@@ -253,94 +253,97 @@ const Formations = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredCourses.map((course) => (
               <Card key={course.id} className="group overflow-hidden hover:shadow-elevated transition-all duration-300">
-                <div className="relative aspect-video overflow-hidden">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button variant="secondary" className="gap-2">
-                      <Play className="w-4 h-4" />
-                      Aperçu
-                    </Button>
+                <div className="flex sm:flex-col">
+                  {/* Thumbnail - Side on mobile, top on larger screens */}
+                  <div className="relative w-28 h-28 sm:w-full sm:h-auto sm:aspect-video overflow-hidden flex-shrink-0">
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                      <Button variant="secondary" size="sm" className="gap-2">
+                        <Play className="w-4 h-4" />
+                        Aperçu
+                      </Button>
+                    </div>
+                    {/* Mobile play icon overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center sm:hidden">
+                      <div className="w-10 h-10 rounded-full bg-foreground/60 flex items-center justify-center">
+                        <Play className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                    </div>
+                    <div className="absolute top-2 left-2 flex gap-1">
+                      <Badge variant={course.isPaid ? "default" : "secondary"} className="text-[10px] px-1.5 py-0.5">
+                        {course.isPaid ? `${formatPrice(course.price!)} F` : "Gratuit"}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge variant={course.isPaid ? "default" : "secondary"} className="gap-1">
-                      {course.isPaid ? (
+
+                  {/* Content */}
+                  <CardContent className="p-3 sm:p-4 flex-1">
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {course.level}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 hidden sm:inline-flex">
+                        {course.category}
+                      </Badge>
+                    </div>
+                    
+                    <h3 className="font-heading font-semibold text-sm sm:text-base text-foreground mb-1 line-clamp-2">
+                      {course.title}
+                    </h3>
+                    
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-1 sm:line-clamp-2 hidden sm:block">
+                      {course.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground mb-2">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {course.duration}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" />
+                        {course.modules}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 mb-2 sm:mb-3">
+                      <Star className="w-3 h-3 text-accent fill-accent" />
+                      <span className="text-xs font-medium">{course.rating}</span>
+                      <span className="text-[10px] text-muted-foreground truncate">• {course.instructor}</span>
+                    </div>
+
+                    {course.progress !== undefined && (
+                      <div className="mb-2 sm:mb-3">
+                        <div className="flex items-center justify-between text-[10px] mb-1">
+                          <span className="text-muted-foreground">Progression</span>
+                          <span className="font-medium text-primary">{course.progress}%</span>
+                        </div>
+                        <Progress value={course.progress} className="h-1.5" />
+                      </div>
+                    )}
+
+                    <Button variant="hero" size="sm" className="w-full gap-1 text-xs sm:text-sm">
+                      {course.progress !== undefined ? (
                         <>
-                          <Lock className="w-3 h-3" />
-                          {formatPrice(course.price!)} FCFA
+                          <Play className="w-3 h-3" />
+                          Continuer
                         </>
                       ) : (
-                        "Gratuit"
+                        <>
+                          <GraduationCap className="w-3 h-3" />
+                          {course.isPaid ? "S'inscrire" : "Commencer"}
+                        </>
                       )}
-                    </Badge>
-                  </div>
-                  <Badge className="absolute top-3 right-3" variant="secondary">
-                    {course.level}
-                  </Badge>
+                    </Button>
+                  </CardContent>
                 </div>
-
-                <CardContent className="p-4">
-                  <Badge variant="outline" className="mb-2 text-xs">
-                    {course.category}
-                  </Badge>
-                  <h3 className="font-heading font-semibold text-foreground mb-2 line-clamp-2">
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {course.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {course.duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-3 h-3" />
-                      {course.modules} modules
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {course.students}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1 mb-4">
-                    <Star className="w-4 h-4 text-accent fill-accent" />
-                    <span className="text-sm font-medium">{course.rating}</span>
-                    <span className="text-xs text-muted-foreground">• {course.instructor}</span>
-                  </div>
-
-                  {course.progress !== undefined && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Progression</span>
-                        <span className="font-medium text-primary">{course.progress}%</span>
-                      </div>
-                      <Progress value={course.progress} className="h-2" />
-                    </div>
-                  )}
-
-                  <Button variant="hero" className="w-full gap-2">
-                    {course.progress !== undefined ? (
-                      <>
-                        <Play className="w-4 h-4" />
-                        Continuer
-                      </>
-                    ) : (
-                      <>
-                        <GraduationCap className="w-4 h-4" />
-                        {course.isPaid ? "S'inscrire" : "Commencer"}
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
               </Card>
             ))}
           </div>
