@@ -193,7 +193,7 @@ const Auth = () => {
         ? producerLocation 
         : `${buyerLocation}, ${buyerCountry}`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
         options: {
@@ -226,10 +226,33 @@ const Auth = () => {
         return;
       }
 
-      toast({
-        title: "Inscription réussie !",
-        description: "Vérifiez votre email pour confirmer votre compte.",
-      });
+      // Create profile immediately after signup
+      if (authData.user) {
+        const { error: profileError } = await supabase.from("profiles").insert({
+          user_id: authData.user.id,
+          full_name: fullName,
+          user_type: userType,
+          phone: phone,
+          location: location,
+          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : null,
+        });
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+        }
+
+        toast({
+          title: "Inscription réussie !",
+          description: "Bienvenue sur NUKUCONNECT !",
+        });
+
+        // Redirect based on user type
+        if (userType === "producer") {
+          navigate("/dashboard");
+        } else {
+          navigate("/buyer-dashboard");
+        }
+      }
     } catch (error) {
       toast({
         title: "Erreur",
