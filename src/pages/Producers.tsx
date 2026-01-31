@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   Search, 
   MapPin, 
   Star, 
@@ -14,7 +21,8 @@ import {
   MessageCircle,
   Filter,
   Users,
-  Package
+  Package,
+  Navigation
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -24,6 +32,7 @@ const producers = [
     name: "Kofi Mensah",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
     location: "Kara, Togo",
+    country: "Togo",
     rating: 4.8,
     verified: true,
     products: 15,
@@ -35,6 +44,7 @@ const producers = [
     name: "Ama Koffi",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
     location: "Lomé, Togo",
+    country: "Togo",
     rating: 4.9,
     verified: true,
     products: 23,
@@ -46,6 +56,7 @@ const producers = [
     name: "Yao Agbeko",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200",
     location: "Atakpamé, Togo",
+    country: "Togo",
     rating: 4.7,
     verified: true,
     products: 8,
@@ -54,36 +65,39 @@ const producers = [
   },
   {
     id: "4",
-    name: "Akossiwa Dosseh",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-    location: "Sokodé, Togo",
+    name: "Kwame Asante",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
+    location: "Accra, Ghana",
+    country: "Ghana",
     rating: 4.6,
-    verified: false,
+    verified: true,
     products: 12,
     sector: "Fruits",
     bio: "Production de mangues et d'agrumes de qualité export.",
   },
   {
     id: "5",
-    name: "Komlan Assou",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-    location: "Dapaong, Togo",
-    rating: 4.5,
-    verified: true,
-    products: 6,
-    sector: "Riz & Céréales",
-    bio: "Riziculteur dans les bas-fonds. Production biologique certifiée.",
-  },
-  {
-    id: "6",
-    name: "Essi Amouzou",
+    name: "Fatou Diallo",
     avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200",
-    location: "Tsévié, Togo",
+    location: "Dakar, Sénégal",
+    country: "Sénégal",
     rating: 4.9,
     verified: true,
     products: 18,
     sector: "Aviculture",
     bio: "Élevage de volailles en plein air. Œufs et poulets fermiers.",
+  },
+  {
+    id: "6",
+    name: "Ibrahim Ouédraogo",
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200",
+    location: "Ouagadougou, Burkina Faso",
+    country: "Burkina Faso",
+    rating: 4.5,
+    verified: false,
+    products: 6,
+    sector: "Riz & Céréales",
+    bio: "Riziculteur dans les bas-fonds. Production biologique certifiée.",
   },
 ];
 
@@ -95,11 +109,26 @@ const sectors = [
   "Fruits",
   "Aviculture",
   "Élevage",
+  "Riz & Céréales",
+];
+
+const countries = [
+  "Tous les pays",
+  "Togo",
+  "Ghana",
+  "Bénin",
+  "Côte d'Ivoire",
+  "Burkina Faso",
+  "Sénégal",
+  "Mali",
+  "Niger",
 ];
 
 const Producers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSector, setSelectedSector] = useState("Tous");
+  const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
+  const [useNearby, setUseNearby] = useState(false);
 
   const filteredProducers = producers.filter((producer) => {
     const matchesSearch =
@@ -107,7 +136,9 @@ const Producers = () => {
       producer.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSector =
       selectedSector === "Tous" || producer.sector === selectedSector;
-    return matchesSearch && matchesSector;
+    const matchesCountry =
+      selectedCountry === "Tous les pays" || producer.country === selectedCountry;
+    return matchesSearch && matchesSector && matchesCountry;
   });
 
   return (
@@ -144,21 +175,50 @@ const Producers = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-6 border-b border-border">
+      <section className="py-6 border-b border-border bg-card">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
-            <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            {sectors.map((sector) => (
-              <Button
-                key={sector}
-                variant={selectedSector === sector ? "default" : "outline"}
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            {/* Sectors */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto">
+              <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {sectors.slice(0, 5).map((sector) => (
+                <Button
+                  key={sector}
+                  variant={selectedSector === sector ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedSector(sector)}
+                  className="whitespace-nowrap"
+                >
+                  {sector}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Country & Location */}
+            <div className="flex items-center gap-3">
+              <Button 
+                variant={useNearby ? "default" : "outline"} 
                 size="sm"
-                onClick={() => setSelectedSector(sector)}
-                className="whitespace-nowrap"
+                onClick={() => setUseNearby(!useNearby)}
+                className="gap-2"
               >
-                {sector}
+                <Navigation className="w-4 h-4" />
+                À proximité
               </Button>
-            ))}
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="w-48">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </section>

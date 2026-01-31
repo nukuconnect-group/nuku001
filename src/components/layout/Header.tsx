@@ -81,8 +81,14 @@ const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2">
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary-foreground" />
+                    <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
+                      {user.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-bold text-primary-foreground">
+                          {(user.user_metadata?.full_name || user.email)?.charAt(0)?.toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <span className="max-w-[120px] truncate">
                       {user.user_metadata?.full_name || user.email?.split("@")[0]}
@@ -90,6 +96,14 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  {user.user_metadata?.user_type === "producer" && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        <User className="w-4 h-4 mr-2" />
+                        Tableau de bord
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="cursor-pointer">
                       <User className="w-4 h-4 mr-2" />
