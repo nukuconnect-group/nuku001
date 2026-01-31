@@ -5,9 +5,10 @@ import NukuAIFloating from "@/components/home/NukuAIFloating";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import UserTypesSection from "@/components/home/UserTypesSection";
+import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
+import WelcomePopup from "@/components/WelcomePopup";
 
 const Index = () => {
   return (
@@ -17,13 +18,14 @@ const Index = () => {
         <HeroCarousel />
         <FeaturedProducts />
         <FeaturesSection />
-        <UserTypesSection />
+        <HowItWorksSection />
         <NukuAISection />
         <CTASection />
       </main>
       <Footer />
       <NukuAIFloating />
       <MobileBottomNav />
+      <WelcomePopup />
     </div>
   );
 };
