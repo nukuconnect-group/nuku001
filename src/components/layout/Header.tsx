@@ -1,10 +1,43 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Leaf, ChevronDown } from "lucide-react";
+import { Menu, X, Leaf, User, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Déconnexion réussie",
+      description: "À bientôt sur NUKUCONNECT !",
+    });
+    navigate("/");
+  };
 
   const navLinks = [
     { label: "Marketplace", href: "/marketplace" },
@@ -43,12 +76,46 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Connexion
-            </Button>
-            <Button variant="hero" size="sm">
-              S'inscrire
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                    <span className="max-w-[120px] truncate">
+                      {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Mon profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="ghost" size="sm">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="hero" size="sm">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -76,10 +143,28 @@ const Header = () => {
               ))}
             </nav>
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-              <Button variant="ghost" className="justify-start">
-                Connexion
-              </Button>
-              <Button variant="hero">S'inscrire</Button>
+              {user ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
+                    Connecté en tant que: <span className="font-medium text-foreground">{user.email}</span>
+                  </div>
+                  <Button variant="ghost" className="justify-start" onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Déconnexion
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      Connexion
+                    </Button>
+                  </Link>
+                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="hero" className="w-full">S'inscrire</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

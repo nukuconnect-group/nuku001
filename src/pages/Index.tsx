@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import HeroSection from "@/components/home/HeroSection";
+import HeroCarousel from "@/components/home/HeroCarousel";
+import FeaturedProducts from "@/components/home/FeaturedProducts";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import UserTypesSection from "@/components/home/UserTypesSection";
 import NukuAISection from "@/components/home/NukuAISection";
@@ -11,7 +12,8 @@ const Index = () => {
     <div className="min-h-screen">
       <Header />
       <main>
-        <HeroSection />
+        <HeroCarousel />
+        <FeaturedProducts />
         <FeaturesSection />
         <UserTypesSection />
         <NukuAISection />
