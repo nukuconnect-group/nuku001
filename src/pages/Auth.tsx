@@ -72,15 +72,36 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        navigate("/");
+        // Fetch profile to determine user type
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("user_id", session.user.id)
+          .single();
+        
+        if (profileData?.user_type === "producer") {
+          navigate("/dashboard");
+        } else {
+          navigate("/buyer-dashboard");
+        }
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("user_id", session.user.id)
+          .single();
+        
+        if (profileData?.user_type === "producer") {
+          navigate("/dashboard");
+        } else {
+          navigate("/buyer-dashboard");
+        }
       }
     });
 
@@ -124,7 +145,8 @@ const Auth = () => {
         title: "Connexion réussie",
         description: "Bienvenue sur NUKUCONNECT !",
       });
-      navigate("/");
+      
+      // Redirect will be handled by onAuthStateChange
     } catch (error) {
       toast({
         title: "Erreur",

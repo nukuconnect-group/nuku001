@@ -22,18 +22,29 @@ import {
   Truck,
   Clock,
   Package,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  Send,
+  User
 } from "lucide-react";
 import { products } from "@/data/marketplace";
+import { useToast } from "@/hooks/use-toast";
+import QRScanner from "@/components/QRScanner";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const product = products.find((p) => p.id === id);
+
+  // Mock traceability status - some products are certified, some not
+  const isTraceable = product ? ["1", "3", "5", "6", "8"].includes(product.id) : false;
 
   if (!product) {
     return (
@@ -57,6 +68,22 @@ const ProductDetail = () => {
   };
 
   const totalPrice = product.price * quantity;
+
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+    
+    toast({
+      title: "Message envoyé !",
+      description: `Votre message a été envoyé à ${product.producer.name}. Vous recevrez une réponse dans vos messages.`,
+    });
+    setMessage("");
+    setShowContactForm(false);
+    
+    // Redirect to messages after a short delay
+    setTimeout(() => {
+      navigate("/messages");
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -84,12 +111,26 @@ const ProductDetail = () => {
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-                {product.isOrganic && (
-                  <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground gap-1">
-                    <Leaf className="w-3 h-3" />
-                    BIO
-                  </Badge>
-                )}
+                {/* Traceability Badge */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {product.isOrganic && (
+                    <Badge className="bg-primary text-primary-foreground gap-1">
+                      <Leaf className="w-3 h-3" />
+                      BIO
+                    </Badge>
+                  )}
+                  {isTraceable ? (
+                    <Badge className="bg-green-600 text-white gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Traçable
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500 gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Non certifié
+                    </Badge>
+                  )}
+                </div>
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                     <Heart className="w-5 h-5 text-muted-foreground hover:text-destructive" />
@@ -204,18 +245,21 @@ const ProductDetail = () => {
               {showContactForm && (
                 <Card className="animate-fade-in">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Envoyer un message</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                      Envoyer un message à {product.producer.name}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Textarea
-                      placeholder="Bonjour, je suis intéressé par votre produit..."
+                      placeholder={`Bonjour ${product.producer.name}, je suis intéressé par votre ${product.name}...`}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       className="min-h-[100px]"
                     />
-                    <Button variant="hero" className="w-full gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      Envoyer
+                    <Button variant="hero" className="w-full gap-2" onClick={handleSendMessage}>
+                      <Send className="w-4 h-4" />
+                      Envoyer le message
                     </Button>
                   </CardContent>
                 </Card>
@@ -246,7 +290,8 @@ const ProductDetail = () => {
                       </div>
                     </div>
                     <Link to={`/producteurs/${product.producer.name}`}>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <User className="w-4 h-4" />
                         Voir profil
                       </Button>
                     </Link>
@@ -258,70 +303,133 @@ const ProductDetail = () => {
 
           {/* Traceability Section */}
           <div className="mt-12">
-            <Card>
+            <Card className={isTraceable ? "border-primary/50" : "border-yellow-500/50"}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <QrCode className="w-5 h-5 text-primary" />
                   Traçabilité du produit
+                  {isTraceable ? (
+                    <Badge className="ml-2 bg-green-600">Certifié</Badge>
+                  ) : (
+                    <Badge variant="outline" className="ml-2 text-yellow-600 border-yellow-500">Non certifié</Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-primary" />
+                {isTraceable ? (
+                  <>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">Origine</h4>
+                          <p className="text-sm text-muted-foreground">{product.location}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">Date de récolte</h4>
+                          <p className="text-sm text-muted-foreground">{product.createdAt}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Leaf className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">Mode de culture</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {product.isOrganic ? "Agriculture biologique" : "Agriculture conventionnelle"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">Certifications</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {product.isOrganic ? "Bio certifié" : "Standard qualité"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">Origine</h4>
-                      <p className="text-sm text-muted-foreground">{product.location}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">Date de récolte</h4>
-                      <p className="text-sm text-muted-foreground">{product.createdAt}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Leaf className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">Mode de culture</h4>
+                    <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                       <p className="text-sm text-muted-foreground">
-                        {product.isOrganic ? "Agriculture biologique" : "Agriculture conventionnelle"}
+                        Scannez le QR code pour plus de détails sur ce produit
                       </p>
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="gap-2" onClick={() => setShowQRCode(true)}>
+                          <QrCode className="w-4 h-4" />
+                          Afficher QR Code
+                        </Button>
+                        <Button variant="hero" className="gap-2" onClick={() => setShowQRScanner(true)}>
+                          <QrCode className="w-4 h-4" />
+                          Scanner
+                        </Button>
+                      </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="text-center py-6">
+                    <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                    <h3 className="font-heading font-semibold text-lg mb-2">Produit non certifié traçable</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                      Ce produit n'a pas encore été certifié par notre système de traçabilité. 
+                      Contactez le vendeur pour plus d'informations sur l'origine du produit.
+                    </p>
+                    <Button variant="outline" className="gap-2" onClick={() => setShowContactForm(true)}>
+                      <MessageCircle className="w-4 h-4" />
+                      Demander la traçabilité
+                    </Button>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">Certifications</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {product.isOrganic ? "Bio certifié" : "Standard qualité"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-6 pt-6 border-t border-border flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Scannez le QR code pour plus de détails sur ce produit
-                  </p>
-                  <Button variant="outline" className="gap-2">
-                    <QrCode className="w-4 h-4" />
-                    Afficher QR Code
-                  </Button>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
+
+          {/* QR Code Display Modal */}
+          {showQRCode && (
+            <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50 p-4" onClick={() => setShowQRCode(false)}>
+              <Card className="max-w-sm w-full" onClick={e => e.stopPropagation()}>
+                <CardHeader>
+                  <CardTitle className="text-center">QR Code de traçabilité</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center">
+                  <div className="w-48 h-48 bg-white p-4 rounded-xl mb-4">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TRC-00${product.id}`} 
+                      alt="QR Code"
+                      className="w-full h-full"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">Code: TRC-00{product.id}</p>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Scannez ce code pour vérifier la traçabilité du produit
+                  </p>
+                  <Button variant="outline" className="mt-4" onClick={() => setShowQRCode(false)}>
+                    Fermer
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </main>
+
+      <QRScanner 
+        isOpen={showQRScanner} 
+        onClose={() => setShowQRScanner(false)}
+        onScan={(code) => {
+          console.log("Scanned code:", code);
+        }}
+      />
 
       <Footer />
       <MobileBottomNav />

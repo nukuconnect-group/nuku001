@@ -19,8 +19,10 @@ import {
   Package,
   Shield,
   Camera,
-  FileText
+  FileText,
+  Scan
 } from "lucide-react";
+import QRScanner from "@/components/QRScanner";
 
 interface TraceableProduct {
   id: string;
@@ -74,14 +76,31 @@ const traceableProducts: TraceableProduct[] = [
       { date: "2025-01-28", event: "Expédition en cours", location: "En transit" },
     ],
   },
+  {
+    id: "TRC-003",
+    name: "Ignames Blancs",
+    image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400",
+    producer: "Yao Agbeko",
+    origin: "Atakpamé, Togo",
+    harvestDate: "2025-01-20",
+    isOrganic: true,
+    certifications: ["Bio Certifié"],
+    status: "verified",
+    timeline: [
+      { date: "2025-01-15", event: "Récolte", location: "Ferme Agbeko, Atakpamé" },
+      { date: "2025-01-18", event: "Contrôle qualité", location: "Centre NUKUCONNECT" },
+      { date: "2025-01-20", event: "Disponible", location: "Marketplace" },
+    ],
+  },
 ];
 
 const Traceability = () => {
   const [searchCode, setSearchCode] = useState("");
   const [searchResult, setSearchResult] = useState<TraceableProduct | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   const handleSearch = () => {
-    const product = traceableProducts.find((p) => p.id === searchCode);
+    const product = traceableProducts.find((p) => p.id === searchCode.toUpperCase());
     setSearchResult(product || null);
   };
 
@@ -119,7 +138,7 @@ const Traceability = () => {
             </p>
 
             {/* Search */}
-            <div className="flex gap-2 max-w-xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-2 max-w-xl mx-auto">
               <div className="relative flex-1">
                 <QrCode className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -129,6 +148,10 @@ const Traceability = () => {
                   className="pl-12 h-12 text-base"
                 />
               </div>
+              <Button variant="outline" size="lg" onClick={() => setShowScanner(true)} className="gap-2">
+                <Scan className="w-4 h-4" />
+                Scanner
+              </Button>
               <Button variant="hero" size="lg" onClick={handleSearch} className="gap-2">
                 <Search className="w-4 h-4" />
                 Rechercher
@@ -136,8 +159,37 @@ const Traceability = () => {
             </div>
 
             <p className="text-sm text-muted-foreground mt-4">
-              Essayez avec: TRC-001 ou TRC-002
+              Essayez avec: TRC-001, TRC-002 ou TRC-003
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Traceable Products List */}
+      <section className="py-8 border-b border-border">
+        <div className="container mx-auto px-4">
+          <h2 className="font-heading text-xl font-bold mb-6">Produits traçables sur la marketplace</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {traceableProducts.map((product) => (
+              <Card key={product.id} className="hover:shadow-elevated transition-all cursor-pointer" onClick={() => {
+                setSearchCode(product.id);
+                setSearchResult(product);
+              }}>
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-medium text-foreground">{product.name}</h3>
+                        {getStatusBadge(product.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{product.producer}</p>
+                      <p className="text-xs text-primary font-mono">{product.id}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -257,7 +309,7 @@ const Traceability = () => {
                       <p className="text-muted-foreground mb-4">
                         Utilisez l'appareil photo de votre téléphone pour scanner le QR code présent sur l'emballage du produit.
                       </p>
-                      <Button variant="outline" className="gap-2 w-full sm:w-auto">
+                      <Button variant="hero" className="gap-2 w-full sm:w-auto" onClick={() => setShowScanner(true)}>
                         <Camera className="w-4 h-4" />
                         Ouvrir le scanner
                       </Button>
@@ -268,8 +320,12 @@ const Traceability = () => {
                         Saisissez le code de traçabilité visible sur l'étiquette du produit.
                       </p>
                       <div className="flex gap-2">
-                        <Input placeholder="TRC-XXXXX" />
-                        <Button variant="hero">Vérifier</Button>
+                        <Input 
+                          placeholder="TRC-XXXXX" 
+                          value={searchCode}
+                          onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
+                        />
+                        <Button variant="hero" onClick={handleSearch}>Vérifier</Button>
                       </div>
                     </div>
                   </div>
@@ -365,6 +421,16 @@ const Traceability = () => {
           </div>
         </div>
       </section>
+
+      <QRScanner 
+        isOpen={showScanner} 
+        onClose={() => setShowScanner(false)}
+        onScan={(code) => {
+          setSearchCode(code);
+          const product = traceableProducts.find((p) => p.id === code.toUpperCase());
+          setSearchResult(product || null);
+        }}
+      />
 
       <Footer />
       <MobileBottomNav />

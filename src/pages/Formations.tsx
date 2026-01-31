@@ -253,7 +253,7 @@ const Formations = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {filteredCourses.map((course) => (
               <Card key={course.id} className="group overflow-hidden hover:shadow-elevated transition-all duration-300">
                 <div className="relative aspect-video overflow-hidden">

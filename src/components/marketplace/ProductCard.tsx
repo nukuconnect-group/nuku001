@@ -1,18 +1,35 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, MessageCircle, Heart, ShieldCheck, Leaf, ShoppingCart } from "lucide-react";
+import { Star, MapPin, MessageCircle, Heart, ShieldCheck, Leaf, ShoppingCart, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Product } from "@/data/marketplace";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   product: Product;
   viewMode?: "grid" | "list";
 }
 
+// Products with traceability certification
+const traceableProducts = ["1", "3", "5", "6", "8"];
+
 const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const isTraceable = traceableProducts.includes(product.id);
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-FR").format(price);
+  };
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Contacter le vendeur",
+      description: `Votre message sera envoyé à ${product.producer.name}`,
+    });
+    navigate(`/produit/${product.id}`);
   };
 
   if (viewMode === "list") {
@@ -92,11 +109,21 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
           />
           
           {/* Badges */}
-          <div className="absolute top-2 left-2 flex gap-1">
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isOrganic && (
               <Badge className="bg-primary text-primary-foreground border-0 gap-1 text-xs px-2 py-0.5">
                 <Leaf className="w-3 h-3" />
                 <span className="hidden sm:inline">Bio</span>
+              </Badge>
+            )}
+            {isTraceable ? (
+              <Badge className="bg-green-600 text-white border-0 gap-1 text-xs px-2 py-0.5">
+                <CheckCircle2 className="w-3 h-3" />
+                <span className="hidden sm:inline">Traçable</span>
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500 gap-1 text-xs px-1.5 py-0.5">
+                <AlertTriangle className="w-3 h-3" />
               </Badge>
             )}
           </div>
