@@ -98,10 +98,10 @@ const Marketplace = () => {
       />
 
       {/* Main Content */}
-      <section className="py-6 lg:py-8">
+      <section className="py-8 lg:py-12">
         <div className="container mx-auto px-4">
           <div className="flex gap-6 lg:gap-8">
-            {/* Filters Sidebar */}
+            {/* Filters Sidebar - Desktop */}
             <aside className="w-64 flex-shrink-0 hidden lg:block">
               <MarketplaceFilters
                 selectedCategory={selectedCategory}
@@ -131,8 +131,8 @@ const Marketplace = () => {
               onMobileClose={() => setMobileFiltersOpen(false)}
             />
 
-            {/* Products */}
-            <div className="flex-1 min-w-0">
+            {/* Products Section */}
+            <div className="flex-1 w-full">
               {/* Toolbar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
@@ -186,18 +186,20 @@ const Marketplace = () => {
                 </div>
               </div>
 
-              {/* Products Grid - 2 cols mobile, 3 tablet, 4 desktop, 5 xl */}
+              {/* Products Grid - Centered and Aligned */}
               {filteredProducts.length > 0 ? (
-                <div
-                  className={
-                    viewMode === "grid"
-                      ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
-                      : "flex flex-col gap-4"
-                  }
-                >
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                <div className="w-full">
+                  <div
+                    className={
+                      viewMode === "grid"
+                        ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 justify-items-center"
+                        : "flex flex-col gap-4"
+                    }
+                  >
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-16">
@@ -218,7 +220,7 @@ const Marketplace = () => {
 
               {/* Load More */}
               {filteredProducts.length > 0 && (
-                <div className="text-center mt-8 lg:mt-10">
+                <div className="text-center mt-10 lg:mt-12">
                   <Button variant="outline" size="lg">
                     Charger plus de produits
                   </Button>
