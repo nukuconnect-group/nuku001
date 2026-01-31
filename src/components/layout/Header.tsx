@@ -40,6 +40,7 @@ const Header = () => {
   };
 
   const navLinks = [
+    { label: "Accueil", href: "/" },
     { label: "Marketplace", href: "/marketplace" },
     { label: "Producteurs", href: "/producteurs" },
     { label: "NUKU AI", href: "/nuku-ai" },

@@ -6,10 +6,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf, User, Store, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Leaf, User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+
+const sectors = [
+  "Céréales & Légumineuses",
+  "Maraîchage",
+  "Fruits",
+  "Tubercules",
+  "Élevage",
+  "Aviculture",
+  "Pêche & Aquaculture",
+  "Transformation agroalimentaire",
+];
+
+const countries = [
+  "Togo",
+  "Bénin",
+  "Ghana",
+  "Côte d'Ivoire",
+  "Burkina Faso",
+  "Niger",
+  "Mali",
+  "Sénégal",
+];
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -21,12 +50,25 @@ const Auth = () => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   
-  // Signup state
+  // Common signup state
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [userType, setUserType] = useState<"producer" | "buyer">("buyer");
+  
+  // Producer fields
+  const [producerName, setProducerName] = useState("");
+  const [producerPhone, setProducerPhone] = useState("");
+  const [producerLocation, setProducerLocation] = useState("");
+  const [producerCompany, setProducerCompany] = useState("");
+  const [producerSector, setProducerSector] = useState("");
+  
+  // Buyer fields
+  const [buyerFirstName, setBuyerFirstName] = useState("");
+  const [buyerLastName, setBuyerLastName] = useState("");
+  const [buyerPhone, setBuyerPhone] = useState("");
+  const [buyerLocation, setBuyerLocation] = useState("");
+  const [buyerCountry, setBuyerCountry] = useState("Togo");
 
   // Check if user is already logged in
   useEffect(() => {
@@ -120,6 +162,15 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
+      const fullName = userType === "producer" 
+        ? producerName 
+        : `${buyerFirstName} ${buyerLastName}`;
+      
+      const phone = userType === "producer" ? producerPhone : buyerPhone;
+      const location = userType === "producer" 
+        ? producerLocation 
+        : `${buyerLocation}, ${buyerCountry}`;
+      
       const { error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
@@ -128,6 +179,10 @@ const Auth = () => {
           data: {
             full_name: fullName,
             user_type: userType,
+            phone: phone,
+            location: location,
+            company: userType === "producer" ? producerCompany : null,
+            sector: userType === "producer" ? producerSector : null,
           },
         },
       });
@@ -297,22 +352,170 @@ const Auth = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="fullname">Nom complet</Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="fullname"
-                            type="text"
-                            placeholder="Votre nom"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
-                        </div>
-                      </div>
+                      {/* Producer Fields */}
+                      {userType === "producer" && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="producer-name">Nom complet</Label>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="producer-name"
+                                type="text"
+                                placeholder="Votre nom complet"
+                                value={producerName}
+                                onChange={(e) => setProducerName(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
 
+                          <div className="space-y-2">
+                            <Label htmlFor="producer-phone">Téléphone</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="producer-phone"
+                                type="tel"
+                                placeholder="+228 XX XX XX XX"
+                                value={producerPhone}
+                                onChange={(e) => setProducerPhone(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="producer-location">Localisation</Label>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="producer-location"
+                                type="text"
+                                placeholder="Ville, Région"
+                                value={producerLocation}
+                                onChange={(e) => setProducerLocation(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="producer-company">Entreprise / Exploitation</Label>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="producer-company"
+                                type="text"
+                                placeholder="Nom de votre entreprise"
+                                value={producerCompany}
+                                onChange={(e) => setProducerCompany(e.target.value)}
+                                className="pl-10"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="producer-sector">Secteur d'activité</Label>
+                            <Select value={producerSector} onValueChange={setProducerSector}>
+                              <SelectTrigger className="w-full">
+                                <Briefcase className="w-4 h-4 mr-2 text-muted-foreground" />
+                                <SelectValue placeholder="Choisir un secteur" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {sectors.map((sector) => (
+                                  <SelectItem key={sector} value={sector}>
+                                    {sector}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Buyer Fields */}
+                      {userType === "buyer" && (
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="buyer-firstname">Prénom</Label>
+                              <Input
+                                id="buyer-firstname"
+                                type="text"
+                                placeholder="Prénom"
+                                value={buyerFirstName}
+                                onChange={(e) => setBuyerFirstName(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="buyer-lastname">Nom</Label>
+                              <Input
+                                id="buyer-lastname"
+                                type="text"
+                                placeholder="Nom"
+                                value={buyerLastName}
+                                onChange={(e) => setBuyerLastName(e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="buyer-phone">Téléphone</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="buyer-phone"
+                                type="tel"
+                                placeholder="+228 XX XX XX XX"
+                                value={buyerPhone}
+                                onChange={(e) => setBuyerPhone(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="buyer-location">Ville / Localité</Label>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                id="buyer-location"
+                                type="text"
+                                placeholder="Votre ville"
+                                value={buyerLocation}
+                                onChange={(e) => setBuyerLocation(e.target.value)}
+                                className="pl-10"
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="buyer-country">Pays</Label>
+                            <Select value={buyerCountry} onValueChange={setBuyerCountry}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Choisir un pays" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {countries.map((country) => (
+                                  <SelectItem key={country} value={country}>
+                                    {country}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Common fields */}
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
                         <div className="relative">
