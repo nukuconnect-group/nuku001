@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
-import MarketplaceFilters from "@/components/marketplace/MarketplaceFilters";
 import MarketplaceHero from "@/components/marketplace/MarketplaceHero";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -12,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { products } from "@/data/marketplace";
-import { SlidersHorizontal, Grid3X3, List, Plus, Search } from "lucide-react";
+import { products, categories } from "@/data/marketplace";
+import { Grid3X3, List, Plus, Search, Leaf } from "lucide-react";
 
 const Marketplace = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,7 +90,7 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
 
       {/* Hero with Carousel */}
@@ -100,133 +102,119 @@ const Marketplace = () => {
       {/* Main Content */}
       <section className="py-8 lg:py-12">
         <div className="container mx-auto px-4">
-          <div className="flex gap-6 lg:gap-8">
-            {/* Filters Sidebar - Desktop */}
-            <aside className="w-64 flex-shrink-0 hidden lg:block">
-              <MarketplaceFilters
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                organicOnly={organicOnly}
-                onOrganicChange={setOrganicOnly}
-                location={location}
-                onLocationChange={setLocation}
-                onReset={handleReset}
-              />
-            </aside>
+          {/* Categories Filter Bar */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((cat) => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className="whitespace-nowrap flex-shrink-0"
+                >
+                  {cat.name}
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {cat.count}
+                  </Badge>
+                </Button>
+              ))}
+              <Button
+                variant={organicOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setOrganicOnly(!organicOnly)}
+                className="whitespace-nowrap flex-shrink-0 gap-1"
+              >
+                <Leaf className="w-3 h-3" />
+                Bio
+              </Button>
+            </div>
+          </div>
 
-            {/* Mobile Filters */}
-            <MarketplaceFilters
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-              priceRange={priceRange}
-              onPriceRangeChange={setPriceRange}
-              organicOnly={organicOnly}
-              onOrganicChange={setOrganicOnly}
-              location={location}
-              onLocationChange={setLocation}
-              onReset={handleReset}
-              isMobileOpen={mobileFiltersOpen}
-              onMobileClose={() => setMobileFiltersOpen(false)}
-            />
+          <div className="w-full">
 
-            {/* Products Section */}
-            <div className="flex-1 w-full">
-              {/* Toolbar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="lg:hidden"
-                    onClick={() => setMobileFiltersOpen(true)}
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{filteredProducts.length}</span> produits trouvés
+              </p>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Trier par" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Plus récents</SelectItem>
+                    <SelectItem value="price-asc">Prix croissant</SelectItem>
+                    <SelectItem value="price-desc">Prix décroissant</SelectItem>
+                    <SelectItem value="rating">Meilleures notes</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* View Toggle */}
+                <div className="hidden sm:flex items-center border border-border rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
                   >
-                    <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Filtres
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{filteredProducts.length}</span> produits trouvés
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  {/* Sort */}
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Trier par" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent">Plus récents</SelectItem>
-                      <SelectItem value="price-asc">Prix croissant</SelectItem>
-                      <SelectItem value="price-desc">Prix décroissant</SelectItem>
-                      <SelectItem value="rating">Meilleures notes</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {/* View Toggle */}
-                  <div className="hidden sm:flex items-center border border-border rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                      }`}
-                    >
-                      <Grid3X3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-2 rounded-md transition-colors ${
-                        viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                      }`}
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-
-              {/* Products Grid - Centered and Aligned */}
-              {filteredProducts.length > 0 ? (
-                <div className="w-full">
-                  <div
-                    className={
-                      viewMode === "grid"
-                        ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 justify-items-center"
-                        : "flex flex-col gap-4"
-                    }
-                  >
-                    {filteredProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} viewMode={viewMode} />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
-                    Aucun produit trouvé
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    Essayez de modifier vos filtres ou votre recherche
-                  </p>
-                  <Button variant="outline" onClick={handleReset}>
-                    Réinitialiser les filtres
-                  </Button>
-                </div>
-              )}
-
-              {/* Load More */}
-              {filteredProducts.length > 0 && (
-                <div className="text-center mt-10 lg:mt-12">
-                  <Button variant="outline" size="lg">
-                    Charger plus de produits
-                  </Button>
-                </div>
-              )}
             </div>
+
+            {/* Products Grid - Centered and Aligned */}
+            {filteredProducts.length > 0 ? (
+              <div className="w-full">
+                <div
+                  className={
+                    viewMode === "grid"
+                      ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 justify-items-center"
+                      : "flex flex-col gap-4"
+                  }
+                >
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
+                  Aucun produit trouvé
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Essayez de modifier vos filtres ou votre recherche
+                </p>
+                <Button variant="outline" onClick={handleReset}>
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            )}
+
+            {/* Load More */}
+            {filteredProducts.length > 0 && (
+              <div className="text-center mt-10 lg:mt-12">
+                <Button variant="outline" size="lg">
+                  Charger plus de produits
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -235,12 +223,13 @@ const Marketplace = () => {
       <Button
         variant="hero"
         size="icon"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-elevated z-30"
+        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 w-14 h-14 rounded-full shadow-elevated z-30"
       >
         <Plus className="w-6 h-6" />
       </Button>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

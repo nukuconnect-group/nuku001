@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,42 +81,46 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
   }
 
   return (
-    <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px]">
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex gap-1">
-          {product.isOrganic && (
-            <Badge className="bg-primary text-primary-foreground border-0 gap-1 text-xs px-2 py-0.5">
-              <Leaf className="w-3 h-3" />
-              <span className="hidden sm:inline">Bio</span>
-            </Badge>
-          )}
-        </div>
+    <Link to={`/produit/${product.id}`} className="block">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px]">
+        {/* Image */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex gap-1">
+            {product.isOrganic && (
+              <Badge className="bg-primary text-primary-foreground border-0 gap-1 text-xs px-2 py-0.5">
+                <Leaf className="w-3 h-3" />
+                <span className="hidden sm:inline">Bio</span>
+              </Badge>
+            )}
+          </div>
 
-        {/* Wishlist */}
-        <button className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors group/heart">
-          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover/heart:text-destructive transition-colors" />
-        </button>
+          {/* Wishlist */}
+          <button 
+            onClick={(e) => e.preventDefault()}
+            className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors group/heart"
+          >
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground group-hover/heart:text-destructive transition-colors" />
+          </button>
 
-        {/* Quick Actions Overlay */}
-        <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-          <Button variant="secondary" size="sm" className="text-xs">
-            <MessageCircle className="w-3.5 h-3.5 mr-1" />
-            Contacter
-          </Button>
-          <Button variant="hero" size="sm" className="text-xs">
-            <ShoppingCart className="w-3.5 h-3.5 mr-1" />
-            Acheter
-          </Button>
+          {/* Quick Actions Overlay */}
+          <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+            <Button variant="secondary" size="sm" className="text-xs" onClick={(e) => e.preventDefault()}>
+              <MessageCircle className="w-3.5 h-3.5 mr-1" />
+              Contacter
+            </Button>
+            <Button variant="hero" size="sm" className="text-xs" onClick={(e) => e.preventDefault()}>
+              <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+              Acheter
+            </Button>
+          </div>
         </div>
-      </div>
 
       <CardContent className="p-2.5 sm:p-3 lg:p-4 flex-1 flex flex-col">
         {/* Category & Location */}
@@ -181,6 +186,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
         </div>
       </CardContent>
     </Card>
+  </Link>
   );
 };
 
