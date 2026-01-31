@@ -17,6 +17,7 @@ import {
   User,
   Loader2
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -53,6 +54,26 @@ const NukuAI = () => {
     scrollToBottom();
   }, [messages]);
 
+  const streamChat = async (userMessages: { role: string; content: string }[]) => {
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nuku-ai-chat`;
+
+    const resp = await fetch(CHAT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ messages: userMessages }),
+    });
+
+    if (!resp.ok || !resp.body) {
+      const error = await resp.json().catch(() => ({ error: "Erreur inconnue" }));
+      throw new Error(error.error || "Erreur de connexion au service IA");
+    }
+
+    return resp.body;
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -63,29 +84,79 @@ const NukuAI = () => {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response (would connect to real AI in production)
-    setTimeout(() => {
-      const responses = [
-        "C'est une excellente question ! Pour le maïs, je recommande d'utiliser des variétés adaptées à votre zone climatique et d'assurer un bon espacement entre les plants (75-80 cm entre les rangs).",
-        "Les maladies les plus courantes sont la mosaïque du manioc et la pourriture des racines. Utilisez des boutures saines et pratiquez la rotation des cultures pour les prévenir.",
-        "La période idéale de semis dépend de votre région. En général, plantez 2-3 semaines après les premières pluies régulières pour éviter les stress hydriques.",
-        "Les prix actuels varient selon les marchés. Le maïs se négocie entre 150-180 FCFA/kg, le riz local autour de 400 FCFA/kg. Consultez régulièrement les marchés locaux.",
-      ];
+    try {
+      const chatMessages = newMessages
+        .filter(m => m.id !== "welcome")
+        .map(m => ({ role: m.role, content: m.content }));
 
-      const aiMessage: Message = {
+      const body = await streamChat(chatMessages);
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let assistantContent = "";
+
+      // Add placeholder for assistant message
+      const assistantId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, {
+        id: assistantId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+      }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        textBuffer += decoder.decode(value, { stream: true });
+        
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => 
+                prev.map(m => 
+                  m.id === assistantId 
+                    ? { ...m, content: assistantContent }
+                    : m
+                )
+              );
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("NUKU AI error:", error);
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: `Désolé, une erreur s'est produite: ${error.message}. Veuillez réessayer.`,
         timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
+      }]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleSuggestionClick = (text: string) => {
@@ -109,7 +180,7 @@ const NukuAI = () => {
                   NUKU AI
                   <Badge variant="secondary" className="text-xs">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Beta
+                    Propulsé par Lovable AI
                   </Badge>
                 </h1>
                 <p className="text-sm text-muted-foreground">Assistant agricole intelligent 24/7</p>
@@ -146,9 +217,11 @@ const NukuAI = () => {
                       : "bg-card"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {message.content}
-                  </p>
+                  <div className={`text-sm leading-relaxed prose prose-sm max-w-none ${
+                    message.role === "user" ? "prose-invert" : ""
+                  }`}>
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
                   <span className="text-[10px] opacity-70 mt-2 block">
                     {message.timestamp.toLocaleTimeString("fr-FR", {
                       hour: "2-digit",
@@ -159,7 +232,7 @@ const NukuAI = () => {
               </div>
             ))}
 
-            {isLoading && (
+            {isLoading && messages[messages.length - 1]?.content === "" && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center">
                   <Bot className="w-4 h-4 text-primary-foreground" />

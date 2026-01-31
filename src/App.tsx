@@ -13,6 +13,7 @@ import Traceability from "./pages/Traceability";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import BuyerDashboard from "./pages/BuyerDashboard";
 import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 
@@ -35,8 +36,8 @@ const App = () => (
           <Route path="/messages" element={<Messages />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
           <Route path="/plans" element={<Plans />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
