@@ -1,9 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import MarketplaceHero from "@/components/marketplace/MarketplaceHero";
+import { CategorySidebar, MobileCategorySidebar, marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import AddProductModal from "@/components/dashboard/AddProductModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -23,8 +26,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { products, categories } from "@/data/marketplace";
-import { Grid3X3, List, Plus, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { products } from "@/data/marketplace";
+import { Grid3X3, List, Plus, Search, Leaf, SlidersHorizontal, MapPin, X, LayoutGrid } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const locations = [
   "Toutes les régions",
@@ -38,6 +43,8 @@ const locations = [
 ];
 
 const Marketplace = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
@@ -47,7 +54,49 @@ const Marketplace = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [minQuantity, setMinQuantity] = useState("");
+  const [categorySidebarOpen, setCategorySidebarOpen] = useState(false);
+  
+  // Add product modal
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single()
+          .then(({ data }) => setProfile(data));
+      }
+    });
+  }, []);
+
+  const handleAddProductClick = () => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Connectez-vous pour publier un produit",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    
+    if (profile?.user_type !== "producer") {
+      toast({
+        title: "Compte producteur requis",
+        description: "Créez un compte producteur pour vendre vos produits",
+      });
+      navigate("/auth");
+      return;
+    }
+    
+    setShowAddProduct(true);
+  };
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -73,7 +122,10 @@ const Marketplace = () => {
     }
 
     if (selectedCategory !== "all") {
-      result = result.filter((p) => p.category === selectedCategory);
+      result = result.filter((p) => 
+        p.category === selectedCategory || 
+        p.category.toLowerCase().includes(selectedCategory.toLowerCase())
+      );
     }
 
     result = result.filter(
@@ -128,21 +180,22 @@ const Marketplace = () => {
 
   const FiltersContent = () => (
     <div className="space-y-6">
-      {/* Categories */}
-      <div className="space-y-3">
-        <Label className="text-sm font-semibold">Catégorie</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {categories.map((cat) => (
-            <Button
-              key={cat.id}
-              variant={selectedCategory === cat.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(cat.id)}
-              className="justify-start text-xs"
-            >
-              {cat.name}
-            </Button>
-          ))}
+      {/* Price Range */}
+      <div className="space-y-4">
+        <Label className="text-sm font-semibold">
+          Prix: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} FCFA
+        </Label>
+        <Slider
+          value={priceRange}
+          onValueChange={(v) => setPriceRange(v as [number, number])}
+          min={0}
+          max={500000}
+          step={5000}
+          className="py-2"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>0 FCFA</span>
+          <span>500K FCFA</span>
         </div>
       </div>
 
@@ -162,25 +215,6 @@ const Marketplace = () => {
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Price Range */}
-      <div className="space-y-4">
-        <Label className="text-sm font-semibold">
-          Prix: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} FCFA
-        </Label>
-        <Slider
-          value={priceRange}
-          onValueChange={(v) => setPriceRange(v as [number, number])}
-          min={0}
-          max={500000}
-          step={5000}
-          className="py-2"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0 FCFA</span>
-          <span>500K FCFA</span>
-        </div>
       </div>
 
       {/* Toggles */}
@@ -216,201 +250,242 @@ const Marketplace = () => {
         onSearchChange={setSearchQuery} 
       />
 
-      <section className="py-8 lg:py-12">
-        <div className="container mx-auto px-4">
-          {/* Advanced Filters Bar */}
-          <div className="mb-6 flex flex-wrap items-center gap-3">
-            {/* Filter Button */}
-            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Filtres
-                  {activeFiltersCount > 0 && (
-                    <Badge variant="default" className="ml-1 px-2 py-0 text-xs">
-                      {activeFiltersCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80">
-                <SheetHeader className="pb-6">
-                  <SheetTitle className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-5 h-5" />
-                    Filtres avancés
-                  </SheetTitle>
-                </SheetHeader>
-                <FiltersContent />
-              </SheetContent>
-            </Sheet>
+      <div className="flex">
+        {/* Desktop Category Sidebar */}
+        <CategorySidebar 
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
 
-            {/* Quick Category Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 flex-1">
-              {categories.slice(0, 6).map((cat) => (
+        {/* Mobile Category Sidebar */}
+        <MobileCategorySidebar
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          open={categorySidebarOpen}
+          onOpenChange={setCategorySidebarOpen}
+        />
+
+        {/* Main Content */}
+        <section className="flex-1 py-8 lg:py-12">
+          <div className="container mx-auto px-4 lg:pl-8">
+            {/* Toolbar */}
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              {/* Categories Button (Mobile) */}
+              <Button 
+                variant="outline" 
+                className="lg:hidden gap-2"
+                onClick={() => setCategorySidebarOpen(true)}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Catégories
+              </Button>
+
+              {/* Filter Button */}
+              <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filtres
+                    {activeFiltersCount > 0 && (
+                      <Badge variant="default" className="ml-1 px-2 py-0 text-xs">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <SheetHeader className="pb-6">
+                    <SheetTitle className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-5 h-5" />
+                      Filtres avancés
+                    </SheetTitle>
+                  </SheetHeader>
+                  <FiltersContent />
+                </SheetContent>
+              </Sheet>
+
+              {/* Quick Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 flex-1">
                 <Button
-                  key={cat.id}
-                  variant={selectedCategory === cat.id ? "default" : "secondary"}
+                  variant={organicOnly ? "default" : "secondary"}
                   size="sm"
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => setOrganicOnly(!organicOnly)}
+                  className="whitespace-nowrap flex-shrink-0 gap-1 text-xs"
+                >
+                  <Leaf className="w-3 h-3" />
+                  Bio
+                </Button>
+                <Button
+                  variant={verifiedOnly ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => setVerifiedOnly(!verifiedOnly)}
                   className="whitespace-nowrap flex-shrink-0 text-xs"
                 >
-                  {cat.name}
-                </Button>
-              ))}
-              <Button
-                variant={organicOnly ? "default" : "secondary"}
-                size="sm"
-                onClick={() => setOrganicOnly(!organicOnly)}
-                className="whitespace-nowrap flex-shrink-0 gap-1 text-xs"
-              >
-                <Leaf className="w-3 h-3" />
-                Bio
-              </Button>
-            </div>
-
-            {/* Location Quick Select */}
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-40 hidden md:flex">
-                <MapPin className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((loc) => (
-                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Active Filters */}
-          {activeFiltersCount > 0 && (
-            <div className="mb-6 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">Filtres actifs:</span>
-              {selectedCategory !== "all" && (
-                <Badge variant="secondary" className="gap-1">
-                  {categories.find(c => c.id === selectedCategory)?.name}
-                  <button onClick={() => setSelectedCategory("all")}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              {organicOnly && (
-                <Badge variant="secondary" className="gap-1">
-                  Bio
-                  <button onClick={() => setOrganicOnly(false)}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              {verifiedOnly && (
-                <Badge variant="secondary" className="gap-1">
                   Vérifiés
-                  <button onClick={() => setVerifiedOnly(false)}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              {location !== "Toutes les régions" && (
-                <Badge variant="secondary" className="gap-1">
-                  {location}
-                  <button onClick={() => setLocation("Toutes les régions")}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs">
-                Tout effacer
-              </Button>
-            </div>
-          )}
+                </Button>
+              </div>
 
-          {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{filteredProducts.length}</span> produits trouvés
-            </p>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Trier par" />
+              {/* Location Quick Select */}
+              <Select value={location} onValueChange={setLocation}>
+                <SelectTrigger className="w-40 hidden md:flex">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recent">Plus récents</SelectItem>
-                  <SelectItem value="price-asc">Prix croissant</SelectItem>
-                  <SelectItem value="price-desc">Prix décroissant</SelectItem>
-                  <SelectItem value="rating">Meilleures notes</SelectItem>
+                  {locations.map((loc) => (
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-
-              <div className="hidden sm:flex items-center border border-border rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
             </div>
-          </div>
 
-          {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 justify-items-center"
-                  : "flex flex-col gap-4"
-              }
-            >
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} viewMode={viewMode} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-muted-foreground" />
+            {/* Active Filters */}
+            {activeFiltersCount > 0 && (
+              <div className="mb-6 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">Filtres actifs:</span>
+                {selectedCategory !== "all" && (
+                  <Badge variant="secondary" className="gap-1">
+                    {marketplaceCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                    <button onClick={() => setSelectedCategory("all")}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {organicOnly && (
+                  <Badge variant="secondary" className="gap-1">
+                    Bio
+                    <button onClick={() => setOrganicOnly(false)}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {verifiedOnly && (
+                  <Badge variant="secondary" className="gap-1">
+                    Vérifiés
+                    <button onClick={() => setVerifiedOnly(false)}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {location !== "Toutes les régions" && (
+                  <Badge variant="secondary" className="gap-1">
+                    {location}
+                    <button onClick={() => setLocation("Toutes les régions")}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs">
+                  Tout effacer
+                </Button>
               </div>
-              <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
-                Aucun produit trouvé
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Essayez de modifier vos filtres ou votre recherche
+            )}
+
+            {/* Results Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{filteredProducts.length}</span> produits trouvés
               </p>
-              <Button variant="outline" onClick={handleReset}>
-                Réinitialiser les filtres
-              </Button>
-            </div>
-          )}
 
-          {filteredProducts.length > 0 && (
-            <div className="text-center mt-10 lg:mt-12">
-              <Button variant="outline" size="lg">
-                Charger plus de produits
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Trier par" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Plus récents</SelectItem>
+                    <SelectItem value="price-asc">Prix croissant</SelectItem>
+                    <SelectItem value="price-desc">Prix décroissant</SelectItem>
+                    <SelectItem value="rating">Meilleures notes</SelectItem>
+                  </SelectContent>
+                </Select>
 
+                <div className="hidden sm:flex items-center border border-border rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            {filteredProducts.length > 0 ? (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6 justify-items-center"
+                    : "flex flex-col gap-4"
+                }
+              >
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
+                  Aucun produit trouvé
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Essayez de modifier vos filtres ou votre recherche
+                </p>
+                <Button variant="outline" onClick={handleReset}>
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            )}
+
+            {filteredProducts.length > 0 && (
+              <div className="text-center mt-10 lg:mt-12">
+                <Button variant="outline" size="lg">
+                  Charger plus de produits
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Floating Add Button */}
       <Button
         variant="hero"
         size="icon"
         className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 w-14 h-14 rounded-full shadow-elevated z-30"
+        onClick={handleAddProductClick}
       >
         <Plus className="w-6 h-6" />
       </Button>
+
+      {/* Add Product Modal */}
+      {profile && (
+        <AddProductModal
+          open={showAddProduct}
+          onOpenChange={setShowAddProduct}
+          profileId={profile.id}
+          onProductAdded={() => {
+            toast({
+              title: "Produit publié !",
+              description: "Votre produit est visible sur le marketplace",
+            });
+          }}
+        />
+      )}
 
       <Footer />
       <MobileBottomNav />

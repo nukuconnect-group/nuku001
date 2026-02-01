@@ -9,10 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
-  Star, MapPin, Clock, ChevronRight, Loader2, User
+  Star, MapPin, Clock, ChevronRight, Loader2, User, Eye, Bell
 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const purchaseData = [
+  { name: 'Jan', achats: 150000 },
+  { name: 'Fév', achats: 220000 },
+  { name: 'Mar', achats: 180000 },
+  { name: 'Avr', achats: 340000 },
+  { name: 'Mai', achats: 290000 },
+  { name: 'Jun', achats: 450000 },
+];
 
 const BuyerDashboard = () => {
   const navigate = useNavigate();
@@ -55,11 +66,34 @@ const BuyerDashboard = () => {
     checkAuth();
   }, [navigate]);
 
+  const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+
   const stats = [
-    { label: "Commandes", value: orders.length, icon: ShoppingBag, color: "bg-primary/20 text-primary" },
-    { label: "Favoris", value: 12, icon: Heart, color: "bg-destructive/20 text-destructive" },
-    { label: "Messages", value: 5, icon: MessageCircle, color: "bg-accent/20 text-accent-foreground" },
-    { label: "Avis donnés", value: 3, icon: Star, color: "bg-yellow-500/20 text-yellow-600" },
+    { 
+      label: "Commandes", 
+      value: orders.length, 
+      icon: ShoppingBag, 
+      color: "bg-primary/20 text-primary",
+      trend: { value: 5, isPositive: true }
+    },
+    { 
+      label: "Dépenses (FCFA)", 
+      value: totalSpent.toLocaleString(), 
+      icon: TrendingUp, 
+      color: "bg-green-500/20 text-green-600"
+    },
+    { 
+      label: "Favoris", 
+      value: 12, 
+      icon: Heart, 
+      color: "bg-destructive/20 text-destructive" 
+    },
+    { 
+      label: "Messages", 
+      value: 5, 
+      icon: MessageCircle, 
+      color: "bg-accent/20 text-accent-foreground" 
+    },
   ];
 
   const recentProducts = [
@@ -67,6 +101,22 @@ const BuyerDashboard = () => {
     { id: "2", name: "Tomates Fraîches", price: 2500, unit: "kg", image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200", producer: "Ama Koffi" },
     { id: "3", name: "Ignames Blancs", price: 3000, unit: "kg", image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=200", producer: "Yao Agbeko" },
   ];
+
+  const handleBecomeProducer = async () => {
+    if (!profile) return;
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ user_type: "producer" })
+      .eq("id", profile.id);
+    
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Félicitations !", description: "Vous êtes maintenant producteur. Redirection..." });
+      setTimeout(() => navigate("/dashboard"), 1500);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,7 +146,7 @@ const BuyerDashboard = () => {
                 <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground">
                   Bonjour, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                <p className="text-muted-foreground">Découvrez les meilleurs produits agricoles</p>
+                <p className="text-muted-foreground">Tableau de bord acheteur • Trouvez les meilleurs produits agricoles</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -110,18 +160,18 @@ const BuyerDashboard = () => {
           </div>
 
           {/* Become Producer Banner */}
-          <Card className="mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+          <Card className="mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 overflow-hidden">
             <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Store className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Store className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-semibold text-foreground">Devenez producteur</h3>
-                  <p className="text-sm text-muted-foreground">Vendez vos produits sur NUKUCONNECT</p>
+                  <h3 className="font-heading text-lg font-semibold text-foreground">Devenez producteur ou fournisseur</h3>
+                  <p className="text-sm text-muted-foreground">Vendez vos produits agricoles sur NUKUCONNECT et touchez des milliers d'acheteurs</p>
                 </div>
               </div>
-              <Button variant="outline" className="gap-2">
+              <Button onClick={handleBecomeProducer} className="gap-2 whitespace-nowrap">
                 <Store className="w-4 h-4" />
                 Devenir vendeur
                 <ChevronRight className="w-4 h-4" />
@@ -130,38 +180,67 @@ const BuyerDashboard = () => {
           </Card>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <StatsGrid stats={stats} />
+
+          {/* Purchase Chart */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Évolution de mes achats (FCFA)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={purchaseData}>
+                  <defs>
+                    <linearGradient id="colorAchats" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v/1000}K`} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Achats']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="achats" 
+                    stroke="hsl(var(--primary))" 
+                    fillOpacity={1} 
+                    fill="url(#colorAchats)" 
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           {/* Tabs */}
           <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="orders" className="gap-2">
+            <TabsList className="bg-muted p-1">
+              <TabsTrigger value="orders" className="gap-2 data-[state=active]:bg-background">
                 <Package className="w-4 h-4" />
-                Mes commandes
+                Mes commandes ({orders.length})
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="gap-2">
+              <TabsTrigger value="favorites" className="gap-2 data-[state=active]:bg-background">
                 <Heart className="w-4 h-4" />
                 Favoris
               </TabsTrigger>
-              <TabsTrigger value="recent" className="gap-2">
+              <TabsTrigger value="recent" className="gap-2 data-[state=active]:bg-background">
                 <Clock className="w-4 h-4" />
                 Vus récemment
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="gap-2 data-[state=active]:bg-background">
+                <Bell className="w-4 h-4" />
+                Alertes prix
               </TabsTrigger>
             </TabsList>
 
@@ -185,13 +264,13 @@ const BuyerDashboard = () => {
                       {orders.map((order) => (
                         <div key={order.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                              <Package className="w-6 h-6 text-muted-foreground" />
+                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Package className="w-6 h-6 text-primary" />
                             </div>
                             <div>
                               <p className="font-medium">{order.products?.name || "Produit"}</p>
                               <p className="text-sm text-muted-foreground">
-                                {order.quantity} × {order.products?.price?.toLocaleString()} FCFA
+                                {order.quantity} × {Number(order.products?.price).toLocaleString()} FCFA
                               </p>
                             </div>
                           </div>
@@ -200,7 +279,7 @@ const BuyerDashboard = () => {
                               {order.status === "pending" ? "En attente" : order.status === "completed" ? "Terminée" : order.status}
                             </Badge>
                             <p className="text-sm font-medium text-primary mt-1">
-                              {order.total_price?.toLocaleString()} FCFA
+                              {Number(order.total_price).toLocaleString()} FCFA
                             </p>
                           </div>
                         </div>
@@ -225,11 +304,11 @@ const BuyerDashboard = () => {
                           <CardContent className="p-3">
                             <div className="flex gap-3">
                               <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                   {product.name}
                                 </h4>
-                                <p className="text-sm text-muted-foreground">{product.producer}</p>
+                                <p className="text-sm text-muted-foreground truncate">{product.producer}</p>
                                 <p className="text-sm font-semibold text-primary">
                                   {product.price.toLocaleString()} FCFA/{product.unit}
                                 </p>
@@ -258,11 +337,11 @@ const BuyerDashboard = () => {
                           <CardContent className="p-3">
                             <div className="flex gap-3">
                               <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
-                              <div className="flex-1">
+                              <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                   {product.name}
                                 </h4>
-                                <p className="text-sm text-muted-foreground">{product.producer}</p>
+                                <p className="text-sm text-muted-foreground truncate">{product.producer}</p>
                                 <p className="text-sm font-semibold text-primary">
                                   {product.price.toLocaleString()} FCFA/{product.unit}
                                 </p>
@@ -272,6 +351,22 @@ const BuyerDashboard = () => {
                         </Card>
                       </Link>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="alerts">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Alertes de prix</CardTitle>
+                  <CardDescription>Recevez des notifications quand les prix baissent</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <Bell className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Aucune alerte configurée</p>
+                    <Button variant="outline">Créer une alerte</Button>
                   </div>
                 </CardContent>
               </Card>
