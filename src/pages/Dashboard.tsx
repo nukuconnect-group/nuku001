@@ -6,28 +6,16 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { StatsGrid } from "@/components/dashboard/DashboardStats";
+import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
+import AddProductModal from "@/components/dashboard/AddProductModal";
 import {
   Package, TrendingUp, ShoppingCart, DollarSign, Plus, Edit,
-  Trash2, Eye, Rocket, BarChart3, Users, Star, Loader2
+  Trash2, Eye, Rocket, BarChart3, Users, Star, Loader2, Settings, MessageCircle
 } from "lucide-react";
-
-const categories = [
-  "Céréales", "Légumes", "Fruits", "Tubercules", "Élevage", "Aviculture", "Autre"
-];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -37,19 +25,16 @@ const Dashboard = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
-  
-  // New product form
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    price: "",
-    category: "",
-    unit: "kg",
-    quantity_available: "",
-    location: "",
-    is_organic: false,
-  });
+  const [showAddProduct, setShowAddProduct] = useState(false);
+
+  const fetchProducts = async (profileId: string) => {
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .eq("producer_id", profileId)
+      .order("created_at", { ascending: false });
+    setProducts(data || []);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -60,7 +45,6 @@ const Dashboard = () => {
       }
       setUser(session.user);
       
-      // Fetch profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -70,16 +54,8 @@ const Dashboard = () => {
       setProfile(profileData);
       
       if (profileData) {
-        // Fetch products
-        const { data: productsData } = await supabase
-          .from("products")
-          .select("*")
-          .eq("producer_id", profileData.id)
-          .order("created_at", { ascending: false });
+        await fetchProducts(profileData.id);
         
-        setProducts(productsData || []);
-        
-        // Fetch orders
         const { data: ordersData } = await supabase
           .from("orders")
           .select("*, products(*)")
@@ -95,51 +71,48 @@ const Dashboard = () => {
     checkAuth();
   }, [navigate]);
 
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile) return;
-    
-    setIsAddingProduct(true);
-    
-    try {
-      const { error } = await supabase.from("products").insert({
-        name: newProduct.name,
-        description: newProduct.description,
-        price: parseFloat(newProduct.price),
-        category: newProduct.category,
-        unit: newProduct.unit,
-        quantity_available: parseFloat(newProduct.quantity_available),
-        location: newProduct.location || profile.location,
-        is_organic: newProduct.is_organic,
-        producer_id: profile.id,
-      });
+  const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+  
+  const stats = [
+    { 
+      label: "Produits", 
+      value: products.length, 
+      icon: Package, 
+      color: "bg-primary/20 text-primary",
+      trend: { value: 12, isPositive: true }
+    },
+    { 
+      label: "Commandes", 
+      value: orders.length, 
+      icon: ShoppingCart, 
+      color: "bg-accent/20 text-accent-foreground",
+      trend: { value: 8, isPositive: true }
+    },
+    { 
+      label: "Ventes (FCFA)", 
+      value: totalSales.toLocaleString(), 
+      icon: DollarSign, 
+      color: "bg-green-500/20 text-green-600",
+      trend: { value: 23, isPositive: true }
+    },
+    { 
+      label: "Vues", 
+      value: "2.4K", 
+      icon: Eye, 
+      color: "bg-blue-500/20 text-blue-600",
+      trend: { value: 15, isPositive: true }
+    },
+  ];
 
-      if (error) throw error;
-
-      toast({ title: "Produit ajouté !", description: "Votre produit est maintenant visible sur le marketplace." });
-      
-      // Refresh products
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("producer_id", profile.id)
-        .order("created_at", { ascending: false });
-      
-      setProducts(data || []);
-      setNewProduct({ name: "", description: "", price: "", category: "", unit: "kg", quantity_available: "", location: "", is_organic: false });
-    } catch (error: any) {
+  const handleDeleteProduct = async (productId: string) => {
+    const { error } = await supabase.from("products").delete().eq("id", productId);
+    if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    } finally {
-      setIsAddingProduct(false);
+    } else {
+      toast({ title: "Produit supprimé" });
+      fetchProducts(profile.id);
     }
   };
-
-  const stats = [
-    { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
-    { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
-    { label: "Ventes (FCFA)", value: orders.reduce((sum, o) => sum + (o.total_price || 0), 0).toLocaleString(), icon: DollarSign, color: "bg-green-500/20 text-green-600" },
-    { label: "Vues", value: "1.2K", icon: Eye, color: "bg-blue-500/20 text-blue-600" },
-  ];
 
   if (isLoading) {
     return (
@@ -161,184 +134,119 @@ const Dashboard = () => {
               <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground">
                 Bonjour, {profile?.full_name || "Producteur"} 👋
               </h1>
-              <p className="text-muted-foreground">Gérez vos produits et suivez vos ventes</p>
+              <p className="text-muted-foreground">Tableau de bord producteur • Gérez vos produits et suivez vos ventes</p>
             </div>
             <div className="flex gap-3">
+              <Button variant="outline" className="gap-2" onClick={() => setShowAddProduct(true)}>
+                <Plus className="w-4 h-4" />
+                Ajouter produit
+              </Button>
               <Link to="/plans">
-                <Button variant="outline" className="gap-2">
+                <Button variant="hero" className="gap-2">
                   <Rocket className="w-4 h-4" />
-                  Booster
+                  Booster mes ventes
                 </Button>
               </Link>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <StatsGrid stats={stats} />
+
+          {/* Charts Row */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2">
+              <SalesAreaChart />
+            </div>
+            <CategoryPieInfo />
           </div>
 
           {/* Tabs */}
           <Tabs defaultValue="products" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="products" className="gap-2">
+            <TabsList className="bg-muted p-1">
+              <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-background">
                 <Package className="w-4 h-4" />
-                Mes produits
+                Mes produits ({products.length})
               </TabsTrigger>
-              <TabsTrigger value="orders" className="gap-2">
+              <TabsTrigger value="orders" className="gap-2 data-[state=active]:bg-background">
                 <ShoppingCart className="w-4 h-4" />
-                Commandes
+                Commandes ({orders.length})
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
+              <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-background">
                 <BarChart3 className="w-4 h-4" />
                 Statistiques
+              </TabsTrigger>
+              <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-background">
+                <MessageCircle className="w-4 h-4" />
+                Messages
               </TabsTrigger>
             </TabsList>
 
             {/* Products Tab */}
             <TabsContent value="products" className="space-y-6">
-              {/* Add Product Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Ajouter un produit
-                  </CardTitle>
-                  <CardDescription>Publiez un nouveau produit sur le marketplace</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAddProduct} className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nom du produit</Label>
-                      <Input 
-                        value={newProduct.name} 
-                        onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                        placeholder="Ex: Maïs biologique" 
-                        required 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Catégorie</Label>
-                      <Select value={newProduct.category} onValueChange={(v) => setNewProduct({...newProduct, category: v})}>
-                        <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                        <SelectContent>
-                          {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Prix (FCFA)</Label>
-                      <Input 
-                        type="number" 
-                        value={newProduct.price} 
-                        onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                        placeholder="Ex: 5000" 
-                        required 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Quantité disponible</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          type="number" 
-                          value={newProduct.quantity_available} 
-                          onChange={(e) => setNewProduct({...newProduct, quantity_available: e.target.value})}
-                          placeholder="Ex: 100" 
-                          required 
-                        />
-                        <Select value={newProduct.unit} onValueChange={(v) => setNewProduct({...newProduct, unit: v})}>
-                          <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="kg">kg</SelectItem>
-                            <SelectItem value="tonne">tonne</SelectItem>
-                            <SelectItem value="unité">unité</SelectItem>
-                            <SelectItem value="sac">sac</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>Description</Label>
-                      <Textarea 
-                        value={newProduct.description} 
-                        onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                        placeholder="Décrivez votre produit..." 
-                        rows={3}
-                      />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch 
-                        checked={newProduct.is_organic} 
-                        onCheckedChange={(v) => setNewProduct({...newProduct, is_organic: v})} 
-                      />
-                      <Label>Produit biologique</Label>
-                    </div>
-                    <div className="md:col-span-2 flex justify-end">
-                      <Button type="submit" variant="hero" disabled={isAddingProduct}>
-                        {isAddingProduct ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                        {isAddingProduct ? "Publication..." : "Publier le produit"}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-
-              {/* Products List */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.map((product) => (
-                  <Card key={product.id} className="group">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{product.name}</h3>
-                          <p className="text-sm text-muted-foreground">{product.category}</p>
+              {products.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {products.map((product) => (
+                    <Card key={product.id} className="group hover:shadow-elevated transition-all">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground line-clamp-1">{product.name}</h3>
+                            <p className="text-sm text-muted-foreground">{product.category}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            {product.is_organic && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">Bio</Badge>
+                            )}
+                          </div>
                         </div>
-                        {product.is_organic && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-700">Bio</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="font-heading text-xl font-bold text-primary">
-                          {product.price?.toLocaleString()} FCFA
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {product.quantity_available} {product.unit}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1 gap-1">
-                          <Edit className="w-3 h-3" />
-                          Modifier
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-1 text-accent-foreground">
-                          <Rocket className="w-3 h-3" />
-                          Booster
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {products.length === 0 && (
-                  <div className="md:col-span-3 text-center py-12">
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="font-heading text-xl font-bold text-primary">
+                            {Number(product.price).toLocaleString()} FCFA
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {product.quantity_available} {product.unit}
+                          </span>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1 gap-1">
+                            <Edit className="w-3 h-3" />
+                            Modifier
+                          </Button>
+                          <Button variant="outline" size="sm" className="gap-1 text-accent-foreground">
+                            <Rocket className="w-3 h-3" />
+                            Booster
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className="border-dashed">
+                  <CardContent className="text-center py-12">
                     <Package className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground">Aucun produit publié pour le moment</p>
-                  </div>
-                )}
-              </div>
+                    <h3 className="font-heading font-semibold text-lg mb-2">Aucun produit publié</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Commencez à vendre en publiant votre premier produit
+                    </p>
+                    <Button variant="hero" className="gap-2" onClick={() => setShowAddProduct(true)}>
+                      <Plus className="w-4 h-4" />
+                      Publier mon premier produit
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Orders Tab */}
@@ -346,6 +254,7 @@ const Dashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Commandes récentes</CardTitle>
+                  <CardDescription>Gérez les commandes reçues de vos clients</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {orders.length === 0 ? (
@@ -357,18 +266,23 @@ const Dashboard = () => {
                     <div className="space-y-4">
                       {orders.map((order) => (
                         <div key={order.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
-                          <div>
-                            <p className="font-medium">{order.products?.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {order.quantity} × {order.products?.price?.toLocaleString()} FCFA
-                            </p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Package className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{order.products?.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {order.quantity} × {Number(order.products?.price).toLocaleString()} FCFA
+                              </p>
+                            </div>
                           </div>
                           <div className="text-right">
                             <Badge variant={order.status === "completed" ? "default" : "secondary"}>
                               {order.status === "pending" ? "En attente" : order.status === "completed" ? "Terminée" : order.status}
                             </Badge>
                             <p className="text-sm font-medium text-primary mt-1">
-                              {order.total_price?.toLocaleString()} FCFA
+                              {Number(order.total_price).toLocaleString()} FCFA
                             </p>
                           </div>
                         </div>
@@ -382,37 +296,65 @@ const Dashboard = () => {
             {/* Analytics Tab */}
             <TabsContent value="analytics">
               <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-primary" />
-                      Évolution des ventes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-48 flex items-center justify-center bg-muted/50 rounded-xl">
-                      <p className="text-muted-foreground">Graphique des ventes (bientôt disponible)</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <OrdersBarChart />
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="w-5 h-5 text-primary" />
-                      Visiteurs
+                      Visiteurs du profil
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-48 flex items-center justify-center bg-muted/50 rounded-xl">
-                      <p className="text-muted-foreground">Statistiques visiteurs (bientôt disponible)</p>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Aujourd'hui</span>
+                        <span className="font-semibold">127 visiteurs</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Cette semaine</span>
+                        <span className="font-semibold">892 visiteurs</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Ce mois</span>
+                        <span className="font-semibold">2,456 visiteurs</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
             </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Messages des clients</CardTitle>
+                  <CardDescription>Répondez aux demandes de vos clients potentiels</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Aucun message pour le moment</p>
+                    <Link to="/messages">
+                      <Button variant="outline">Voir la messagerie</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      {/* Add Product Modal */}
+      {profile && (
+        <AddProductModal
+          open={showAddProduct}
+          onOpenChange={setShowAddProduct}
+          profileId={profile.id}
+          onProductAdded={() => fetchProducts(profile.id)}
+        />
+      )}
 
       <Footer />
       <MobileBottomNav />

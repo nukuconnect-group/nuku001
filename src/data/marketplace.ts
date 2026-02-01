@@ -26,13 +26,17 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-  { id: "all", name: "Tous", icon: "Grid3X3", count: 156 },
+  { id: "all", name: "Tous", icon: "Grid3X3", count: 250 },
+  { id: "agriculture", name: "Agriculture", icon: "Tractor", count: 85 },
   { id: "cereales", name: "Céréales", icon: "Wheat", count: 45 },
   { id: "legumes", name: "Légumes", icon: "Carrot", count: 38 },
   { id: "fruits", name: "Fruits", icon: "Apple", count: 28 },
   { id: "tubercules", name: "Tubercules", icon: "CircleDot", count: 22 },
-  { id: "elevage", name: "Élevage", icon: "Beef", count: 15 },
-  { id: "volailles", name: "Volailles", icon: "Bird", count: 8 },
+  { id: "elevage", name: "Élevage", icon: "Beef", count: 35 },
+  { id: "volailles", name: "Aviculture", icon: "Bird", count: 18 },
+  { id: "pisciculture", name: "Pisciculture", icon: "Fish", count: 15 },
+  { id: "aquaculture", name: "Aquaculture", icon: "Droplets", count: 12 },
+  { id: "agribusiness", name: "Agribusiness", icon: "Factory", count: 20 },
 ];
 
 export const products: Product[] = [

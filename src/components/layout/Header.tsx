@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Leaf, User, LogOut, Bell, Crown } from "lucide-react";
+import { Menu, X, Leaf, User, LogOut, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -10,12 +10,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
+import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
@@ -92,6 +96,42 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
+            {/* Categories Dropdown */}
+            <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <LayoutGrid className="w-4 h-4" />
+                  Catégories
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 p-0">
+                <SheetHeader className="p-4 border-b border-border">
+                  <SheetTitle className="flex items-center gap-2">
+                    <LayoutGrid className="w-5 h-5" />
+                    Catégories
+                  </SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100vh-80px)]">
+                  <div className="p-2">
+                    {marketplaceCategories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/marketplace?category=${category.id}`}
+                        onClick={() => setCategoriesOpen(false)}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted text-foreground transition-all"
+                      >
+                        <category.icon className="w-5 h-5 flex-shrink-0 text-primary" />
+                        <span className="flex-1 text-left font-medium">{category.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {category.count}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </SheetContent>
+            </Sheet>
+
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -135,9 +175,9 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer">
+                    <Link to="/messages" className="cursor-pointer">
                       <User className="w-4 h-4 mr-2" />
-                      Mon profil
+                      Messages
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -165,16 +205,20 @@ const Header = () => {
 
           {/* Mobile Right Section */}
           <div className="lg:hidden flex items-center gap-2">
+            {user && <NotificationBell />}
+            
             {user && (
-              <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xs font-bold text-primary-foreground">
-                    {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
-                  </span>
-                )}
-              </div>
+              <Link to={getDashboardLink()}>
+                <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-primary-foreground">
+                      {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </Link>
             )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
