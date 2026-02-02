@@ -2,9 +2,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, MessageCircle, Heart, ShieldCheck, Leaf, ShoppingCart, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Star, MapPin, MessageCircle, Heart, ShieldCheck, Leaf, ShoppingCart, AlertTriangle, CheckCircle2, Zap, Tag, Sparkles } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/components/cart/CartContext";
 
 interface ProductCardProps {
   product: Product;
@@ -12,15 +13,26 @@ interface ProductCardProps {
 }
 
 // Products with traceability certification
-const traceableProducts = ["1", "3", "5", "6", "8"];
+const traceableProducts = ["1", "3", "5", "6", "8", "9", "10"];
 
 const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addItem } = useCart();
   const isTraceable = traceableProducts.includes(product.id);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-FR").format(price);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product);
+    toast({
+      title: "Ajouté au panier",
+      description: `${product.name} a été ajouté à votre panier`,
+    });
   };
 
   const handleContactClick = (e: React.MouseEvent) => {
@@ -30,6 +42,27 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
       description: `Votre message sera envoyé à ${product.producer.name}`,
     });
     navigate(`/produit/${product.id}`);
+  };
+
+  const getPromoBadge = () => {
+    if (!product.promoType) return null;
+    
+    const badges = {
+      promo: { label: "PROMO", className: "bg-destructive text-destructive-foreground", icon: Tag },
+      flash: { label: "FLASH", className: "bg-orange-500 text-white", icon: Zap },
+      soldes: { label: "SOLDES", className: "bg-purple-500 text-white", icon: Tag },
+      nouveau: { label: "NEW", className: "bg-blue-500 text-white", icon: Sparkles },
+    };
+    
+    const badge = badges[product.promoType];
+    if (!badge) return null;
+    
+    return (
+      <Badge className={`${badge.className} gap-1 text-[10px] font-bold px-1.5 py-0.5 animate-pulse`}>
+        <badge.icon className="w-3 h-3" />
+        {badge.label}
+      </Badge>
+    );
   };
 
   if (viewMode === "list") {
@@ -43,10 +76,18 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            {product.isOrganic && (
-              <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs">
-                <Leaf className="w-3 h-3 mr-1" />
-                BIO
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {getPromoBadge()}
+              {product.isOrganic && (
+                <Badge className="bg-primary text-primary-foreground text-xs">
+                  <Leaf className="w-3 h-3 mr-1" />
+                  BIO
+                </Badge>
+              )}
+            </div>
+            {product.discount && (
+              <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground font-bold">
+                -{product.discount}%
               </Badge>
             )}
           </div>
@@ -74,19 +115,26 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-heading text-xl font-bold text-primary">
-                    {formatPrice(product.price)} FCFA
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-heading text-xl font-bold text-primary">
+                      {formatPrice(product.price)} FCFA
+                    </p>
+                    {product.originalPrice && (
+                      <p className="text-sm text-muted-foreground line-through">
+                        {formatPrice(product.originalPrice)}
+                      </p>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">/{product.unit}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleContactClick}>
                     <MessageCircle className="w-4 h-4 mr-1" />
                     Contacter
                   </Button>
-                  <Button variant="hero" size="sm">
+                  <Button variant="hero" size="sm" onClick={handleAddToCart}>
                     <ShoppingCart className="w-4 h-4 mr-1" />
-                    Commander
+                    Ajouter
                   </Button>
                 </div>
               </div>
@@ -110,6 +158,7 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
           
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {getPromoBadge()}
             {product.isOrganic && (
               <Badge className="bg-primary text-primary-foreground border-0 gap-1 text-xs px-2 py-0.5">
                 <Leaf className="w-3 h-3" />
@@ -128,6 +177,13 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
             )}
           </div>
 
+          {/* Discount Badge */}
+          {product.discount && (
+            <Badge className="absolute top-2 right-10 bg-destructive text-destructive-foreground font-bold text-xs">
+              -{product.discount}%
+            </Badge>
+          )}
+
           {/* Wishlist */}
           <button 
             onClick={(e) => e.preventDefault()}
@@ -138,13 +194,13 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
           {/* Quick Actions Overlay */}
           <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-            <Button variant="secondary" size="sm" className="text-xs" onClick={(e) => e.preventDefault()}>
+            <Button variant="secondary" size="sm" className="text-xs" onClick={handleContactClick}>
               <MessageCircle className="w-3.5 h-3.5 mr-1" />
               Contacter
             </Button>
-            <Button variant="hero" size="sm" className="text-xs" onClick={(e) => e.preventDefault()}>
+            <Button variant="hero" size="sm" className="text-xs" onClick={handleAddToCart}>
               <ShoppingCart className="w-3.5 h-3.5 mr-1" />
-              Acheter
+              Ajouter
             </Button>
           </div>
         </div>
@@ -173,9 +229,16 @@ const ProductCard = ({ product, viewMode = "grid" }: ProductCardProps) => {
 
         {/* Price & Quantity */}
         <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2 mb-2 sm:mb-3 mt-auto">
-          <span className="font-heading text-base sm:text-lg lg:text-xl font-bold text-primary">
-            {formatPrice(product.price)} <span className="text-xs sm:text-sm">FCFA</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-heading text-base sm:text-lg lg:text-xl font-bold text-primary">
+              {formatPrice(product.price)} <span className="text-xs sm:text-sm">FCFA</span>
+            </span>
+            {product.originalPrice && (
+              <span className="text-xs text-muted-foreground line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
+          </div>
           <span className="text-[10px] sm:text-sm text-muted-foreground">
             / {product.unit}
           </span>
