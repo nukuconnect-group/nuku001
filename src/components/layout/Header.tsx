@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Leaf, User, LogOut, LayoutGrid } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutGrid, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -15,7 +15,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import NotificationBell from "@/components/NotificationBell";
+import CartIcon from "@/components/cart/CartIcon";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import nukuLogo from "@/assets/nukuconnect-logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -86,10 +88,12 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-soft group-hover:shadow-elevated transition-all duration-300">
-              <Leaf className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="font-heading font-bold text-xl text-foreground">
+            <img 
+              src={nukuLogo} 
+              alt="NUKUCONNECT" 
+              className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
+            />
+            <span className="font-heading font-bold text-lg lg:text-xl text-foreground hidden sm:block">
               NUKU<span className="text-primary">CONNECT</span>
             </span>
           </Link>
@@ -146,6 +150,8 @@ const Header = () => {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-2">
             <LanguageSwitcher />
+            
+            <CartIcon />
             
             {user && <NotificationBell />}
             
@@ -204,7 +210,9 @@ const Header = () => {
           </div>
 
           {/* Mobile Right Section */}
-          <div className="lg:hidden flex items-center gap-2">
+          <div className="lg:hidden flex items-center gap-1">
+            <CartIcon />
+            
             {user && <NotificationBell />}
             
             {user && (

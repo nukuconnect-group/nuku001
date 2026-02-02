@@ -180,6 +180,28 @@ const Marketplace = () => {
 
   const FiltersContent = () => (
     <div className="space-y-6">
+      {/* Categories */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold">
+          Catégories
+        </Label>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger>
+            <SelectValue placeholder="Toutes les catégories" />
+          </SelectTrigger>
+          <SelectContent>
+            {marketplaceCategories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                <span className="flex items-center gap-2">
+                  <cat.icon className="w-4 h-4" />
+                  {cat.name}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Price Range */}
       <div className="space-y-4">
         <Label className="text-sm font-semibold">

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useCart } from "@/components/cart/CartContext";
 import { 
   ArrowLeft, 
   Leaf, 
@@ -25,7 +26,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Send,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
+  Tag
 } from "lucide-react";
 import { products } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
@@ -35,16 +40,54 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const product = products.find((p) => p.id === id);
 
   // Mock traceability status - some products are certified, some not
-  const isTraceable = product ? ["1", "3", "5", "6", "8"].includes(product.id) : false;
+  const isTraceable = product ? ["1", "3", "5", "6", "8", "9", "10"].includes(product.id) : false;
+
+  // Image carousel helpers
+  const images = product?.images || (product ? [product.image] : []);
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  const handleAddToCart = () => {
+    if (product) {
+      addItem(product, quantity);
+      toast({
+        title: "Ajouté au panier",
+        description: `${quantity} ${product.unit}(s) de ${product.name}`,
+      });
+    }
+  };
+
+  const getPromoBadge = () => {
+    if (!product?.promoType) return null;
+    
+    const badges: Record<string, { label: string; className: string; icon: any }> = {
+      promo: { label: "PROMO", className: "bg-destructive text-destructive-foreground", icon: Tag },
+      flash: { label: "FLASH", className: "bg-orange-500 text-white", icon: Zap },
+      soldes: { label: "SOLDES", className: "bg-purple-500 text-white", icon: Tag },
+      nouveau: { label: "NEW", className: "bg-blue-500 text-white", icon: Zap },
+    };
+    
+    const badge = badges[product.promoType];
+    if (!badge) return null;
+    
+    return (
+      <Badge className={`${badge.className} gap-1 font-bold animate-pulse`}>
+        <badge.icon className="w-3 h-3" />
+        {badge.label}
+      </Badge>
+    );
+  };
 
   if (!product) {
     return (
@@ -103,16 +146,56 @@ const ProductDetail = () => {
 
         <div className="container mx-auto px-4 pb-12">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Image Section */}
+            {/* Image Section with Carousel */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
                 <img
-                  src={product.image}
+                  src={images[currentImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all duration-300"
                 />
-                {/* Traceability Badge */}
+                
+                {/* Carousel Navigation */}
+                {images.length > 1 && (
+                  <>
+                    <button 
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    
+                    {/* Dots Indicator */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {images.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`w-2 h-2 rounded-full transition-all ${
+                            idx === currentImageIndex 
+                              ? "bg-primary w-6" 
+                              : "bg-card/80"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {getPromoBadge()}
+                  {product.discount && (
+                    <Badge className="bg-destructive text-destructive-foreground font-bold">
+                      -{product.discount}%
+                    </Badge>
+                  )}
                   {product.isOrganic && (
                     <Badge className="bg-primary text-primary-foreground gap-1">
                       <Leaf className="w-3 h-3" />
@@ -131,6 +214,7 @@ const ProductDetail = () => {
                     </Badge>
                   )}
                 </div>
+
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                     <Heart className="w-5 h-5 text-muted-foreground hover:text-destructive" />
@@ -140,6 +224,25 @@ const ProductDetail = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        idx === currentImageIndex 
+                          ? "border-primary" 
+                          : "border-transparent opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Details Section */}
@@ -161,10 +264,15 @@ const ProductDetail = () => {
               </h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="font-heading text-3xl lg:text-4xl font-bold text-primary">
                   {formatPrice(product.price)} FCFA
                 </span>
+                {product.originalPrice && (
+                  <span className="text-xl text-muted-foreground line-through">
+                    {formatPrice(product.originalPrice)} FCFA
+                  </span>
+                )}
                 <span className="text-muted-foreground">/ {product.unit}</span>
               </div>
 
@@ -234,9 +342,9 @@ const ProductDetail = () => {
                     <MessageCircle className="w-4 h-4" />
                     Contacter le vendeur
                   </Button>
-                  <Button variant="hero" className="flex-1 gap-2">
+                  <Button variant="hero" className="flex-1 gap-2" onClick={handleAddToCart}>
                     <ShoppingCart className="w-4 h-4" />
-                    Commander
+                    Ajouter au panier
                   </Button>
                 </div>
               </div>

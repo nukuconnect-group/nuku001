@@ -14,9 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf, User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import nukuLogo from "@/assets/nukuconnect-logo.png";
 
 const sectors = [
   "Céréales & Légumineuses",
@@ -273,10 +274,14 @@ const Auth = () => {
           <div className="max-w-md mx-auto">
             {/* Logo */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-hero mb-4">
-                <Leaf className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h1 className="font-heading text-2xl font-bold text-foreground">NUKUCONNECT</h1>
+              <img 
+                src={nukuLogo} 
+                alt="NUKUCONNECT" 
+                className="w-24 h-24 mx-auto mb-4 object-contain"
+              />
+              <h1 className="font-heading text-2xl font-bold text-foreground">
+                NUKU<span className="text-primary">CONNECT</span>
+              </h1>
               <p className="text-muted-foreground mt-2">
                 Connectez-vous à la plus grande marketplace agricole d'Afrique
               </p>

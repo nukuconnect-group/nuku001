@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2, Image, Upload } from "lucide-react";
+import { Plus, Loader2, Upload, X, Tag, Zap } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 interface AddProductModalProps {
@@ -30,13 +30,27 @@ interface AddProductModalProps {
   onProductAdded: () => void;
 }
 
+const promoTypes = [
+  { value: "", label: "Aucune promotion" },
+  { value: "promo", label: "PROMO", icon: Tag },
+  { value: "flash", label: "FLASH", icon: Zap },
+  { value: "soldes", label: "SOLDES", icon: Tag },
+  { value: "nouveau", label: "NOUVEAU", icon: Zap },
+];
+
 const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddProductModalProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     price: "",
+    originalPrice: "",
+    discount: "",
+    promoType: "",
     category: "",
     unit: "kg",
     quantity_available: "",
@@ -44,6 +58,34 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     is_organic: false,
     min_order: "1",
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Convert to base64 for preview (in real app, would upload to storage)
+    Array.from(files).forEach((file) => {
+      if (images.length >= 5) {
+        toast({
+          title: "Limite atteinte",
+          description: "Maximum 5 images par produit",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setImages((prev) => [...prev, result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +103,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         is_organic: newProduct.is_organic,
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
+        images: images.length > 0 ? images : null,
       });
 
       if (error) throw error;
@@ -74,6 +117,9 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         name: "",
         description: "",
         price: "",
+        originalPrice: "",
+        discount: "",
+        promoType: "",
         category: "",
         unit: "kg",
         quantity_available: "",
@@ -81,6 +127,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         is_organic: false,
         min_order: "1",
       });
+      setImages([]);
       
       onProductAdded();
       onOpenChange(false);
@@ -113,15 +160,53 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Upload Placeholder */}
-          <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-            <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">
-              Glissez vos images ici ou cliquez pour télécharger
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              PNG, JPG jusqu'à 5MB (max 5 images)
-            </p>
+          {/* Image Upload */}
+          <div className="space-y-3">
+            <Label>Images du produit</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            
+            {images.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {images.map((img, idx) => (
+                  <div key={idx} className="relative flex-shrink-0">
+                    <img 
+                      src={img} 
+                      alt="" 
+                      className="w-20 h-20 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {images.length < 5 && (
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+              >
+                <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Cliquez pour ajouter des images
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  PNG, JPG jusqu'à 5MB ({5 - images.length} restantes)
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -166,6 +251,47 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
             </div>
 
             <div className="space-y-2">
+              <Label>Prix original (si promo)</Label>
+              <Input
+                type="number"
+                value={newProduct.originalPrice}
+                onChange={(e) => setNewProduct({ ...newProduct, originalPrice: e.target.value })}
+                placeholder="Ex: 6000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Type de promotion</Label>
+              <Select
+                value={newProduct.promoType}
+                onValueChange={(v) => setNewProduct({ ...newProduct, promoType: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Aucune" />
+                </SelectTrigger>
+                <SelectContent>
+                  {promoTypes.map((promo) => (
+                    <SelectItem key={promo.value} value={promo.value}>
+                      {promo.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Réduction (%)</Label>
+              <Input
+                type="number"
+                value={newProduct.discount}
+                onChange={(e) => setNewProduct({ ...newProduct, discount: e.target.value })}
+                placeholder="Ex: 20"
+                min={0}
+                max={100}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Quantité disponible *</Label>
               <div className="flex gap-2">
                 <Input
@@ -205,7 +331,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label>Localisation</Label>
               <Input
                 value={newProduct.location}
