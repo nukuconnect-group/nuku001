@@ -3,8 +3,27 @@ import { Link } from "react-router-dom";
 import { useCart } from "./CartContext";
 import { Badge } from "@/components/ui/badge";
 
-const CartIcon = () => {
+interface CartIconProps {
+  showBadgeOnly?: boolean;
+}
+
+const CartIcon = ({ showBadgeOnly }: CartIconProps) => {
   const { itemCount } = useCart();
+
+  if (showBadgeOnly) {
+    return (
+      <>
+        <ShoppingCart className="w-5 h-5" />
+        {itemCount > 0 && (
+          <Badge
+            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] p-0 flex items-center justify-center text-[10px] bg-accent text-accent-foreground border-2 border-background"
+          >
+            {itemCount > 99 ? "99+" : itemCount}
+          </Badge>
+        )}
+      </>
+    );
+  }
 
   return (
     <Link

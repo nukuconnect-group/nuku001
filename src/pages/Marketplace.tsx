@@ -197,6 +197,13 @@ const Marketplace = () => {
     ).slice(0, 10);
   }, [productSearch]);
 
+  // Get top rated products for the filter
+  const popularProducts = useMemo(() => {
+    return [...products]
+      .sort((a, b) => b.producer.rating - a.producer.rating)
+      .slice(0, 4);
+  }, []);
+
   const FiltersContent = () => (
     <div className="space-y-6">
       {/* Product Search */}
@@ -253,6 +260,29 @@ const Marketplace = () => {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Popular Products */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold">
+          ⭐ Produits populaires
+        </Label>
+        <div className="grid grid-cols-2 gap-2">
+          {popularProducts.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setSearchQuery(p.name);
+                setFiltersOpen(false);
+              }}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border hover:bg-muted transition-colors"
+            >
+              <img src={p.image} alt="" className="w-12 h-12 rounded-lg object-cover" />
+              <span className="text-[10px] font-medium text-center line-clamp-2">{p.name}</span>
+              <span className="text-[10px] text-primary font-semibold">{formatPrice(p.price)} FCFA</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Price Range */}

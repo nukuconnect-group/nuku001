@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -30,20 +31,31 @@ const deliveryOptions = [
     description: "Récupérez chez le producteur",
     price: 0,
     icon: Store,
+    tag: "Gratuit",
+  },
+  {
+    id: "gozem",
+    name: "Gozem Livraison",
+    description: "Livraison nationale (Togo)",
+    price: 1500,
+    icon: Truck,
+    tag: "National",
   },
   {
     id: "standard",
     name: "Livraison Standard",
     description: "3-5 jours ouvrables",
     price: 2500,
-    icon: Truck,
+    icon: Package,
+    tag: "Économique",
   },
   {
-    id: "express",
-    name: "Livraison Express",
-    description: "24-48 heures",
-    price: 5000,
+    id: "dhl",
+    name: "DHL Express",
+    description: "International - 2-5 jours",
+    price: 15000,
     icon: Package,
+    tag: "International",
   },
 ];
 
@@ -203,7 +215,7 @@ const Cart = () => {
                       {deliveryOptions.map((option) => (
                         <div
                           key={option.id}
-                          className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                          className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer ${
                             deliveryMethod === option.id
                               ? "border-primary bg-primary/5"
                               : "border-border hover:border-primary/50"
@@ -211,14 +223,19 @@ const Cart = () => {
                           onClick={() => setDeliveryMethod(option.id)}
                         >
                           <RadioGroupItem value={option.id} id={option.id} />
-                          <option.icon className="w-5 h-5 text-primary" />
-                          <div className="flex-1">
-                            <Label htmlFor={option.id} className="font-medium cursor-pointer">
-                              {option.name}
-                            </Label>
-                            <p className="text-sm text-muted-foreground">{option.description}</p>
+                          <option.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Label htmlFor={option.id} className="font-medium cursor-pointer text-sm sm:text-base">
+                                {option.name}
+                              </Label>
+                              <Badge variant="secondary" className="text-[10px]">
+                                {option.tag}
+                              </Badge>
+                            </div>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{option.description}</p>
                           </div>
-                          <span className="font-semibold text-foreground">
+                          <span className="font-semibold text-foreground text-sm sm:text-base whitespace-nowrap">
                             {option.price === 0 ? "Gratuit" : `${formatPrice(option.price)} FCFA`}
                           </span>
                         </div>
