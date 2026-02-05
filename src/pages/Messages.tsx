@@ -160,12 +160,12 @@ const Messages = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-16 lg:pb-0">
+    <div className="min-h-screen bg-background flex flex-col pb-14 lg:pb-0">
       <Header />
 
-      <main className="flex-1 pt-20 lg:pt-24 flex">
+      <main className="flex-1 flex">
         <div className="container mx-auto px-0 lg:px-4 flex flex-1">
-          <div className="flex w-full h-[calc(100vh-5rem)] lg:h-[calc(100vh-6rem)]">
+          <div className="flex w-full h-[calc(100vh-12rem)] lg:h-[calc(100vh-10rem)]">
             {/* Conversations List */}
             <div
               className={`w-full lg:w-96 border-r border-border flex flex-col bg-card ${

@@ -129,10 +129,10 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0">
+    <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
 
-      <main className="pt-20 lg:pt-24">
+      <main>
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <button
