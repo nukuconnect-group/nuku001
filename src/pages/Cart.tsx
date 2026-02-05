@@ -96,9 +96,9 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <div className="min-h-screen bg-background pb-14 lg:pb-0">
         <Header />
-        <main className="pt-24 lg:pt-28">
+        <main>
           <div className="container mx-auto px-4 py-12">
             <div className="text-center">
               <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
@@ -123,10 +123,10 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0">
+    <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
-      <main className="pt-24 lg:pt-28">
-        <div className="container mx-auto px-4 py-8">
+      <main>
+        <div className="container mx-auto px-4 py-6">
           {/* Back Button */}
           <button
             onClick={() => navigate(-1)}

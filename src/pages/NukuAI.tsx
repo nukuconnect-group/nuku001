@@ -164,10 +164,10 @@ const NukuAI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-20 lg:pb-0">
+    <div className="min-h-screen bg-background flex flex-col pb-14 lg:pb-0">
       <Header />
 
-      <main className="flex-1 pt-20 lg:pt-24 flex flex-col">
+      <main className="flex-1 flex flex-col">
         {/* Header */}
         <div className="border-b border-border bg-card/50">
           <div className="container mx-auto px-4 py-4">

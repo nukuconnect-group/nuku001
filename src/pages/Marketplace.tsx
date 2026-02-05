@@ -347,7 +347,7 @@ const Marketplace = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0 pt-28 sm:pt-32">
+    <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
 
       <MarketplaceHero 
