@@ -585,7 +585,7 @@ const Marketplace = () => {
               {/* New Arrivals */}
               <ProductSection 
                 title="Nouveautés" 
-                icon={<Star className="w-4 h-4 text-amber-500" />}
+                icon={<Star className="w-4 h-4 text-accent" />}
                 products={newArrivals}
               />
 
