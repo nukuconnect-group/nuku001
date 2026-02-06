@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const slides = [
   {
@@ -56,7 +57,7 @@ const HeroCarousel = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <section className="relative min-h-[85vh] sm:min-h-screen flex items-center pt-0 overflow-hidden">
       {/* Background Slides */}
       {slides.map((slide, index) => (
         <div
@@ -125,7 +126,7 @@ const HeroCarousel = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl">
           {/* Dynamic Badge */}
-          <div className="overflow-hidden h-10 mb-6">
+          <div className="overflow-hidden h-8 sm:h-10 mb-4 sm:mb-6">
             {slides.map((slide, index) => (
               <div
                 key={index}
@@ -135,9 +136,9 @@ const HeroCarousel = () => {
                     : "translate-y-full opacity-0 absolute"
                 }`}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30">
-                  <Sparkles className="w-4 h-4 text-accent" />
-                  <span className="text-sm font-medium text-primary-foreground">
+                <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
+                  <span className="text-xs sm:text-sm font-medium text-primary-foreground">
                     {slide.subtitle}
                   </span>
                 </div>
@@ -146,11 +147,11 @@ const HeroCarousel = () => {
           </div>
 
           {/* Dynamic Title */}
-          <div className="overflow-hidden mb-6">
+          <div className="overflow-hidden mb-4 sm:mb-6">
             {slides.map((slide, index) => (
               <h1
                 key={index}
-                className={`font-heading text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-primary-foreground leading-tight transition-all duration-700 ${
+                className={`font-heading text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-primary-foreground leading-tight transition-all duration-700 ${
                   index === currentSlide 
                     ? "translate-y-0 opacity-100" 
                     : "translate-y-full opacity-0 absolute"
@@ -171,11 +172,11 @@ const HeroCarousel = () => {
           </div>
 
           {/* Dynamic Description */}
-          <div className="overflow-hidden mb-8 h-16">
+          <div className="overflow-hidden mb-6 sm:mb-8 h-12 sm:h-16">
             {slides.map((slide, index) => (
               <p
                 key={index}
-                className={`text-lg md:text-xl text-primary-foreground/80 max-w-2xl transition-all duration-700 ${
+                className={`text-sm sm:text-lg md:text-xl text-primary-foreground/80 max-w-2xl transition-all duration-700 ${
                   index === currentSlide 
                     ? "translate-y-0 opacity-100" 
                     : "translate-y-full opacity-0 absolute"
@@ -187,36 +188,37 @@ const HeroCarousel = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
-            <Button variant="hero" size="xl">
-              Commencer maintenant
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
+            <Link to="/marketplace">
+              <Button variant="hero" size="lg" className="text-sm sm:text-base w-full sm:w-auto">
+                Commencer maintenant
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-primary-foreground/20">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-primary-foreground/20">
             {stats.map((stat) => (
               <div key={stat.label}>
-                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">{stat.value}</p>
-                <p className="text-sm text-primary-foreground/70">{stat.label}</p>
+                <p className="font-heading text-xl sm:text-3xl md:text-4xl font-bold text-accent">{stat.value}</p>
+                <p className="text-[10px] sm:text-sm text-primary-foreground/70">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-
       {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 sm:gap-3">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`h-2 rounded-full transition-all duration-500 ${
+            className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 ${
               index === currentSlide 
-                ? "w-10 bg-primary" 
-                : "w-2 bg-primary-foreground/40 hover:bg-primary-foreground/60"
+                ? "w-8 sm:w-10 bg-primary" 
+                : "w-1.5 sm:w-2 bg-primary-foreground/40 hover:bg-primary-foreground/60"
             }`}
           />
         ))}
