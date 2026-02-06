@@ -5,7 +5,6 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import MarketplaceHero from "@/components/marketplace/MarketplaceHero";
-import AddProductModal from "@/components/dashboard/AddProductModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -26,11 +25,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { supabase } from "@/integrations/supabase/client";
 import { products } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
-import { Grid3X3, List, Plus, Search, Leaf, SlidersHorizontal, MapPin, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, Flame, Star, Sparkles } from "lucide-react";
 
 const locations = [
   "Toutes les régions",
@@ -46,7 +43,6 @@ const locations = [
 const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
@@ -57,25 +53,6 @@ const Marketplace = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [productSearch, setProductSearch] = useState("");
-  
-  // Add product modal
-  const [showAddProduct, setShowAddProduct] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data));
-      }
-    });
-  }, []);
 
   // Handle URL params changes
   useEffect(() => {
@@ -84,29 +61,6 @@ const Marketplace = () => {
     if (category) setSelectedCategory(category);
     if (search) setSearchQuery(search);
   }, [searchParams]);
-
-  const handleAddProductClick = () => {
-    if (!user) {
-      toast({
-        title: "Connexion requise",
-        description: "Connectez-vous pour publier un produit",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-    
-    if (profile?.user_type !== "producer") {
-      toast({
-        title: "Compte producteur requis",
-        description: "Créez un compte producteur pour vendre vos produits",
-      });
-      navigate("/auth");
-      return;
-    }
-    
-    setShowAddProduct(true);
-  };
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -172,6 +126,33 @@ const Marketplace = () => {
     return result;
   }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, location, sortBy]);
 
+  // Get products by category for Alibaba-style sections
+  const productsByCategory = useMemo(() => {
+    const grouped: { [key: string]: typeof products } = {};
+    products.forEach(p => {
+      if (!grouped[p.category]) {
+        grouped[p.category] = [];
+      }
+      grouped[p.category].push(p);
+    });
+    return grouped;
+  }, []);
+
+  // Featured products (best rated)
+  const featuredProducts = useMemo(() => {
+    return [...products].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6);
+  }, []);
+
+  // Flash deals (with discount)
+  const flashDeals = useMemo(() => {
+    return products.filter(p => p.discount && p.discount > 0).slice(0, 4);
+  }, []);
+
+  // New arrivals
+  const newArrivals = useMemo(() => {
+    return [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+  }, []);
+
   const handleReset = () => {
     setSearchQuery("");
     setSelectedCategory("all");
@@ -204,24 +185,24 @@ const Marketplace = () => {
       .slice(0, 4);
   }, []);
 
+  const isFiltering = searchQuery || selectedCategory !== "all" || organicOnly || verifiedOnly || location !== "Toutes les régions";
+
   const FiltersContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Product Search */}
-      <div className="space-y-3">
-        <Label className="text-sm font-semibold">
-          Rechercher un produit
-        </Label>
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Rechercher un produit</Label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Nom du produit..."
             value={productSearch}
             onChange={(e) => setProductSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 h-9 text-xs"
           />
         </div>
         {productSearch && productOptions.length > 0 && (
-          <div className="max-h-40 overflow-y-auto border border-border rounded-lg">
+          <div className="max-h-36 overflow-y-auto border border-border rounded-lg">
             {productOptions.map((p) => (
               <button
                 key={p.id}
@@ -230,9 +211,9 @@ const Marketplace = () => {
                   setProductSearch("");
                   setFiltersOpen(false);
                 }}
-                className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left text-sm"
+                className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left text-xs"
               >
-                <img src={p.image} alt="" className="w-8 h-8 rounded object-cover" />
+                <img src={p.image} alt="" className="w-7 h-7 rounded object-cover" />
                 <span className="truncate">{p.name}</span>
               </button>
             ))}
@@ -241,19 +222,17 @@ const Marketplace = () => {
       </div>
 
       {/* Categories */}
-      <div className="space-y-3">
-        <Label className="text-sm font-semibold">
-          Catégories
-        </Label>
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Catégories</Label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger>
+          <SelectTrigger className="h-9 text-xs">
             <SelectValue placeholder="Toutes les catégories" />
           </SelectTrigger>
           <SelectContent>
             {marketplaceCategories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
+              <SelectItem key={cat.id} value={cat.id} className="text-xs">
                 <span className="flex items-center gap-2">
-                  <cat.icon className="w-4 h-4" />
+                  <cat.icon className="w-3.5 h-3.5" />
                   {cat.name}
                 </span>
               </SelectItem>
@@ -263,9 +242,10 @@ const Marketplace = () => {
       </div>
 
       {/* Popular Products */}
-      <div className="space-y-3">
-        <Label className="text-sm font-semibold">
-          ⭐ Produits populaires
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <Star className="w-3.5 h-3.5 text-accent" />
+          Produits populaires
         </Label>
         <div className="grid grid-cols-2 gap-2">
           {popularProducts.map((p) => (
@@ -277,17 +257,17 @@ const Marketplace = () => {
               }}
               className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border hover:bg-muted transition-colors"
             >
-              <img src={p.image} alt="" className="w-12 h-12 rounded-lg object-cover" />
-              <span className="text-[10px] font-medium text-center line-clamp-2">{p.name}</span>
-              <span className="text-[10px] text-primary font-semibold">{formatPrice(p.price)} FCFA</span>
+              <img src={p.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+              <span className="text-[9px] font-medium text-center line-clamp-2">{p.name}</span>
+              <span className="text-[9px] text-primary font-semibold">{formatPrice(p.price)} F</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Price Range */}
-      <div className="space-y-4">
-        <Label className="text-sm font-semibold">
+      <div className="space-y-3">
+        <Label className="text-xs font-semibold">
           Prix: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} FCFA
         </Label>
         <Slider
@@ -298,51 +278,87 @@ const Marketplace = () => {
           step={5000}
           className="py-2"
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>0 FCFA</span>
           <span>500K FCFA</span>
         </div>
       </div>
 
       {/* Location */}
-      <div className="space-y-3">
-        <Label className="text-sm font-semibold flex items-center gap-2">
-          <MapPin className="w-4 h-4" />
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5" />
           Localisation
         </Label>
         <Select value={location} onValueChange={setLocation}>
-          <SelectTrigger>
+          <SelectTrigger className="h-9 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {locations.map((loc) => (
-              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+              <SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Toggles */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium flex items-center gap-2">
-            <Leaf className="w-4 h-4 text-primary" />
+          <Label className="text-xs font-medium flex items-center gap-1.5">
+            <Leaf className="w-3.5 h-3.5 text-primary" />
             Produits bio uniquement
           </Label>
           <Switch checked={organicOnly} onCheckedChange={setOrganicOnly} />
         </div>
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">
-            Vendeurs vérifiés uniquement
-          </Label>
+          <Label className="text-xs font-medium">Vendeurs vérifiés uniquement</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
         </div>
       </div>
 
       {/* Reset */}
-      <Button variant="outline" onClick={handleReset} className="w-full">
+      <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">
         Réinitialiser les filtres
       </Button>
+    </div>
+  );
+
+  // Section component for category groups
+  const ProductSection = ({ 
+    title, 
+    icon, 
+    products: sectionProducts, 
+    viewAll 
+  }: { 
+    title: string; 
+    icon: React.ReactNode; 
+    products: typeof products; 
+    viewAll?: string;
+  }) => (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-heading text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+          {icon}
+          {title}
+        </h2>
+        {viewAll && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs text-primary gap-1"
+            onClick={() => setSelectedCategory(viewAll)}
+          >
+            Voir tout
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
+        )}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+        {sectionProducts.slice(0, 5).map((product) => (
+          <ProductCard key={product.id} product={product} viewMode="grid" />
+        ))}
+      </div>
     </div>
   );
 
@@ -356,27 +372,27 @@ const Marketplace = () => {
       />
 
       {/* Main Content */}
-      <section className="py-6 sm:py-8 lg:py-12">
+      <section className="py-4 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Toolbar */}
-          <div className="mb-4 sm:mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             {/* Filter Button */}
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span className="hidden xs:inline">Filtres</span>
+                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  Filtres
                   {activeFiltersCount > 0 && (
-                    <Badge variant="default" className="ml-1 px-1.5 py-0 text-[10px]">
+                    <Badge variant="default" className="ml-1 px-1.5 py-0 text-[9px] h-4">
                       {activeFiltersCount}
                     </Badge>
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80">
-                <SheetHeader className="pb-6">
-                  <SheetTitle className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-5 h-5" />
+              <SheetContent side="right" className="w-72 sm:w-80">
+                <SheetHeader className="pb-4">
+                  <SheetTitle className="flex items-center gap-2 text-sm">
+                    <SlidersHorizontal className="w-4 h-4" />
                     Filtres avancés
                   </SheetTitle>
                 </SheetHeader>
@@ -384,13 +400,13 @@ const Marketplace = () => {
               </SheetContent>
             </Sheet>
 
-            {/* Quick Pills */}
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 flex-1">
+            {/* Quick Pills - 3 per line on mobile */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1">
               <Button
                 variant={organicOnly ? "default" : "secondary"}
                 size="sm"
                 onClick={() => setOrganicOnly(!organicOnly)}
-                className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] sm:text-xs px-2 sm:px-3"
+                className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5"
               >
                 <Leaf className="w-3 h-3" />
                 Bio
@@ -399,35 +415,35 @@ const Marketplace = () => {
                 variant={verifiedOnly ? "default" : "secondary"}
                 size="sm"
                 onClick={() => setVerifiedOnly(!verifiedOnly)}
-                className="whitespace-nowrap flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-3"
+                className="whitespace-nowrap flex-shrink-0 text-[10px] h-8 px-2.5"
               >
                 Vérifiés
               </Button>
               
-              {/* Category Quick Filters */}
-              {marketplaceCategories.slice(0, 4).map((cat) => (
+              {/* Category Quick Filters - show 3 on mobile */}
+              {marketplaceCategories.slice(1, 4).map((cat) => (
                 <Button
                   key={cat.id}
                   variant={selectedCategory === cat.id ? "default" : "secondary"}
                   size="sm"
                   onClick={() => setSelectedCategory(selectedCategory === cat.id ? "all" : cat.id)}
-                  className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] sm:text-xs px-2 sm:px-3"
+                  className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5"
                 >
                   <cat.icon className="w-3 h-3" />
-                  <span className="hidden sm:inline">{cat.name}</span>
+                  <span className="hidden xs:inline">{cat.name}</span>
                 </Button>
               ))}
             </div>
 
             {/* Location Quick Select - Hidden on mobile */}
             <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-32 sm:w-40 hidden md:flex text-xs sm:text-sm">
-                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <SelectTrigger className="w-28 sm:w-36 hidden md:flex h-8 text-xs">
+                <MapPin className="w-3 h-3 mr-1" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((loc) => (
-                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  <SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -435,150 +451,198 @@ const Marketplace = () => {
 
           {/* Active Filters */}
           {activeFiltersCount > 0 && (
-            <div className="mb-4 sm:mb-6 flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="text-xs sm:text-sm text-muted-foreground">Filtres:</span>
+            <div className="mb-4 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] text-muted-foreground">Filtres:</span>
               {selectedCategory !== "all" && (
-                <Badge variant="secondary" className="gap-1 text-[10px] sm:text-xs">
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
                   {marketplaceCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => setSelectedCategory("all")}>
-                    <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <X className="w-2.5 h-2.5" />
                   </button>
                 </Badge>
               )}
               {organicOnly && (
-                <Badge variant="secondary" className="gap-1 text-[10px] sm:text-xs">
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
                   Bio
                   <button onClick={() => setOrganicOnly(false)}>
-                    <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <X className="w-2.5 h-2.5" />
                   </button>
                 </Badge>
               )}
               {verifiedOnly && (
-                <Badge variant="secondary" className="gap-1 text-[10px] sm:text-xs">
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
                   Vérifiés
                   <button onClick={() => setVerifiedOnly(false)}>
-                    <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <X className="w-2.5 h-2.5" />
                   </button>
                 </Badge>
               )}
               {location !== "Toutes les régions" && (
-                <Badge variant="secondary" className="gap-1 text-[10px] sm:text-xs">
+                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
                   {location}
                   <button onClick={() => setLocation("Toutes les régions")}>
-                    <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <X className="w-2.5 h-2.5" />
                   </button>
                 </Badge>
               )}
-              <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] sm:text-xs h-6 px-2">
+              <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] h-5 px-2">
                 Effacer
               </Button>
             </div>
           )}
 
-          {/* Results Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{filteredProducts.length}</span> produits
-            </p>
+          {/* If filtering, show filtered results. Otherwise show Alibaba-style sections */}
+          {isFiltering ? (
+            <>
+              {/* Results Bar */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{filteredProducts.length}</span> produits
+                </p>
 
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[160px] text-xs sm:text-sm">
-                  <SelectValue placeholder="Trier par" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Plus récents</SelectItem>
-                  <SelectItem value="price-asc">Prix croissant</SelectItem>
-                  <SelectItem value="price-desc">Prix décroissant</SelectItem>
-                  <SelectItem value="rating">Meilleures notes</SelectItem>
-                </SelectContent>
-              </Select>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                      <SelectValue placeholder="Trier par" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
+                      <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
+                      <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
+                      <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-              <div className="hidden sm:flex items-center border border-border rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 sm:p-2 rounded-md transition-colors ${
-                    viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                  }`}
-                >
-                  <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-1.5 sm:p-2 rounded-md transition-colors ${
-                    viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                  <div className="hidden sm:flex items-center border border-border rounded-lg p-0.5">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 rounded-md transition-colors ${
+                        viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <Grid3X3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 rounded-md transition-colors ${
+                        viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <List className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Products Grid */}
-          {filteredProducts.length > 0 ? (
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 justify-items-center"
-                  : "flex flex-col gap-3 sm:gap-4"
-              }
-            >
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} viewMode={viewMode} />
-              ))}
-            </div>
+              {/* Products Grid */}
+              {filteredProducts.length > 0 ? (
+                <div
+                  className={
+                    viewMode === "grid"
+                      ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"
+                      : "flex flex-col gap-3"
+                  }
+                >
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Search className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-heading text-base font-semibold text-foreground mb-1.5">
+                    Aucun produit trouvé
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Essayez de modifier vos filtres
+                  </p>
+                  <Button variant="outline" onClick={handleReset} size="sm" className="text-xs">
+                    Réinitialiser
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-12 sm:py-16">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Search className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+            <>
+              {/* Flash Deals Section */}
+              {flashDeals.length > 0 && (
+                <ProductSection 
+                  title="Offres Flash" 
+                  icon={<Flame className="w-4 h-4 text-accent" />}
+                  products={flashDeals}
+                />
+              )}
+
+              {/* Suggested for You */}
+              <ProductSection 
+                title="Sélection pour vous" 
+                icon={<Sparkles className="w-4 h-4 text-primary" />}
+                products={featuredProducts}
+              />
+
+              {/* New Arrivals */}
+              <ProductSection 
+                title="Nouveautés" 
+                icon={<Star className="w-4 h-4 text-accent" />}
+                products={newArrivals}
+              />
+
+              {/* Products by Category */}
+              {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
+                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase() || c.id.toLowerCase() === category.toLowerCase());
+                const CategoryIcon = categoryInfo?.icon || Grid3X3;
+                
+                return (
+                  <ProductSection 
+                    key={category}
+                    title={category}
+                    icon={<CategoryIcon className="w-4 h-4 text-primary" />}
+                    products={categoryProducts}
+                    viewAll={categoryInfo?.id || category}
+                  />
+                );
+              })}
+
+              {/* All Products */}
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-heading text-base sm:text-lg font-bold text-foreground">
+                    Tous les produits
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-32 h-8 text-xs">
+                        <SelectValue placeholder="Trier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
+                        <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
+                        <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
+                        <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                  {products.map((product) => (
+                    <ProductCard key={product.id} product={product} viewMode="grid" />
+                  ))}
+                </div>
               </div>
-              <h3 className="font-heading text-lg sm:text-xl font-semibold text-foreground mb-2">
-                Aucun produit trouvé
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4 sm:mb-6">
-                Essayez de modifier vos filtres
-              </p>
-              <Button variant="outline" onClick={handleReset} size="sm">
-                Réinitialiser
-              </Button>
-            </div>
+            </>
           )}
 
-          {filteredProducts.length > 0 && (
-            <div className="text-center mt-8 sm:mt-10 lg:mt-12">
-              <Button variant="outline" size="lg" className="text-sm">
+          {filteredProducts.length > 0 && isFiltering && (
+            <div className="text-center mt-8">
+              <Button variant="outline" size="sm" className="text-xs">
                 Charger plus de produits
               </Button>
             </div>
           )}
         </div>
       </section>
-
-      {/* Floating Add Button - Hidden on mobile since we have the bottom nav button */}
-      <Button
-        variant="hero"
-        size="icon"
-        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-elevated z-30 hidden lg:flex"
-        onClick={handleAddProductClick}
-      >
-        <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
-      </Button>
-
-      {/* Add Product Modal */}
-      {profile && (
-        <AddProductModal
-          open={showAddProduct}
-          onOpenChange={setShowAddProduct}
-          profileId={profile.id}
-          onProductAdded={() => {
-            toast({
-              title: "Produit publié !",
-              description: "Votre produit est visible sur le marketplace",
-            });
-          }}
-        />
-      )}
 
       <Footer />
       <MobileBottomNav />
