@@ -570,7 +570,7 @@ const Marketplace = () => {
               {flashDeals.length > 0 && (
                 <ProductSection 
                   title="Offres Flash" 
-                  icon={<Flame className="w-4 h-4 text-orange-500" />}
+                  icon={<Flame className="w-4 h-4 text-accent" />}
                   products={flashDeals}
                 />
               )}
