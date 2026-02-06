@@ -244,7 +244,7 @@ const Marketplace = () => {
       {/* Popular Products */}
       <div className="space-y-2">
         <Label className="text-xs font-semibold flex items-center gap-1.5">
-          <Star className="w-3.5 h-3.5 text-amber-500" />
+          <Star className="w-3.5 h-3.5 text-accent" />
           Produits populaires
         </Label>
         <div className="grid grid-cols-2 gap-2">
