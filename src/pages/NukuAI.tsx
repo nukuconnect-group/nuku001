@@ -6,16 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Bot, 
-  Send, 
-  Sparkles, 
-  Leaf, 
-  Bug, 
-  CloudRain, 
-  TrendingUp,
-  Lightbulb,
-  User,
-  Loader2
+  Bot, Send, Sparkles, Leaf, Bug, CloudRain, TrendingUp,
+  Lightbulb, User, Loader2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -56,7 +48,6 @@ const NukuAI = () => {
 
   const streamChat = async (userMessages: { role: string; content: string }[]) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nuku-ai-chat`;
-
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -65,80 +56,50 @@ const NukuAI = () => {
       },
       body: JSON.stringify({ messages: userMessages }),
     });
-
     if (!resp.ok || !resp.body) {
       const error = await resp.json().catch(() => ({ error: "Erreur inconnue" }));
       throw new Error(error.error || "Erreur de connexion au service IA");
     }
-
     return resp.body;
   };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
-
+    const userMessage: Message = { id: Date.now().toString(), role: "user", content: input, timestamp: new Date() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
     try {
-      const chatMessages = newMessages
-        .filter(m => m.id !== "welcome")
-        .map(m => ({ role: m.role, content: m.content }));
-
+      const chatMessages = newMessages.filter(m => m.id !== "welcome").map(m => ({ role: m.role, content: m.content }));
       const body = await streamChat(chatMessages);
       const reader = body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
       let assistantContent = "";
-
-      // Add placeholder for assistant message
       const assistantId = (Date.now() + 1).toString();
-      setMessages(prev => [...prev, {
-        id: assistantId,
-        role: "assistant",
-        content: "",
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [...prev, { id: assistantId, role: "assistant", content: "", timestamp: new Date() }]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
         textBuffer += decoder.decode(value, { stream: true });
-        
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
           if (!line.startsWith("data: ")) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") break;
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantContent += content;
-              setMessages(prev => 
-                prev.map(m => 
-                  m.id === assistantId 
-                    ? { ...m, content: assistantContent }
-                    : m
-                )
-              );
+              setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: assistantContent } : m));
             }
           } catch {
             textBuffer = line + "\n" + textBuffer;
@@ -148,127 +109,82 @@ const NukuAI = () => {
       }
     } catch (error: any) {
       console.error("NUKU AI error:", error);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: `Désolé, une erreur s'est produite: ${error.message}. Veuillez réessayer.`,
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: `Désolé, une erreur s'est produite: ${error.message}. Veuillez réessayer.`, timestamp: new Date() }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSuggestionClick = (text: string) => {
-    setInput(text);
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col pb-14 lg:pb-0">
       <Header />
-
       <main className="flex-1 flex flex-col">
-        {/* Header */}
         <div className="border-b border-border bg-card/50">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-hero flex items-center justify-center">
-                <Bot className="w-6 h-6 text-primary-foreground" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-hero flex items-center justify-center">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-heading font-bold text-foreground flex items-center gap-2">
+                <h1 className="font-heading font-bold text-sm sm:text-base text-foreground flex items-center gap-2">
                   NUKU AI
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Propulsé par Lovable AI
+                    Par Nukuconnect Technologie
                   </Badge>
                 </h1>
-                <p className="text-sm text-muted-foreground">Assistant agricole intelligent 24/7</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Assistant agricole intelligent 24/7</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6 space-y-6">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === "assistant"
-                      ? "bg-gradient-hero"
-                      : "bg-secondary"
-                  }`}
-                >
-                  {message.role === "assistant" ? (
-                    <Bot className="w-4 h-4 text-primary-foreground" />
-                  ) : (
-                    <User className="w-4 h-4 text-secondary-foreground" />
-                  )}
+              <div key={message.id} className={`flex gap-2 sm:gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === "assistant" ? "bg-gradient-hero" : "bg-secondary"}`}>
+                  {message.role === "assistant" ? <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" /> : <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary-foreground" />}
                 </div>
-                <Card
-                  className={`max-w-[80%] p-4 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card"
-                  }`}
-                >
-                  <div className={`text-sm leading-relaxed prose prose-sm max-w-none ${
-                    message.role === "user" ? "prose-invert" : ""
-                  }`}>
+                <Card className={`max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
+                  <div className={`text-xs sm:text-sm leading-relaxed prose prose-sm max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
-                  <span className="text-[10px] opacity-70 mt-2 block">
-                    {message.timestamp.toLocaleTimeString("fr-FR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                  <span className="text-[9px] sm:text-[10px] opacity-70 mt-2 block">
+                    {message.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </Card>
               </div>
             ))}
-
             {isLoading && messages[messages.length - 1]?.content === "" && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
+              <div className="flex gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-hero flex items-center justify-center">
+                  <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />
                 </div>
-                <Card className="p-4">
+                <Card className="p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">NUKU AI réfléchit...</span>
+                    <span className="text-xs sm:text-sm">NUKU AI réfléchit...</span>
                   </div>
                 </Card>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Suggestions */}
         {messages.length === 1 && (
           <div className="border-t border-border bg-card/50">
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="w-4 h-4 text-accent" />
-                <span className="text-sm font-medium text-foreground">Questions suggérées</span>
+            <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
+                <span className="text-xs sm:text-sm font-medium text-foreground">Questions suggérées</span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {suggestedQuestions.map((q, i) => (
-                  <Button
-                    key={i}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 text-xs"
-                    onClick={() => handleSuggestionClick(q.text)}
-                  >
-                    <q.icon className="w-3 h-3 text-primary" />
-                    {q.text}
+                  <Button key={i} variant="outline" size="sm" className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
+                    onClick={() => setInput(q.text)}>
+                    <q.icon className="w-3 h-3 text-primary" />{q.text}
                   </Button>
                 ))}
               </div>
@@ -276,36 +192,18 @@ const NukuAI = () => {
           </div>
         )}
 
-        {/* Input */}
         <div className="border-t border-border bg-card">
-          <div className="container mx-auto px-4 py-4">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="flex gap-3"
-            >
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Posez votre question agricole..."
-                className="flex-1"
-                disabled={isLoading}
-              />
-              <Button
-                type="submit"
-                variant="hero"
-                size="icon"
-                disabled={!input.trim() || isLoading}
-              >
+          <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2 sm:gap-3">
+              <Input value={input} onChange={(e) => setInput(e.target.value)}
+                placeholder="Posez votre question agricole..." className="flex-1 text-xs sm:text-sm h-9 sm:h-10" disabled={isLoading} />
+              <Button type="submit" variant="hero" size="icon" disabled={!input.trim() || isLoading} className="h-9 w-9 sm:h-10 sm:w-10">
                 <Send className="w-4 h-4" />
               </Button>
             </form>
           </div>
         </div>
       </main>
-
       <MobileBottomNav />
     </div>
   );

@@ -9,27 +9,18 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { products } from "@/data/marketplace";
-import nukuLogo from "@/assets/nukuconnect-logo-new.png";
+import nukuLogo from "@/assets/nukuconnect-logo-splash.png";
 
 const languages = [
   { code: "fr", name: "Français", flag: "🇫🇷", currency: "XOF" },
@@ -235,18 +226,18 @@ const Header = () => {
         {/* Row 2: Main Header */}
         <div className="bg-primary text-primary-foreground">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex items-center justify-between h-14 lg:h-14 gap-2">
+            <div className="flex items-center justify-between h-12 sm:h-14 gap-2">
               {/* Left - Mobile Menu */}
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild className="lg:hidden">
-                  <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9">
+                  <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8">
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-72 p-0">
                   <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
                     <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
-                      <img src={nukuLogo} alt="NUKUCONNECT" className="w-8 h-8 object-contain" />
+                      <img src={nukuLogo} alt="NUKUCONNECT" className="w-8 h-8 object-contain rounded-full bg-white p-0.5" />
                       NUKUCONNECT
                     </SheetTitle>
                   </SheetHeader>
@@ -337,7 +328,7 @@ const Header = () => {
               {/* Logo */}
               <Link to="/" className="flex items-center gap-2 flex-shrink-0">
                 <img src={nukuLogo} alt="NUKUCONNECT"
-                  className="w-10 h-10 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white/10 p-0.5" />
+                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5" />
                 <span className="font-heading font-bold text-sm sm:text-base lg:text-lg text-primary-foreground hidden sm:block">
                   NUKUCONNECT
                 </span>
@@ -361,10 +352,9 @@ const Header = () => {
 
               {/* Right Icons */}
               <div className="flex items-center gap-1 sm:gap-1.5">
-                {/* Notifications */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9">
+                    <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                       <Bell className="w-4 h-4" />
                       {unreadCount > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
@@ -398,11 +388,10 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* User Account */}
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9">
+                      <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                         <User className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -459,15 +448,14 @@ const Header = () => {
                   </DropdownMenu>
                 ) : (
                   <Link to="/auth" className="hidden sm:block">
-                    <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9">
+                    <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                       <User className="w-4 h-4" />
                     </Button>
                   </Link>
                 )}
 
-                {/* Cart */}
                 <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)}
-                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9">
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                   <CartIcon showBadgeOnly />
                 </Button>
               </div>
@@ -491,7 +479,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Row 4: Desktop Nav */}
+        {/* Row 4: Desktop Nav with Categories */}
         <nav className="hidden lg:block bg-card border-b border-border">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
