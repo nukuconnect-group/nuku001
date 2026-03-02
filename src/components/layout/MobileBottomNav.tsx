@@ -51,36 +51,23 @@ const MobileBottomNav = () => {
   };
 
   const handleSellClick = () => {
-    // If not logged in, redirect to auth
     if (!user) {
-      toast({
-        title: "Connexion requise",
-        description: "Connectez-vous pour vendre vos produits",
-      });
+      toast({ title: "Connexion requise", description: "Connectez-vous pour vendre vos produits" });
       navigate("/auth");
       return;
     }
     
-    // If loading profile, wait
     if (isLoading) {
-      toast({
-        title: "Chargement...",
-        description: "Veuillez patienter",
-      });
+      toast({ title: "Chargement...", description: "Veuillez patienter" });
       return;
     }
 
-    // If not a producer, redirect to upgrade
     if (!profile || profile.user_type !== "producer") {
-      toast({
-        title: "Compte producteur requis",
-        description: "Passez en mode producteur pour vendre vos produits",
-      });
+      toast({ title: "Compte producteur requis", description: "Passez en mode producteur pour vendre vos produits" });
       navigate("/buyer-dashboard");
       return;
     }
     
-    // If producer, show modal
     setShowAddProduct(true);
   };
 
@@ -93,29 +80,23 @@ const MobileBottomNav = () => {
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/98 backdrop-blur-lg border-t border-border lg:hidden">
         <div className="flex items-center justify-around h-14 relative px-1">
-          <Link
-            to="/"
+          <Link to="/"
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
               isActive("/") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+            }`}>
             <Home className="w-5 h-5" />
             <span className="text-[9px] font-medium">Accueil</span>
           </Link>
 
-          <button
-            onClick={() => setShowCategories(true)}
-            className="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors text-muted-foreground hover:text-foreground min-w-[48px]"
-          >
+          <button onClick={() => setShowCategories(true)}
+            className="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors text-muted-foreground hover:text-foreground min-w-[48px]">
             <LayoutGrid className="w-5 h-5" />
             <span className="text-[9px] font-medium">Catégories</span>
           </button>
 
           <div className="relative -mt-5">
-            <button
-              onClick={handleSellClick}
-              className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg text-primary-foreground hover:opacity-90 transition-all active:scale-95"
-            >
+            <button onClick={handleSellClick}
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg text-primary-foreground hover:opacity-90 transition-all active:scale-95">
               <Plus className="w-6 h-6" />
             </button>
             <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-primary whitespace-nowrap">
@@ -123,22 +104,18 @@ const MobileBottomNav = () => {
             </span>
           </div>
 
-          <Link
-            to="/marketplace"
+          <Link to="/marketplace"
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
               isActive("/marketplace") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+            }`}>
             <Store className="w-5 h-5" />
             <span className="text-[9px] font-medium">Marché</span>
           </Link>
 
-          <Link
-            to="/messages"
+          <Link to="/messages"
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
               isActive("/messages") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+            }`}>
             <MessageCircle className="w-5 h-5" />
             <span className="text-[9px] font-medium">Messages</span>
           </Link>
@@ -147,19 +124,17 @@ const MobileBottomNav = () => {
       
       <CategorySheet open={showCategories} onOpenChange={setShowCategories} />
 
-      {/* Add Product Modal - now always rendered when user is producer */}
-      <AddProductModal
-        open={showAddProduct}
-        onOpenChange={setShowAddProduct}
-        profileId={profile?.id || ""}
-        onProductAdded={() => {
-          toast({
-            title: "Produit publié !",
-            description: "Votre produit est visible sur le marketplace",
-          });
-          setShowAddProduct(false);
-        }}
-      />
+      {profile && (
+        <AddProductModal
+          open={showAddProduct}
+          onOpenChange={setShowAddProduct}
+          profileId={profile.id}
+          onProductAdded={() => {
+            toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
+            setShowAddProduct(false);
+          }}
+        />
+      )}
     </>
   );
 };
