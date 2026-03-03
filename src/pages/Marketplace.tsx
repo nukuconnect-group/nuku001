@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
-import MarketplaceHero from "@/components/marketplace/MarketplaceHero";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -105,8 +104,6 @@ const Marketplace = () => {
     return products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 10);
   }, [productSearch]);
 
-  const popularProducts = useMemo(() => [...products].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 4), []);
-
   const isFiltering = searchQuery || selectedCategory !== "all" || organicOnly || verifiedOnly || location !== "Toutes les régions";
 
   const scrollSponsored = (dir: "left" | "right") => {
@@ -141,25 +138,10 @@ const Marketplace = () => {
           <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Toutes les catégories" /></SelectTrigger>
           <SelectContent>
             {marketplaceCategories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id} className="text-xs">
-                <span className="flex items-center gap-2"><cat.icon className="w-3.5 h-3.5" />{cat.name}</span>
-              </SelectItem>
+              <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Produits populaires</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {popularProducts.map((p) => (
-            <button key={p.id} onClick={() => { setSearchQuery(p.name); setFiltersOpen(false); }}
-              className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border hover:bg-muted transition-colors">
-              <img src={p.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
-              <span className="text-[9px] font-medium text-center line-clamp-2">{p.name}</span>
-              <span className="text-[9px] text-primary font-semibold">{formatPrice(p.price)} F</span>
-            </button>
-          ))}
-        </div>
       </div>
       <div className="space-y-3">
         <Label className="text-xs font-semibold">Prix: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} FCFA</Label>
@@ -174,15 +156,15 @@ const Marketplace = () => {
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />Produits bio uniquement</Label>
+          <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />Bio uniquement</Label>
           <Switch checked={organicOnly} onCheckedChange={setOrganicOnly} />
         </div>
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Vendeurs vérifiés uniquement</Label>
+          <Label className="text-xs font-medium">Vérifiés uniquement</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
         </div>
       </div>
-      <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">Réinitialiser les filtres</Button>
+      <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">Réinitialiser</Button>
     </div>
   );
 
@@ -205,7 +187,24 @@ const Marketplace = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
-      <MarketplaceHero searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+
+      {/* Compact search bar instead of big hero */}
+      <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input type="text" placeholder="Rechercher un produit, producteur..."
+                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-10 text-sm bg-card border-border" />
+            </div>
+            <Select value={location} onValueChange={setLocation}>
+              <SelectTrigger className="w-full sm:w-40 h-10 text-xs"><MapPin className="w-3.5 h-3.5 mr-1" /><SelectValue /></SelectTrigger>
+              <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
+            </Select>
+          </div>
+        </div>
+      </section>
 
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
@@ -229,7 +228,7 @@ const Marketplace = () => {
             </div>
           </div>
 
-          {/* Toolbar */}
+          {/* Toolbar - no category icons, just filter button + quick pills */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
@@ -250,17 +249,15 @@ const Marketplace = () => {
               <Button variant={verifiedOnly ? "default" : "secondary"} size="sm" onClick={() => setVerifiedOnly(!verifiedOnly)} className="whitespace-nowrap flex-shrink-0 text-[10px] h-8 px-2.5">
                 Vérifiés
               </Button>
-              {marketplaceCategories.slice(1, 4).map((cat) => (
-                <Button key={cat.id} variant={selectedCategory === cat.id ? "default" : "secondary"} size="sm"
-                  onClick={() => setSelectedCategory(selectedCategory === cat.id ? "all" : cat.id)}
-                  className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5">
-                  <cat.icon className="w-3 h-3" /><span className="hidden xs:inline">{cat.name}</span>
-                </Button>
-              ))}
             </div>
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-28 sm:w-36 hidden md:flex h-8 text-xs"><MapPin className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
-              <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
+                <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
+                <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
+                <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
@@ -283,22 +280,11 @@ const Marketplace = () => {
 
           {isFiltering ? (
             <>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+              <div className="flex items-center justify-between gap-2 mb-4">
                 <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> produits</p>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-full sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
-                      <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
-                      <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
-                      <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="hidden sm:flex items-center border border-border rounded-lg p-0.5">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
-                  </div>
+                <div className="hidden sm:flex items-center border border-border rounded-lg p-0.5">
+                  <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
               {filteredProducts.length > 0 ? (
@@ -317,7 +303,7 @@ const Marketplace = () => {
           ) : (
             <>
               {flashDeals.length > 0 && (
-                <ProductSection title="Offres Flash" icon={<Flame className="w-4 h-4 text-accent" />} products={flashDeals} />
+                <ProductSection title="Offres Flash" icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
               )}
               <ProductSection title="Sélection pour vous" icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
               <ProductSection title="Nouveautés" icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
@@ -331,15 +317,6 @@ const Marketplace = () => {
               <div className="mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">Tous les produits</h2>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-32 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
-                      <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
-                      <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
-                      <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                   {products.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
