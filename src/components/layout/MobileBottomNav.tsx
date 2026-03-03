@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, Store, MessageCircle, Plus } from "lucide-react";
+import { Home, LayoutGrid, Store, MessageCircle, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import CategorySheet from "./CategorySheet";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -15,6 +19,7 @@ const MobileBottomNav = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSellLoading, setShowSellLoading] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -50,21 +55,42 @@ const MobileBottomNav = () => {
     }
   };
 
-  const handleSellClick = () => {
+  const handleSellClick = async () => {
     if (!user) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour vendre vos produits" });
       navigate("/auth");
       return;
     }
-    
-    if (isLoading) {
-      toast({ title: "Chargement...", description: "Veuillez patienter" });
+
+    // If profile is still loading, show loading and wait
+    if (isLoading || !profile) {
+      setShowSellLoading(true);
+      // Re-fetch profile and wait
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        setProfile(data);
+        setShowSellLoading(false);
+        
+        if (!data || data.user_type !== "producer") {
+          toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
+          navigate("/auth");
+          return;
+        }
+        setShowAddProduct(true);
+      } catch {
+        setShowSellLoading(false);
+        toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
+      }
       return;
     }
 
-    if (!profile || profile.user_type !== "producer") {
-      toast({ title: "Compte producteur requis", description: "Passez en mode producteur pour vendre vos produits" });
-      navigate("/buyer-dashboard");
+    if (profile.user_type !== "producer") {
+      toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
+      navigate("/auth");
       return;
     }
     
@@ -97,7 +123,7 @@ const MobileBottomNav = () => {
           <div className="relative -mt-5">
             <button onClick={handleSellClick}
               className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg text-primary-foreground hover:opacity-90 transition-all active:scale-95">
-              <Plus className="w-6 h-6" />
+              {showSellLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-6 h-6" />}
             </button>
             <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-primary whitespace-nowrap">
               Vendre
@@ -124,7 +150,7 @@ const MobileBottomNav = () => {
       
       <CategorySheet open={showCategories} onOpenChange={setShowCategories} />
 
-      {profile && (
+      {profile && profile.user_type === "producer" && (
         <AddProductModal
           open={showAddProduct}
           onOpenChange={setShowAddProduct}

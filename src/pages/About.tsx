@@ -1,0 +1,125 @@
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Users, Target, Globe, Leaf, ArrowRight, Linkedin, Mail } from "lucide-react";
+
+const teamMembers = [
+  { name: "Kodjo Amouzou", role: "CEO & Fondateur", bio: "Expert en agritech avec 10+ ans d'expérience dans le développement agricole en Afrique de l'Ouest.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" },
+  { name: "Afi Mensah", role: "Directrice Technique (CTO)", bio: "Ingénieure logiciel spécialisée en plateformes marketplace et intelligence artificielle.", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80" },
+  { name: "Yao Koffi", role: "Directeur Commercial", bio: "Stratège commercial avec une expertise en distribution agricole et chaînes d'approvisionnement.", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" },
+  { name: "Akosua Djobo", role: "Responsable Marketing", bio: "Spécialiste en marketing digital et communication pour les startups agritech.", avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&q=80" },
+  { name: "Mensah Ézin", role: "Directeur Opérations", bio: "Expert logistique avec 8 ans dans la gestion des chaînes d'approvisionnement agricoles.", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80" },
+  { name: "Emefa Agbeko", role: "Responsable IA & Data", bio: "Data scientist passionnée par l'application de l'IA au service de l'agriculture durable.", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80" },
+];
+
+const values = [
+  { icon: Target, title: "Notre Mission", description: "Connecter directement les producteurs agricoles aux acheteurs pour créer un commerce équitable et transparent en Afrique." },
+  { icon: Globe, title: "Notre Vision", description: "Devenir la première plateforme de commerce agricole en Afrique de l'Ouest, en utilisant la technologie pour transformer l'agriculture." },
+  { icon: Leaf, title: "Nos Valeurs", description: "Transparence, durabilité, innovation et inclusion. Nous croyons en un avenir agricole prospère pour tous." },
+  { icon: Users, title: "Notre Impact", description: "Plus de 850 producteurs connectés, 15 000+ transactions réalisées et un réseau en constante croissance." },
+];
+
+const About = () => {
+  return (
+    <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <Header />
+
+      {/* Hero */}
+      <section className="py-10 sm:py-16 bg-gradient-to-b from-primary/5 to-background">
+        <div className="container mx-auto px-3 sm:px-4 text-center">
+          <Badge variant="secondary" className="mb-4">À propos</Badge>
+          <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+            Qui sommes-<span className="text-primary">nous</span> ?
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto mb-6">
+            NUKUCONNECT est une marketplace agricole intelligente qui met en relation 
+            directe les producteurs et les acheteurs en Afrique de l'Ouest.
+          </p>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-8 sm:py-12">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            {values.map((value) => (
+              <Card key={value.title} className="text-center p-4 sm:p-6 hover:shadow-elevated transition-all">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <value.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-heading font-bold text-sm sm:text-base mb-2">{value.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">{value.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team */}
+      <section className="py-8 sm:py-12 bg-muted/30">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-2">Notre Équipe</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">Des passionnés d'agriculture et de technologie</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
+            {teamMembers.map((member) => (
+              <Card key={member.name} className="overflow-hidden group hover:shadow-elevated transition-all">
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover mx-auto mb-3 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
+                  />
+                  <h3 className="font-heading font-bold text-xs sm:text-sm text-foreground">{member.name}</h3>
+                  <p className="text-[10px] sm:text-xs text-primary font-medium mb-2">{member.role}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-3">{member.bio}</p>
+                  <div className="flex justify-center gap-2 mt-3">
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Linkedin className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Mail className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-10 sm:py-14">
+        <div className="container mx-auto px-3 sm:px-4 text-center">
+          <h2 className="font-heading text-lg sm:text-2xl font-bold text-foreground mb-3">
+            Rejoignez l'aventure NUKUCONNECT
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
+            Que vous soyez producteur ou acheteur, rejoignez notre communauté et contribuez 
+            à transformer l'agriculture africaine.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link to="/auth">
+              <Button variant="hero" className="gap-2 text-xs sm:text-sm">
+                Créer mon compte <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link to="/marketplace">
+              <Button variant="outline" className="text-xs sm:text-sm">Explorer le marché</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+      <MobileBottomNav />
+    </div>
+  );
+};
+
+export default About;

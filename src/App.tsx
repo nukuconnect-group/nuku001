@@ -20,6 +20,8 @@ import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
 import Plans from "./pages/Plans";
+import DeliveryTracking from "./pages/DeliveryTracking";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +31,6 @@ const App = () => {
   const [isFirstVisit, setIsFirstVisit] = useState(true);
 
   useEffect(() => {
-    // Check if this is the first visit in this session
     const hasSeenSplash = sessionStorage.getItem("nukuconnect-splash-seen");
     if (hasSeenSplash) {
       setShowSplash(false);
@@ -67,6 +68,8 @@ const App = () => {
               <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
               <Route path="/panier" element={<Cart />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/suivi-livraison" element={<DeliveryTracking />} />
+              <Route path="/a-propos" element={<About />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
