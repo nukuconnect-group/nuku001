@@ -20,7 +20,7 @@ import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { products } from "@/data/marketplace";
-import nukuLogo from "@/assets/nukuconnect-logo-splash.png";
+import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 
 const languages = [
   { code: "fr", name: "Français", flag: "🇫🇷", currency: "XOF" },
