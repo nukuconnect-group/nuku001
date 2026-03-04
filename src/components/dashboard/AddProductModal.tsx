@@ -31,7 +31,7 @@ interface AddProductModalProps {
 }
 
 const promoTypes = [
-  { value: "", label: "Aucune promotion" },
+  { value: "none", label: "Aucune promotion" },
   { value: "promo", label: "PROMO", icon: Tag },
   { value: "flash", label: "FLASH", icon: Zap },
   { value: "soldes", label: "SOLDES", icon: Tag },
@@ -50,7 +50,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     price: "",
     originalPrice: "",
     discount: "",
-    promoType: "",
+    promoType: "none",
     category: "",
     unit: "kg",
     quantity_available: "",
@@ -119,7 +119,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         price: "",
         originalPrice: "",
         discount: "",
-        promoType: "",
+        promoType: "none",
         category: "",
         unit: "kg",
         quantity_available: "",
