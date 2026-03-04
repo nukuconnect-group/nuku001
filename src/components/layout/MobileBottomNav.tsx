@@ -150,10 +150,12 @@ const MobileBottomNav = () => {
       
       <CategorySheet open={showCategories} onOpenChange={setShowCategories} />
 
-      {profile && profile.user_type === "producer" && (
+      {profile && (
         <AddProductModal
-          open={showAddProduct}
-          onOpenChange={setShowAddProduct}
+          open={showAddProduct && profile.user_type === "producer"}
+          onOpenChange={(open) => {
+            if (!open) setShowAddProduct(false);
+          }}
           profileId={profile.id}
           onProductAdded={() => {
             toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
