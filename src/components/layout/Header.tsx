@@ -44,7 +44,8 @@ const navLinks = [
   { label: "NUKU AI", href: "/nuku-ai" },
   { label: "Formations", href: "/formations" },
   { label: "Traçabilité", href: "/tracabilite" },
-  { label: "Suivre Livraison", href: "/tracabilite" },
+  { label: "Suivre Livraison", href: "/suivi-livraison" },
+  { label: "À propos", href: "/a-propos" },
   { label: "Tarifs", href: "/plans" },
 ];
 
@@ -430,8 +431,8 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/tracabilite" className="flex items-center gap-2 text-xs">
-                            <Truck className="w-3.5 h-3.5" />Livraisons
+                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
+                            <Truck className="w-3.5 h-3.5" />Suivre mes commandes
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
