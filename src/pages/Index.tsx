@@ -3,6 +3,7 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NukuAIFloating from "@/components/home/NukuAIFloating";
 import HeroCarousel from "@/components/home/HeroCarousel";
+import PromoBannerSlider from "@/components/home/PromoBannerSlider";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
@@ -15,6 +16,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroCarousel />
+        <PromoBannerSlider />
         <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />

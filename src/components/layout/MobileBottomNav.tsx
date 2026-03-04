@@ -99,7 +99,7 @@ const MobileBottomNav = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/98 backdrop-blur-lg border-t border-border lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden">
         <div className="flex items-center justify-around h-14 relative px-1">
           <Link to="/"
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
