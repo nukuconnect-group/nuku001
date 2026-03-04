@@ -56,45 +56,40 @@ const MobileBottomNav = () => {
   };
 
   const handleSellClick = async () => {
+    console.log("[SELL] clicked, user:", !!user, "profile:", profile?.user_type, "isLoading:", isLoading);
+    
     if (!user) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour vendre vos produits" });
       navigate("/auth");
       return;
     }
 
-    // If profile is still loading, show loading and wait
-    if (isLoading || !profile) {
-      setShowSellLoading(true);
-      // Re-fetch profile and wait
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-        setProfile(data);
-        setShowSellLoading(false);
-        
-        if (!data || data.user_type !== "producer") {
-          toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
-          navigate("/auth");
-          return;
-        }
-        setShowAddProduct(true);
-      } catch {
-        setShowSellLoading(false);
-        toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
+    // Always re-fetch profile to ensure fresh data
+    setShowSellLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      
+      console.log("[SELL] fetched profile:", data?.user_type, "error:", error?.message);
+      setProfile(data);
+      setShowSellLoading(false);
+      
+      if (!data || data.user_type !== "producer") {
+        toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
+        navigate("/auth");
+        return;
       }
-      return;
+      
+      console.log("[SELL] opening modal for profile:", data.id);
+      setShowAddProduct(true);
+    } catch (err) {
+      console.error("[SELL] error:", err);
+      setShowSellLoading(false);
+      toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
     }
-
-    if (profile.user_type !== "producer") {
-      toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
-      navigate("/auth");
-      return;
-    }
-    
-    setShowAddProduct(true);
   };
 
   const isActive = (href: string) => {
