@@ -19,34 +19,22 @@ import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
-import { products } from "@/data/marketplace";
+import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 
 const languages = [
-  { code: "fr", name: "Français", flag: "🇫🇷", currency: "XOF" },
-  { code: "en", name: "English", flag: "🇬🇧", currency: "USD" },
-  { code: "ewe", name: "Eʋegbe", flag: "🇹🇬", currency: "XOF" },
-  { code: "kab", name: "Kabɩyɛ", flag: "🇹🇬", currency: "XOF" },
-  { code: "wo", name: "Wolof", flag: "🇸🇳", currency: "XOF" },
+  { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
+  { code: "en" as LangCode, name: "English", flag: "🇬🇧" },
+  { code: "ewe" as LangCode, name: "Eʋegbe", flag: "🇹🇬" },
+  { code: "kab" as LangCode, name: "Kabɩyɛ", flag: "🇹🇬" },
+  { code: "wo" as LangCode, name: "Wolof", flag: "🇸🇳" },
 ];
 
 const currencies = [
-  { code: "XOF", name: "Franc CFA", symbol: "FCFA" },
-  { code: "USD", name: "Dollar US", symbol: "$" },
-  { code: "EUR", name: "Euro", symbol: "€" },
-  { code: "GBP", name: "Livre Sterling", symbol: "£" },
-];
-
-const navLinks = [
-  { label: "Accueil", href: "/" },
-  { label: "Marketplace", href: "/marketplace" },
-  { label: "Producteurs", href: "/producteurs" },
-  { label: "NUKU AI", href: "/nuku-ai" },
-  { label: "Formations", href: "/formations" },
-  { label: "Traçabilité", href: "/tracabilite" },
-  { label: "Suivre Livraison", href: "/suivi-livraison" },
-  { label: "À propos", href: "/a-propos" },
-  { label: "Tarifs", href: "/plans" },
+  { code: "XOF" as CurrencyCode, name: "Franc CFA", symbol: "FCFA" },
+  { code: "USD" as CurrencyCode, name: "Dollar US", symbol: "$" },
+  { code: "EUR" as CurrencyCode, name: "Euro", symbol: "€" },
+  { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
 const mockNotifications = [
@@ -62,8 +50,7 @@ const Header = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [currentLang, setCurrentLang] = useState("fr");
-  const [currentCurrency, setCurrentCurrency] = useState("XOF");
+  const { lang, setLang, currency, setCurrency, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
@@ -76,6 +63,18 @@ const Header = () => {
   const { toast } = useToast();
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const navLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.marketplace"), href: "/marketplace" },
+    { label: t("nav.producers"), href: "/producteurs" },
+    { label: t("nav.nukuai"), href: "/nuku-ai" },
+    { label: t("nav.formations"), href: "/formations" },
+    { label: t("nav.traceability"), href: "/tracabilite" },
+    { label: t("nav.tracking"), href: "/suivi-livraison" },
+    { label: t("nav.about"), href: "/a-propos" },
+    { label: t("nav.plans"), href: "/plans" },
+  ];
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -101,15 +100,6 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => setUserLocation("Lomé, TG"),
-        () => setUserLocation("Lomé, TG")
-      );
-    }
-  }, []);
-
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
     setProfile(data);
@@ -118,14 +108,14 @@ const Header = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast({ title: "Déconnexion réussie", description: "À bientôt !" });
+    toast({ title: t("auth.logout"), description: "À bientôt !" });
     navigate("/");
   };
 
   const handleSaveLocation = () => {
     if (customLocation.trim()) {
       setUserLocation(customLocation);
-      toast({ title: "Lieu de livraison mis à jour", description: customLocation });
+      toast({ title: t("header.deliveryLocation"), description: customLocation });
     }
     setLocationDialogOpen(false);
   };
@@ -136,40 +126,9 @@ const Header = () => {
 
   const getDashboardLink = () => profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
 
-  const filteredProducts = searchQuery.length >= 2 
-    ? products.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
-
-  const currentLanguage = languages.find(l => l.code === currentLang);
-  const currentCurrencyData = currencies.find(c => c.code === currentCurrency);
+  const currentLanguage = languages.find(l => l.code === lang);
+  const currentCurrencyData = currencies.find(c => c.code === currency);
   const isActive = (href: string) => location.pathname === href;
-
-  const SearchResults = ({ isMobile = false }: { isMobile?: boolean }) => (
-    showSearchResults && filteredProducts.length > 0 ? (
-      <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-elevated z-50 overflow-hidden">
-        {filteredProducts.slice(0, isMobile ? 4 : 5).map((product) => (
-          <Link key={product.id} to={`/produit/${product.id}`}
-            onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
-            className="flex items-center gap-2 p-2 hover:bg-muted transition-colors">
-            <img src={product.image} alt={product.name} className="w-9 h-9 rounded-lg object-cover" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{product.name}</p>
-              <p className="text-[10px] text-muted-foreground">{product.category}</p>
-            </div>
-            <span className="text-xs font-bold text-primary">{new Intl.NumberFormat("fr-FR").format(product.price)} F</span>
-          </Link>
-        ))}
-        <Link to={`/marketplace?search=${searchQuery}`}
-          onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
-          className="block p-2 text-center text-xs text-primary font-medium hover:bg-muted border-t border-border">
-          Voir tous les résultats →
-        </Link>
-      </div>
-    ) : null
-  );
 
   return (
     <>
@@ -181,7 +140,7 @@ const Header = () => {
               <button onClick={() => setLocationDialogOpen(true)}
                 className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                 <Truck className="w-3.5 h-3.5" />
-                <span>Livraison vers:</span>
+                <span>{t("header.deliverTo")}</span>
                 <span className="font-medium text-foreground">{userLocation}</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
@@ -193,11 +152,11 @@ const Header = () => {
                     <ChevronDown className="w-3 h-3" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-card">
-                    <DropdownMenuLabel>Langue</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("header.language")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {languages.map((lang) => (
-                      <DropdownMenuItem key={lang.code} onClick={() => setCurrentLang(lang.code)} className="cursor-pointer text-xs">
-                        <span className="mr-2">{lang.flag}</span>{lang.name}
+                    {languages.map((l) => (
+                      <DropdownMenuItem key={l.code} onClick={() => setLang(l.code)} className="cursor-pointer text-xs">
+                        <span className="mr-2">{l.flag}</span>{l.name}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -206,14 +165,14 @@ const Header = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex items-center gap-1 hover:text-foreground transition-colors text-muted-foreground">
                     <DollarSign className="w-3.5 h-3.5" />
-                    <span>{currentCurrencyData?.symbol} {currentCurrency}</span>
+                    <span>{currentCurrencyData?.symbol} {currency}</span>
                     <ChevronDown className="w-3 h-3" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-card">
-                    <DropdownMenuLabel>Devise</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("header.currency")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {currencies.map((curr) => (
-                      <DropdownMenuItem key={curr.code} onClick={() => setCurrentCurrency(curr.code)} className="cursor-pointer text-xs">
+                      <DropdownMenuItem key={curr.code} onClick={() => setCurrency(curr.code)} className="cursor-pointer text-xs">
                         <span className="mr-2">{curr.symbol}</span>{curr.name}
                       </DropdownMenuItem>
                     ))}
@@ -228,7 +187,6 @@ const Header = () => {
         <div className="bg-primary text-primary-foreground">
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex items-center justify-between h-12 sm:h-14 gap-2">
-              {/* Left - Mobile Menu */}
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild className="lg:hidden">
                   <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8">
@@ -248,13 +206,13 @@ const Header = () => {
                         className="w-full flex items-center gap-2 p-3 rounded-lg bg-muted mb-2">
                         <MapPin className="w-4 h-4 text-primary" />
                         <div className="text-left">
-                          <p className="text-[10px] text-muted-foreground">Livrer vers</p>
+                          <p className="text-[10px] text-muted-foreground">{t("header.deliverTo")}</p>
                           <p className="text-xs font-medium">{userLocation}</p>
                         </div>
                         <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground" />
                       </button>
                       <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">Catégories</h4>
+                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.categories")}</h4>
                         {marketplaceCategories.slice(0, 6).map((cat) => (
                           <Link key={cat.id} to={`/marketplace?category=${cat.id}`} onClick={() => setIsMenuOpen(false)}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted">
@@ -265,7 +223,7 @@ const Header = () => {
                       </div>
                       <div className="border-t border-border my-2" />
                       <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">Navigation</h4>
+                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.navigation")}</h4>
                         {navLinks.map((link) => (
                           <Link key={link.href + link.label} to={link.href} onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted">
@@ -276,13 +234,13 @@ const Header = () => {
                       </div>
                       <div className="border-t border-border my-2" />
                       <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">Langue & Devise</h4>
+                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.langCurrency")}</h4>
                         <div className="grid grid-cols-2 gap-2 px-3">
-                          <select value={currentLang} onChange={(e) => setCurrentLang(e.target.value)}
+                          <select value={lang} onChange={(e) => setLang(e.target.value as LangCode)}
                             className="text-xs p-2 rounded-lg border border-border bg-background">
                             {languages.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                           </select>
-                          <select value={currentCurrency} onChange={(e) => setCurrentCurrency(e.target.value)}
+                          <select value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
                             className="text-xs p-2 rounded-lg border border-border bg-background">
                             {currencies.map(c => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
                           </select>
@@ -304,19 +262,19 @@ const Header = () => {
                             </div>
                             <div className="flex-1">
                               <p className="font-medium text-xs">{profile?.full_name || user.email?.split("@")[0]}</p>
-                              <p className="text-[10px] text-muted-foreground">Mon compte</p>
+                              <p className="text-[10px] text-muted-foreground">{t("auth.myAccount")}</p>
                             </div>
                           </Link>
                           <Button variant="ghost" className="w-full justify-start gap-2 text-destructive mt-2 h-8 text-xs"
                             onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
-                            <LogOut className="w-3 h-3" />Déconnexion
+                            <LogOut className="w-3 h-3" />{t("auth.logout")}
                           </Button>
                         </div>
                       ) : (
                         <div className="p-2">
                           <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                             <Button variant="hero" className="w-full gap-2 h-9 text-xs">
-                              <User className="w-3 h-3" />Connexion / Inscription
+                              <User className="w-3 h-3" />{t("auth.loginSignup")}
                             </Button>
                           </Link>
                         </div>
@@ -326,7 +284,6 @@ const Header = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Logo */}
               <Link to="/" className="flex items-center gap-2 flex-shrink-0">
                 <img src={nukuLogo} alt="NUKUCONNECT"
                   className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5" />
@@ -335,23 +292,20 @@ const Header = () => {
                 </span>
               </Link>
 
-              {/* Desktop Search */}
               <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
                 <div className="relative w-full">
-                  <Input type="text" placeholder="Rechercher des produits..." value={searchQuery}
+                  <Input type="text" placeholder={t("header.search")} value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
                     onFocus={() => setShowSearchResults(true)}
                     className="w-full h-10 pl-4 pr-28 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
                   <Button size="sm"
                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-4 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full text-xs font-medium"
                     onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
-                    <Search className="w-3.5 h-3.5 mr-1.5" />Rechercher
+                    <Search className="w-3.5 h-3.5 mr-1.5" />{t("header.searchBtn")}
                   </Button>
-                  <SearchResults />
                 </div>
               </div>
 
-              {/* Right Icons */}
               <div className="flex items-center gap-1 sm:gap-1.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -366,9 +320,9 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-72 bg-card">
                     <div className="flex items-center justify-between px-2 py-1.5 text-sm font-semibold">
-                      <span>Notifications</span>
+                      <span>{t("header.notifications")}</span>
                       {unreadCount > 0 && (
-                        <button onClick={markAllAsRead} className="text-primary text-[10px] font-normal">Tout lire</button>
+                        <button onClick={markAllAsRead} className="text-primary text-[10px] font-normal">{t("header.readAll")}</button>
                       )}
                     </div>
                     <DropdownMenuSeparator />
@@ -384,7 +338,7 @@ const Header = () => {
                     ))}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="justify-center text-xs text-primary cursor-pointer" onClick={() => navigate("/messages")}>
-                      Voir toutes les notifications
+                      {t("header.viewAllNotif")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -417,33 +371,33 @@ const Header = () => {
                       <div className="p-1">
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to={getDashboardLink()} className="flex items-center gap-2 text-xs">
-                            <LayoutDashboard className="w-3.5 h-3.5" />Tableau de bord
+                            <LayoutDashboard className="w-3.5 h-3.5" />{t("dashboard.title")}
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to="/messages" className="flex items-center gap-2 text-xs">
-                            <Package className="w-3.5 h-3.5" />Mes commandes
+                            <Package className="w-3.5 h-3.5" />{t("dashboard.orders")}
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to="/plans" className="flex items-center gap-2 text-xs">
-                            <Wallet className="w-3.5 h-3.5" />Paiements
+                            <Wallet className="w-3.5 h-3.5" />{t("dashboard.payments")}
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
-                            <Truck className="w-3.5 h-3.5" />Suivre mes commandes
+                            <Truck className="w-3.5 h-3.5" />{t("dashboard.trackOrders")}
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to="/buyer-dashboard" className="flex items-center gap-2 text-xs">
-                            <Settings className="w-3.5 h-3.5" />Paramètres
+                            <Settings className="w-3.5 h-3.5" />{t("dashboard.settings")}
                           </Link>
                         </DropdownMenuItem>
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
-                        <LogOut className="w-3.5 h-3.5 mr-2" />Déconnexion
+                        <LogOut className="w-3.5 h-3.5 mr-2" />{t("auth.logout")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -467,7 +421,7 @@ const Header = () => {
         {/* Row 3: Mobile Search */}
         <div className="lg:hidden bg-primary px-3 pb-2" ref={mobileSearchRef}>
           <div className="relative">
-            <Input type="text" placeholder="Rechercher des produits..." value={searchQuery}
+            <Input type="text" placeholder={t("header.search")} value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
               className="w-full h-9 pl-4 pr-10 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
@@ -476,25 +430,24 @@ const Header = () => {
               onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
               <Search className="w-3.5 h-3.5" />
             </Button>
-            <SearchResults isMobile />
           </div>
         </div>
 
-        {/* Row 4: Desktop Nav with Categories */}
+        {/* Row 4: Desktop Nav */}
         <nav className="hidden lg:block bg-card border-b border-border">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
               <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium">
-                    <LayoutGrid className="w-4 h-4" />Catégories
+                    <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
                   <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
                     <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
-                      <LayoutGrid className="w-4 h-4" />Toutes les Catégories
+                      <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
                     </SheetTitle>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100vh-60px)]">
@@ -506,7 +459,7 @@ const Header = () => {
                             <category.icon className="w-5 h-5 text-primary" />
                           </div>
                           <span className="text-xs font-medium">{category.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{category.count} produits</span>
+                          <span className="text-[10px] text-muted-foreground">{category.count} {t("mp.products")}</span>
                         </Link>
                       ))}
                     </div>
@@ -535,25 +488,25 @@ const Header = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-5 h-5 text-primary" />Lieu de livraison
+              <MapPin className="w-5 h-5 text-primary" />{t("header.deliveryLocation")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
               <MapPin className="w-4 h-4 text-primary" />
               <div>
-                <p className="text-[10px] text-muted-foreground">Lieu actuel</p>
+                <p className="text-[10px] text-muted-foreground">{t("header.currentLocation")}</p>
                 <p className="text-sm font-medium">{userLocation}</p>
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-medium">Entrez votre adresse</label>
+              <label className="text-xs font-medium">{t("header.enterAddress")}</label>
               <Input placeholder="Ex: Quartier Bè, Lomé, Togo" value={customLocation}
                 onChange={(e) => setCustomLocation(e.target.value)} className="text-sm" />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 text-xs" onClick={() => setLocationDialogOpen(false)}>Annuler</Button>
-              <Button variant="hero" className="flex-1 text-xs" onClick={handleSaveLocation}>Enregistrer</Button>
+              <Button variant="outline" className="flex-1 text-xs" onClick={() => setLocationDialogOpen(false)}>{t("header.cancel")}</Button>
+              <Button variant="hero" className="flex-1 text-xs" onClick={handleSaveLocation}>{t("header.save")}</Button>
             </div>
           </div>
         </DialogContent>
