@@ -16,20 +16,33 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { products } from "@/data/marketplace";
+import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
 
 const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t, formatPrice: fmtPrice } = useLanguage();
+  const { data: dbProducts, isLoading } = useProducts();
+  
+  // Merge DB products with mock products (DB first)
+  const allProducts = useMemo(() => {
+    const db = dbProducts || [];
+    // If we have DB products, show them first, then mock ones
+    if (db.length > 0) return [...db, ...mockProducts];
+    return mockProducts;
+  }, [dbProducts]);
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
   const [organicOnly, setOrganicOnly] = useState(false);
-  const [location, setLocation] = useState("Toutes les régions");
+  const [location, setLocation] = useState(t("mp.allRegions"));
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -49,13 +62,13 @@ const Marketplace = () => {
     if (selectedCategory !== "all") count++;
     if (organicOnly) count++;
     if (verifiedOnly) count++;
-    if (location !== "Toutes les régions") count++;
+    if (location !== t("mp.allRegions") && location !== "Toutes les régions") count++;
     if (priceRange[0] > 0 || priceRange[1] < 500000) count++;
     return count;
-  }, [selectedCategory, organicOnly, verifiedOnly, location, priceRange]);
+  }, [selectedCategory, organicOnly, verifiedOnly, location, priceRange, t]);
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = [...allProducts];
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query) || p.producer.name.toLowerCase().includes(query));
@@ -66,7 +79,7 @@ const Marketplace = () => {
     result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
     if (organicOnly) result = result.filter(p => p.isOrganic);
     if (verifiedOnly) result = result.filter(p => p.producer.verified);
-    if (location !== "Toutes les régions") result = result.filter(p => p.location.includes(location));
+    if (location !== t("mp.allRegions") && location !== "Toutes les régions") result = result.filter(p => p.location.includes(location));
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
@@ -74,37 +87,37 @@ const Marketplace = () => {
       default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return result;
-  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, location, sortBy]);
+  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, location, sortBy, allProducts, t]);
+
+  const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
+  const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
+  const newArrivals = useMemo(() => [...allProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4), [allProducts]);
+  const sponsoredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8), [allProducts]);
 
   const productsByCategory = useMemo(() => {
-    const grouped: { [key: string]: typeof products } = {};
-    products.forEach(p => { if (!grouped[p.category]) grouped[p.category] = []; grouped[p.category].push(p); });
+    const grouped: { [key: string]: typeof allProducts } = {};
+    allProducts.forEach(p => { if (!grouped[p.category]) grouped[p.category] = []; grouped[p.category].push(p); });
     return grouped;
-  }, []);
-
-  const featuredProducts = useMemo(() => [...products].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), []);
-  const flashDeals = useMemo(() => products.filter(p => p.discount && p.discount > 0).slice(0, 6), []);
-  const newArrivals = useMemo(() => [...products].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4), []);
-  const sponsoredProducts = useMemo(() => [...products].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8), []);
+  }, [allProducts]);
 
   const handleReset = () => {
     setSearchQuery(""); setSelectedCategory("all"); setPriceRange([0, 500000]);
-    setOrganicOnly(false); setVerifiedOnly(false); setLocation("Toutes les régions");
+    setOrganicOnly(false); setVerifiedOnly(false); setLocation(t("mp.allRegions"));
     setSortBy("recent"); setProductSearch("");
   };
 
-  const formatPrice = (price: number) => {
+  const formatPriceShort = (price: number) => {
     if (price >= 1000000) return `${(price / 1000000).toFixed(1)}M`;
     if (price >= 1000) return `${(price / 1000).toFixed(0)}K`;
     return price.toString();
   };
 
   const productOptions = useMemo(() => {
-    if (!productSearch) return products.slice(0, 10);
-    return products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 10);
-  }, [productSearch]);
+    if (!productSearch) return allProducts.slice(0, 10);
+    return allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 10);
+  }, [productSearch, allProducts]);
 
-  const isFiltering = searchQuery || selectedCategory !== "all" || organicOnly || verifiedOnly || location !== "Toutes les régions";
+  const isFiltering = searchQuery || selectedCategory !== "all" || organicOnly || verifiedOnly || (location !== t("mp.allRegions") && location !== "Toutes les régions");
 
   const scrollSponsored = (dir: "left" | "right") => {
     if (sponsoredRef.current) {
@@ -115,10 +128,10 @@ const Marketplace = () => {
   const FiltersContent = () => (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Rechercher un produit</Label>
+        <Label className="text-xs font-semibold">{t("mp.searchProduct")}</Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Nom du produit..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9 h-9 text-xs" />
+          <Input placeholder={t("mp.productName")} value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9 h-9 text-xs" />
         </div>
         {productSearch && productOptions.length > 0 && (
           <div className="max-h-36 overflow-y-auto border border-border rounded-lg">
@@ -133,9 +146,9 @@ const Marketplace = () => {
         )}
       </div>
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">Catégories</Label>
+        <Label className="text-xs font-semibold">{t("nav.categories")}</Label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Toutes les catégories" /></SelectTrigger>
+          <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("mp.allCategories")} /></SelectTrigger>
           <SelectContent>
             {marketplaceCategories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
@@ -144,11 +157,11 @@ const Marketplace = () => {
         </Select>
       </div>
       <div className="space-y-3">
-        <Label className="text-xs font-semibold">Prix: {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])} FCFA</Label>
+        <Label className="text-xs font-semibold">{t("mp.price")}: {formatPriceShort(priceRange[0])} - {formatPriceShort(priceRange[1])} FCFA</Label>
         <Slider value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} min={0} max={500000} step={5000} className="py-2" />
       </div>
       <div className="space-y-2">
-        <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />Localisation</Label>
+        <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{t("mp.location")}</Label>
         <Select value={location} onValueChange={setLocation}>
           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
@@ -156,25 +169,25 @@ const Marketplace = () => {
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />Bio uniquement</Label>
+          <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />{t("mp.bioOnly")}</Label>
           <Switch checked={organicOnly} onCheckedChange={setOrganicOnly} />
         </div>
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">Vérifiés uniquement</Label>
+          <Label className="text-xs font-medium">{t("mp.verifiedOnly")}</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
         </div>
       </div>
-      <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">Réinitialiser</Button>
+      <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">{t("mp.reset")}</Button>
     </div>
   );
 
-  const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof products; viewAll?: string }) => (
+  const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof allProducts; viewAll?: string }) => (
     <div className="mb-6 sm:mb-8">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">{icon}{title}</h2>
         {viewAll && (
           <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-primary gap-1" onClick={() => setSelectedCategory(viewAll)}>
-            Voir tout<ChevronRight className="w-3 h-3" />
+            {t("mp.viewAll")}<ChevronRight className="w-3 h-3" />
           </Button>
         )}
       </div>
@@ -188,13 +201,12 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
 
-      {/* Compact search bar instead of big hero */}
       <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input type="text" placeholder="Rechercher un produit, producteur..."
+              <Input type="text" placeholder={t("header.search")}
                 value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-10 text-sm bg-card border-border" />
             </div>
@@ -206,13 +218,19 @@ const Marketplace = () => {
         </div>
       </section>
 
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
+
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Sponsored Products Slider */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                <Award className="w-4 h-4 text-accent" />Produits Sponsorisés
+                <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
               </h2>
               <div className="flex gap-1">
                 <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3.5 h-3.5" /></Button>
@@ -228,35 +246,35 @@ const Marketplace = () => {
             </div>
           </div>
 
-          {/* Toolbar - no category icons, just filter button + quick pills */}
+          {/* Toolbar */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
-                  <SlidersHorizontal className="w-3.5 h-3.5" />Filtres
+                  <SlidersHorizontal className="w-3.5 h-3.5" />{t("mp.filters")}
                   {activeFiltersCount > 0 && (<Badge variant="default" className="ml-1 px-1.5 py-0 text-[9px] h-4">{activeFiltersCount}</Badge>)}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-72 sm:w-80">
-                <SheetHeader className="pb-4"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />Filtres avancés</SheetTitle></SheetHeader>
+                <SheetHeader className="pb-4"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />{t("mp.advancedFilters")}</SheetTitle></SheetHeader>
                 <FiltersContent />
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1">
               <Button variant={organicOnly ? "default" : "secondary"} size="sm" onClick={() => setOrganicOnly(!organicOnly)} className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5">
-                <Leaf className="w-3 h-3" />Bio
+                <Leaf className="w-3 h-3" />{t("mp.bio")}
               </Button>
               <Button variant={verifiedOnly ? "default" : "secondary"} size="sm" onClick={() => setVerifiedOnly(!verifiedOnly)} className="whitespace-nowrap flex-shrink-0 text-[10px] h-8 px-2.5">
-                Vérifiés
+                {t("mp.verified")}
               </Button>
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent" className="text-xs">Plus récents</SelectItem>
-                <SelectItem value="price-asc" className="text-xs">Prix croissant</SelectItem>
-                <SelectItem value="price-desc" className="text-xs">Prix décroissant</SelectItem>
-                <SelectItem value="rating" className="text-xs">Meilleures notes</SelectItem>
+                <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
+                <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
+                <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
+                <SelectItem value="rating" className="text-xs">{t("mp.sortRating")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -264,24 +282,24 @@ const Marketplace = () => {
           {/* Active Filters */}
           {activeFiltersCount > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground">Filtres:</span>
+              <span className="text-[10px] text-muted-foreground">{t("mp.filters")}:</span>
               {selectedCategory !== "all" && (
                 <Badge variant="secondary" className="gap-1 text-[10px] h-5">
                   {marketplaceCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => setSelectedCategory("all")}><X className="w-2.5 h-2.5" /></button>
                 </Badge>
               )}
-              {organicOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">Bio<button onClick={() => setOrganicOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              {verifiedOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">Vérifiés<button onClick={() => setVerifiedOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              {location !== "Toutes les régions" && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{location}<button onClick={() => setLocation("Toutes les régions")}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] h-5 px-2">Effacer</Button>
+              {organicOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.bio")}<button onClick={() => setOrganicOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
+              {verifiedOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.verified")}<button onClick={() => setVerifiedOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
+              {location !== t("mp.allRegions") && location !== "Toutes les régions" && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{location}<button onClick={() => setLocation(t("mp.allRegions"))}><X className="w-2.5 h-2.5" /></button></Badge>)}
+              <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] h-5 px-2">{t("mp.clear")}</Button>
             </div>
           )}
 
           {isFiltering ? (
             <>
               <div className="flex items-center justify-between gap-2 mb-4">
-                <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> produits</p>
+                <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> {t("mp.products")}</p>
                 <div className="hidden sm:flex items-center border border-border rounded-lg p-0.5">
                   <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
@@ -294,19 +312,19 @@ const Marketplace = () => {
               ) : (
                 <div className="text-center py-12">
                   <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><Search className="w-6 h-6 text-muted-foreground" /></div>
-                  <h3 className="font-heading text-base font-semibold text-foreground mb-1.5">Aucun produit trouvé</h3>
-                  <p className="text-xs text-muted-foreground mb-4">Essayez de modifier vos filtres</p>
-                  <Button variant="outline" onClick={handleReset} size="sm" className="text-xs">Réinitialiser</Button>
+                  <h3 className="font-heading text-base font-semibold text-foreground mb-1.5">{t("mp.noProducts")}</h3>
+                  <p className="text-xs text-muted-foreground mb-4">{t("mp.noProductsDesc")}</p>
+                  <Button variant="outline" onClick={handleReset} size="sm" className="text-xs">{t("mp.reset")}</Button>
                 </div>
               )}
             </>
           ) : (
             <>
               {flashDeals.length > 0 && (
-                <ProductSection title="Offres Flash" icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
+                <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
               )}
-              <ProductSection title="Sélection pour vous" icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
-              <ProductSection title="Nouveautés" icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
+              <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
+              <ProductSection title={t("mp.newArrivals")} icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
               {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
                 const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase() || c.id.toLowerCase() === category.toLowerCase());
                 const CategoryIcon = categoryInfo?.icon || Grid3X3;
@@ -316,10 +334,10 @@ const Marketplace = () => {
               })}
               <div className="mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">Tous les produits</h2>
+                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {products.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
+                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
                 </div>
               </div>
             </>
