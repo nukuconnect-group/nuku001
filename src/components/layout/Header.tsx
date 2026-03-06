@@ -337,7 +337,7 @@ const Header = () => {
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="justify-center text-xs text-primary cursor-pointer" onClick={() => navigate("/messages")}>
+                    <DropdownMenuItem className="justify-center text-xs text-primary cursor-pointer" onClick={() => navigate("/notifications")}>
                       {t("header.viewAllNotif")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
