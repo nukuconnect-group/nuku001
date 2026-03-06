@@ -67,7 +67,7 @@ const DeliveryTracking = () => {
     }
   };
 
-  const getOrderSteps = (order: any) => {
+  const getOrderSteps = (order: any): { status: "done" | "current" | "pending"; title: string; description: string; time: string }[] => {
     const steps = [
       { status: "done" as const, title: "Commande confirmée", description: "Paiement validé", time: new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) },
     ];
