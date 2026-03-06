@@ -73,17 +73,17 @@ const DeliveryTracking = () => {
       { status: "done", title: "Commande confirmée", description: "Paiement validé", time: new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) },
     ];
     if (order.status === "pending") {
-      steps.push({ status: "current" as const, title: "En attente", description: "Le vendeur prépare votre commande", time: "" });
-      steps.push({ status: "pending" as const, title: "Expédition", description: "En attente d'envoi", time: "" });
-      steps.push({ status: "pending" as const, title: "Livraison", description: "Livraison prévue", time: "" });
+      steps.push({ status: "current", title: "En attente", description: "Le vendeur prépare votre commande", time: "" });
+      steps.push({ status: "pending", title: "Expédition", description: "En attente d'envoi", time: "" });
+      steps.push({ status: "pending", title: "Livraison", description: "Livraison prévue", time: "" });
     } else if (order.status === "shipped" || order.status === "in-transit") {
-      steps.push({ status: "done" as const, title: "Préparation", description: "Produit emballé", time: "" });
-      steps.push({ status: "current" as const, title: "En transit", description: "En route vers vous", time: "" });
-      steps.push({ status: "pending" as const, title: "Livraison", description: "Livraison prévue", time: "" });
+      steps.push({ status: "done", title: "Préparation", description: "Produit emballé", time: "" });
+      steps.push({ status: "current", title: "En transit", description: "En route vers vous", time: "" });
+      steps.push({ status: "pending", title: "Livraison", description: "Livraison prévue", time: "" });
     } else if (order.status === "completed" || order.status === "delivered") {
-      steps.push({ status: "done" as const, title: "Préparation", description: "Produit emballé", time: "" });
-      steps.push({ status: "done" as const, title: "En transit", description: "Livré par le transporteur", time: "" });
-      steps.push({ status: "done" as const, title: "Livré", description: "Reçu par le client", time: new Date(order.updated_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) });
+      steps.push({ status: "done", title: "Préparation", description: "Produit emballé", time: "" });
+      steps.push({ status: "done", title: "En transit", description: "Livré par le transporteur", time: "" });
+      steps.push({ status: "done", title: "Livré", description: "Reçu par le client", time: new Date(order.updated_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) });
     }
     return steps;
   };
