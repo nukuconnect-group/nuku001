@@ -71,21 +71,22 @@ const Cart = () => {
 
       if (!buyerProfile) throw new Error("Profile not found");
 
-      // Create orders for each item
       for (const item of items) {
         const sellerId = item.product.producer.id;
+        const productId = item.product.id;
         
-        // Try to find seller profile - for mock products use buyer as placeholder
-        let sellerProfileId = sellerId;
-        if (sellerId && sellerId.startsWith("p")) {
-          // Mock product - use a generic approach
-          sellerProfileId = buyerProfile.id; // Will be updated when real seller exists
+        // Validate UUIDs - skip mock products
+        const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        
+        if (!isValidUUID(productId) || !isValidUUID(sellerId)) {
+          console.warn("Skipping mock product:", productId);
+          continue;
         }
 
-        await supabase.from("orders").insert({
+        const { error } = await supabase.from("orders").insert({
           buyer_id: buyerProfile.id,
-          seller_id: sellerProfileId,
-          product_id: item.product.id.length > 10 ? item.product.id : buyerProfile.id, // UUID for DB products
+          seller_id: sellerId,
+          product_id: productId,
           quantity: item.quantity,
           total_price: item.product.price * item.quantity,
           status: "pending",
@@ -93,6 +94,8 @@ const Cart = () => {
             ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${deliveryAddress}` 
             : "Retrait sur place",
         });
+
+        if (error) throw error;
       }
 
       toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
