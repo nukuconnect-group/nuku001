@@ -47,12 +47,61 @@ const ProductDetail = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    toast({ title: t("product.messageSent"), description: `${t("product.sendMessage")} ${product?.producer.name}` });
-    setMessage("");
-    setShowContactForm(false);
-    setTimeout(() => navigate("/messages"), 1500);
+  const handleSendMessage = async () => {
+    if (!message.trim() || !product) return;
+    
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Connexion requise", description: "Connectez-vous pour envoyer un message", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      // Get buyer profile
+      const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
+      if (!buyerProfile) throw new Error("Profile not found");
+
+      const sellerId = product.producer.id;
+
+      // Check for existing conversation
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("buyer_id", buyerProfile.id)
+        .eq("seller_id", sellerId)
+        .maybeSingle();
+
+      let conversationId = existingConv?.id;
+
+      if (!conversationId) {
+        // Create new conversation
+        const { data: newConv, error: convError } = await supabase
+          .from("conversations")
+          .insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id })
+          .select("id")
+          .single();
+        if (convError) throw convError;
+        conversationId = newConv.id;
+      }
+
+      // Send message
+      const { error: msgError } = await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: buyerProfile.id,
+        content: message,
+      });
+      if (msgError) throw msgError;
+
+      toast({ title: t("product.messageSent"), description: `Message envoyé à ${product.producer.name}` });
+      setMessage("");
+      setShowContactForm(false);
+      setTimeout(() => navigate("/messages"), 1000);
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
   };
 
   if (isLoading && isUUID) {
