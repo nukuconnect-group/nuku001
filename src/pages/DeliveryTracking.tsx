@@ -68,8 +68,9 @@ const DeliveryTracking = () => {
   };
 
   const getOrderSteps = (order: any): { status: "done" | "current" | "pending"; title: string; description: string; time: string }[] => {
-    const steps = [
-      { status: "done" as const, title: "Commande confirmée", description: "Paiement validé", time: new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) },
+    type Step = { status: "done" | "current" | "pending"; title: string; description: string; time: string };
+    const steps: Step[] = [
+      { status: "done", title: "Commande confirmée", description: "Paiement validé", time: new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) },
     ];
     if (order.status === "pending") {
       steps.push({ status: "current" as const, title: "En attente", description: "Le vendeur prépare votre commande", time: "" });
