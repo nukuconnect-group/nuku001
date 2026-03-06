@@ -17,6 +17,7 @@ import {
   Loader2
 } from "lucide-react";
 import { products as mockProducts } from "@/data/marketplace";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
