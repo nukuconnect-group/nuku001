@@ -30,23 +30,30 @@ const FeaturedProducts = () => {
 
   const featuredProducts = useMemo(() => {
     const db = dbProducts || [];
-    const all = db.length > 0 ? [...db, ...mockProducts] : mockProducts;
+    
+    // Prioritize real products, fill remaining slots with mock
+    if (db.length > 0) {
+      const realFirst = [...db].slice(0, 8);
+      const mockFiller = mockProducts.slice(0, Math.max(0, 8 - realFirst.length));
+      const all = [...realFirst, ...mockFiller];
 
-    // If user has a profile, prioritize products from their location or related categories
-    if (userProfile) {
-      const userLocation = userProfile.location?.toLowerCase() || "";
-      const scored = all.map((p) => {
-        let score = 0;
-        if (userLocation && p.location.toLowerCase().includes(userLocation)) score += 3;
-        // Boost newer products
-        score += (new Date(p.createdAt).getTime() / Date.now());
-        return { ...p, _score: score };
-      });
-      scored.sort((a, b) => b._score - a._score);
-      return scored.slice(0, 8);
+      if (userProfile) {
+        const userLocation = userProfile.location?.toLowerCase() || "";
+        const scored = all.map((p) => {
+          let score = 0;
+          // Real DB products get a base boost
+          if (db.find(d => d.id === p.id)) score += 5;
+          if (userLocation && p.location.toLowerCase().includes(userLocation)) score += 3;
+          score += (new Date(p.createdAt).getTime() / Date.now());
+          return { ...p, _score: score };
+        });
+        scored.sort((a, b) => b._score - a._score);
+        return scored.slice(0, 8);
+      }
+      return all;
     }
 
-    return all.slice(0, 8);
+    return mockProducts.slice(0, 8);
   }, [dbProducts, userProfile]);
 
   return (

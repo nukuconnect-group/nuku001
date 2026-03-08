@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { products as mockProducts, type Product } from "@/data/marketplace";
+import { useProducts } from "@/hooks/useProducts";
 import { MapPin } from "lucide-react";
 
 interface SimilarProductsProps {
@@ -11,25 +12,27 @@ interface SimilarProductsProps {
 
 const SimilarProducts = ({ currentProduct }: SimilarProductsProps) => {
   const { formatPrice } = useLanguage();
+  const { data: dbProducts } = useProducts();
 
   const similar = useMemo(() => {
-    // First: same category or location
-    let results = mockProducts
+    const db = dbProducts || [];
+    const pool = db.length > 0 ? [...db, ...mockProducts.slice(0, 4)] : mockProducts;
+    
+    let results = pool
       .filter(p => p.id !== currentProduct.id && (
         p.category === currentProduct.category ||
         p.location === currentProduct.location
       ));
     
-    // If not enough, fill with other products
     if (results.length < 6) {
-      const remaining = mockProducts.filter(p => 
+      const remaining = pool.filter(p => 
         p.id !== currentProduct.id && !results.find(r => r.id === p.id)
       );
       results = [...results, ...remaining];
     }
     
     return results.slice(0, 6);
-  }, [currentProduct]);
+  }, [currentProduct, dbProducts]);
 
   return (
     <div className="mt-8 sm:mt-12">
