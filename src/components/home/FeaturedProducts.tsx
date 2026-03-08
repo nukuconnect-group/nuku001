@@ -1,60 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { products as mockProducts } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMemo, useEffect, useState, useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useRef, useCallback, useEffect } from "react";
 import ProductCard from "@/components/marketplace/ProductCard";
 
 const FeaturedProducts = () => {
   const { data: dbProducts, isLoading } = useProducts();
   const { t } = useLanguage();
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .single();
-        setUserProfile(data);
-      }
-    };
-    loadProfile();
-  }, []);
 
   const featuredProducts = useMemo(() => {
     const db = dbProducts || [];
-    
-    // Prioritize real products, fill remaining slots with mock
-    if (db.length > 0) {
-      const realFirst = [...db].slice(0, 8);
-      const mockFiller = mockProducts.slice(0, Math.max(0, 8 - realFirst.length));
-      const all = [...realFirst, ...mockFiller];
-
-      if (userProfile) {
-        const userLocation = userProfile.location?.toLowerCase() || "";
-        const scored = all.map((p) => {
-          let score = 0;
-          // Real DB products get a base boost
-          if (db.find(d => d.id === p.id)) score += 5;
-          if (userLocation && p.location.toLowerCase().includes(userLocation)) score += 3;
-          score += (new Date(p.createdAt).getTime() / Date.now());
-          return { ...p, _score: score };
-        });
-        scored.sort((a, b) => b._score - a._score);
-        return scored.slice(0, 8);
-      }
-      return all;
-    }
-
-    return mockProducts.slice(0, 8);
-  }, [dbProducts, userProfile]);
+    return [...db]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 8);
+  }, [dbProducts]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScrollTimer = useRef<ReturnType<typeof setInterval>>();
@@ -81,6 +42,8 @@ const FeaturedProducts = () => {
 
   const handleTouchStart = () => clearInterval(autoScrollTimer.current);
   const handleTouchEnd = () => { clearInterval(autoScrollTimer.current); startAutoScroll(); };
+
+  if (featuredProducts.length === 0 && !isLoading) return null;
 
   return (
     <section className="py-8 sm:py-12 lg:py-16 bg-muted/30">
