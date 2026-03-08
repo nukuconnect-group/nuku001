@@ -505,7 +505,7 @@ const Dashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => setProfile(updated)} />
+              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
             </TabsContent>
           </Tabs>
         </div>
