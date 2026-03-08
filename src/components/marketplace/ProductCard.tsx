@@ -18,7 +18,7 @@ interface ProductCardProps {
   isBoosted?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false }: ProductCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
