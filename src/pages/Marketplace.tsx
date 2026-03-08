@@ -78,10 +78,13 @@ const Marketplace = () => {
     if (selectedCategory !== "all") count++;
     if (organicOnly) count++;
     if (verifiedOnly) count++;
+    if (inStockOnly) count++;
+    if (discountOnly) count++;
+    if (minRating > 0) count++;
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") count++;
     if (priceRange[0] > 0 || priceRange[1] < 500000) count++;
     return count;
-  }, [selectedCategory, organicOnly, verifiedOnly, location, priceRange, t]);
+  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, t]);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
