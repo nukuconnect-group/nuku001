@@ -383,6 +383,9 @@ const ProductDetail = () => {
               <ReviewSection productId={product.id} />
             </div>
           </div>
+
+          {/* ===== SIMILAR PRODUCTS ===== */}
+          <SimilarProducts currentProduct={product} />
         </div>
       </main>
       <Footer />
