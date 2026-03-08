@@ -44,12 +44,12 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-3 sm:gap-4 text-center lg:text-left">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary flex items-center justify-center">
-                <Smartphone className="w-6 h-6 sm:w-7 sm:h-7 text-primary-foreground" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 flex items-center justify-center">
+                <Smartphone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div>
-                <h3 className="font-heading text-lg sm:text-xl font-bold">Téléchargez l'application</h3>
-                <p className="text-primary-foreground/70 text-xs sm:text-sm">
+                <h3 className="font-heading text-lg sm:text-xl font-bold text-white">Téléchargez l'application</h3>
+                <p className="text-white/70 text-xs sm:text-sm">
                   Accédez à NUKUCONNECT partout, tout le temps.
                 </p>
               </div>
@@ -68,7 +68,7 @@ const Footer = () => {
 
       <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12">
-          {/* Brand - Logo only, no text name */}
+          {/* Brand */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block mb-4">
               <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-14 sm:h-12 object-contain" />
@@ -92,11 +92,11 @@ const Footer = () => {
 
           {/* Links */}
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4">Plateforme</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Plateforme</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.platform.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-xs sm:text-sm text-primary-foreground/70 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -105,11 +105,11 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4">Ressources</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Ressources</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-xs sm:text-sm text-primary-foreground/70 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -118,11 +118,11 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4">Entreprise</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Entreprise</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-xs sm:text-sm text-primary-foreground/70 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -131,17 +131,17 @@ const Footer = () => {
           </div>
 
           <div className="col-span-2 sm:col-span-1">
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4">Contact</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Contact</h4>
             <ul className="space-y-2 sm:space-y-3">
-              <li className="flex items-center gap-2 text-xs sm:text-sm text-primary-foreground/70">
+              <li className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
                 <Mail className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">contact@nukuconnect.com</span>
               </li>
-              <li className="flex items-center gap-2 text-xs sm:text-sm text-primary-foreground/70">
+              <li className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
                 <Phone className="w-4 h-4 flex-shrink-0" />
                 +228 90 00 00 00
               </li>
-              <li className="flex items-start gap-2 text-xs sm:text-sm text-primary-foreground/70">
+              <li className="flex items-start gap-2 text-xs sm:text-sm text-white/70">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 Lomé, Togo
               </li>
@@ -150,8 +150,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs sm:text-sm text-primary-foreground/50 text-center md:text-left">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs sm:text-sm text-white/50 text-center md:text-left">
             © 2025 NUKUCONNECT. Tous droits réservés.
           </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
