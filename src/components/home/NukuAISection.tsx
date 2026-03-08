@@ -46,11 +46,11 @@ const NukuAISection = () => {
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
               {features.map((feature) => (
-                <div key={feature.text} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
-                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
+                <div key={feature.text} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium">{feature.text}</span>
+                  <span className="text-xs sm:text-sm font-medium text-white">{feature.text}</span>
                 </div>
               ))}
             </div>
