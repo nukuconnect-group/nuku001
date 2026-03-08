@@ -14,8 +14,12 @@ import { useProduct } from "@/hooks/useProducts";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2
+  Loader2, DollarSign
 } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { type CurrencyCode } from "@/contexts/LanguageContext";
 import { products as mockProducts } from "@/data/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
