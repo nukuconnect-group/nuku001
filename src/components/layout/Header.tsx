@@ -490,7 +490,7 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/buyer-dashboard" className="flex items-center gap-2 text-xs">
+                          <Link to="/settings" className="flex items-center gap-2 text-xs">
                             <Settings className="w-3.5 h-3.5" />{t("dashboard.settings")}
                           </Link>
                         </DropdownMenuItem>
