@@ -163,10 +163,14 @@ const PromoBannerSlider = () => {
     <div>
       {/* Banner Slider - mobile only */}
       <div className="md:hidden px-3 pt-2 pb-1">
-        <div className="relative overflow-hidden rounded-2xl shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${current * 100}%)` }}
+            className={`flex ${isSwiping ? '' : 'transition-transform duration-500 ease-out'}`}
+            style={{ transform: `translateX(calc(-${current * 100}% + ${isSwiping ? touchDelta : 0}px))` }}
           >
             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
