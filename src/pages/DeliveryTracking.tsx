@@ -46,7 +46,7 @@ const DeliveryTracking = () => {
       if (!session) { setIsLoading(false); return; }
       setUser(session.user);
       
-      const { data: prof } = await supabase.from("profiles").select("id, user_type").eq("user_id", session.user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("id, user_type, full_name, phone").eq("user_id", session.user.id).single();
       if (!mounted) return;
       setProfile(prof);
       
