@@ -514,6 +514,11 @@ const Dashboard = () => {
               </Card>
             </TabsContent>
 
+            {/* Withdrawals Tab */}
+            <TabsContent value="withdrawals">
+              <WithdrawalPanel />
+            </TabsContent>
+
             {/* Settings Tab */}
             <TabsContent value="settings">
               <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
