@@ -24,7 +24,33 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
-const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
+const locations = [
+  "Toutes les régions",
+  // Togo
+  "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié",
+  // Bénin
+  "Cotonou", "Porto-Novo", "Parakou", "Abomey",
+  // Ghana
+  "Accra", "Kumasi", "Tamale", "Cape Coast",
+  // Côte d'Ivoire
+  "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro",
+  // Sénégal
+  "Dakar", "Saint-Louis", "Thiès", "Ziguinchor",
+  // Burkina Faso
+  "Ouagadougou", "Bobo-Dioulasso", "Koudougou",
+  // Mali
+  "Bamako", "Sikasso", "Mopti",
+  // Niger
+  "Niamey", "Zinder", "Maradi",
+  // Cameroun
+  "Douala", "Yaoundé", "Bafoussam",
+  // Nigeria
+  "Lagos", "Abuja", "Kano", "Ibadan",
+  // RDC
+  "Kinshasa", "Lubumbashi",
+  // Guinée
+  "Conakry",
+];
 
 const Marketplace = () => {
   const navigate = useNavigate();

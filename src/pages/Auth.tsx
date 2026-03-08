@@ -31,14 +31,12 @@ const sectors = [
 ];
 
 const countries = [
-  "Togo",
-  "Bénin",
-  "Ghana",
-  "Côte d'Ivoire",
-  "Burkina Faso",
-  "Niger",
-  "Mali",
-  "Sénégal",
+  "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso",
+  "Niger", "Mali", "Sénégal", "Guinée", "Cameroun",
+  "Nigeria", "RDC", "Congo", "Gabon", "Tchad",
+  "Mauritanie", "Gambie", "Sierra Leone", "Liberia",
+  "Cap-Vert", "Guinée-Bissau", "Guinée équatoriale",
+  "São Tomé-et-Príncipe", "Centrafrique",
 ];
 
 const Auth = () => {
@@ -69,7 +67,31 @@ const Auth = () => {
   const [buyerLastName, setBuyerLastName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerLocation, setBuyerLocation] = useState("");
-  const [buyerCountry, setBuyerCountry] = useState("Togo");
+  const [buyerCountry, setBuyerCountry] = useState("");
+
+  // Auto-detect country from timezone/locale
+  useEffect(() => {
+    if (buyerCountry) return;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const tzCountryMap: Record<string, string> = {
+        "Africa/Lome": "Togo", "Africa/Porto-Novo": "Bénin", "Africa/Cotonou": "Bénin",
+        "Africa/Accra": "Ghana", "Africa/Abidjan": "Côte d'Ivoire",
+        "Africa/Ouagadougou": "Burkina Faso", "Africa/Niamey": "Niger",
+        "Africa/Bamako": "Mali", "Africa/Dakar": "Sénégal",
+        "Africa/Conakry": "Guinée", "Africa/Douala": "Cameroun",
+        "Africa/Lagos": "Nigeria", "Africa/Kinshasa": "RDC",
+        "Africa/Brazzaville": "Congo", "Africa/Libreville": "Gabon",
+        "Africa/Ndjamena": "Tchad", "Africa/Nouakchott": "Mauritanie",
+        "Africa/Banjul": "Gambie", "Africa/Freetown": "Sierra Leone",
+        "Africa/Monrovia": "Liberia",
+      };
+      const detected = tzCountryMap[tz] || "Togo";
+      setBuyerCountry(detected);
+    } catch {
+      setBuyerCountry("Togo");
+    }
+  }, []);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -266,20 +288,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-earth">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
       <Header />
       
       <main className="py-6 sm:py-10">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="max-w-md mx-auto">
             {/* Logo */}
-            <div className="text-center mb-4">
-              <img 
-                src={nukuLogo} 
-                alt="NUKUCONNECT" 
-                className="w-24 h-24 sm:w-28 sm:h-28 mx-auto object-contain rounded-full bg-white p-1 shadow-lg"
-              />
-              <h2 className="font-heading text-lg sm:text-xl font-bold text-foreground mt-2">NUKUCONNECT</h2>
+            <div className="text-center mb-5 sm:mb-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-primary flex items-center justify-center shadow-lg mb-3">
+                <img 
+                  src={nukuLogo} 
+                  alt="NUKUCONNECT" 
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white p-1"
+                />
+              </div>
+              <h2 className="font-heading text-lg sm:text-xl font-bold text-primary">NUKUCONNECT</h2>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">La marketplace agricole intelligente</p>
             </div>
 
             <Card variant="feature">
