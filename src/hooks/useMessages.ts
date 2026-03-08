@@ -76,6 +76,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
             timestamp: new Date(m.created_at),
             status: m.is_read ? "read" : "delivered",
             type: "text",
+            replyToId: m.reply_to_id || undefined,
           };
           setMessages((prev) => {
             if (prev.some((p) => p.id === m.id)) return prev;
