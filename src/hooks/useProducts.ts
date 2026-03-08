@@ -65,11 +65,16 @@ export const useProducts = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Products fetch error:", error);
+        throw error;
+      }
       return (data || []).map((p: any) => mapDbToProduct(p));
     },
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 5,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 };
 

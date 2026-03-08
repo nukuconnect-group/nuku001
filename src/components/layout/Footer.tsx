@@ -47,23 +47,23 @@ const Footer = () => {
       {/* App Download Section */}
       <div className="border-b border-white/15 relative z-10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-center gap-3 sm:gap-4 text-center lg:text-left">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 text-center sm:text-left">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <Smartphone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
               <div>
-                <h3 className="font-heading text-lg sm:text-xl font-bold text-white">Téléchargez l'application</h3>
-                <p className="text-white/70 text-xs sm:text-sm">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white leading-tight">Téléchargez l'application</h3>
+                <p className="text-white/70 text-[11px] sm:text-sm leading-snug mt-0.5">
                   Accédez à NUKUCONNECT partout, tout le temps.
                 </p>
               </div>
             </div>
-            <div className="flex flex-row gap-3 sm:gap-4 w-full sm:w-auto justify-center">
-              <a href="#" className="flex-shrink-0">
-                <img src={badgeGooglePlay} alt="Disponible sur Google Play" className="h-10 sm:h-12 w-auto object-contain" />
+            <div className="flex flex-row items-center gap-3 sm:gap-4">
+              <a href="#" className="flex-shrink-0 block rounded-lg overflow-hidden">
+                <img src={badgeGooglePlay} alt="Disponible sur Google Play" className="h-10 sm:h-12 w-auto object-contain mix-blend-screen" />
               </a>
-              <a href="#" className="flex-shrink-0">
+              <a href="#" className="flex-shrink-0 block">
                 <img src={badgeAppStore} alt="Télécharger dans l'App Store" className="h-10 sm:h-12 w-auto object-contain" />
               </a>
             </div>
