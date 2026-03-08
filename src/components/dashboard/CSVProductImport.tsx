@@ -142,11 +142,23 @@ function parseCSV(text: string): ParsedProduct[] {
 
 const CSVProductImport = ({ profileId, onImportComplete }: CSVProductImportProps) => {
   const { toast } = useToast();
+  const { data: dbCategories = [] } = useCategories();
   const fileRef = useRef<HTMLInputElement>(null);
   const [parsed, setParsed] = useState<ParsedProduct[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"upload" | "preview" | "done">("upload");
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+
+  const updateProduct = (idx: number, field: keyof ParsedProduct, value: string | number) => {
+    setParsed(prev => prev.map((p, i) => {
+      if (i !== idx) return p;
+      const updated = { ...p, [field]: value };
+      updated.valid = updated.price > 0 && updated.name.length > 0;
+      updated.error = !updated.valid ? (updated.price <= 0 ? "Prix invalide" : "Nom manquant") : undefined;
+      return updated;
+    }));
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
