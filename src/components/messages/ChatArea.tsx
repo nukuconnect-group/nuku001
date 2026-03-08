@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2,
+  Loader2, Reply,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -29,7 +29,7 @@ interface Props {
   conversation: ConversationItem | null;
   messages: MessageItem[];
   onBack: () => void;
-  onSend: (content: string) => void;
+  onSend: (content: string, replyToId?: string) => void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
@@ -42,51 +42,40 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [isRecording, setIsRecording] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
+  const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSendMessage = async () => {
-    // If we have an image preview, send it with optional caption
     if (imagePreview) {
       await uploadAndSendImage(imagePreview.file, messageInput.trim());
       return;
     }
     if (!messageInput.trim()) return;
-    onSend(messageInput.trim());
+    onSend(messageInput.trim(), replyTo?.id);
     setMessageInput("");
+    setReplyTo(null);
     setShowAiSuggestions(false);
   };
 
   const uploadAndSendImage = async (file: File, caption?: string) => {
     if (!conversation) return;
     setIsUploadingImage(true);
-
     try {
       const ext = file.name.split('.').pop() || 'jpg';
       const fileName = `chat/${conversation.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(fileName, file, { contentType: file.type });
-
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(fileName, file, { contentType: file.type });
       if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-      const imageUrl = urlData.publicUrl;
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
       const content = caption ? `📷 ${caption}` : "📷 Photo";
-
-      // Send as a regular message with image URL embedded
-      onSend(`${content}\n[image:${imageUrl}]`);
-
+      onSend(`${content}\n[image:${urlData.publicUrl}]`, replyTo?.id);
       setImagePreview(null);
       setMessageInput("");
+      setReplyTo(null);
       toast({ title: "Image envoyée ✓" });
     } catch (error: any) {
-      console.error("Image upload error:", error);
       toast({ title: "Erreur d'envoi", description: "Impossible d'envoyer l'image", variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
@@ -96,13 +85,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     if (file.size > 5 * 1024 * 1024) {
       toast({ title: "Fichier trop volumineux", description: "La taille maximale est de 5 Mo", variant: "destructive" });
       e.target.value = "";
       return;
     }
-    
     const url = URL.createObjectURL(file);
     setImagePreview({ file, url });
     e.target.value = "";
@@ -113,25 +100,15 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     if (!file) return;
     const url = URL.createObjectURL(file);
     const newMsg: MessageItem = {
-      id: `local-${Date.now()}`,
-      senderId: "me",
-      content: `📎 ${file.name}`,
-      timestamp: new Date(),
-      status: "sent",
-      type: "file",
-      fileUrl: url,
-      fileName: file.name,
+      id: `local-${Date.now()}`, senderId: "me", content: `📎 ${file.name}`,
+      timestamp: new Date(), status: "sent", type: "file", fileUrl: url, fileName: file.name,
     };
     onLocalMessage(newMsg);
     e.target.value = "";
   };
 
   const toggleRecording = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
+    if (isRecording) { mediaRecorderRef.current?.stop(); setIsRecording(false); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -141,16 +118,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunks, { type: "audio/webm" });
         const url = URL.createObjectURL(blob);
-        const newMsg: MessageItem = {
-          id: `local-${Date.now()}`,
-          senderId: "me",
-          content: "🎙️ Message vocal",
-          timestamp: new Date(),
-          status: "sent",
-          type: "voice",
-          fileUrl: url,
-        };
-        onLocalMessage(newMsg);
+        onLocalMessage({ id: `local-${Date.now()}`, senderId: "me", content: "🎙️ Message vocal", timestamp: new Date(), status: "sent", type: "voice", fileUrl: url });
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
@@ -169,7 +137,6 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     }
   };
 
-  // Parse message content for embedded images
   const parseMessage = (content: string) => {
     const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
     if (imageMatch) {
@@ -177,6 +144,16 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       return { text: text || "📷 Photo", imageUrl: imageMatch[1] };
     }
     return { text: content, imageUrl: null };
+  };
+
+  const handleReply = (msg: MessageItem) => {
+    setReplyTo(msg);
+    inputRef.current?.focus();
+  };
+
+  const findReplyMessage = (replyToId?: string) => {
+    if (!replyToId) return null;
+    return messages.find(m => m.id === replyToId) || null;
   };
 
   if (!conversation) {
@@ -205,7 +182,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </button>
         <div className="relative flex-shrink-0">
           <img src={conversation.participant.avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
-          {conversation.participant.isOnline && <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />}
+          <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-card ${conversation.participant.isOnline ? "bg-green-500" : "bg-muted-foreground/40"}`} />
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="font-medium text-sm text-foreground truncate">{conversation.participant.name}</h2>
@@ -253,11 +230,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         {conversation.productName && conversation.productImage && (
           <Link to={`/produit/${conversation.productId}`} className="block">
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow mx-auto max-w-xs">
-              <img 
-                src={conversation.productImage} 
-                alt={conversation.productName} 
-                className="w-14 h-14 rounded-lg object-cover flex-shrink-0" 
-              />
+              <img src={conversation.productImage} alt={conversation.productName} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground truncate">{conversation.productName}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Produit concerné</p>
@@ -271,37 +244,63 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
         {messages.map((msg) => {
           const { text, imageUrl } = parseMessage(msg.content);
+          const repliedMsg = findReplyMessage(msg.replyToId);
           return (
-            <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"}`}>
-              <Card className={`max-w-[85%] sm:max-w-[75%] p-2.5 shadow-sm border-0 ${
-                msg.senderId === "me" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card rounded-bl-sm"
-              }`}>
-                {/* Embedded image from storage */}
-                {imageUrl && (
-                  <img src={imageUrl} alt="" className="rounded-lg mb-1.5 max-h-56 max-w-full object-cover cursor-pointer"
-                    onClick={() => window.open(imageUrl, "_blank")} />
+            <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
+              <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
+                {/* Reply button (on hover, left side for own messages) */}
+                {msg.senderId === "me" && (
+                  <button onClick={() => handleReply(msg)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded-full" title="Répondre">
+                    <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
                 )}
-                {/* Legacy local image */}
-                {msg.type === "image" && msg.fileUrl && !imageUrl && (
-                  <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
-                )}
-                {msg.type === "voice" && msg.fileUrl && (
-                  <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
-                )}
-                {msg.type === "file" && (
-                  <div className="flex items-center gap-2 p-2 bg-black/10 rounded-lg mb-1.5">
-                    <Paperclip className="w-4 h-4" />
-                    <span className="text-xs truncate">{msg.fileName}</span>
+                <Card className={`p-2.5 shadow-sm border-0 ${
+                  msg.senderId === "me" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card rounded-bl-sm"
+                }`}>
+                  {/* Quoted reply */}
+                  {repliedMsg && (
+                    <div className={`mb-1.5 p-1.5 rounded-lg border-l-2 ${
+                      msg.senderId === "me" ? "bg-primary-foreground/10 border-primary-foreground/40" : "bg-muted border-primary/40"
+                    }`}>
+                      <p className={`text-[10px] font-medium mb-0.5 ${msg.senderId === "me" ? "text-primary-foreground/70" : "text-primary"}`}>
+                        {repliedMsg.senderId === "me" ? "Vous" : conversation.participant.name}
+                      </p>
+                      <p className={`text-[10px] truncate ${msg.senderId === "me" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                        {parseMessage(repliedMsg.content).text}
+                      </p>
+                    </div>
+                  )}
+                  {imageUrl && (
+                    <img src={imageUrl} alt="" className="rounded-lg mb-1.5 max-h-56 max-w-full object-cover cursor-pointer"
+                      onClick={() => window.open(imageUrl, "_blank")} />
+                  )}
+                  {msg.type === "image" && msg.fileUrl && !imageUrl && (
+                    <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
+                  )}
+                  {msg.type === "voice" && msg.fileUrl && (
+                    <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
+                  )}
+                  {msg.type === "file" && (
+                    <div className="flex items-center gap-2 p-2 bg-black/10 rounded-lg mb-1.5">
+                      <Paperclip className="w-4 h-4" />
+                      <span className="text-xs truncate">{msg.fileName}</span>
+                    </div>
+                  )}
+                  <p className="text-sm leading-relaxed">{text}</p>
+                  <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
+                    <span className="text-[10px] opacity-70">
+                      {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    {msg.senderId === "me" && getMessageStatus(msg.status)}
                   </div>
+                </Card>
+                {/* Reply button (on hover, right side for other's messages) */}
+                {msg.senderId !== "me" && (
+                  <button onClick={() => handleReply(msg)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded-full" title="Répondre">
+                    <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
                 )}
-                <p className="text-sm leading-relaxed">{text}</p>
-                <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
-                  <span className="text-[10px] opacity-70">
-                    {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  {msg.senderId === "me" && getMessageStatus(msg.status)}
-                </div>
-              </Card>
+              </div>
             </div>
           );
         })}
@@ -319,11 +318,8 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           </div>
           <div className="flex flex-wrap gap-1.5">
             {AI_QUICK_REPLIES.map((reply) => (
-              <button
-                key={reply.label}
-                onClick={() => { setMessageInput(reply.text); setShowAiSuggestions(false); }}
-                className="px-2.5 py-1 rounded-full bg-card border border-primary/20 text-[11px] font-medium text-foreground hover:bg-primary/10 transition-colors"
-              >
+              <button key={reply.label} onClick={() => { setMessageInput(reply.text); setShowAiSuggestions(false); }}
+                className="px-2.5 py-1 rounded-full bg-card border border-primary/20 text-[11px] font-medium text-foreground hover:bg-primary/10 transition-colors">
                 {reply.label}
               </button>
             ))}
@@ -337,23 +333,32 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <div className="flex items-start gap-2">
             <div className="relative">
               <img src={imagePreview.url} alt="" className="w-20 h-20 rounded-lg object-cover" />
-              <button 
-                onClick={() => { URL.revokeObjectURL(imagePreview.url); setImagePreview(null); }}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-              >
+              <button onClick={() => { URL.revokeObjectURL(imagePreview.url); setImagePreview(null); }}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                 <X className="w-3 h-3" />
               </button>
             </div>
             <div className="flex-1">
               <p className="text-[10px] text-muted-foreground mb-1">Image prête à envoyer</p>
-              <Input 
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Ajouter une légende (optionnel)..."
-                className="h-8 text-xs"
-              />
+              <Input value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Ajouter une légende (optionnel)..." className="h-8 text-xs" />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Reply preview bar */}
+      {replyTo && (
+        <div className="px-3 py-2 bg-primary/5 border-t border-primary/10 flex items-center gap-2">
+          <Reply className="w-4 h-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
+            <p className="text-[10px] font-semibold text-primary">
+              {replyTo.senderId === "me" ? "Vous" : conversation.participant.name}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate">{parseMessage(replyTo.content).text}</p>
+          </div>
+          <button onClick={() => setReplyTo(null)} className="p-1 hover:bg-muted rounded-full flex-shrink-0">
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
         </div>
       )}
 
@@ -369,7 +374,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowAiSuggestions(!showAiSuggestions)}>
             <Sparkles className={`w-4 h-4 ${showAiSuggestions ? "text-primary" : "text-muted-foreground"}`} />
           </Button>
-          <Input value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
+          <Input ref={inputRef} value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
           <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
           </Button>

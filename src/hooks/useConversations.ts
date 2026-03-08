@@ -46,12 +46,39 @@ export function useConversations() {
 
     if (!convs) { setLoading(false); return; }
 
+    // Fetch presence for all participants
+    const participantProfileIds = convs.map((c: any) => c.buyer_id === profile.id ? c.seller_id : c.buyer_id);
+    const participantUserIds: string[] = [];
+    const profileToUserMap = new Map<string, string>();
+    
+    for (const c of convs as any[]) {
+      const other = c.buyer_id === profile.id ? c.seller : c.buyer;
+      if (other?.id) {
+        // We need user_id from profiles to check presence
+        const { data: pData } = await supabase.from("profiles").select("user_id").eq("id", other.id).single();
+        if (pData) {
+          profileToUserMap.set(other.id, pData.user_id);
+          participantUserIds.push(pData.user_id);
+        }
+      }
+    }
+
+    // Batch fetch presence
+    const presenceMap = new Map<string, boolean>();
+    if (participantUserIds.length > 0) {
+      const { data: presenceData } = await supabase
+        .from("user_presence")
+        .select("user_id, is_online")
+        .in("user_id", participantUserIds);
+      presenceData?.forEach((p: any) => presenceMap.set(p.user_id, p.is_online));
+    }
+
     const items: ConversationItem[] = await Promise.all(
       convs.map(async (c: any) => {
         const isBuyer = c.buyer_id === profile.id;
         const other = isBuyer ? c.seller : c.buyer;
+        const otherUserId = profileToUserMap.get(other?.id || "");
 
-        // Get last message
         const { data: msgs } = await supabase
           .from("messages")
           .select("content, created_at, sender_id, is_read")
@@ -61,7 +88,6 @@ export function useConversations() {
 
         const lastMsg = msgs?.[0];
 
-        // Count unread
         const { count } = await supabase
           .from("messages")
           .select("id", { count: "exact", head: true })
@@ -70,6 +96,7 @@ export function useConversations() {
           .eq("is_read", false);
 
         const product = c.products;
+        const isOnline = otherUserId ? (presenceMap.get(otherUserId) || false) : false;
 
         return {
           id: c.id,
@@ -77,7 +104,7 @@ export function useConversations() {
             id: other?.id || "",
             name: other?.full_name || "Utilisateur",
             avatar: other?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(other?.full_name || "U")}&background=1c98ed&color=fff`,
-            isOnline: false,
+            isOnline,
           },
           lastMessage: lastMsg?.content || "Nouvelle conversation",
           timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(c.updated_at),
@@ -105,6 +132,9 @@ export function useConversations() {
         fetchConversations();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => {
+        fetchConversations();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_presence" }, () => {
         fetchConversations();
       })
       .subscribe();
