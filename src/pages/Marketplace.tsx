@@ -377,7 +377,7 @@ const Marketplace = () => {
               <span className="text-[10px] text-muted-foreground">{t("mp.filters")}:</span>
               {selectedCategory !== "all" && (
                 <Badge variant="secondary" className="gap-1 text-[10px] h-5">
-                  {marketplaceCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                  {marketplaceCategories.find(c => c.name.toLowerCase() === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => setSelectedCategory("all")}><X className="w-2.5 h-2.5" /></button>
                 </Badge>
               )}
