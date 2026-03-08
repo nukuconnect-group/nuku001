@@ -93,6 +93,7 @@ const App = () => {
                 <Route path="/tracabilite" element={<Traceability />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                 <Route path="/panier" element={<Cart />} />
