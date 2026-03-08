@@ -313,7 +313,7 @@ const Marketplace = () => {
             <>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> {t("mp.products")}</p>
-                <div className="hidden sm:flex items-center border border-border rounded-lg p-0.5">
+                <div className="flex items-center border border-border rounded-lg p-0.5">
                   <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
                 </div>

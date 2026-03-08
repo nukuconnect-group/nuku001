@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
@@ -41,7 +41,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
 
   if (viewMode === "list") {
     return (
-      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300">
+      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-lg">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-48 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
@@ -91,66 +91,71 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
 
   return (
     <Link to={`/produit/${product.id}`} className="block">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto">
-        {/* Square Image */}
-        <div className="relative aspect-square overflow-hidden">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto rounded-none sm:rounded-lg">
+        {/* Compact image with square borders */}
+        <div className="relative aspect-[4/3] overflow-hidden">
           <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           
-          <div className="absolute top-2 left-2 flex gap-1">
+          <div className="absolute top-1.5 left-1.5 flex gap-1">
             {product.discount && (
-              <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] px-1.5">-{product.discount}%</Badge>
+              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1 py-0 rounded-sm">-{product.discount}%</Badge>
             )}
-            {isNew && <Badge className="bg-blue-500 text-white font-bold text-[10px] px-1.5">NEW</Badge>}
+            {isNew && <Badge className="bg-blue-500 text-white font-bold text-[9px] px-1 py-0 rounded-sm">NEW</Badge>}
+            {product.isOrganic && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">BIO</Badge>}
           </div>
 
           {/* Compare button */}
           <button
             onClick={handleCompare}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary transition-colors sm:opacity-0 sm:group-hover:opacity-100"
           >
-            <GitCompareArrows className="w-3.5 h-3.5" />
+            <GitCompareArrows className="w-3 h-3" />
           </button>
 
           {/* Quick Add overlay */}
-          <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button variant="secondary" size="sm" className="w-full text-xs h-8 gap-1" onClick={handleAddToCart}>
-              <ShoppingCart className="w-3 h-3" />Ajouter au panier
+          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Button variant="secondary" size="sm" className="w-full text-[10px] h-7 gap-1 rounded-sm" onClick={handleAddToCart}>
+              <ShoppingCart className="w-3 h-3" />Ajouter
             </Button>
           </div>
         </div>
 
-        <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col">
+        <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col">
           {/* Title */}
-          <h3 className="font-heading font-semibold text-foreground text-xs sm:text-sm mb-0.5 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-heading font-semibold text-foreground text-[11px] sm:text-xs mb-0.5 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
 
           {/* Reviews */}
-          <div className="flex items-center gap-0.5 mb-1">
+          <div className="flex items-center gap-0.5 mb-0.5">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
+              <Star key={i} className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
             ))}
-            <span className="text-[9px] text-muted-foreground ml-0.5">({reviewCount})</span>
+            <span className="text-[8px] sm:text-[9px] text-muted-foreground ml-0.5">({reviewCount})</span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center gap-1 flex-wrap mb-1.5 mt-auto">
-            <span className="font-heading text-sm sm:text-base font-bold text-primary">{formatPrice(product.price)}</span>
+          <div className="flex items-center gap-1 flex-wrap mb-1 mt-auto">
+            <span className="font-heading text-xs sm:text-sm font-bold text-primary">{formatPrice(product.price)}</span>
             {product.originalPrice && (
-              <span className="text-[10px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+              <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
             )}
-            <span className="text-[10px] text-muted-foreground">/{product.unit}</span>
+            <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
           </div>
 
-          {/* Fournisseur (not "Vendeur") */}
-          <div className="flex items-center gap-1.5 pt-1.5 border-t border-border">
-            <img src={product.producer.avatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover" />
+          {/* Stock & Location */}
+          <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] text-muted-foreground mb-1">
+            <span className="flex items-center gap-0.5"><MapPin className="w-2 h-2 sm:w-2.5 sm:h-2.5" />{product.location}</span>
+          </div>
+
+          {/* Fournisseur */}
+          <div className="flex items-center gap-1 pt-1 border-t border-border">
+            <img src={product.producer.avatar} alt={product.producer.name} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-0.5">
-                <span className="text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
-                {product.producer.verified && <ShieldCheck className="w-2.5 h-2.5 text-primary flex-shrink-0" />}
+                <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
+                {product.producer.verified && <ShieldCheck className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary flex-shrink-0" />}
               </div>
-              <span className="text-[8px] text-muted-foreground">Fournisseur</span>
             </div>
           </div>
         </CardContent>
