@@ -24,6 +24,7 @@ import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
+import QRScanner from "@/components/QRScanner";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
