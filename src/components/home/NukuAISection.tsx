@@ -68,8 +68,8 @@ const NukuAISection = () => {
             <div className="absolute -inset-4 bg-gradient-to-r from-accent/30 to-primary-foreground/20 rounded-3xl blur-2xl" />
             <Card className="relative bg-card border-border/50 overflow-hidden shadow-elevated max-w-sm mx-auto lg:max-w-none">
               <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary to-primary/80">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-foreground flex items-center justify-center overflow-hidden">
-                  <img src={nukuLogo} alt="NUKU AI" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-foreground flex items-center justify-center">
+                  <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div>
                   <p className="font-semibold text-primary-foreground text-sm sm:text-base">NUKU AI</p>
