@@ -201,8 +201,11 @@ const Header = () => {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
 
       {/* Sticky part: Row 2 (main header) + mobile search */}
       <header className="sticky top-0 z-50 bg-card shadow-sm">
