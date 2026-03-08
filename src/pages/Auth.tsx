@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import nukuLogo from "@/assets/nukuconnect-logo.png";
+import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 
 const sectors = [
   "Céréales & Légumineuses",
