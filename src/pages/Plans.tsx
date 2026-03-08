@@ -335,7 +335,8 @@ const Plans = () => {
               { q: "Comment fonctionne le paiement ?", a: "Nous acceptons Mobile Money (TMoney, Flooz), cartes bancaires et virement. Le paiement est sécurisé." },
               { q: "Puis-je annuler mon abonnement ?", a: "Oui, vous pouvez annuler à tout moment sans frais. Votre compte reste actif jusqu'à la fin de la période payée." },
               { q: "Le plan gratuit est-il vraiment limité à 3 produits ?", a: "Oui, le plan gratuit vous permet de publier jusqu'à 3 produits. Pour plus d'annonces, passez au plan Pro." },
-              { q: "Dois-je m'abonner pour acheter ?", a: "Oui, même le plan gratuit nécessite une inscription. Cela nous permet de sécuriser les transactions et d'assurer un suivi de qualité." },
+              { q: "Comment fonctionnent les commissions ?", a: "NUKUCONNECT prélève une commission sur chaque vente effectuée. Le taux varie selon votre plan : 8% pour le plan Gratuit, 5% pour le Pro, 3% pour le Business, et à partir de 2% pour le plan Entreprise. La commission est automatiquement déduite et le montant net est affiché dans votre tableau de bord." },
+              { q: "Dois-je m'abonner pour acheter ?", a: "Non ! Les acheteurs n'ont pas besoin de s'abonner à un plan payant. Un compte gratuit suffit pour acheter sur la marketplace. Les plans d'adhésion sont destinés aux fournisseurs souhaitant vendre leurs produits." },
             ].map((faq) => (
               <div key={faq.q} className="bg-card rounded-xl p-4 sm:p-6 shadow-soft">
                 <h3 className="font-heading font-semibold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">{faq.q}</h3>
