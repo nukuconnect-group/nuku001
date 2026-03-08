@@ -104,7 +104,7 @@
                    {formatPrice(total)} FCFA
                  </span>
                </div>
-               <Link to="/cart" onClick={() => onOpenChange(false)}>
+               <Link to="/panier" onClick={() => onOpenChange(false)}>
                  <Button variant="hero" className="w-full gap-2 h-9 text-xs">
                    Commander
                    <ArrowRight className="w-3 h-3" />
