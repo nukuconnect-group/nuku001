@@ -261,7 +261,7 @@ const ProductDetail = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Textarea placeholder={`Bonjour ${product.producer.name}...`} value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-[100px]" />
-                    <Button variant="hero" className="w-full gap-2" onClick={handleSendMessage}>
+                    <Button variant="hero" className="w-full gap-2" onClick={handleContactSeller}>
                       <Send className="w-4 h-4" />{t("product.send")}
                     </Button>
                   </CardContent>
