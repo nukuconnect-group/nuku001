@@ -191,13 +191,6 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-    setProfile(data);
-    if (data?.location) setUserLocation(data.location);
-    fetchNotifications(userId);
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({ title: t("auth.logout"), description: "À bientôt !" });
