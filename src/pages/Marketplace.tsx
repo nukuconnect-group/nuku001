@@ -495,7 +495,7 @@ const Marketplace = () => {
               </div>
               {filteredProducts.length > 0 ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} />))}
+                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
                 </div>
               ) : (
                 <div className="text-center py-12">
