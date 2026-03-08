@@ -199,7 +199,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           {/* Fournisseur */}
           {!hideProducer && (
             <div className="flex items-center gap-1.5 pt-1.5 mt-1 border-t border-border">
-              <img src={product.producer.avatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
+              <img src={product.producer.avatar || defaultAvatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
               <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
             </div>
           )}
