@@ -161,20 +161,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
               className="hidden"
             />
             
-            {images.length > 0 && (
+            {imagePreviews.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
+                {imagePreviews.map((img, idx) => (
                   <div key={idx} className="relative flex-shrink-0">
-                    <img 
-                      src={img} 
-                      alt="" 
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-                    >
+                    <img src={img} alt="" className="w-20 h-20 object-cover rounded-lg" />
+                    <button type="button" onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -182,18 +175,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
               </div>
             )}
             
-            {images.length < 5 && (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-              >
+            {imagePreviews.length < 5 && (
+              <div onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
                 <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Cliquez pour ajouter des images
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG jusqu'à 5MB ({5 - images.length} restantes)
-                </p>
+                <p className="text-sm text-muted-foreground">Cliquez pour ajouter des images</p>
+                <p className="text-xs text-muted-foreground mt-1">PNG, JPG jusqu'à 5MB ({5 - imagePreviews.length} restantes)</p>
               </div>
             )}
           </div>
