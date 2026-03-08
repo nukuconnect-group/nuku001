@@ -575,6 +575,11 @@ const Marketplace = () => {
         onClose={() => setImageSearchOpen(false)}
         onSearch={(query) => setSearchQuery(query)}
       />
+      <QRScanner
+        isOpen={qrScannerOpen}
+        onClose={() => setQrScannerOpen(false)}
+        onScan={(code) => setSearchQuery(code)}
+      />
     </div>
   );
 };
