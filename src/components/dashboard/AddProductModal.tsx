@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { Plus, Loader2, Upload, X, Tag, Zap, Edit } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 
