@@ -299,6 +299,9 @@ const AdminDashboard = () => {
               <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Megaphone className="w-3.5 h-3.5" />Notifications
               </TabsTrigger>
+              <TabsTrigger value="support" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <MessageCircle className="w-3.5 h-3.5" />Support
+              </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
