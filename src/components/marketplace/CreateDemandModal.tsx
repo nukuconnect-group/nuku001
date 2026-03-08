@@ -15,6 +15,7 @@ interface CreateDemandModalProps {
 }
 
 const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
+  const { data: marketplaceCategories = [] } = useCategories();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

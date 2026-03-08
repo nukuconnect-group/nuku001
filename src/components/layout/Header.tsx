@@ -576,7 +576,7 @@ const Header = () => {
                             <span className="text-xl">{category.emoji}</span>
                           </div>
                           <span className="text-xs font-medium">{category.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{category.count} {t("mp.products")}</span>
+                          <span className="text-[10px] text-muted-foreground">{t("mp.products")}</span>
                         </Link>
                       ))}
                     </div>
