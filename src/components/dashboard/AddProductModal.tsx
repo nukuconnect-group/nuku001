@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { Plus, Loader2, Upload, X, Tag, Zap } from "lucide-react";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 
