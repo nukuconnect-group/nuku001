@@ -9,10 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { StatsGrid } from "@/components/dashboard/DashboardStats";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
-  Star, MapPin, Clock, ChevronRight, Loader2, User, Eye, Bell, HandCoins
+  Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
+  Eye, Truck, Settings, LogOut
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
@@ -30,10 +32,15 @@ const purchaseData = [
 const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { formatPrice } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("orders");
+  const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,13 +60,16 @@ const BuyerDashboard = () => {
       setProfile(profileData);
       
       if (profileData) {
-        const { data: ordersData } = await supabase
-          .from("orders")
-          .select("*, products(*)")
-          .eq("buyer_id", profileData.id)
-          .order("created_at", { ascending: false });
+        // Fetch orders, conversations, notifications in parallel
+        const [ordersRes, convsRes, notifsRes] = await Promise.all([
+          supabase.from("orders").select("*, products(*)").eq("buyer_id", profileData.id).order("created_at", { ascending: false }),
+          supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profileData.id).order("updated_at", { ascending: false }).limit(10),
+          supabase.from("notifications").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(20),
+        ]);
         
-        setOrders(ordersData || []);
+        setOrders(ordersRes.data || []);
+        setConversations(convsRes.data || []);
+        setNotifications(notifsRes.data || []);
       }
       
       setIsLoading(false);
@@ -69,55 +79,37 @@ const BuyerDashboard = () => {
   }, [navigate]);
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+  const pendingOrders = orders.filter(o => o.status === "pending").length;
+  const unreadNotifs = notifications.filter(n => !n.is_read).length;
 
   const stats = [
-    { 
-      label: "Commandes", 
-      value: orders.length, 
-      icon: ShoppingBag, 
-      color: "bg-primary/20 text-primary",
-      trend: { value: 5, isPositive: true }
-    },
-    { 
-      label: "Dépenses (FCFA)", 
-      value: totalSpent.toLocaleString(), 
-      icon: TrendingUp, 
-      color: "bg-green-500/20 text-green-600"
-    },
-    { 
-      label: "Favoris", 
-      value: 12, 
-      icon: Heart, 
-      color: "bg-destructive/20 text-destructive" 
-    },
-    { 
-      label: "Messages", 
-      value: 5, 
-      icon: MessageCircle, 
-      color: "bg-accent/20 text-accent-foreground" 
-    },
-  ];
-
-  const recentProducts = [
-    { id: "1", name: "Maïs Jaune Premium", price: 150000, unit: "tonne", image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=200", producer: "Kofi Mensah" },
-    { id: "2", name: "Tomates Fraîches", price: 2500, unit: "kg", image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200", producer: "Ama Koffi" },
-    { id: "3", name: "Ignames Blancs", price: 3000, unit: "kg", image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=200", producer: "Yao Agbeko" },
+    { label: "Commandes", value: orders.length, icon: ShoppingBag, color: "bg-primary/20 text-primary", trend: { value: 5, isPositive: true } },
+    { label: "Dépensé", value: formatPrice(totalSpent), icon: TrendingUp, color: "bg-green-500/20 text-green-600" },
+    { label: "Favoris", value: wishlistItems?.length || 0, icon: Heart, color: "bg-destructive/20 text-destructive" },
+    { label: "Messages", value: conversations.length, icon: MessageCircle, color: "bg-accent/20 text-accent-foreground" },
   ];
 
   const handleBecomeProducer = async () => {
     if (!profile) return;
-    
-    const { error } = await supabase
-      .from("profiles")
-      .update({ user_type: "producer" })
-      .eq("id", profile.id);
-    
+    const { error } = await supabase.from("profiles").update({ user_type: "producer" }).eq("id", profile.id);
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Félicitations !", description: "Vous êtes maintenant producteur. Redirection..." });
+      toast({ title: "Félicitations !", description: "Vous êtes maintenant producteur." });
       setTimeout(() => navigate("/dashboard"), 1500);
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+      pending: { label: "En attente", variant: "secondary" },
+      confirmed: { label: "Confirmée", variant: "default" },
+      shipped: { label: "Expédiée", variant: "outline" },
+      completed: { label: "Livrée", variant: "default" },
+      cancelled: { label: "Annulée", variant: "destructive" },
+    };
+    const s = map[status] || { label: status, variant: "secondary" as const };
+    return <Badge variant={s.variant} className="text-[10px] sm:text-xs">{s.label}</Badge>;
   };
 
   if (isLoading) {
@@ -132,88 +124,116 @@ const BuyerDashboard = () => {
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
 
-      <main className="pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          {/* Welcome */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-hero flex items-center justify-center">
+      <main className="pt-4 sm:pt-8 pb-8 sm:pb-12">
+        <div className="container mx-auto px-3 sm:px-4">
+          {/* Welcome - responsive */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <User className="w-8 h-8 text-primary-foreground" />
+                  <User className="w-5 h-5 sm:w-8 sm:h-8 text-primary-foreground" />
                 )}
               </div>
-              <div>
-                <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground">
+              <div className="min-w-0">
+                <h1 className="font-heading text-base sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
                   Bonjour, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                <p className="text-muted-foreground">Tableau de bord acheteur • Trouvez les meilleurs produits agricoles</p>
+                <p className="text-[11px] sm:text-sm text-muted-foreground truncate">
+                  Tableau de bord acheteur
+                </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Link to="/marketplace">
-                <Button variant="hero" className="gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  Explorer le marché
+            <div className="flex gap-2 sm:gap-3">
+              <Link to="/marketplace" className="flex-1 sm:flex-none">
+                <Button variant="hero" className="gap-1.5 sm:gap-2 w-full text-xs sm:text-sm h-9 sm:h-10">
+                  <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Explorer
+                </Button>
+              </Link>
+              <Link to="/suivi-livraison" className="flex-1 sm:flex-none">
+                <Button variant="outline" className="gap-1.5 w-full text-xs sm:text-sm h-9 sm:h-10">
+                  <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Suivi
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Become Producer Banner */}
-          <Card className="mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 overflow-hidden">
-            <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Store className="w-7 h-7 text-primary" />
+          {/* Stats Grid - responsive */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 sm:mb-8">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="overflow-hidden">
+                <CardContent className="p-3 sm:p-5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.color}`}>
+                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.label}</p>
+                      <p className="font-heading text-sm sm:text-xl font-bold text-foreground truncate">
+                        {stat.value}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Become Producer Banner - responsive */}
+          <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+            <CardContent className="p-3 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Store className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-heading text-lg font-semibold text-foreground">Devenez producteur ou fournisseur</h3>
-                  <p className="text-sm text-muted-foreground">Vendez vos produits agricoles sur NUKUCONNECT et touchez des milliers d'acheteurs</p>
+                <div className="min-w-0">
+                  <h3 className="font-heading text-sm sm:text-lg font-semibold text-foreground">Devenez vendeur</h3>
+                  <p className="text-[11px] sm:text-sm text-muted-foreground">Vendez vos produits sur NUKUCONNECT</p>
                 </div>
               </div>
-              <Button onClick={handleBecomeProducer} className="gap-2 whitespace-nowrap">
-                <Store className="w-4 h-4" />
+              <Button onClick={handleBecomeProducer} className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
+                <Store className="w-3.5 h-3.5" />
                 Devenir vendeur
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             </CardContent>
           </Card>
 
-          {/* Buy Intent */}
-          <Card className="mb-8 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/10">
-            <CardContent className="p-6">
-              <h3 className="font-heading text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                <HandCoins className="w-5 h-5 text-primary" />
+          {/* Buy Intent - responsive */}
+          <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/10">
+            <CardContent className="p-3 sm:p-6">
+              <h3 className="font-heading text-sm sm:text-lg font-semibold text-foreground mb-1.5 sm:mb-2 flex items-center gap-2">
+                <HandCoins className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 Que recherchez-vous ?
               </h3>
-              <p className="text-sm text-muted-foreground mb-3">Exprimez vos besoins pour que les fournisseurs vous contactent directement</p>
-              <div className="flex gap-2">
-                <CreateDemandModal trigger={
-                  <Button variant="hero" className="gap-2">
-                    <HandCoins className="w-4 h-4" />Exprimer un besoin d'achat
-                  </Button>
-                } />
-              </div>
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
+              <p className="text-[11px] sm:text-sm text-muted-foreground mb-3">
+                Exprimez vos besoins pour que les fournisseurs vous contactent
+              </p>
+              <CreateDemandModal trigger={
+                <Button variant="hero" className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10">
+                  <HandCoins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Exprimer un besoin
+                </Button>
+              } />
+              <div className="mt-3 sm:mt-4">
+                <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
                 <DemandsList limit={3} />
               </div>
             </CardContent>
           </Card>
-          <StatsGrid stats={stats} />
 
-          {/* Purchase Chart */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Évolution de mes achats (FCFA)
+          {/* Purchase Chart - responsive */}
+          <Card className="mb-5 sm:mb-8">
+            <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                Évolution des achats
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+            <CardContent className="p-2 sm:p-6 pt-0">
+              <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={purchaseData}>
                   <defs>
                     <linearGradient id="colorAchats" x1="0" y1="0" x2="0" y2="1">
@@ -222,89 +242,107 @@ const BuyerDashboard = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v/1000}K`} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} tickMargin={4} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(v) => `${v/1000}K`} width={35} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--card))', 
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      fontSize: '12px'
                     }}
-                    formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Achats']}
+                    formatter={(value: number) => [formatPrice(value), 'Achats']}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="achats" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1} 
-                    fill="url(#colorAchats)" 
-                    strokeWidth={2}
-                  />
+                  <Area type="monotone" dataKey="achats" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorAchats)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Tabs */}
-          <Tabs defaultValue="orders" className="space-y-6">
-            <TabsList className="bg-muted p-1">
-              <TabsTrigger value="orders" className="gap-2 data-[state=active]:bg-background">
-                <Package className="w-4 h-4" />
-                Mes commandes ({orders.length})
+          {/* Tabs - responsive with horizontal scroll on mobile */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+            <TabsList className="bg-muted p-1 w-full overflow-x-auto flex justify-start sm:justify-center scrollbar-hide">
+              <TabsTrigger value="orders" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
+                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Commandes</span>
+                <span className="xs:hidden">Cmd</span>
+                {pendingOrders > 0 && (
+                  <span className="ml-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground rounded-full text-[9px] sm:text-[10px] flex items-center justify-center font-bold">
+                    {pendingOrders}
+                  </span>
+                )}
               </TabsTrigger>
-              <TabsTrigger value="favorites" className="gap-2 data-[state=active]:bg-background">
-                <Heart className="w-4 h-4" />
+              <TabsTrigger value="favorites" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
+                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Favoris
               </TabsTrigger>
-              <TabsTrigger value="recent" className="gap-2 data-[state=active]:bg-background">
-                <Clock className="w-4 h-4" />
-                Vus récemment
+              <TabsTrigger value="messages" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
+                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Messages
               </TabsTrigger>
-              <TabsTrigger value="alerts" className="gap-2 data-[state=active]:bg-background">
-                <Bell className="w-4 h-4" />
-                Alertes prix
+              <TabsTrigger value="alerts" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
+                <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Alertes
+                {unreadNotifs > 0 && (
+                  <span className="ml-1 w-4 h-4 bg-destructive text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                    {unreadNotifs}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
 
+            {/* Orders Tab */}
             <TabsContent value="orders">
               <Card>
-                <CardHeader>
-                  <CardTitle>Commandes récentes</CardTitle>
-                  <CardDescription>Suivez l'état de vos commandes</CardDescription>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm sm:text-base">Commandes récentes</CardTitle>
+                      <CardDescription className="text-[11px] sm:text-sm">Suivez l'état de vos commandes</CardDescription>
+                    </div>
+                    <Link to="/suivi-livraison">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[11px] sm:text-xs h-8">
+                        <Truck className="w-3 h-3" />Tout voir
+                      </Button>
+                    </Link>
+                  </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-3 sm:p-6 pt-0">
                   {orders.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Package className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                      <p className="text-muted-foreground mb-4">Aucune commande pour le moment</p>
+                    <div className="text-center py-8 sm:py-12">
+                      <Package className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Aucune commande</p>
                       <Link to="/marketplace">
-                        <Button variant="hero">Découvrir les produits</Button>
+                        <Button variant="hero" className="text-xs sm:text-sm h-9">Découvrir les produits</Button>
                       </Link>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2.5 sm:space-y-4">
                       {orders.map((order) => (
-                        <div key={order.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Package className="w-6 h-6 text-primary" />
+                        <Link key={order.id} to="/suivi-livraison" className="block">
+                          <div className="flex items-center justify-between p-2.5 sm:p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <Package className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-xs sm:text-sm truncate">{order.products?.name || "Produit"}</p>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                  {order.quantity} × {formatPrice(Number(order.products?.price || 0))}
+                                </p>
+                                <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5">
+                                  {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">{order.products?.name || "Produit"}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {order.quantity} × {Number(order.products?.price).toLocaleString()} FCFA
+                            <div className="text-right flex-shrink-0 ml-2">
+                              {getStatusBadge(order.status)}
+                              <p className="text-xs sm:text-sm font-semibold text-primary mt-1">
+                                {formatPrice(Number(order.total_price))}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge variant={order.status === "completed" ? "default" : "secondary"}>
-                              {order.status === "pending" ? "En attente" : order.status === "completed" ? "Terminée" : order.status}
-                            </Badge>
-                            <p className="text-sm font-medium text-primary mt-1">
-                              {Number(order.total_price).toLocaleString()} FCFA
-                            </p>
-                          </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -312,84 +350,153 @@ const BuyerDashboard = () => {
               </Card>
             </TabsContent>
 
+            {/* Favorites Tab */}
             <TabsContent value="favorites">
               <Card>
-                <CardHeader>
-                  <CardTitle>Produits favoris</CardTitle>
-                  <CardDescription>Retrouvez vos produits préférés</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {recentProducts.map((product) => (
-                      <Link key={product.id} to={`/produit/${product.id}`}>
-                        <Card className="group hover:shadow-elevated transition-all">
-                          <CardContent className="p-3">
-                            <div className="flex gap-3">
-                              <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                                  {product.name}
-                                </h4>
-                                <p className="text-sm text-muted-foreground truncate">{product.producer}</p>
-                                <p className="text-sm font-semibold text-primary">
-                                  {product.price.toLocaleString()} FCFA/{product.unit}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm sm:text-base">Produits favoris</CardTitle>
+                      <CardDescription className="text-[11px] sm:text-sm">Retrouvez vos produits préférés</CardDescription>
+                    </div>
+                    <Link to="/favoris">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[11px] sm:text-xs h-8">
+                        <Heart className="w-3 h-3" />Tout voir
+                      </Button>
+                    </Link>
                   </div>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {(!wishlistItems || wishlistItems.length === 0) ? (
+                    <div className="text-center py-8 sm:py-12">
+                      <Heart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3">Aucun favori pour le moment</p>
+                      <Link to="/marketplace">
+                        <Button variant="outline" className="text-xs sm:text-sm h-9">Parcourir les produits</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+                      {wishlistItems.slice(0, 6).map((item: any) => (
+                        <Link key={item.id} to={`/produit/${item.product_id}`}>
+                          <Card className="group hover:shadow-elevated transition-all">
+                            <CardContent className="p-2.5 sm:p-3">
+                              <div className="flex gap-2.5 sm:gap-3 items-center">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                                  <Heart className="w-5 h-5 text-destructive" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                                    Produit favori
+                                  </h4>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                    Ajouté le {new Date(item.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="recent">
+            {/* Messages Tab */}
+            <TabsContent value="messages">
               <Card>
-                <CardHeader>
-                  <CardTitle>Consultés récemment</CardTitle>
-                  <CardDescription>Les derniers produits que vous avez vus</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {recentProducts.map((product) => (
-                      <Link key={product.id} to={`/produit/${product.id}`}>
-                        <Card className="group hover:shadow-elevated transition-all">
-                          <CardContent className="p-3">
-                            <div className="flex gap-3">
-                              <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                                  {product.name}
-                                </h4>
-                                <p className="text-sm text-muted-foreground truncate">{product.producer}</p>
-                                <p className="text-sm font-semibold text-primary">
-                                  {product.price.toLocaleString()} FCFA/{product.unit}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm sm:text-base">Mes conversations</CardTitle>
+                      <CardDescription className="text-[11px] sm:text-sm">Échangez avec les producteurs</CardDescription>
+                    </div>
+                    <Link to="/messages">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[11px] sm:text-xs h-8">
+                        <MessageCircle className="w-3 h-3" />Tout voir
+                      </Button>
+                    </Link>
                   </div>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {conversations.length === 0 ? (
+                    <div className="text-center py-8 sm:py-12">
+                      <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3">Aucune conversation</p>
+                      <Link to="/marketplace">
+                        <Button variant="outline" className="text-xs sm:text-sm h-9">Contacter un producteur</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {conversations.map((conv) => (
+                        <Link key={conv.id} to="/messages" className="block">
+                          <div className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {conv.profiles?.avatar_url ? (
+                                <img src={conv.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-xs sm:text-sm truncate">{conv.profiles?.full_name || "Vendeur"}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                {new Date(conv.updated_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Alerts Tab - now shows real notifications */}
             <TabsContent value="alerts">
               <Card>
-                <CardHeader>
-                  <CardTitle>Alertes de prix</CardTitle>
-                  <CardDescription>Recevez des notifications quand les prix baissent</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <Bell className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground mb-4">Aucune alerte configurée</p>
-                    <Button variant="outline">Créer une alerte</Button>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm sm:text-base">Notifications</CardTitle>
+                      <CardDescription className="text-[11px] sm:text-sm">Vos alertes et mises à jour</CardDescription>
+                    </div>
+                    <Link to="/notifications">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[11px] sm:text-xs h-8">
+                        <Bell className="w-3 h-3" />Tout voir
+                      </Button>
+                    </Link>
                   </div>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-8 sm:py-12">
+                      <Bell className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-xs sm:text-sm text-muted-foreground">Aucune notification</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {notifications.map((notif) => (
+                        <div key={notif.id} className={`flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl transition-colors ${notif.is_read ? 'bg-muted/30' : 'bg-primary/5 border border-primary/10'}`}>
+                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.is_read ? 'bg-muted-foreground/30' : 'bg-primary'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-xs sm:text-sm">{notif.title}</p>
+                            {notif.description && (
+                              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.description}</p>
+                            )}
+                            <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-1">
+                              {new Date(notif.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
