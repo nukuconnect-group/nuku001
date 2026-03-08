@@ -201,9 +201,9 @@ const ProductDetail = () => {
                 <Badge variant="secondary" className="capitalize">{product.category}</Badge>
                 <span className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-4 h-4" />{product.location}</span>
               </div>
-              <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="font-heading text-3xl lg:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+              <h1 className="font-heading text-xl sm:text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
+              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                <span className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
                 )}
