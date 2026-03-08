@@ -292,6 +292,9 @@ const AdminDashboard = () => {
               <TabsTrigger value="finances" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <HandCoins className="w-3.5 h-3.5" />Finances
               </TabsTrigger>
+              <TabsTrigger value="withdrawals" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Wallet className="w-3.5 h-3.5" />Retraits
+              </TabsTrigger>
               <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Megaphone className="w-3.5 h-3.5" />Notifications
               </TabsTrigger>
