@@ -18,6 +18,7 @@ import {
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
   CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet, Crown
 } from "lucide-react";
+import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 
 const deliveryOptions = [
   { id: "pickup", name: "Retrait sur place", description: "Récupérez chez le producteur", price: 0, icon: Store, tag: "Gratuit" },
