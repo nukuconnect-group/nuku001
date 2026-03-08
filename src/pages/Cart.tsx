@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import BillingForm from "@/components/cart/BillingForm";
-import DeliveryZoneMap, { deliveryOptions } from "@/components/cart/DeliveryZoneMap";
+import DeliveryZoneMap, { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import PaymentMethodSelect, { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import OrderSummary from "@/components/cart/OrderSummary";
 
@@ -77,8 +77,9 @@ const Cart = () => {
     });
   }, []);
 
+  const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
-  const deliveryPrice = selectedDelivery?.price || 0;
+  const deliveryPrice = dynamicDeliveryPrice || selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice - promoDiscount;
 
   const handleCheckout = async () => {
@@ -268,6 +269,7 @@ const Cart = () => {
                 onAddressChange={setDeliveryAddress}
                 quarter={deliveryQuarter}
                 onQuarterChange={setDeliveryQuarter}
+                onDynamicPriceChange={setDynamicDeliveryPrice}
               />
 
               <PaymentMethodSelect
