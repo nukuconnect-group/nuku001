@@ -254,7 +254,92 @@ const Marketplace = () => {
     </div>
   );
 
-  const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof allProducts; viewAll?: string }) => (
+  const NewArrivalsSection = ({ products: arrivals }: { products: typeof allProducts }) => {
+    if (arrivals.length === 0) return null;
+    const hero = arrivals[0];
+    const rest = arrivals.slice(1, 5);
+    const reviewCount = (r: number) => Math.floor(r * 12);
+
+    return (
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
+            <Star className="w-4 h-4 text-accent" />
+            {t("mp.newArrivals")}
+          </h2>
+          <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-primary gap-1" onClick={() => setSortBy("recent")}>
+            {t("mp.viewAll")}<ChevronRight className="w-3 h-3" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3">
+          {/* Hero card - large featured */}
+          <Link to={`/produit/${hero.id}`} className="sm:col-span-1 lg:col-span-5 block group">
+            <div className="relative h-full min-h-[280px] sm:min-h-[340px] rounded-xl overflow-hidden bg-muted">
+              <img src={hero.image} alt={hero.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+              <div className="absolute top-3 left-3 flex gap-1.5">
+                <Badge className="bg-accent text-accent-foreground font-bold text-[10px] px-2 py-1 shadow-md">✨ NOUVEAU</Badge>
+                {hero.discount && hero.discount > 0 && (
+                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] px-2 py-1 shadow-md">-{hero.discount}%</Badge>
+                )}
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-medium">{hero.category}</span>
+                <h3 className="font-heading text-lg sm:text-xl font-bold text-primary-foreground mb-1 line-clamp-2">{hero.name}</h3>
+                <p className="text-xs text-primary-foreground/80 line-clamp-2 mb-2">{hero.description}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-3 h-3 ${i < Math.round(hero.producer.rating) ? "text-accent fill-accent" : "text-primary-foreground/30"}`} />
+                  ))}
+                  <span className="text-[10px] text-primary-foreground/70">({reviewCount(hero.producer.rating)})</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-heading text-xl font-bold text-primary-foreground">{formatPrice(hero.price)}</span>
+                    {hero.originalPrice && <span className="text-xs text-primary-foreground/50 line-through">{formatPrice(hero.originalPrice)}</span>}
+                    <span className="text-[10px] text-primary-foreground/60">/{hero.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-primary-foreground/70">
+                    <MapPin className="w-3 h-3" />{hero.location}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Side cards */}
+          <div className="sm:col-span-1 lg:col-span-7 grid grid-cols-2 gap-2 sm:gap-3">
+            {rest.map((product, idx) => (
+              <Link to={`/produit/${product.id}`} key={product.id} className="block group">
+                <div className="relative rounded-xl overflow-hidden bg-muted h-full min-h-[160px] sm:min-h-[165px]">
+                  <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
+                  <div className="absolute top-2 left-2">
+                    <Badge className="bg-accent/90 text-accent-foreground font-bold text-[8px] px-1.5 py-0.5 shadow-sm">NEW</Badge>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3">
+                    <span className="text-[8px] uppercase tracking-wider text-primary-foreground/60 font-medium">{product.category}</span>
+                    <h4 className="font-heading text-xs sm:text-sm font-semibold text-primary-foreground line-clamp-1 mb-0.5">{product.name}</h4>
+                    <div className="flex items-center gap-0.5 mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-2 h-2 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-primary-foreground/20"}`} />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-heading text-sm font-bold text-primary-foreground">{formatPrice(product.price)}</span>
+                      <span className="text-[8px] text-primary-foreground/60">{product.location}</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
     <div className="mb-6 sm:mb-8">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">{icon}{title}</h2>
