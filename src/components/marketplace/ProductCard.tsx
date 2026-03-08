@@ -21,6 +21,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
   const { toast } = useToast();
   const { addItem } = useCart();
   const { formatPrice } = useLanguage();
+  const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [showReviews, setShowReviews] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
