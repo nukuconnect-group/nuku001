@@ -34,11 +34,11 @@ const NukuAISection = () => {
               <span className="text-xs sm:text-sm font-medium text-white">Par Nukuconnect Technologie</span>
             </div>
             
-            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Rencontrez <span className="text-secondary-foreground font-extrabold">Nukuconnect IA</span>
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 text-white">
+              Rencontrez <span className="text-yellow-300 font-extrabold">Nukuconnect IA</span>
             </h2>
             
-            <p className="text-sm sm:text-base lg:text-lg text-primary-foreground/90 mb-6 sm:mb-8 leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-white/90 mb-6 sm:mb-8 leading-relaxed">
               Votre assistant agricole intelligent disponible 24/7. Posez vos questions 
               sur les cultures, l'élevage, les maladies des plantes et recevez des 
               conseils personnalisés instantanément.
