@@ -181,8 +181,19 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
-                    <Heart className="w-5 h-5 text-muted-foreground hover:text-destructive" />
+                  <button
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
+                        navigate("/auth");
+                        return;
+                      }
+                      toggleWishlist(product.id);
+                      toast({ title: isInWishlist(product.id) ? "Retiré des favoris" : "Ajouté aux favoris" });
+                    }}
+                    className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  >
+                    <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
                   <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                     <Share2 className="w-5 h-5 text-muted-foreground" />
