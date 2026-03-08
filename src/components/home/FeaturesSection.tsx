@@ -17,13 +17,13 @@ const FeaturesSection = () => {
     <section className="py-12 sm:py-20 lg:py-28 text-white relative" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-16">
-          <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+          <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/20 text-white text-xs sm:text-sm font-medium mb-3 sm:mb-4">
             Fonctionnalités
           </span>
-          <h2 className="font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 sm:mb-4">
-            Tout pour <span className="text-primary">réussir</span>
+          <h2 className="font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
+            Tout pour <span className="text-yellow-300">réussir</span>
           </h2>
-          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground px-2">
+          <p className="text-xs sm:text-base lg:text-lg text-white/80 px-2">
             Technologie et agriculture pour transformer votre activité.
           </p>
         </div>
