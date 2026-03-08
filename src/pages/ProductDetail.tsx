@@ -19,6 +19,7 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReviewSection from "@/components/product/ReviewSection";
 
 const ProductDetail = () => {
   const { id } = useParams();
