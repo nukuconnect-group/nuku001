@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS reviews_product_user_unique ON public.reviews (product_id, user_id);
