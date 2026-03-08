@@ -120,13 +120,13 @@ const Producers = () => {
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4">
               <Users className="w-3 h-3 mr-1" />
-              Réseau de producteurs
+              Réseau de fournisseurs
             </Badge>
             <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Nos producteurs
+              Nos fournisseurs
             </h1>
             <p className="text-muted-foreground mb-8">
-              Découvrez les producteurs actifs sur la plateforme et connectez-vous directement avec eux.
+              Découvrez les fournisseurs actifs sur la plateforme et connectez-vous directement avec eux.
             </p>
 
             {/* Search */}
