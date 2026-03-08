@@ -318,6 +318,11 @@ const Dashboard = () => {
                               onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
                               <Edit className="w-2.5 h-2.5" />Modifier
                             </Button>
+                            {!isProductBoosted(activeBoosts, product.id) && (
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-primary" onClick={() => setBoostProduct(product)}>
+                                <Rocket className="w-3 h-3" />
+                              </Button>
+                            )}
                             <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate(`/tracabilite`)}>
                               <QrCode className="w-3 h-3 text-blue-500" />
                             </Button>
