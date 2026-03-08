@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bot, Send, Sparkles, MessageCircle, Zap, Globe, Leaf } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import nukuLogo from "@/assets/nukuconnect-logo-new.png";
+// Logo removed from this section per user request
 
 const NukuAISection = () => {
   const [messages] = useState([
