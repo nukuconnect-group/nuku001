@@ -51,6 +51,7 @@ const Header = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
