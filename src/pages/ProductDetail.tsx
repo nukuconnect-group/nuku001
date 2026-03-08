@@ -16,7 +16,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2, DollarSign, CreditCard, ZoomIn, X
+  Loader2, DollarSign, CreditCard, ZoomIn, X, QrCode, Download
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -439,6 +439,43 @@ const ProductDetail = () => {
                         <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span><span className="sm:hidden">Profil</span>
                       </Button>
                     </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* QR Code */}
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <QrCode className="w-4 h-4 text-primary" />
+                    <span className="font-heading font-semibold text-xs sm:text-sm text-foreground">QR Code du produit</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white p-2 rounded-lg border border-border">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/produit/${product.id}`)}`}
+                        alt="QR Code produit"
+                        className="w-24 h-24 sm:w-28 sm:h-28"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                        Scannez ce QR code pour accéder directement à ce produit ou partagez-le avec vos clients.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`${window.location.origin}/produit/${product.id}`)}`;
+                          link.download = `qr-${product.name.replace(/\s+/g, "-")}.png`;
+                          link.click();
+                        }}
+                      >
+                        <Download className="w-3 h-3" />Télécharger
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
