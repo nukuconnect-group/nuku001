@@ -96,14 +96,19 @@ const Marketplace = () => {
     if (organicOnly) result = result.filter(p => p.isOrganic);
     if (verifiedOnly) result = result.filter(p => p.producer.verified);
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") result = result.filter(p => p.location.includes(location));
+    if (inStockOnly) result = result.filter(p => p.quantity > 0);
+    if (discountOnly) result = result.filter(p => p.discount && p.discount > 0);
+    if (minRating > 0) result = result.filter(p => p.producer.rating >= minRating);
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
       case "rating": result.sort((a, b) => b.producer.rating - a.producer.rating); break;
+      case "popular": result.sort((a, b) => (b.producer.totalSales || 0) - (a.producer.totalSales || 0)); break;
+      case "discount": result.sort((a, b) => (b.discount || 0) - (a.discount || 0)); break;
       default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return result;
-  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, location, sortBy, allProducts, t]);
+  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, t]);
 
   const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
   const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
