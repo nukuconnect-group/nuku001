@@ -216,6 +216,30 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "La connexion avec Google a échoué.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
