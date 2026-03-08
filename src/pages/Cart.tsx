@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
-  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet
+  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet, Crown
 } from "lucide-react";
 
 const deliveryOptions = [
