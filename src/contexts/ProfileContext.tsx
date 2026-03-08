@@ -67,6 +67,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      sessionHandled.current = true;
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
