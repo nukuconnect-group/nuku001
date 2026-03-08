@@ -210,7 +210,7 @@ const BuyerDashboard = () => {
                   <p className="text-[11px] sm:text-sm text-muted-foreground">Vendez vos produits sur NUKUCONNECT</p>
                 </div>
               </div>
-              <Button onClick={handleBecomeProducer} className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
+              <Button onClick={() => setShowMigrationModal(true)} className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
                 <Store className="w-3.5 h-3.5" />
                 Devenir vendeur
                 <ChevronRight className="w-3.5 h-3.5" />
