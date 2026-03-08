@@ -83,7 +83,7 @@ const Producers = () => {
       return profiles.map((p) => ({
           id: p.id,
           user_id: p.user_id,
-          name: p.full_name || "Producteur",
+          name: p.full_name || "Fournisseur",
           avatar: p.avatar_url,
           location: p.location || "Non spécifié",
           verified: p.is_verified,
