@@ -339,7 +339,7 @@ const Marketplace = () => {
     );
   };
 
-
+  const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof allProducts; viewAll?: string }) => (
     <div className="mb-6 sm:mb-8">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">{icon}{title}</h2>
