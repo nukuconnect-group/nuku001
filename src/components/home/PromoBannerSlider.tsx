@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ShoppingCart, Users, Leaf, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Leaf, TrendingUp } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +12,12 @@ const banners = [
   {
     image: promoBanner1,
     title: "Livraison gratuite",
-    subtitle: "sur votre première commande",
+    subtitle: "Sur votre première commande",
     code: "NUKU2026",
-    codeLabel: "Utilisez ce code promo",
-    cta: "Commander",
+    codeLabel: "Code promo",
+    cta: "Commander maintenant",
     link: "/marketplace",
-    gradient: "from-primary to-primary/80",
+    gradient: "from-primary via-primary/90 to-primary/70",
   },
   {
     image: promoBanner2,
@@ -25,15 +25,15 @@ const banners = [
     subtitle: "Jusqu'à -40% sur les fruits & légumes",
     cta: "Voir les offres",
     link: "/marketplace?category=agriculture",
-    gradient: "from-orange-500 to-orange-400",
+    gradient: "from-orange-600 via-orange-500 to-amber-500",
   },
   {
     image: promoBanner3,
     title: "Devenez vendeur",
     subtitle: "Vendez vos produits à des milliers d'acheteurs",
-    cta: "S'inscrire",
+    cta: "S'inscrire gratuitement",
     link: "/auth",
-    gradient: "from-emerald-600 to-emerald-500",
+    gradient: "from-emerald-700 via-emerald-600 to-emerald-500",
   },
 ];
 
@@ -53,29 +53,36 @@ const PromoBannerSlider = () => {
 
   return (
     <div className="md:hidden">
-      {/* Promo Banner Slider */}
-      <div className="px-3 py-2">
-        <div className="relative overflow-hidden rounded-xl">
+      {/* Promo Banner Slider - Full width with padding */}
+      <div className="px-3 pt-2 pb-1">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${current * 100}%)` }}
           >
             {banners.map((banner, i) => (
-              <Link key={i} to={banner.link} className="w-full flex-shrink-0 relative">
-                <div className={`relative h-36 sm:h-44 rounded-xl overflow-hidden bg-gradient-to-r ${banner.gradient}`}>
-                  <img src={banner.image} alt={banner.title}
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-60" />
-                  <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6">
-                    <h3 className="text-white font-heading font-bold text-base sm:text-lg leading-tight">{banner.title}</h3>
-                    <p className="text-white/90 text-[11px] sm:text-xs mt-0.5">{banner.subtitle}</p>
+              <Link key={i} to={banner.link} className="w-full flex-shrink-0 relative block">
+                <div className={`relative h-44 sm:h-52 rounded-2xl overflow-hidden bg-gradient-to-r ${banner.gradient}`}>
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40"
+                  />
+                  <div className="relative z-10 h-full flex flex-col justify-center px-5 sm:px-7">
+                    <h3 className="text-white font-heading font-extrabold text-xl sm:text-2xl leading-tight drop-shadow-md">
+                      {banner.title}
+                    </h3>
+                    <p className="text-white/90 text-sm sm:text-base mt-1 font-medium drop-shadow-sm">
+                      {banner.subtitle}
+                    </p>
                     {banner.code && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1 w-fit">
-                        <span className="text-white font-bold text-xs sm:text-sm tracking-wider">{banner.code}</span>
-                        <span className="text-white/70 text-[9px]">{banner.codeLabel}</span>
+                      <div className="mt-3 inline-flex items-center gap-2 bg-white/25 backdrop-blur-sm rounded-lg px-3 py-1.5 w-fit border border-white/20">
+                        <span className="text-white font-bold text-sm sm:text-base tracking-widest">{banner.code}</span>
+                        <span className="text-white/80 text-xs">{banner.codeLabel}</span>
                       </div>
                     )}
-                    <div className="mt-2">
-                      <span className="inline-block bg-white text-foreground font-semibold text-[10px] sm:text-xs px-3 py-1.5 rounded-full shadow-sm">
+                    <div className="mt-3">
+                      <span className="inline-block bg-white text-foreground font-bold text-xs sm:text-sm px-5 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow">
                         {banner.cta}
                       </span>
                     </div>
@@ -84,19 +91,28 @@ const PromoBannerSlider = () => {
               </Link>
             ))}
           </div>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {/* Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
             {banners.map((_, i) => (
-              <button key={i} onClick={() => setCurrent(i)}
-                className={`h-1.5 rounded-full transition-all ${i === current ? "w-4 bg-white" : "w-1.5 bg-white/50"}`} />
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                className={`rounded-full transition-all ${i === current ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"}`}
+              />
             ))}
           </div>
-          <button onClick={() => setCurrent((prev) => (prev - 1 + banners.length) % banners.length)}
-            className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white">
-            <ChevronLeft className="w-3.5 h-3.5" />
+          {/* Nav arrows */}
+          <button
+            onClick={() => setCurrent((prev) => (prev - 1 + banners.length) % banners.length)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-95"
+          >
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          <button onClick={() => setCurrent((prev) => (prev + 1) % banners.length)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white">
-            <ChevronRight className="w-3.5 h-3.5" />
+          <button
+            onClick={() => setCurrent((prev) => (prev + 1) % banners.length)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-95"
+          >
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -112,14 +128,14 @@ const PromoBannerSlider = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-accent/5 border border-accent/10">
-            <Leaf className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-foreground">Bio</p>
               <p className="text-[9px] text-muted-foreground">Certifié</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/10">
-            <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted border border-border">
+            <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-foreground">50K+</p>
               <p className="text-[9px] text-muted-foreground">Ventes</p>

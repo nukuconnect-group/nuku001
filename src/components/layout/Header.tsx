@@ -211,16 +211,6 @@ const Header = () => {
                         </div>
                         <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground" />
                       </button>
-                      <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.categories")}</h4>
-                        {marketplaceCategories.slice(0, 6).map((cat) => (
-                          <Link key={cat.id} to={`/marketplace?category=${cat.id}`} onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted">
-                            <cat.icon className="w-4 h-4 text-primary" />
-                            <span className="text-xs">{cat.name}</span>
-                          </Link>
-                        ))}
-                      </div>
                       <div className="border-t border-border my-2" />
                       <div className="mb-2">
                         <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.navigation")}</h4>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -273,18 +273,12 @@ const Auth = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
             {/* Logo */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <img 
                 src={nukuLogo} 
                 alt="NUKUCONNECT" 
-                className="w-24 h-24 mx-auto mb-4 object-contain"
+                className="w-20 h-20 mx-auto object-contain"
               />
-              <h1 className="font-heading text-2xl font-bold text-foreground">
-                NUKU<span className="text-primary">CONNECT</span>
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Connectez-vous à la plus grande marketplace agricole d'Afrique
-              </p>
             </div>
 
             <Card variant="feature">
@@ -621,6 +615,22 @@ const Auth = () => {
                         </div>
                       </div>
 
+                      {/* Privacy Policy Checkbox */}
+                      <div className="flex items-start gap-2">
+                        <input type="checkbox" id="privacy-policy" required
+                          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                        <label htmlFor="privacy-policy" className="text-xs text-muted-foreground leading-tight">
+                          J'accepte les{" "}
+                          <Link to="/terms" target="_blank" className="text-primary underline hover:text-primary/80">
+                            conditions d'utilisation
+                          </Link>{" "}
+                          et la{" "}
+                          <Link to="/privacy" target="_blank" className="text-primary underline hover:text-primary/80">
+                            politique de confidentialité
+                          </Link>
+                        </label>
+                      </div>
+
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                           <>
@@ -631,10 +641,6 @@ const Auth = () => {
                           "Créer mon compte"
                         )}
                       </Button>
-
-                      <p className="text-xs text-center text-muted-foreground">
-                        En vous inscrivant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
-                      </p>
                     </form>
                   </CardContent>
                 </TabsContent>
