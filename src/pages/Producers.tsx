@@ -80,9 +80,7 @@ const Producers = () => {
         });
       }
 
-      return profiles
-        .filter((p) => (productCounts[p.id] || 0) > 0)
-        .map((p) => ({
+      return profiles.map((p) => ({
           id: p.id,
           user_id: p.user_id,
           name: p.full_name || "Producteur",
