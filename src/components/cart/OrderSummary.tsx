@@ -2,18 +2,29 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/components/cart/CartContext";
-import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck } from "lucide-react";
+import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+const promoCodes: Record<string, { discount: number; type: "percent" | "fixed"; label: string; minAmount?: number }> = {
+  "NUKU10": { discount: 10, type: "percent", label: "10% de réduction" },
+  "NUKU20": { discount: 20, type: "percent", label: "20% de réduction", minAmount: 10000 },
+  "BIENVENUE": { discount: 5, type: "percent", label: "5% - Bienvenue !" },
+  "LIVRAISON": { discount: 2500, type: "fixed", label: "2 500 FCFA de réduction" },
+  "PROMO5000": { discount: 5000, type: "fixed", label: "5 000 FCFA de réduction", minAmount: 25000 },
+};
 
 interface OrderSummaryProps {
   deliveryPrice: number;
   isCheckingOut: boolean;
   canCheckout: boolean;
   onCheckout: () => void;
+  onDiscountChange?: (discount: number, code: string) => void;
 }
 
 const purchasePolicyContent = `Dernière mise à jour : 09 février 2025
@@ -77,11 +88,46 @@ La décision finale pourra, si nécessaire, être soumise aux juridictions comp�
 Nukuconnect SA se réserve le droit de modifier cette politique à tout moment.
 Toute modification sera publiée sur la Plateforme et applicable aux commandes passées après sa date d'entrée en vigueur.`;
 
-const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }: OrderSummaryProps) => {
+const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange }: OrderSummaryProps) => {
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const { formatPrice } = useLanguage();
-  const finalTotal = total + deliveryPrice;
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number; type: "percent" | "fixed"; label: string } | null>(null);
+  const [promoError, setPromoError] = useState("");
+
+  const discountAmount = appliedPromo
+    ? appliedPromo.type === "percent"
+      ? Math.round(total * appliedPromo.discount / 100)
+      : appliedPromo.discount
+    : 0;
+
+  const finalTotal = total + deliveryPrice - discountAmount;
+
+  const handleApplyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    const promo = promoCodes[code];
+    if (!promo) {
+      setPromoError("Code promo invalide");
+      return;
+    }
+    if (promo.minAmount && total < promo.minAmount) {
+      setPromoError(`Minimum ${formatPrice(promo.minAmount)} requis`);
+      return;
+    }
+    setAppliedPromo({ code, ...promo });
+    setPromoError("");
+    const amt = promo.type === "percent" ? Math.round(total * promo.discount / 100) : promo.discount;
+    onDiscountChange?.(amt, code);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError("");
+    onDiscountChange?.(0, "");
+  };
 
   return (
     <Card className="sticky top-24">
@@ -194,12 +240,56 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }:
           </label>
         </div>
 
+        {/* Promo Code */}
+        <div className="space-y-2 pt-2 border-t border-border">
+          <p className="text-xs font-medium flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-primary" />
+            Code promo
+          </p>
+          {appliedPromo ? (
+            <div className="flex items-center justify-between p-2.5 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="text-xs font-semibold text-primary">{appliedPromo.code}</p>
+                  <p className="text-[10px] text-muted-foreground">{appliedPromo.label}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px] text-primary">-{formatPrice(discountAmount)}</Badge>
+                <button onClick={handleRemovePromo} className="text-muted-foreground hover:text-destructive">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={promoInput}
+                onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                placeholder="Entrer un code"
+                className="h-8 text-xs flex-1"
+              />
+              <Button variant="outline" size="sm" className="h-8 text-xs px-3" onClick={handleApplyPromo}>
+                Appliquer
+              </Button>
+            </div>
+          )}
+          {promoError && <p className="text-[10px] text-destructive">{promoError}</p>}
+        </div>
+
         {/* Totals */}
         <div className="space-y-2 pt-2 border-t border-border">
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Sous-total ({itemCount} articles)</span>
             <span className="font-medium">{formatPrice(total)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-xs sm:text-sm">
+              <span className="text-primary">Réduction ({appliedPromo?.code})</span>
+              <span className="text-primary font-medium">-{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Livraison</span>
             <span className={deliveryPrice === 0 ? "text-primary font-medium" : "font-medium"}>

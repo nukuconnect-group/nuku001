@@ -40,6 +40,10 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [mobileNumber, setMobileNumber] = useState("");
 
+  // Promo
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
+
   // Load user profile and auto-fill billing
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -75,7 +79,7 @@ const Cart = () => {
 
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
   const deliveryPrice = selectedDelivery?.price || 0;
-  const finalTotal = total + deliveryPrice;
+  const finalTotal = total + deliveryPrice - promoDiscount;
 
   const handleCheckout = async () => {
     if (!user) {
@@ -281,6 +285,7 @@ const Cart = () => {
                 isCheckingOut={isCheckingOut}
                 canCheckout={!!user}
                 onCheckout={handleCheckout}
+                onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
               />
             </div>
           </div>
