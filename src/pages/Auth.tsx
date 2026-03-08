@@ -44,6 +44,8 @@ const Auth = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
