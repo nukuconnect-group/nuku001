@@ -5,6 +5,7 @@ import NukuAIFloating from "@/components/home/NukuAIFloating";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import PromoBannerSlider from "@/components/home/PromoBannerSlider";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
+import CategoriesSection from "@/components/home/CategoriesSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
@@ -21,6 +22,7 @@ const Index = () => {
         </div>
         {/* PromoBannerSlider: mobile only - with products & farmers */}
         <PromoBannerSlider />
+        <CategoriesSection />
         <div className="lg:hidden">
           <FeaturedProducts />
         </div>
