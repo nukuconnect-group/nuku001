@@ -83,7 +83,7 @@ const AdminDashboard = () => {
         supabase.rpc("get_admin_orders"),
         supabase.rpc("get_admin_subscriptions"),
         supabase.rpc("get_admin_analytics"),
-        supabase.from("profiles").select("*").eq("user_id", session.user.id).single(),
+        supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
       ]);
 
       if (isMounted) {

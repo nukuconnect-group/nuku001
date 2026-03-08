@@ -199,7 +199,7 @@ const Header = () => {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+    const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
     setProfile(data);
     if (data?.location) setUserLocation(data.location);
     fetchNotifications(userId);

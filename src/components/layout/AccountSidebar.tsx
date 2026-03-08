@@ -94,7 +94,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const fetchProfile = async (userId: string) => {
     const [profileRes, roleRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", userId).single(),
+      supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
     ]);
     setProfile(profileRes.data);
