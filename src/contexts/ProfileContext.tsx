@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileContextType {
@@ -23,42 +23,74 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const profileCache = useRef<Record<string, any>>({});
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setProfile(data);
+    // Use cache to avoid redundant fetches
+    if (profileCache.current[userId]) {
+      setProfile(profileCache.current[userId]);
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      profileCache.current[userId] = data;
+      setProfile(data);
+    } catch (e) {
+      console.error("Profile fetch error:", e);
+    }
     setIsLoading(false);
   }, []);
 
   const refreshProfile = useCallback(async () => {
     if (user?.id) {
+      // Clear cache to force refresh
+      delete profileCache.current[user.id];
       await fetchProfile(user.id);
     }
   }, [user, fetchProfile]);
 
   const updateProfile = useCallback((updates: Partial<any>) => {
-    setProfile((prev: any) => (prev ? { ...prev, ...updates } : prev));
+    setProfile((prev: any) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      if (prev.user_id) profileCache.current[prev.user_id] = updated;
+      return updated;
+    });
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
+    // Set up auth listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
         setProfile(null);
+        profileCache.current = {};
+        setIsLoading(false);
+        return;
+      }
+      
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        // Use setTimeout to avoid Supabase deadlock with simultaneous calls
+        setTimeout(() => fetchProfile(currentUser.id), 0);
+      } else {
         setIsLoading(false);
       }
     });
 
+    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        fetchProfile(currentUser.id);
       } else {
         setIsLoading(false);
       }
