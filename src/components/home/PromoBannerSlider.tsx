@@ -7,11 +7,49 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { products as mockProducts } from "@/data/marketplace";
 import ProductCard from "@/components/marketplace/ProductCard";
+import awardImage from "@/assets/award-togo-top-impact.jpg";
+import heroFarmers from "@/assets/hero-farmers-connected.jpg";
+import heroNetwork from "@/assets/hero-network-agriculture.jpg";
+import heroOrganic from "@/assets/hero-organic-farm.jpg";
+import heroAI from "@/assets/hero-ai-agriculture.jpg";
 import promoBanner1 from "@/assets/promo-banner-1.jpg";
-import promoBanner2 from "@/assets/promo-banner-2.jpg";
-import promoBanner3 from "@/assets/promo-banner-3.jpg";
 
 const banners = [
+  {
+    image: awardImage,
+    title: "🏆 Meilleure Innovation 2025",
+    subtitle: "NukuConnect sacrée par Togo Top Impact",
+    cta: "Découvrir",
+    link: "/a-propos",
+  },
+  {
+    image: heroFarmers,
+    title: "Agriculteurs connectés",
+    subtitle: "La technologie au service des champs",
+    cta: "Explorer",
+    link: "/marketplace",
+  },
+  {
+    image: heroNetwork,
+    title: "Réseau agricole digital",
+    subtitle: "Connectez-vous aux producteurs locaux",
+    cta: "Rejoindre",
+    link: "/auth",
+  },
+  {
+    image: heroOrganic,
+    title: "Agriculture moderne & durable",
+    subtitle: "Des produits frais et certifiés bio",
+    cta: "Voir les produits",
+    link: "/marketplace?category=agriculture",
+  },
+  {
+    image: heroAI,
+    title: "L'IA au service de l'agriculture",
+    subtitle: "Optimisez vos rendements avec NukuAI",
+    cta: "Essayer NukuAI",
+    link: "/nuku-ai",
+  },
   {
     image: promoBanner1,
     title: "Livraison gratuite",
@@ -19,20 +57,6 @@ const banners = [
     code: "NUKU2026",
     cta: "Commander",
     link: "/marketplace",
-  },
-  {
-    image: promoBanner2,
-    title: "Produits de saison",
-    subtitle: "Jusqu'à -40%",
-    cta: "Voir les offres",
-    link: "/marketplace?category=agriculture",
-  },
-  {
-    image: promoBanner3,
-    title: "Devenez vendeur",
-    subtitle: "Rejoignez la communauté",
-    cta: "S'inscrire",
-    link: "/auth",
   },
 ];
 
