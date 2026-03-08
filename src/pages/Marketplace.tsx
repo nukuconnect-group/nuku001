@@ -74,9 +74,7 @@ const Marketplace = () => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    // Only add mock filler if very few real products
-    const mockFiller = db.length < 6 ? mockProducts.slice(0, Math.max(0, 6 - db.length)) : [];
-    return [...sortedDb, ...mockFiller];
+    return sortedDb;
   }, [dbProducts, activeBoosts]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
