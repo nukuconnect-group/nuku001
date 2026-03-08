@@ -309,7 +309,6 @@ const Marketplace = () => {
               }`}>
               {category.name}
             </button>
-            </button>
           ))}
         </div>
       </div>
