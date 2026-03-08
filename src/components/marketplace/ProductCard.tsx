@@ -14,6 +14,7 @@ interface ProductCardProps {
   product: Product;
   viewMode?: "grid" | "list";
   onCompare?: (product: Product) => void;
+  hideProducer?: boolean;
 }
 
 const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps) => {
