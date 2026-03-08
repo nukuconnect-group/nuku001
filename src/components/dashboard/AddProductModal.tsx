@@ -59,28 +59,23 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     const files = e.target.files;
     if (!files) return;
 
-    // Convert to base64 for preview (in real app, would upload to storage)
     Array.from(files).forEach((file) => {
-      if (images.length >= 5) {
-        toast({
-          title: "Limite atteinte",
-          description: "Maximum 5 images par produit",
-          variant: "destructive",
-        });
+      if (imageFiles.length >= 5) {
+        toast({ title: "Limite atteinte", description: "Maximum 5 images par produit", variant: "destructive" });
         return;
       }
-
+      setImageFiles((prev) => [...prev, file]);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImages((prev) => [...prev, result]);
+      reader.onload = (ev) => {
+        setImagePreviews((prev) => [...prev, ev.target?.result as string]);
       };
       reader.readAsDataURL(file);
     });
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
