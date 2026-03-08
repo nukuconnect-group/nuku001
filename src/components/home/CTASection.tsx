@@ -13,10 +13,10 @@ const partners = [
 
 const CTASection = () => {
   return (
-    <section className="py-12 sm:py-20 lg:py-28 bg-gradient-earth relative overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent" />
+    <section className="py-12 sm:py-20 lg:py-28 relative overflow-hidden text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-white" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
