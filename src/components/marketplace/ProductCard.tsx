@@ -17,7 +17,7 @@ interface ProductCardProps {
   hideProducer?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false }: ProductCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
