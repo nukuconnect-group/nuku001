@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -38,28 +40,85 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [messageInput, setMessageInput] = useState("");
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
+    // If we have an image preview, send it with optional caption
+    if (imagePreview) {
+      await uploadAndSendImage(imagePreview.file, messageInput.trim());
+      return;
+    }
     if (!messageInput.trim()) return;
     onSend(messageInput.trim());
     setMessageInput("");
     setShowAiSuggestions(false);
   };
 
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>, type: "file" | "image") => {
+  const uploadAndSendImage = async (file: File, caption?: string) => {
+    if (!conversation) return;
+    setIsUploadingImage(true);
+
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `chat/${conversation.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      const imageUrl = urlData.publicUrl;
+      const content = caption ? `📷 ${caption}` : "📷 Photo";
+
+      // Send as a regular message with image URL embedded
+      onSend(`${content}\n[image:${imageUrl}]`);
+
+      setImagePreview(null);
+      setMessageInput("");
+      toast({ title: "Image envoyée ✓" });
+    } catch (error: any) {
+      console.error("Image upload error:", error);
+      toast({ title: "Erreur d'envoi", description: "Impossible d'envoyer l'image", variant: "destructive" });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleImageSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Fichier trop volumineux", description: "La taille maximale est de 5 Mo", variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+    
+    const url = URL.createObjectURL(file);
+    setImagePreview({ file, url });
+    e.target.value = "";
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     const newMsg: MessageItem = {
       id: `local-${Date.now()}`,
       senderId: "me",
-      content: type === "image" ? "📷 Photo" : `📎 ${file.name}`,
+      content: `📎 ${file.name}`,
       timestamp: new Date(),
       status: "sent",
-      type,
+      type: "file",
       fileUrl: url,
       fileName: file.name,
     };
@@ -110,6 +169,16 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     }
   };
 
+  // Parse message content for embedded images
+  const parseMessage = (content: string) => {
+    const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
+    if (imageMatch) {
+      const text = content.replace(/\n?\[image:[^\]]+\]/, "").trim();
+      return { text: text || "📷 Photo", imageUrl: imageMatch[1] };
+    }
+    return { text: content, imageUrl: null };
+  };
+
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center bg-muted/10 hidden lg:flex">
@@ -126,8 +195,8 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
   return (
     <div className="flex-1 flex flex-col bg-background">
-      <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => handleFileSelected(e, "file")} />
-      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelected(e, "image")} />
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
 
       {/* Header */}
       <div className="p-2.5 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card">
@@ -183,33 +252,42 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         <div className="flex items-center justify-center">
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"}`}>
-            <Card className={`max-w-[85%] sm:max-w-[75%] p-2.5 shadow-sm border-0 ${
-              msg.senderId === "me" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card rounded-bl-sm"
-            }`}>
-              {msg.type === "image" && msg.fileUrl && (
-                <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
-              )}
-              {msg.type === "voice" && msg.fileUrl && (
-                <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
-              )}
-              {msg.type === "file" && (
-                <div className="flex items-center gap-2 p-2 bg-black/10 rounded-lg mb-1.5">
-                  <Paperclip className="w-4 h-4" />
-                  <span className="text-xs truncate">{msg.fileName}</span>
+        {messages.map((msg) => {
+          const { text, imageUrl } = parseMessage(msg.content);
+          return (
+            <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"}`}>
+              <Card className={`max-w-[85%] sm:max-w-[75%] p-2.5 shadow-sm border-0 ${
+                msg.senderId === "me" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card rounded-bl-sm"
+              }`}>
+                {/* Embedded image from storage */}
+                {imageUrl && (
+                  <img src={imageUrl} alt="" className="rounded-lg mb-1.5 max-h-56 max-w-full object-cover cursor-pointer"
+                    onClick={() => window.open(imageUrl, "_blank")} />
+                )}
+                {/* Legacy local image */}
+                {msg.type === "image" && msg.fileUrl && !imageUrl && (
+                  <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
+                )}
+                {msg.type === "voice" && msg.fileUrl && (
+                  <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
+                )}
+                {msg.type === "file" && (
+                  <div className="flex items-center gap-2 p-2 bg-black/10 rounded-lg mb-1.5">
+                    <Paperclip className="w-4 h-4" />
+                    <span className="text-xs truncate">{msg.fileName}</span>
+                  </div>
+                )}
+                <p className="text-sm leading-relaxed">{text}</p>
+                <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
+                  <span className="text-[10px] opacity-70">
+                    {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  {msg.senderId === "me" && getMessageStatus(msg.status)}
                 </div>
-              )}
-              <p className="text-sm leading-relaxed">{msg.content}</p>
-              <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
-                <span className="text-[10px] opacity-70">
-                  {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-                {msg.senderId === "me" && getMessageStatus(msg.status)}
-              </div>
-            </Card>
-          </div>
-        ))}
+              </Card>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -236,6 +314,32 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
       )}
 
+      {/* Image preview */}
+      {imagePreview && (
+        <div className="px-3 py-2 bg-muted/50 border-t border-border">
+          <div className="flex items-start gap-2">
+            <div className="relative">
+              <img src={imagePreview.url} alt="" className="w-20 h-20 rounded-lg object-cover" />
+              <button 
+                onClick={() => { URL.revokeObjectURL(imagePreview.url); setImagePreview(null); }}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-muted-foreground mb-1">Image prête à envoyer</p>
+              <Input 
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Ajouter une légende (optionnel)..."
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-2.5 sm:p-3 border-t border-border bg-card">
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 sm:gap-2">
@@ -252,8 +356,8 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
           </Button>
-          <Button type="submit" size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90 flex-shrink-0" disabled={!messageInput.trim()}>
-            <Send className="w-3.5 h-3.5" />
+          <Button type="submit" size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90 flex-shrink-0" disabled={!messageInput.trim() && !imagePreview || isUploadingImage}>
+            {isUploadingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           </Button>
         </form>
       </div>

@@ -216,51 +216,76 @@ const Dashboard = () => {
             <TabsContent value="products" className="space-y-3">
               {products.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                  {products.map((product) => (
-                    <Card key={product.id} className="group hover:shadow-elevated transition-all overflow-hidden">
-                      <div className="relative">
-                        {product.images?.[0] ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-32 sm:h-40 object-cover" />
-                        ) : (
-                          <div className="w-full h-32 sm:h-40 bg-muted flex items-center justify-center">
-                            <Package className="w-8 h-8 text-muted-foreground/30" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 left-2 flex gap-1">
-                          {product.is_organic && (
-                            <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
+                  {products.map((product) => {
+                    const productOrders = orders.filter(o => o.product_id === product.id);
+                    const productRevenue = productOrders.reduce((s: number, o: any) => s + (Number(o.total_price) || 0), 0);
+                    const productSold = productOrders.reduce((s: number, o: any) => s + (Number(o.quantity) || 0), 0);
+                    return (
+                      <Card key={product.id} className="group hover:shadow-elevated transition-all overflow-hidden">
+                        <div className="relative cursor-pointer" onClick={() => navigate(`/produit/${product.id}`)}>
+                          {product.images?.[0] ? (
+                            <img src={product.images[0]} alt={product.name} className="w-full h-32 sm:h-40 object-cover" />
+                          ) : (
+                            <div className="w-full h-32 sm:h-40 bg-muted flex items-center justify-center">
+                              <Package className="w-8 h-8 text-muted-foreground/30" />
+                            </div>
                           )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <Badge className="bg-card/90 text-foreground gap-1 text-[10px]">
+                              <Eye className="w-3 h-3" />Voir le produit
+                            </Badge>
+                          </div>
+                          <div className="absolute top-2 left-2 flex gap-1">
+                            {product.is_organic && (
+                              <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
+                            )}
+                          </div>
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <Badge variant="secondary" className="text-[9px] bg-card/90">
+                              {product.quantity_available} {product.unit}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="absolute top-2 right-2 flex gap-1">
-                          <Badge variant="secondary" className="text-[9px] bg-card/90">
-                            {product.quantity_available} {product.unit}
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-2.5 sm:p-3">
-                        <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 mb-0.5">{product.name}</h3>
-                        <p className="text-[10px] text-muted-foreground mb-1.5 flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5" />{product.location || product.category}
-                        </p>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-heading text-sm sm:text-base font-bold text-primary">
-                            {Number(product.price).toLocaleString()} FCFA
-                          </span>
-                          <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button variant="outline" size="sm" className="flex-1 gap-1 text-[10px] h-7"
-                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
-                            <Edit className="w-2.5 h-2.5" />Modifier
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive h-7 px-2"
-                            onClick={() => handleDeleteProduct(product.id)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        <CardContent className="p-2.5 sm:p-3">
+                          <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 mb-0.5 cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => navigate(`/produit/${product.id}`)}>{product.name}</h3>
+                          <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5" />{product.location || product.category}
+                          </p>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-heading text-sm sm:text-base font-bold text-primary">
+                              {Number(product.price).toLocaleString()} F
+                            </span>
+                            <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
+                          </div>
+                          {/* Per-product stats */}
+                          <div className="grid grid-cols-2 gap-1 mb-2">
+                            <div className="bg-muted/50 rounded-md p-1.5 text-center">
+                              <p className="text-[9px] text-muted-foreground">Vendus</p>
+                              <p className="text-xs font-bold text-foreground">{productSold}</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-md p-1.5 text-center">
+                              <p className="text-[9px] text-muted-foreground">Revenus</p>
+                              <p className="text-xs font-bold text-primary">{productRevenue > 0 ? `${(productRevenue / 1000).toFixed(0)}K` : "0"} F</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button variant="outline" size="sm" className="flex-1 gap-1 text-[10px] h-7"
+                              onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
+                              <Edit className="w-2.5 h-2.5" />Modifier
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate(`/tracabilite`)}>
+                              <QrCode className="w-3 h-3 text-blue-500" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive h-7 px-2"
+                              onClick={() => handleDeleteProduct(product.id)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <Card className="border-dashed">
