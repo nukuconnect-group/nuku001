@@ -63,7 +63,7 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
                 value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-9 sm:pl-12 h-10 sm:h-12 lg:h-14 text-xs sm:text-base bg-white/90 backdrop-blur-sm border-white/30 text-foreground" />
             </div>
-            <Button variant="hero" size="lg" className="h-10 sm:h-12 lg:h-14 px-6 sm:px-8 text-xs sm:text-sm">
+            <Button variant="hero" size="lg" className="h-10 sm:h-12 lg:h-14 px-6 sm:px-8 text-xs sm:text-sm bg-white text-primary hover:bg-white/90">
               Rechercher <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
             </Button>
           </div>
