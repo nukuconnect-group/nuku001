@@ -13,6 +13,7 @@ import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
@@ -232,6 +233,9 @@ const Dashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="traceability" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
                 <QrCode className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Traçabilité
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Paramètres
               </TabsTrigger>
             </TabsList>
 
@@ -485,6 +489,11 @@ const Dashboard = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => setProfile(updated)} />
             </TabsContent>
           </Tabs>
         </div>

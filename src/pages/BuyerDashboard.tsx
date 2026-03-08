@@ -23,6 +23,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const purchaseData = [
@@ -646,19 +647,7 @@ const BuyerDashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <Card>
-                <CardContent className="p-4 sm:p-6 text-center">
-                  <Settings className="w-10 h-10 mx-auto text-primary mb-3" />
-                  <h3 className="font-heading text-sm font-semibold mb-1">Paramètres du profil</h3>
-                  <p className="text-xs text-muted-foreground mb-4">Modifiez votre photo, vos informations et vos images d'arrière-plan</p>
-                  <Link to="/settings">
-                    <Button variant="hero" className="gap-2 text-xs">
-                      <Settings className="w-4 h-4" />
-                      Accéder aux paramètres
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => setProfile(updated)} />
             </TabsContent>
 
           </Tabs>
