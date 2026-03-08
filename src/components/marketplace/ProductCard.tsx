@@ -136,6 +136,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
         </div>
 
         <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col gap-0.5">
+          {/* Category */}
+          <span className="text-[8px] sm:text-[9px] font-medium text-primary uppercase tracking-wide">{product.category}</span>
+
           {/* Title */}
           <h3 className="font-heading font-semibold text-foreground text-[11px] sm:text-xs leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {product.name}
