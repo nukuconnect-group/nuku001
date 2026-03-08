@@ -130,6 +130,11 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm animate-fade-in">-{product.discount}%</Badge>
             )}
             {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">NEW</Badge>}
+            {matchingDemands > 0 && (
+              <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
+                <HandCoins className="w-2.5 h-2.5" />{matchingDemands} achat{matchingDemands > 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
 
           {/* Compare & Wishlist buttons */}
