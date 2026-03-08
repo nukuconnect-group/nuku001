@@ -392,7 +392,7 @@ const Header = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Link to="/auth" className="hidden sm:block">
+                  <Link to="/auth">
                     <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                       <User className="w-4 h-4" />
                     </Button>

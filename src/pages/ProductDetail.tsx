@@ -19,6 +19,7 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReviewSection from "@/components/product/ReviewSection";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -136,14 +137,14 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
       <main>
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /><span className="text-sm">{t("product.back")}</span>
+            <ArrowLeft className="w-4 h-4" /><span className="text-xs sm:text-sm">{t("product.back")}</span>
           </button>
         </div>
 
-        <div className="container mx-auto px-4 pb-12">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="container mx-auto px-3 sm:px-4 pb-8 sm:pb-12">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
             {/* Image Section */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
@@ -200,9 +201,9 @@ const ProductDetail = () => {
                 <Badge variant="secondary" className="capitalize">{product.category}</Badge>
                 <span className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-4 h-4" />{product.location}</span>
               </div>
-              <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="font-heading text-3xl lg:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+              <h1 className="font-heading text-xl sm:text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
+              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                <span className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
                 )}
@@ -265,26 +266,30 @@ const ProductDetail = () => {
 
               <Card>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <img src={product.producer.avatar} alt={product.producer.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div className="flex-1">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <img src={product.producer.avatar} alt={product.producer.name} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover" />
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-heading font-semibold text-foreground">{product.producer.name}</span>
-                        {product.producer.verified && <ShieldCheck className="w-5 h-5 text-primary" />}
+                        <span className="font-heading font-semibold text-sm sm:text-base text-foreground truncate">{product.producer.name}</span>
+                        {product.producer.verified && <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Star className="w-4 h-4 text-accent fill-accent" />
-                        <span className="text-sm font-medium">{product.producer.rating}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Star className="w-3.5 h-3.5 text-accent fill-accent" />
+                        <span className="text-xs sm:text-sm font-medium">{product.producer.rating}</span>
                       </div>
+                      <span className="text-[10px] text-muted-foreground">Fournisseur</span>
                     </div>
                     <Link to={`/producteurs/${product.producer.name}`}>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <User className="w-4 h-4" />{t("product.viewProfile")}
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                        <User className="w-3.5 h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span>
                       </Button>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Reviews Section */}
+              <ReviewSection productId={product.id} />
             </div>
           </div>
         </div>

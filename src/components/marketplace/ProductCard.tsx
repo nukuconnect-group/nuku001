@@ -91,7 +91,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
 
   return (
     <Link to={`/produit/${product.id}`} className="block">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px]">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto">
         {/* Square Image */}
         <div className="relative aspect-square overflow-hidden">
           <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
