@@ -7,7 +7,7 @@ import {
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle,
-  Mic, Camera
+  Mic, Camera, QrCode
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -24,6 +24,7 @@ import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
+import QRScanner from "@/components/QRScanner";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
@@ -50,6 +51,7 @@ const Header = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -381,8 +383,12 @@ const Header = () => {
                   <Input type="text" placeholder={t("header.search")} value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
                     onFocus={() => setShowSearchResults(true)}
-                    className="w-full h-10 pl-4 pr-36 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
+                    className="w-full h-10 pl-4 pr-44 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
                   <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    <button type="button" onClick={() => setQrScannerOpen(true)}
+                      className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+                      <QrCode className="w-4 h-4" />
+                    </button>
                     <button type="button" onClick={() => setVoiceSearchOpen(true)}
                       className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                       <Mic className="w-4 h-4" />
@@ -539,8 +545,12 @@ const Header = () => {
             <Input type="text" placeholder={t("header.search")} value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
-              className="w-full h-9 pl-4 pr-24 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
+              className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+              <button type="button" onClick={() => setQrScannerOpen(true)}
+                className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+                <QrCode className="w-3.5 h-3.5" />
+              </button>
               <button type="button" onClick={() => setVoiceSearchOpen(true)}
                 className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                 <Mic className="w-3.5 h-3.5" />
@@ -648,6 +658,11 @@ const Header = () => {
         open={imageSearchOpen}
         onClose={() => setImageSearchOpen(false)}
         onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
+      />
+      <QRScanner
+        isOpen={qrScannerOpen}
+        onClose={() => setQrScannerOpen(false)}
+        onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
       />
     </>
   );
