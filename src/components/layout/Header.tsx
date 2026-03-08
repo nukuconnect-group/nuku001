@@ -377,12 +377,8 @@ const Header = () => {
                 </SheetContent>
               </Sheet>
 
-              <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-                <img src={nukuLogo} alt="NUKUCONNECT"
-                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5 hidden sm:block" />
-                <img src={nukuLogoWhite} alt="NUKUCONNECT"
-                  className="h-9 object-contain sm:hidden" />
-                <span className="font-heading font-bold text-sm sm:text-base lg:text-lg text-primary-foreground hidden sm:block">
+              <Link to="/" className="flex items-center flex-shrink-0">
+                <span className="font-heading font-extrabold text-lg sm:text-xl lg:text-2xl text-primary-foreground tracking-tight">
                   NUKUCONNECT
                 </span>
               </Link>
