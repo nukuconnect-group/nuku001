@@ -38,7 +38,6 @@ const ProductDetail = () => {
   const [message, setMessage] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Try DB product first, fallback to mock
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
   const mockProduct = mockProducts.find((p) => p.id === id);
@@ -70,8 +69,6 @@ const ProductDetail = () => {
       navigate("/auth");
       return;
     }
-
-    // If message is typed, send it first then redirect
     if (message.trim()) {
       try {
         const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
@@ -91,8 +88,6 @@ const ProductDetail = () => {
         console.error("Send message error:", error);
       }
     }
-
-    // Always redirect to messages with product context
     navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
   };
 
@@ -124,47 +119,54 @@ const ProductDetail = () => {
   const totalPrice = product.price * quantity;
 
   return (
-    <div className="min-h-screen bg-background pb-14 lg:pb-0">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
       <main>
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        {/* Back button */}
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-4">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" /><span className="text-xs sm:text-sm">{t("product.back")}</span>
           </button>
         </div>
 
-        <div className="container mx-auto px-3 sm:px-4 pb-8 sm:pb-12">
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
-            {/* Image Section */}
-            <div className="space-y-4">
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-                <img src={images[currentImageIndex] || product.image} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
+        <div className="container mx-auto px-3 sm:px-4 pb-6 sm:pb-12">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10">
+
+            {/* ===== IMAGE SECTION ===== */}
+            <div className="space-y-2 sm:space-y-3">
+              {/* Main image — square, no rounded corners on mobile */}
+              <div className="relative aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg">
+                <img
+                  src={images[currentImageIndex] || product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
                 {images.length > 1 && (
                   <>
-                    <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
-                      <ChevronLeft className="w-5 h-5" />
+                    <button onClick={prevImage} className="absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
-                      <ChevronRight className="w-5 h-5" />
+                    <button onClick={nextImage} className="absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                       {images.map((_, idx) => (
                         <button key={idx} onClick={() => setCurrentImageIndex(idx)}
-                          className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? "bg-primary w-6" : "bg-card/80"}`} />
+                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${idx === currentImageIndex ? "bg-primary w-4 sm:w-6" : "bg-card/80"}`} />
                       ))}
                     </div>
                   </>
                 )}
-                {/* Only 2 badges: BIO and discount */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {/* Badges */}
+                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5">
                   {product.isOrganic && (
-                    <Badge className="bg-primary text-primary-foreground gap-1"><Leaf className="w-3 h-3" />BIO</Badge>
+                    <Badge className="bg-primary text-primary-foreground gap-1 text-[10px] sm:text-xs px-1.5 py-0.5"><Leaf className="w-2.5 h-2.5 sm:w-3 sm:h-3" />BIO</Badge>
                   )}
                   {product.discount && (
-                    <Badge className="bg-destructive text-destructive-foreground font-bold">-{product.discount}%</Badge>
+                    <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs px-1.5 py-0.5">-{product.discount}%</Badge>
                   )}
                 </div>
-                <div className="absolute top-4 right-4 flex gap-2">
+                <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1.5">
                   <button
                     onClick={() => {
                       if (!isAuthenticated) {
@@ -175,20 +177,22 @@ const ProductDetail = () => {
                       toggleWishlist(product.id);
                       toast({ title: isInWishlist(product.id) ? "Retiré des favoris" : "Ajouté aux favoris" });
                     }}
-                    className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
                   >
-                    <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
+                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
-                  <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
-                    <Share2 className="w-5 h-5 text-muted-foreground" />
+                  <button className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   </button>
                 </div>
               </div>
+
+              {/* Thumbnails — square, no rounded */}
               {images.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-1.5 sm:gap-2 overflow-x-auto px-1 pb-1">
                   {images.map((img, idx) => (
                     <button key={idx} onClick={() => setCurrentImageIndex(idx)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"}`}>
+                      className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 overflow-hidden border-2 transition-all rounded-none sm:rounded ${idx === currentImageIndex ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"}`}>
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
@@ -196,14 +200,14 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Details */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <Badge variant="secondary" className="capitalize text-xs">{product.category}</Badge>
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground"><MapPin className="w-3.5 h-3.5" />{product.location}</span>
-                {/* Currency selector */}
+            {/* ===== DETAILS SECTION ===== */}
+            <div className="space-y-4 sm:space-y-5 px-1 sm:px-0">
+              {/* Category + location + currency */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="secondary" className="capitalize text-[10px] sm:text-xs">{product.category}</Badge>
+                <span className="flex items-center gap-1 text-[10px] sm:text-sm text-muted-foreground"><MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />{product.location}</span>
                 <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
-                  <SelectTrigger className="w-24 h-7 text-[10px] ml-auto"><DollarSign className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-20 sm:w-24 h-6 sm:h-7 text-[9px] sm:text-[10px] ml-auto"><DollarSign className="w-3 h-3 mr-0.5" /><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="XOF" className="text-xs">FCFA</SelectItem>
                     <SelectItem value="USD" className="text-xs">USD $</SelectItem>
@@ -212,97 +216,110 @@ const ProductDetail = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <h1 className="font-heading text-xl sm:text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
-              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                <span className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+
+              {/* Title */}
+              <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">{product.name}</h1>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
                 {product.originalPrice && (
-                  <span className="text-xl text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                  <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
                 )}
-                <span className="text-muted-foreground">/ {product.unit}</span>
-              </div>
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-
-              <div className="flex items-center gap-6 py-4 border-y border-border">
-                <div className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" />
-                  <span className="text-sm"><span className="font-semibold text-foreground">{product.quantity}</span> {product.unit}s {t("product.available")}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">{t("product.deliveryAvailable")}</span>
-                </div>
+                <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <label className="text-sm font-medium text-foreground">{t("product.quantity")}</label>
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+
+              {/* Stock + delivery */}
+              <div className="flex items-center gap-4 sm:gap-6 py-3 border-y border-border">
+                <div className="flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-primary" />
+                  <span className="text-xs sm:text-sm"><span className="font-semibold text-foreground">{product.quantity}</span> {product.unit}s {t("product.available")}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-primary" />
+                  <span className="text-xs sm:text-sm text-muted-foreground">{t("product.deliveryAvailable")}</span>
+                </div>
+              </div>
+
+              {/* Quantity selector + total */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-xs sm:text-sm font-medium text-foreground">{t("product.quantity")}</label>
                   <div className="flex items-center">
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 rounded-l-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center">-</button>
-                    <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 h-10 text-center rounded-none border-x-0" min={1} max={product.quantity} />
-                    <button onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))} className="w-10 h-10 rounded-r-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center">+</button>
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-l-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center text-sm">-</button>
+                    <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-14 sm:w-20 h-8 sm:h-10 text-center rounded-none border-x-0 text-sm" min={1} max={product.quantity} />
+                    <button onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-r-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center text-sm">+</button>
                   </div>
                 </div>
-                <div className="p-4 bg-muted rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-muted-foreground">{t("product.estimatedTotal")}</span>
-                    <span className="font-heading text-2xl font-bold text-primary">{formatPrice(totalPrice)}</span>
+
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm text-muted-foreground">{t("product.estimatedTotal")}</span>
+                    <span className="font-heading text-lg sm:text-xl font-bold text-primary">{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" className="gap-2" onClick={handleContactSeller}>
-                    <MessageCircle className="w-4 h-4" />{t("product.contactSeller")}
+
+                {/* Action buttons — stacked on mobile */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs sm:text-sm w-full sm:w-auto" onClick={handleContactSeller}>
+                    <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{t("product.contactSeller")}
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handleAddToCart}>
-                    <ShoppingCart className="w-4 h-4" />{t("product.addToCart")}
+                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleAddToCart}>
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{t("product.addToCart")}
                   </Button>
-                  <Button variant="hero" className="flex-1 gap-2" onClick={handleBuyNow}>
-                    <CreditCard className="w-4 h-4" />Acheter
+                  <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleBuyNow}>
+                    <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Acheter
                   </Button>
                 </div>
               </div>
 
+              {/* Contact form */}
               {showContactForm && (
                 <Card className="animate-fade-in">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <MessageCircle className="w-5 h-5 text-primary" />
+                  <CardHeader className="p-3 pb-2">
+                    <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-primary" />
                       {t("product.sendMessage")} {product.producer.name}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Textarea placeholder={`Bonjour ${product.producer.name}...`} value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-[100px]" />
-                    <Button variant="hero" className="w-full gap-2" onClick={handleContactSeller}>
-                      <Send className="w-4 h-4" />{t("product.send")}
+                  <CardContent className="p-3 pt-0 space-y-3">
+                    <Textarea placeholder={`Bonjour ${product.producer.name}...`} value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-[80px] text-sm" />
+                    <Button variant="hero" size="sm" className="w-full gap-2 text-sm" onClick={handleContactSeller}>
+                      <Send className="w-3.5 h-3.5" />{t("product.send")}
                     </Button>
                   </CardContent>
                 </Card>
               )}
 
+              {/* Seller card */}
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <img src={product.producer.avatar} alt={product.producer.name} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover" />
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2.5 sm:gap-4">
+                    <img src={product.producer.avatar} alt={product.producer.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-heading font-semibold text-sm sm:text-base text-foreground truncate">{product.producer.name}</span>
-                        {product.producer.verified && <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />}
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-heading font-semibold text-xs sm:text-sm text-foreground truncate">{product.producer.name}</span>
+                        {product.producer.verified && <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Star className="w-3.5 h-3.5 text-accent fill-accent" />
-                        <span className="text-xs sm:text-sm font-medium">{product.producer.rating}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Star className="w-3 h-3 text-accent fill-accent" />
+                        <span className="text-[10px] sm:text-xs font-medium">{product.producer.rating}</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">Fournisseur</span>
+                      <span className="text-[9px] sm:text-[10px] text-muted-foreground">Fournisseur</span>
                     </div>
                     <Link to={`/producteurs/${product.producer.name}`}>
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                        <User className="w-3.5 h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span>
+                      <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">
+                        <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span><span className="sm:hidden">Profil</span>
                       </Button>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Reviews Section */}
+              {/* Reviews */}
               <ReviewSection productId={product.id} />
             </div>
           </div>
