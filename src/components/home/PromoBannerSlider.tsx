@@ -169,29 +169,29 @@ const PromoBannerSlider = () => {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="px-3 sm:px-0 py-2 sm:py-4">
-        <div className="sm:container sm:mx-auto sm:px-4">
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-xl mx-auto md:max-w-none">
-            <div className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-primary/5 border border-primary/10">
+      {/* Quick Stats - mobile only */}
+      <div className="md:hidden px-3 py-2">
+        <div>
+          <div className="grid grid-cols-3 gap-2 max-w-xl mx-auto">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
               <Users className="w-4 h-4 text-primary flex-shrink-0" />
               <div>
-                <p className="text-xs sm:text-sm font-bold text-foreground">10K+</p>
-                <p className="text-[9px] sm:text-xs text-muted-foreground">Producteurs</p>
+                <p className="text-xs font-bold text-foreground">10K+</p>
+                <p className="text-[9px] text-muted-foreground">Producteurs</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
               <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
               <div>
-                <p className="text-xs sm:text-sm font-bold text-foreground">2K+</p>
-                <p className="text-[9px] sm:text-xs text-muted-foreground">Bio certifié</p>
+                <p className="text-xs font-bold text-foreground">2K+</p>
+                <p className="text-[9px] text-muted-foreground">Bio certifié</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
               <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
               <div>
-                <p className="text-xs sm:text-sm font-bold text-foreground">50K+</p>
-                <p className="text-[9px] sm:text-xs text-muted-foreground">Ventes</p>
+                <p className="text-xs font-bold text-foreground">50K+</p>
+                <p className="text-[9px] text-muted-foreground">Ventes</p>
               </div>
             </div>
           </div>
