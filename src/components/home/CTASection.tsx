@@ -25,12 +25,12 @@ const CTASection = () => {
             <Rocket className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
           </div>
 
-          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
+          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 px-2">
             Prêt à transformer votre{" "}
-            <span className="text-primary">activité agricole</span> ?
+            <span className="text-yellow-300">activité agricole</span> ?
           </h2>
 
-          <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-10 max-w-2xl mx-auto px-4">
+          <p className="text-sm sm:text-lg text-white/80 mb-6 sm:mb-10 max-w-2xl mx-auto px-4">
             Rejoignez des milliers de producteurs et acheteurs qui font confiance 
             à NUKUCONNECT pour développer leur activité.
           </p>
