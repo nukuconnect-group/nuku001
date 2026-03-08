@@ -45,8 +45,7 @@ const ProductDetail = () => {
 
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
-  const mockProduct = mockProducts.find((p) => p.id === id);
-  const product = dbProduct || mockProduct;
+  const product = dbProduct || null;
 
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);

@@ -16,7 +16,7 @@ const SimilarProducts = ({ currentProduct }: SimilarProductsProps) => {
 
   const similar = useMemo(() => {
     const db = dbProducts || [];
-    const pool = db.length > 0 ? [...db, ...mockProducts.slice(0, 4)] : mockProducts;
+    const pool = db;
     
     let results = pool
       .filter(p => p.id !== currentProduct.id && (

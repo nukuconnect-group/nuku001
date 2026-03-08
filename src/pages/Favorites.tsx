@@ -14,7 +14,7 @@ const Favorites = () => {
   const { wishlist, isLoading: wishlistLoading, isAuthenticated } = useWishlist();
   const { data: dbProducts, isLoading: productsLoading } = useProducts();
 
-  const allProducts = [...(dbProducts || []), ...mockProducts];
+  const allProducts = dbProducts || [];
 
   const favoriteProducts = allProducts.filter((p) =>
     wishlist.some((w) => w.product_id === p.id)

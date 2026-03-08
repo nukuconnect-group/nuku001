@@ -110,7 +110,7 @@ const PromoBannerSlider = () => {
 
   const recentProducts = useMemo(() => {
     const db = products || [];
-    return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
+    return db.slice(0, 8);
   }, [products]);
 
   // Featured producers with professional avatars
