@@ -71,6 +71,9 @@ const banners = [
 
 const PromoBannerSlider = () => {
   const [current, setCurrent] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchDelta, setTouchDelta] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const { data: products } = useProducts();
   const { formatPrice } = useLanguage();
 
@@ -80,6 +83,30 @@ const PromoBannerSlider = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+    setIsSwiping(true);
+    setTouchDelta(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    setTouchDelta(e.touches[0].clientX - touchStart);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart === null) return;
+    const threshold = 50;
+    if (touchDelta < -threshold) {
+      setCurrent((prev) => (prev + 1) % banners.length);
+    } else if (touchDelta > threshold) {
+      setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+    }
+    setTouchStart(null);
+    setTouchDelta(0);
+    setIsSwiping(false);
+  };
 
   const recentProducts = useMemo(() => {
     const db = products || [];
@@ -136,10 +163,14 @@ const PromoBannerSlider = () => {
     <div>
       {/* Banner Slider - mobile only */}
       <div className="md:hidden px-3 pt-2 pb-1">
-        <div className="relative overflow-hidden rounded-2xl shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${current * 100}%)` }}
+            className={`flex ${isSwiping ? '' : 'transition-transform duration-500 ease-out'}`}
+            style={{ transform: `translateX(calc(-${current * 100}% + ${isSwiping ? touchDelta : 0}px))` }}
           >
             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
