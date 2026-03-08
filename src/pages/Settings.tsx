@@ -73,12 +73,13 @@ const Settings = () => {
 
       if (type === "avatar") {
         await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
-        setProfile((p: any) => ({ ...p, avatar_url: publicUrl }));
+        updateProfile({ avatar_url: publicUrl });
       } else {
         const newImages = [...coverImages, publicUrl];
         setCoverImages(newImages);
         await supabase.from("profiles").update({ cover_url: publicUrl, cover_images: newImages } as any).eq("id", profile.id);
         setCurrentCoverIndex(newImages.length - 1);
+        updateProfile({ cover_url: publicUrl, cover_images: newImages });
       }
       toast({ title: "Image mise à jour ✓" });
     } catch (err: any) {
