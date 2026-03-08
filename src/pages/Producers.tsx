@@ -14,6 +14,7 @@ import {
   Filter, Users, Package, Navigation, Loader2, User
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -196,9 +197,11 @@ const Producers = () => {
                           className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-border"
                         />
                       ) : (
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-border">
-                          <User className="w-6 h-6 text-primary" />
-                        </div>
+                        <img
+                          src={defaultAvatar}
+                          alt={producer.name}
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-border bg-primary/5"
+                        />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">

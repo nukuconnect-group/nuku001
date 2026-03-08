@@ -3,12 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +28,20 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   const { formatPrice } = useLanguage();
   const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [showReviews, setShowReviews] = useState(false);
+
+  // Check if there are active demands matching this product's category
+  const { data: matchingDemands = 0 } = useQuery({
+    queryKey: ["demand-count", product.category],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("demands")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .ilike("category", `%${product.category}%`);
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -113,6 +130,11 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm animate-fade-in">-{product.discount}%</Badge>
             )}
             {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">NEW</Badge>}
+            {matchingDemands > 0 && (
+              <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
+                <HandCoins className="w-2.5 h-2.5" />{matchingDemands} achat{matchingDemands > 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
 
           {/* Compare & Wishlist buttons */}
@@ -177,7 +199,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           {/* Fournisseur */}
           {!hideProducer && (
             <div className="flex items-center gap-1.5 pt-1.5 mt-1 border-t border-border">
-              <img src={product.producer.avatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
+              <img src={product.producer.avatar || defaultAvatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
               <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
             </div>
           )}
