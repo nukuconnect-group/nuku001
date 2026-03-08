@@ -107,19 +107,28 @@ const Dashboard = () => {
       <main className="py-3 sm:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Welcome */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-            <div>
-              <h1 className="font-heading text-base sm:text-xl lg:text-2xl font-bold text-foreground">
-                Bonjour, {profile?.full_name || "Producteur"} 👋
-              </h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Gérez vos produits et suivez vos ventes</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <User className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
+                  Bonjour, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
+                </h1>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Tableau de bord fournisseur</p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8" onClick={() => setShowAddProduct(true)}>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap" onClick={() => setShowAddProduct(true)}>
                 <Plus className="w-3.5 h-3.5" />Ajouter produit
               </Button>
               <Link to="/plans">
-                <Button variant="hero" size="sm" className="gap-1 text-[10px] sm:text-xs h-8">
+                <Button variant="hero" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap">
                   <Rocket className="w-3.5 h-3.5" />Booster
                 </Button>
               </Link>
