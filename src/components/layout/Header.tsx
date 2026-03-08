@@ -96,7 +96,8 @@ const Header = () => {
                 onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
                 className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <cat.icon className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm">{cat.emoji}</span>
+                </div>
                 </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
