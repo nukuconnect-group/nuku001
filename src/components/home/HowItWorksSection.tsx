@@ -39,16 +39,16 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section className="py-10 sm:py-14 lg:py-20 bg-muted/30">
+    <section className="py-10 sm:py-14 lg:py-20 text-white relative" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
-          <span className="inline-block px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3">
+          <span className="inline-block px-3 py-1.5 rounded-full bg-white/20 text-white text-xs sm:text-sm font-medium mb-3">
             Comment ça marche ?
           </span>
-          <h2 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            Achetez en <span className="text-primary">4 étapes simples</span>
+          <h2 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+            Achetez en <span className="text-yellow-300">4 étapes simples</span>
           </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground px-2">
+          <p className="text-xs sm:text-sm text-white/80 px-2">
             De la création de compte à la livraison, découvrez comment NUKUCONNECT simplifie vos achats agricoles.
           </p>
         </div>
