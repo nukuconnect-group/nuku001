@@ -451,8 +451,6 @@ const Header = () => {
             </Button>
           </div>
         </div>
-
-        </div>
       </header>
 
       {/* Row 4: Desktop Nav - scrolls away */}
