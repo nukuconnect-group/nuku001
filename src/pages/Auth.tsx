@@ -31,14 +31,12 @@ const sectors = [
 ];
 
 const countries = [
-  "Togo",
-  "Bénin",
-  "Ghana",
-  "Côte d'Ivoire",
-  "Burkina Faso",
-  "Niger",
-  "Mali",
-  "Sénégal",
+  "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso",
+  "Niger", "Mali", "Sénégal", "Guinée", "Cameroun",
+  "Nigeria", "RDC", "Congo", "Gabon", "Tchad",
+  "Mauritanie", "Gambie", "Sierra Leone", "Liberia",
+  "Cap-Vert", "Guinée-Bissau", "Guinée équatoriale",
+  "São Tomé-et-Príncipe", "Centrafrique",
 ];
 
 const Auth = () => {
