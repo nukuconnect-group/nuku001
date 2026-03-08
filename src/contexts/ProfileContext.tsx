@@ -24,6 +24,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const profileCache = useRef<Record<string, any>>({});
+  const sessionHandled = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     // Use cache to avoid redundant fetches
