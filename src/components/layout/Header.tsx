@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { 
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
-  LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
+  LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle,
+  Mic, Camera
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
