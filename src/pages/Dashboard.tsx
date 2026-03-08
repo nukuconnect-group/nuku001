@@ -278,6 +278,11 @@ const Dashboard = () => {
                             {product.is_organic && (
                               <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
                             )}
+                            {isProductBoosted(activeBoosts, product.id) && (
+                              <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 gap-0.5 animate-pulse">
+                                <Rocket className="w-2.5 h-2.5" />Boosté
+                              </Badge>
+                            )}
                           </div>
                           <div className="absolute top-2 right-2 flex gap-1">
                             <Badge variant="secondary" className="text-[9px] bg-card/90">
