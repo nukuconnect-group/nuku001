@@ -56,6 +56,32 @@ const FeaturedProducts = () => {
     return mockProducts.slice(0, 8);
   }, [dbProducts, userProfile]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const autoScrollTimer = useRef<ReturnType<typeof setInterval>>();
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+
+  const startAutoScroll = useCallback(() => {
+    if (!isMobile || !scrollRef.current) return;
+    autoScrollTimer.current = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const cardWidth = 160;
+      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }, 3000);
+  }, [isMobile]);
+
+  useEffect(() => {
+    startAutoScroll();
+    return () => clearInterval(autoScrollTimer.current);
+  }, [startAutoScroll, featuredProducts]);
+
+  const handleTouchStart = () => clearInterval(autoScrollTimer.current);
+  const handleTouchEnd = () => { clearInterval(autoScrollTimer.current); startAutoScroll(); };
+
   return (
     <section className="py-8 sm:py-12 lg:py-16 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
@@ -77,7 +103,11 @@ const FeaturedProducts = () => {
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0"
+          <div
+            ref={scrollRef}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0"
             style={{ WebkitOverflowScrolling: 'touch' }}>
             {featuredProducts.map((product) => (
               <div key={product.id} className="min-w-[150px] max-w-[170px] snap-start flex-shrink-0 sm:min-w-0 sm:max-w-none">
