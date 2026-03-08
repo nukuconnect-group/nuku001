@@ -113,6 +113,7 @@ const App = () => {
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
+        </ProfileProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );
