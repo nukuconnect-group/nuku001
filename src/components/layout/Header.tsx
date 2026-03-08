@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,12 +38,6 @@ const currencies = [
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
-const mockNotifications = [
-  { id: "1", type: "order", title: "Nouvelle commande", message: "50kg de Maïs commandé", time: "5 min", read: false },
-  { id: "2", type: "message", title: "Nouveau message", message: "De Kofi Mensah", time: "30 min", read: false },
-  { id: "3", type: "system", title: "Produit épuisé", message: "Stock Tomates vide", time: "2h", read: true },
-];
-
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -56,14 +50,40 @@ const Header = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
   const [customLocation, setCustomLocation] = useState("");
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  // Fetch real notifications from DB
+  const fetchNotifications = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setNotifications(data);
+  }, []);
+
+  // Realtime notifications subscription
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("header-notifications")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+        const n = payload.new as any;
+        if (n.user_id === user.id) {
+          setNotifications(prev => [n, ...prev.slice(0, 9)]);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const navLinks = [
     { label: t("nav.home"), href: "/" },
@@ -105,6 +125,7 @@ const Header = () => {
     const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
     setProfile(data);
     if (data?.location) setUserLocation(data.location);
+    fetchNotifications(userId);
   };
 
   const handleLogout = async () => {
@@ -121,8 +142,10 @@ const Header = () => {
     setLocationDialogOpen(false);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    if (!user) return;
+    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
   };
 
   const getDashboardLink = () => profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
@@ -319,13 +342,17 @@ const Header = () => {
                       )}
                     </div>
                     <DropdownMenuSeparator />
-                    {notifications.map((notif) => (
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-muted-foreground">Aucune notification</div>
+                    ) : notifications.map((notif) => (
                       <DropdownMenuItem key={notif.id} className="flex items-start gap-2 p-2 cursor-pointer">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-muted' : 'bg-primary'}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.is_read ? 'bg-muted' : 'bg-primary'}`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium">{notif.title}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{notif.message}</p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5">Il y a {notif.time}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{notif.description}</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5">
+                            {new Date(notif.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </p>
                         </div>
                       </DropdownMenuItem>
                     ))}

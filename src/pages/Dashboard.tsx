@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
@@ -138,11 +139,11 @@ const Dashboard = () => {
               <Card className="cursor-pointer hover:shadow-elevated transition-all h-full">
                 <CardContent className="p-3 sm:p-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Truck className="w-4 h-4 text-accent-foreground" />
+                    <ShoppingCart className="w-4 h-4 text-accent-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Livraisons</p>
-                    <p className="text-[10px] text-muted-foreground">Suivre envois</p>
+                    <p className="text-xs font-semibold text-foreground">Commandes</p>
+                    <p className="text-[10px] text-muted-foreground">Suivre commandes</p>
                   </div>
                 </CardContent>
               </Card>
@@ -181,38 +182,47 @@ const Dashboard = () => {
 
             <TabsContent value="products" className="space-y-3">
               {products.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                   {products.map((product) => (
-                    <Card key={product.id} className="group hover:shadow-elevated transition-all">
-                      <CardContent className="p-2.5 sm:p-3">
-                        {product.images?.[0] && (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-24 sm:h-32 object-cover rounded-lg mb-2" />
-                        )}
-                        <div className="flex items-start justify-between mb-1.5">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1">{product.name}</h3>
-                            <p className="text-[10px] text-muted-foreground">{product.category}</p>
+                    <Card key={product.id} className="group hover:shadow-elevated transition-all overflow-hidden">
+                      <div className="relative">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0]} alt={product.name} className="w-full h-32 sm:h-40 object-cover" />
+                        ) : (
+                          <div className="w-full h-32 sm:h-40 bg-muted flex items-center justify-center">
+                            <Package className="w-8 h-8 text-muted-foreground/30" />
                           </div>
+                        )}
+                        <div className="absolute top-2 left-2 flex gap-1">
                           {product.is_organic && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-[9px] ml-1">Bio</Badge>
+                            <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
                           )}
                         </div>
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <Badge variant="secondary" className="text-[9px] bg-card/90">
+                            {product.quantity_available} {product.unit}
+                          </Badge>
+                        </div>
+                      </div>
+                      <CardContent className="p-2.5 sm:p-3">
+                        <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 mb-0.5">{product.name}</h3>
+                        <p className="text-[10px] text-muted-foreground mb-1.5 flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5" />{product.location || product.category}
+                        </p>
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-heading text-sm sm:text-base font-bold text-primary">
-                            {Number(product.price).toLocaleString()} F
+                            {Number(product.price).toLocaleString()} FCFA
                           </span>
-                          <span className="text-[10px] text-muted-foreground">{product.quantity_available} {product.unit}</span>
+                          <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
                         </div>
                         <div className="flex gap-1">
-                          <Button variant="outline" size="sm" className="flex-1 gap-1 text-[10px] h-7">
+                          <Button variant="outline" size="sm" className="flex-1 gap-1 text-[10px] h-7"
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
                             <Edit className="w-2.5 h-2.5" />Modifier
                           </Button>
-                          <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7">
-                            <Rocket className="w-2.5 h-2.5" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive h-7"
+                          <Button variant="ghost" size="sm" className="text-destructive h-7 px-2"
                             onClick={() => handleDeleteProduct(product.id)}>
-                            <Trash2 className="w-2.5 h-2.5" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </CardContent>
@@ -401,8 +411,9 @@ const Dashboard = () => {
       </main>
 
       {profile && (
-        <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct}
-          profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)} />
+        <AddProductModal open={showAddProduct} onOpenChange={(open) => { setShowAddProduct(open); if (!open) setEditingProduct(null); }}
+          profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
+          editProduct={editingProduct} />
       )}
       <Footer />
       <MobileBottomNav />

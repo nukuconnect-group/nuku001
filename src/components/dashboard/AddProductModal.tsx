@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { Plus, Loader2, Upload, X, Tag, Zap } from "lucide-react";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 
@@ -22,6 +22,7 @@ interface AddProductModalProps {
   onOpenChange: (open: boolean) => void;
   profileId: string;
   onProductAdded: () => void;
+  editProduct?: any;
 }
 
 const promoTypes = [
@@ -32,7 +33,7 @@ const promoTypes = [
   { value: "nouveau", label: "NOUVEAU", icon: Zap },
 ];
 
-const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddProductModalProps) => {
+const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editProduct }: AddProductModalProps) => {
   const { toast } = useToast();
   const { uploadImages, uploading } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +41,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [newProduct, setNewProduct] = useState({
+  const defaultProduct = {
     name: "",
     description: "",
     price: "",
@@ -53,7 +54,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     location: "",
     is_organic: false,
     min_order: "1",
-  });
+  };
+
+  const [newProduct, setNewProduct] = useState(defaultProduct);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editProduct) {
+      setNewProduct({
+        name: editProduct.name || "",
+        description: editProduct.description || "",
+        price: String(editProduct.price || ""),
+        originalPrice: "",
+        discount: "",
+        promoType: "none",
+        category: editProduct.category || "",
+        unit: editProduct.unit || "kg",
+        quantity_available: String(editProduct.quantity_available || ""),
+        location: editProduct.location || "",
+        is_organic: editProduct.is_organic || false,
+        min_order: String(editProduct.min_order || "1"),
+      });
+      if (editProduct.images?.length) {
+        setImagePreviews(editProduct.images);
+        setImageFiles([]);
+      }
+    } else {
+      setNewProduct(defaultProduct);
+      setImagePreviews([]);
+      setImageFiles([]);
+    }
+  }, [editProduct]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -83,13 +114,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     setIsLoading(true);
 
     try {
-      // Upload images to storage
-      let imageUrls: string[] = [];
+      let imageUrls: string[] = editProduct?.images || [];
       if (imageFiles.length > 0) {
-        imageUrls = await uploadImages(imageFiles);
+        const uploaded = await uploadImages(imageFiles);
+        imageUrls = [...imageUrls, ...uploaded];
       }
 
-      const { error } = await supabase.from("products").insert({
+      const productData = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
@@ -101,31 +132,26 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
-      });
+      };
 
-      if (error) throw error;
+      if (editProduct) {
+        const { error } = await supabase.from("products").update(productData).eq("id", editProduct.id);
+        if (error) throw error;
+        toast({ title: "Produit modifié !", description: "Les modifications ont été enregistrées." });
+      } else {
+        const { error } = await supabase.from("products").insert(productData);
+        if (error) throw error;
+        toast({ title: "Produit publié !", description: "Votre produit est maintenant visible sur le marketplace." });
+      }
 
-      toast({
-        title: "Produit publié !",
-        description: "Votre produit est maintenant visible sur le marketplace.",
-      });
-
-      setNewProduct({
-        name: "", description: "", price: "", originalPrice: "", discount: "",
-        promoType: "none", category: "", unit: "kg", quantity_available: "",
-        location: "", is_organic: false, min_order: "1",
-      });
+      setNewProduct(defaultProduct);
       setImageFiles([]);
       setImagePreviews([]);
       
       onProductAdded();
       onOpenChange(false);
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -140,11 +166,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="w-5 h-5 text-primary" />
-            Publier un nouveau produit
+            {editProduct ? <Edit className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+            {editProduct ? "Modifier le produit" : "Publier un nouveau produit"}
           </DialogTitle>
           <DialogDescription>
-            Remplissez les informations pour ajouter votre produit au marketplace
+            {editProduct ? "Modifiez les informations de votre produit" : "Remplissez les informations pour ajouter votre produit au marketplace"}
           </DialogDescription>
         </DialogHeader>
 

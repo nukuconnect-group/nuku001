@@ -132,10 +132,10 @@ const DeliveryTracking = () => {
       <section className="py-6 sm:py-8 bg-muted/30 border-b border-border">
         <div className="container mx-auto px-3 sm:px-4 text-center">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <Truck className="w-6 h-6 text-primary" />
+            <Package className="w-6 h-6 text-primary" />
           </div>
           <h1 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-1">Suivre mes commandes</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Statut en temps réel</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Suivi en temps réel de vos achats</p>
         </div>
       </section>
 
