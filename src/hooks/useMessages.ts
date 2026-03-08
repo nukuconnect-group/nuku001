@@ -29,13 +29,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
     if (data) {
       setMessages(
-        data.map((m) => ({
+        data.map((m: any) => ({
           id: m.id,
           senderId: m.sender_id === profileId ? "me" : "other",
           content: m.content,
           timestamp: new Date(m.created_at),
           status: m.is_read ? "read" as const : "delivered" as const,
           type: "text" as const,
+          replyToId: m.reply_to_id || undefined,
         }))
       );
 
