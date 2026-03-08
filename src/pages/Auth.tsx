@@ -615,6 +615,22 @@ const Auth = () => {
                         </div>
                       </div>
 
+                      {/* Privacy Policy Checkbox */}
+                      <div className="flex items-start gap-2">
+                        <input type="checkbox" id="privacy-policy" required
+                          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                        <label htmlFor="privacy-policy" className="text-xs text-muted-foreground leading-tight">
+                          J'accepte les{" "}
+                          <Link to="/terms" target="_blank" className="text-primary underline hover:text-primary/80">
+                            conditions d'utilisation
+                          </Link>{" "}
+                          et la{" "}
+                          <Link to="/privacy" target="_blank" className="text-primary underline hover:text-primary/80">
+                            politique de confidentialité
+                          </Link>
+                        </label>
+                      </div>
+
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                           <>
@@ -625,10 +641,6 @@ const Auth = () => {
                           "Créer mon compte"
                         )}
                       </Button>
-
-                      <p className="text-xs text-center text-muted-foreground">
-                        En vous inscrivant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
-                      </p>
                     </form>
                   </CardContent>
                 </TabsContent>

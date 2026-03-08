@@ -15,7 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
-  CreditCard, ArrowLeft, Store, Loader2, LogIn
+  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet
 } from "lucide-react";
 
 const deliveryOptions = [
@@ -23,6 +23,13 @@ const deliveryOptions = [
   { id: "gozem", name: "Gozem Livraison", description: "Livraison nationale (Togo)", price: 1500, icon: Truck, tag: "National" },
   { id: "standard", name: "Livraison Standard", description: "3-5 jours ouvrables", price: 2500, icon: Package, tag: "Économique" },
   { id: "dhl", name: "DHL Express", description: "International - 2-5 jours", price: 15000, icon: Package, tag: "International" },
+];
+
+const paymentMethods = [
+  { id: "mobile_money", name: "Mobile Money", description: "TMoney, Flooz, Moov Money", icon: Smartphone, tag: "Populaire" },
+  { id: "wave", name: "Wave", description: "Paiement instantané via Wave", icon: Wallet, tag: "Rapide" },
+  { id: "card", name: "Carte bancaire", description: "Visa, Mastercard", icon: CreditCard, tag: "International" },
+  { id: "cash", name: "Paiement à la livraison", description: "Payez en espèces à la réception", icon: Package, tag: "Cash" },
 ];
 
 const Cart = () => {
@@ -34,8 +41,10 @@ const Cart = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
+  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,19 +72,24 @@ const Cart = () => {
       return;
     }
 
+    if ((paymentMethod === "mobile_money" || paymentMethod === "wave") && !mobileNumber) {
+      toast({ title: "Numéro requis", description: "Veuillez entrer votre numéro de téléphone pour le paiement mobile.", variant: "destructive" });
+      return;
+    }
+
     setIsCheckingOut(true);
     try {
-      // Get buyer profile id
       const { data: buyerProfile } = await supabase
         .from("profiles").select("id").eq("user_id", user.id).single();
 
       if (!buyerProfile) throw new Error("Profile not found");
 
+      const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
+
       for (const item of items) {
         const sellerId = item.product.producer.id;
         const productId = item.product.id;
         
-        // Validate UUIDs - skip mock products
         const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
         
         if (!isValidUUID(productId) || !isValidUUID(sellerId)) {
@@ -90,9 +104,11 @@ const Cart = () => {
           quantity: item.quantity,
           total_price: item.product.price * item.quantity,
           status: "pending",
-          notes: deliveryMethod !== "pickup" 
-            ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${deliveryAddress}` 
-            : "Retrait sur place",
+          notes: [
+            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${deliveryAddress}` : "Retrait sur place",
+            `Paiement: ${selectedPayment?.name}`,
+            mobileNumber ? `Tél: ${mobileNumber}` : "",
+          ].filter(Boolean).join(" | "),
         });
 
         if (error) throw error;
@@ -203,6 +219,7 @@ const Cart = () => {
                 </Card>
               ))}
 
+              {/* Delivery Method */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -249,6 +266,60 @@ const Cart = () => {
                           <Label>{t("cart.fullAddress")}</Label>
                           <Input placeholder="Quartier, rue, repère..." value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
                         </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Payment Method */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet className="w-5 h-5 text-primary" />Mode de paiement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="space-y-3">
+                      {paymentMethods.map((method) => (
+                        <div key={method.id}
+                          className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            paymentMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                          }`}
+                          onClick={() => setPaymentMethod(method.id)}>
+                          <RadioGroupItem value={method.id} id={`pay-${method.id}`} />
+                          <method.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Label htmlFor={`pay-${method.id}`} className="font-medium cursor-pointer text-sm sm:text-base">{method.name}</Label>
+                              <Badge variant="secondary" className="text-[10px]">{method.tag}</Badge>
+                            </div>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{method.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+
+                  {(paymentMethod === "mobile_money" || paymentMethod === "wave") && (
+                    <div className="mt-6 space-y-4 p-4 bg-muted rounded-xl">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <Smartphone className="w-4 h-4 text-primary" />Numéro de paiement
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>Numéro de téléphone</Label>
+                        <Input
+                          type="tel"
+                          placeholder="+228 90 XX XX XX"
+                          value={mobileNumber}
+                          onChange={(e) => setMobileNumber(e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          {paymentMethod === "mobile_money"
+                            ? "Vous recevrez une notification pour confirmer le paiement via TMoney, Flooz ou Moov Money."
+                            : "Vous recevrez une notification Wave pour confirmer le paiement."}
+                        </p>
                       </div>
                     </div>
                   )}
