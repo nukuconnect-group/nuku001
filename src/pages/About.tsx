@@ -6,14 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Target, Globe, Leaf, ArrowRight, Linkedin, Mail } from "lucide-react";
+import teamCeo from "@/assets/team-ceo.png";
+import teamCto from "@/assets/team-cto.png";
 
 const teamMembers = [
-  { name: "Kodjo Amouzou", role: "CEO & Fondateur", bio: "Expert en agritech avec 10+ ans d'expérience dans le développement agricole en Afrique de l'Ouest.", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80" },
-  { name: "Afi Mensah", role: "Directrice Technique (CTO)", bio: "Ingénieure logiciel spécialisée en plateformes marketplace et intelligence artificielle.", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80" },
-  { name: "Yao Koffi", role: "Directeur Commercial", bio: "Stratège commercial avec une expertise en distribution agricole et chaînes d'approvisionnement.", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" },
-  { name: "Akosua Djobo", role: "Responsable Marketing", bio: "Spécialiste en marketing digital et communication pour les startups agritech.", avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&q=80" },
-  { name: "Mensah Ézin", role: "Directeur Opérations", bio: "Expert logistique avec 8 ans dans la gestion des chaînes d'approvisionnement agricoles.", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80" },
-  { name: "Emefa Agbeko", role: "Responsable IA & Data", bio: "Data scientist passionnée par l'application de l'IA au service de l'agriculture durable.", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80" },
+  { name: "Edem ADZO Kodzo", role: "CEO & Fondateur", bio: "Visionnaire et entrepreneur, fondateur de NUKUCONNECT. Passionné par l'innovation technologique au service de l'agriculture africaine.", avatar: teamCeo },
+  { name: "Komi Sena AFANDONOUGBO", role: "Directeur Technique (CTO)", bio: "Expert en développement logiciel et architecte de la plateforme NUKUCONNECT. Spécialiste en solutions digitales pour l'agritech.", avatar: teamCto },
 ];
 
 const values = [
@@ -66,7 +64,7 @@ const About = () => {
             <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-2">Notre Équipe</h2>
             <p className="text-xs sm:text-sm text-muted-foreground">Des passionnés d'agriculture et de technologie</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
             {teamMembers.map((member) => (
               <Card key={member.name} className="overflow-hidden group hover:shadow-elevated transition-all">
                 <CardContent className="p-3 sm:p-4 text-center">
