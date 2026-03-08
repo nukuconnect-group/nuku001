@@ -29,7 +29,7 @@ const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé"
 const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t, formatPrice: fmtPrice, currency, setCurrency } = useLanguage();
+  const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
   
   // Merge DB products with mock products (DB first)
