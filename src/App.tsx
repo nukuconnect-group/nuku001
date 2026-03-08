@@ -31,6 +31,7 @@ import Legal from "./pages/Legal";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ScrollToTop from "./components/ScrollToTop";
 
