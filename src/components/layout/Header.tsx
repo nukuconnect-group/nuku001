@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
-  LayoutDashboard, Wallet, DollarSign
+  LayoutDashboard, Wallet, DollarSign, Leaf
 } from "lucide-react";
+import { products as mockProducts } from "@/data/marketplace";
+import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -18,7 +20,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
@@ -45,7 +46,7 @@ const Header = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const { lang, setLang, currency, setCurrency, t } = useLanguage();
+  const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
@@ -59,7 +60,81 @@ const Header = () => {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // Fetch real notifications from DB
+  // Search results with product thumbnails and category suggestions
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) return { products: [], categories: [] };
+    const q = searchQuery.toLowerCase();
+    const matchedProducts = mockProducts.filter(p => 
+      p.name.toLowerCase().includes(q) || 
+      p.category.toLowerCase().includes(q) ||
+      p.producer.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q)
+    ).slice(0, 5);
+    const matchedCategories = marketplaceCategories.filter(c =>
+      c.name.toLowerCase().includes(q)
+    ).slice(0, 3);
+    return { products: matchedProducts, categories: matchedCategories };
+  }, [searchQuery]);
+
+  const SearchResultsDropdown = ({ className = "" }: { className?: string }) => {
+    if (!showSearchResults || !searchQuery.trim() || searchQuery.length < 2) return null;
+    const { products: matchedProducts, categories: matchedCategories } = searchResults;
+    if (matchedProducts.length === 0 && matchedCategories.length === 0) {
+      return (
+        <div className={`absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-elevated z-50 p-4 ${className}`}>
+          <p className="text-xs text-muted-foreground text-center">Aucun résultat pour "{searchQuery}"</p>
+        </div>
+      );
+    }
+    return (
+      <div className={`absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-elevated z-50 overflow-hidden ${className}`}>
+        {matchedCategories.length > 0 && (
+          <div className="p-2 border-b border-border">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase px-2 mb-1">Catégories</p>
+            {matchedCategories.map(cat => (
+              <Link key={cat.id} to={`/marketplace?category=${cat.id}`}
+                onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                  <cat.icon className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <span className="text-xs font-medium text-foreground">{cat.name}</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
+              </Link>
+            ))}
+          </div>
+        )}
+        {matchedProducts.length > 0 && (
+          <div className="p-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase px-2 mb-1">Produits</p>
+            {matchedProducts.map(product => (
+              <Link key={product.id} to={`/produit/${product.id}`}
+                onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
+                <img src={product.image} alt={product.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">{product.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{product.producer.name} • {product.location}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-bold text-primary">{formatPrice(product.price)}</p>
+                  {product.isOrganic && <Leaf className="w-3 h-3 text-green-500 ml-auto" />}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        <div className="border-t border-border p-2">
+          <button onClick={() => { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); }}
+            className="w-full text-center text-xs text-primary font-medium py-1.5 hover:bg-muted rounded-lg transition-colors">
+            Voir tous les résultats pour "{searchQuery}" →
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+
   const fetchNotifications = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("notifications")
@@ -304,7 +379,7 @@ const Header = () => {
                 <img src={nukuLogo} alt="NUKUCONNECT"
                   className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5 hidden sm:block" />
                 <img src={nukuLogoWhite} alt="NUKUCONNECT"
-                  className="h-7 object-contain sm:hidden" />
+                  className="h-9 object-contain sm:hidden" />
                 <span className="font-heading font-bold text-sm sm:text-base lg:text-lg text-primary-foreground hidden sm:block">
                   NUKUCONNECT
                 </span>
@@ -321,6 +396,7 @@ const Header = () => {
                     onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
                     <Search className="w-3.5 h-3.5 mr-1.5" />{t("header.searchBtn")}
                   </Button>
+                  <SearchResultsDropdown />
                 </div>
               </div>
 
@@ -453,6 +529,7 @@ const Header = () => {
             onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
             <Search className="w-3.5 h-3.5" />
           </Button>
+          <SearchResultsDropdown />
         </div>
       </div>
 
