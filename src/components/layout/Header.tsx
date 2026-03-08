@@ -98,7 +98,6 @@ const Header = () => {
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-sm">{cat.emoji}</span>
                 </div>
-                </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
               </Link>
