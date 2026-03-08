@@ -5,23 +5,35 @@ import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 
 import catAgriculture from "@/assets/cat-agriculture.jpg";
-import catAgroalimentaire from "@/assets/cat-agroalimentaire.jpg";
-import catElevage from "@/assets/cat-elevage.jpg";
-import catAquaculture from "@/assets/cat-aquaculture.jpg";
+import catCereales from "@/assets/cat-cereales.jpg";
+import catLegumes from "@/assets/cat-legumes.jpg";
 import catFruits from "@/assets/cat-fruits-legumes.jpg";
+import catTubercules from "@/assets/cat-tubercules.jpg";
+import catElevage from "@/assets/cat-elevage.jpg";
+import catAviculture from "@/assets/cat-aviculture.jpg";
+import catPisciculture from "@/assets/cat-pisciculture.jpg";
+import catAquaculture from "@/assets/cat-aquaculture.jpg";
+import catAgribusiness from "@/assets/cat-agribusiness.jpg";
+import catForesterie from "@/assets/cat-foresterie.jpg";
 import catDefault from "@/assets/cat-default.jpg";
 
 const categoryImages: Record<string, string> = {
   agriculture: catAgriculture,
-  agroalimentaire: catAgroalimentaire,
+  céréales: catCereales,
+  cereales: catCereales,
+  "légumes & maraîchage": catLegumes,
+  "légumes": catLegumes,
+  legumes: catLegumes,
+  fruits: catFruits,
+  tubercules: catTubercules,
   élevage: catElevage,
   elevage: catElevage,
+  aviculture: catAviculture,
+  pisciculture: catPisciculture,
   aquaculture: catAquaculture,
-  pisciculture: catAquaculture,
-  "fruits & légumes": catFruits,
-  "fruits et légumes": catFruits,
-  fruits: catFruits,
-  légumes: catFruits,
+  agribusiness: catAgribusiness,
+  foresterie: catForesterie,
+  agroalimentaire: catAgribusiness,
 };
 
 const getCategoryImage = (name: string) => {
@@ -73,7 +85,7 @@ const CategoriesSection = () => {
           {activeCategories.map((cat: any) => (
             <Link
               key={cat.id}
-              to={`/marketplace?category=${encodeURIComponent(cat.name)}`}
+              to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
               className="flex-shrink-0 w-[46vw] max-w-[200px] group"
             >
               <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow">
@@ -102,7 +114,7 @@ const CategoriesSection = () => {
           {activeCategories.map((cat: any) => (
             <Link
               key={cat.id}
-              to={`/marketplace?category=${encodeURIComponent(cat.name)}`}
+              to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
               className="group"
             >
               <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow">
