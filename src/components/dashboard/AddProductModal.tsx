@@ -83,6 +83,10 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         location: editProduct.location || "",
         is_organic: editProduct.is_organic || false,
         min_order: String(editProduct.min_order || "1"),
+        deliveryDelay: "immediate",
+        saleMode: "retail",
+        negotiable: false,
+        deliveryAvailable: true,
       });
       if (editProduct.images?.length) {
         setImagePreviews(editProduct.images);
