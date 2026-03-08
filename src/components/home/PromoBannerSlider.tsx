@@ -9,6 +9,12 @@ import { products as mockProducts } from "@/data/marketplace";
 import ProductCard from "@/components/marketplace/ProductCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
+import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
+import avatarMale2 from "@/assets/avatars/avatar-male-2.png";
+import avatarFemale2 from "@/assets/avatars/avatar-female-2.png";
+import avatarMale3 from "@/assets/avatars/avatar-male-3.png";
+import avatarMale4 from "@/assets/avatars/avatar-male-4.png";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
@@ -80,8 +86,24 @@ const PromoBannerSlider = () => {
     return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
   }, [products]);
 
-  // Fetch real producers from the database
-  const { data: realProducers = [] } = useQuery({
+  // Featured producers with professional avatars
+  const featuredProducers = [
+    { id: "eyabane", name: "Eyabanè Bitassa", avatar: avatarMale1 },
+    { id: "fiogbo", name: "Souléïmane FIOGBO", avatar: avatarMale2 },
+    { id: "hounsou", name: "Alban Hounsou", avatar: avatarMale3 },
+    { id: "ahouede", name: "Dela AHOUEDE", avatar: avatarFemale1 },
+    { id: "bissang", name: "Koffi E. BISSANG", avatar: avatarMale4 },
+    { id: "kabassima", name: "Alexandre KABASSIMA", avatar: avatarMale3 },
+    { id: "freehol", name: "Hol Freehol", avatar: avatarMale1 },
+    { id: "horizon", name: "Horizon Agri", avatar: avatarMale2 },
+    { id: "afandonougbo", name: "Komi S. Afandonougbo", avatar: avatarMale4 },
+    { id: "ouro-akpo", name: "Mourdjanatou OURO-AKPO", avatar: avatarFemale2 },
+    { id: "lerampo", name: "TCHABLI LERAMPO", avatar: avatarMale3 },
+    { id: "ziafo", name: "Yannick ZIAFO", avatar: avatarMale1 },
+  ];
+
+  // Also fetch real producers to merge DB avatars when available
+  const { data: dbProducers = [] } = useQuery({
     queryKey: ["homepage-producers"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
@@ -89,12 +111,26 @@ const PromoBannerSlider = () => {
         .select("id, full_name, avatar_url, user_type")
         .eq("user_type", "producer")
         .order("created_at", { ascending: false })
-        .limit(12);
+        .limit(20);
       if (error) throw error;
-      return (profiles || []).filter(p => p.full_name && p.full_name !== "—Inconnu");
+      return profiles || [];
     },
     staleTime: 1000 * 60 * 5,
   });
+
+  // Merge: use DB avatar if available, otherwise use the featured avatar
+  const displayProducers = useMemo(() => {
+    return featuredProducers.map(fp => {
+      const match = dbProducers.find(db =>
+        db.full_name?.toLowerCase().includes(fp.name.split(' ')[0].toLowerCase())
+      );
+      return {
+        id: match?.id || fp.id,
+        name: fp.name,
+        avatar: match?.avatar_url || fp.avatar,
+      };
+    });
+  }, [dbProducers]);
 
   return (
     <div>
@@ -189,31 +225,29 @@ const PromoBannerSlider = () => {
       )}
 
       {/* Fournisseurs actifs - all devices */}
-      {realProducers.length > 0 && (
-        <div className="px-3 sm:px-0 py-2 sm:py-4">
-          <div className="sm:container sm:mx-auto sm:px-4">
-            <div className="flex items-center justify-between mb-2 sm:mb-4">
-              <h3 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-primary" />Fournisseurs actifs
-              </h3>
-              <Link to="/producteurs" className="text-[10px] sm:text-xs text-primary font-medium">Voir tous →</Link>
-            </div>
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
-              {realProducers.map((producer) => (
-                <Link key={producer.id} to={`/producteurs/${producer.id}`}
-                  className="flex-shrink-0 flex flex-col items-center gap-1 w-16 sm:w-20 group">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-muted">
-                    <img src={producer.avatar_url || defaultAvatar} alt={producer.full_name || ""} className="w-full h-full object-cover" />
-                  </div>
-                  <p className="text-[9px] sm:text-[11px] font-medium text-foreground text-center line-clamp-1 w-full">
-                    {(producer.full_name || "").split(' ')[0]}
-                  </p>
-                </Link>
-              ))}
-            </div>
+      <div className="px-3 sm:px-0 py-2 sm:py-4">
+        <div className="sm:container sm:mx-auto sm:px-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <h3 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-primary" />Fournisseurs actifs
+            </h3>
+            <Link to="/producteurs" className="text-[10px] sm:text-xs text-primary font-medium">Voir tous →</Link>
+          </div>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
+            {displayProducers.map((producer) => (
+              <Link key={producer.id} to={`/producteurs/${producer.id}`}
+                className="flex-shrink-0 flex flex-col items-center gap-1 w-16 sm:w-20 group">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-muted">
+                  <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
+                </div>
+                <p className="text-[9px] sm:text-[11px] font-medium text-foreground text-center line-clamp-1 w-full">
+                  {producer.name.split(' ')[0]}
+                </p>
+              </Link>
+            ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
