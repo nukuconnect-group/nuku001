@@ -37,13 +37,13 @@ const CTASection = () => {
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link to="/auth">
-              <Button variant="hero" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
+              <Button variant="hero" size="lg" className="w-full sm:w-auto text-sm sm:text-base bg-white text-primary hover:bg-white/90">
                 Créer mon compte gratuit
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
             <Link to="/nuku-ai">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm sm:text-base border-white text-white hover:bg-white/10">
                 Contacter notre équipe
               </Button>
             </Link>
