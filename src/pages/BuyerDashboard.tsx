@@ -14,11 +14,12 @@ import { useWishlist } from "@/hooks/useWishlist";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut
+  Eye, Truck, Settings, LogOut, Crown
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
+import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 
 const purchaseData = [
   { name: 'Jan', achats: 150000 },
