@@ -411,8 +411,9 @@ const Dashboard = () => {
       </main>
 
       {profile && (
-        <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct}
-          profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)} />
+        <AddProductModal open={showAddProduct} onOpenChange={(open) => { setShowAddProduct(open); if (!open) setEditingProduct(null); }}
+          profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
+          editProduct={editingProduct} />
       )}
       <Footer />
       <MobileBottomNav />
