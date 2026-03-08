@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import CategoryManager from "@/components/admin/CategoryManager";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
+import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 
 const COLORS = [
