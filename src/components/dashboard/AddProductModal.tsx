@@ -59,7 +59,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [newProduct, setNewProduct] = useState(defaultProduct);
 
   // Populate form when editing
-  useState(() => {
+  useEffect(() => {
     if (editProduct) {
       setNewProduct({
         name: editProduct.name || "",
@@ -77,9 +77,14 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       });
       if (editProduct.images?.length) {
         setImagePreviews(editProduct.images);
+        setImageFiles([]);
       }
+    } else {
+      setNewProduct(defaultProduct);
+      setImagePreviews([]);
+      setImageFiles([]);
     }
-  });
+  }, [editProduct]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
