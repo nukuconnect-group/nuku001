@@ -456,6 +456,16 @@ const Auth = () => {
                         </div>
                       </div>
 
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => { setForgotMode(true); setForgotEmail(loginEmail); }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Mot de passe oublié ?
+                        </button>
+                      </div>
+
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                           <>
