@@ -20,6 +20,7 @@ interface ProfileSettingsPanelProps {
 
 const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSettingsPanelProps) => {
   const { toast } = useToast();
+  const { updateProfile: updateCtxProfile } = useProfile();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [location, setLocation] = useState(profile?.location || "");
