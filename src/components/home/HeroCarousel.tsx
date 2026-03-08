@@ -1,32 +1,40 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import awardImage from "@/assets/award-togo-top-impact.jpg";
 
 const slides = [
+  {
+    image: awardImage,
+    title: "NukuConnect sacrée Meilleure Innovation de l'Année 2025",
+    subtitle: "🏆 Prix Togo Top Impact",
+    description: "NukuConnect a été récompensée comme la meilleure innovation technologique de l'année 2025 lors de la cérémonie Togo Top Impact.",
+    isAward: true,
+  },
   {
     image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920&q=80",
     title: "Connectez votre production agricole au monde entier",
     subtitle: "Produits Frais",
-    description: "NUKUCONNECT révolutionne le commerce agricole en Afrique."
+    description: "NUKUCONNECT révolutionne le commerce agricole en Afrique.",
   },
   {
     image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1920&q=80",
     title: "Agriculture biologique et durable",
     subtitle: "Qualité Certifiée",
-    description: "Des produits naturels et certifiés bio, des champs à votre table."
+    description: "Des produits naturels et certifiés bio, des champs à votre table.",
   },
   {
     image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1920&q=80",
     title: "Soutenez les producteurs locaux",
     subtitle: "Commerce Équitable",
-    description: "Achetez directement auprès des agriculteurs."
+    description: "Achetez directement auprès des agriculteurs.",
   },
   {
     image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=1920&q=80",
     title: "L'IA au service de l'agriculture",
     subtitle: "Innovation Agricole",
-    description: "Conseils personnalisés grâce à notre assistant NUKU AI."
+    description: "Conseils personnalisés grâce à notre assistant NUKU AI.",
   }
 ];
 
