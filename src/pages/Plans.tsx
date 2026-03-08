@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight } from "lucide-react";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2 } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const plans = [
   {
@@ -13,6 +17,7 @@ const plans = [
     name: "Gratuit",
     monthlyPrice: 0,
     annualPrice: 0,
+    maxProducts: 3,
     description: "Pour découvrir NUKUCONNECT",
     icon: Zap,
     color: "bg-muted",
@@ -36,6 +41,7 @@ const plans = [
     name: "Pro",
     monthlyPrice: 5000,
     annualPrice: 50000,
+    maxProducts: 15,
     description: "Pour les producteurs actifs",
     icon: Star,
     color: "bg-primary",
@@ -57,6 +63,7 @@ const plans = [
     name: "Business",
     monthlyPrice: 15000,
     annualPrice: 150000,
+    maxProducts: 9999,
     description: "Pour les entreprises agricoles",
     icon: Rocket,
     color: "bg-gradient-hero",
@@ -78,6 +85,7 @@ const plans = [
     name: "Entreprise",
     monthlyPrice: -1,
     annualPrice: -1,
+    maxProducts: 9999,
     description: "Solutions personnalisées",
     icon: Crown,
     color: "bg-accent",
@@ -98,6 +106,52 @@ const plans = [
 
 const Plans = () => {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { subscription, refreshSubscription, isLoading: subLoading } = useSubscription();
+
+  const handleSubscribe = async (planId: string, maxProducts: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Connexion requise", description: "Connectez-vous pour souscrire à un plan.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+
+    if (planId === "enterprise") {
+      toast({ title: "Contactez-nous", description: "Envoyez un email à contact@nukuconnect.com pour le plan Entreprise." });
+      return;
+    }
+
+    setSubscribing(planId);
+    try {
+      // Upsert subscription
+      const { error } = await supabase.from("subscriptions" as any).upsert({
+        user_id: session.user.id,
+        plan: planId,
+        billing_period: billing,
+        max_products: maxProducts,
+        status: "active",
+        started_at: new Date().toISOString(),
+        expires_at: billing === "monthly"
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      } as any, { onConflict: "user_id" });
+
+      if (error) throw error;
+
+      await refreshSubscription();
+      toast({ title: "Abonnement activé !", description: `Vous êtes maintenant sur le plan ${planId === "free" ? "Gratuit" : planId === "pro" ? "Pro" : "Business"}.` });
+      navigate(-1);
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setSubscribing(null);
+    }
+  };
+
+  const currentPlan = subscription?.plan;
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -117,6 +171,14 @@ const Plans = () => {
             Des solutions adaptées à chaque étape de votre croissance. 
             Commencez gratuitement et évoluez selon vos besoins.
           </p>
+
+          {currentPlan && (
+            <div className="mb-6">
+              <Badge className="bg-primary text-primary-foreground text-sm px-4 py-1">
+                Plan actuel : {currentPlan === "free" ? "Gratuit" : currentPlan === "pro" ? "Pro" : currentPlan === "business" ? "Business" : currentPlan}
+              </Badge>
+            </div>
+          )}
 
           {/* Monthly/Annual Toggle */}
           <div className="inline-flex items-center bg-muted rounded-full p-1 gap-0.5">
@@ -151,16 +213,24 @@ const Plans = () => {
               const price = billing === "monthly" ? plan.monthlyPrice : plan.annualPrice;
               const isCustom = price === -1;
               const period = billing === "monthly" ? "/mois" : "/an";
+              const isCurrent = currentPlan === plan.id;
               
               return (
                 <Card 
                   key={plan.id} 
-                  className={`relative overflow-hidden ${plan.popular ? "border-primary shadow-elevated" : ""}`}
+                  className={`relative overflow-hidden ${plan.popular ? "border-primary shadow-elevated" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}
                 >
                   {plan.popular && (
                     <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
                       <Badge variant="default" className="bg-primary text-[10px] sm:text-xs">
                         Populaire
+                      </Badge>
+                    </div>
+                  )}
+                  {isCurrent && (
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                      <Badge className="bg-accent text-accent-foreground text-[10px] sm:text-xs">
+                        Actuel
                       </Badge>
                     </div>
                   )}
@@ -213,9 +283,21 @@ const Plans = () => {
                     <Button 
                       variant={plan.popular ? "hero" : "outline"} 
                       className="w-full gap-2 text-xs sm:text-sm h-9 sm:h-10"
+                      disabled={isCurrent || subscribing === plan.id}
+                      onClick={() => handleSubscribe(plan.id, plan.maxProducts)}
                     >
-                      {plan.id === "enterprise" ? "Nous contacter" : plan.id === "free" ? "Commencer" : "Choisir ce plan"}
-                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      {subscribing === plan.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : isCurrent ? (
+                        "Plan actuel"
+                      ) : plan.id === "enterprise" ? (
+                        "Nous contacter"
+                      ) : (
+                        <>
+                          {plan.id === "free" ? "Commencer" : "Choisir ce plan"}
+                          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -233,26 +315,12 @@ const Plans = () => {
           </h2>
           <div className="max-w-3xl mx-auto space-y-3 sm:space-y-6">
             {[
-              {
-                q: "Puis-je changer de plan à tout moment ?",
-                a: "Oui, vous pouvez upgrader ou downgrader votre plan à tout moment. Les changements prennent effet immédiatement."
-              },
-              {
-                q: "Quelle est la différence entre mensuel et annuel ?",
-                a: "Le plan annuel vous offre 2 mois gratuits soit environ 17% d'économie par rapport au paiement mensuel."
-              },
-              {
-                q: "Comment fonctionne le paiement ?",
-                a: "Nous acceptons Mobile Money (TMoney, Flooz), cartes bancaires et virement. Le paiement est sécurisé."
-              },
-              {
-                q: "Puis-je annuler mon abonnement ?",
-                a: "Oui, vous pouvez annuler à tout moment sans frais. Votre compte reste actif jusqu'à la fin de la période payée."
-              },
-              {
-                q: "Le plan gratuit est-il vraiment limité à 3 produits ?",
-                a: "Oui, le plan gratuit vous permet de publier jusqu'à 3 produits. Pour plus d'annonces, passez au plan Pro."
-              },
+              { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader ou downgrader votre plan à tout moment. Les changements prennent effet immédiatement." },
+              { q: "Quelle est la différence entre mensuel et annuel ?", a: "Le plan annuel vous offre 2 mois gratuits soit environ 17% d'économie par rapport au paiement mensuel." },
+              { q: "Comment fonctionne le paiement ?", a: "Nous acceptons Mobile Money (TMoney, Flooz), cartes bancaires et virement. Le paiement est sécurisé." },
+              { q: "Puis-je annuler mon abonnement ?", a: "Oui, vous pouvez annuler à tout moment sans frais. Votre compte reste actif jusqu'à la fin de la période payée." },
+              { q: "Le plan gratuit est-il vraiment limité à 3 produits ?", a: "Oui, le plan gratuit vous permet de publier jusqu'à 3 produits. Pour plus d'annonces, passez au plan Pro." },
+              { q: "Dois-je m'abonner pour acheter ?", a: "Oui, même le plan gratuit nécessite une inscription. Cela nous permet de sécuriser les transactions et d'assurer un suivi de qualité." },
             ].map((faq) => (
               <div key={faq.q} className="bg-card rounded-xl p-4 sm:p-6 shadow-soft">
                 <h3 className="font-heading font-semibold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">{faq.q}</h3>
