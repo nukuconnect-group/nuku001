@@ -22,7 +22,8 @@ import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
 const locations = [
@@ -57,6 +58,7 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
+  const { toast } = useToast();
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
@@ -372,14 +374,36 @@ const Marketplace = () => {
       <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input type="text" placeholder={t("header.search")}
-                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 text-sm bg-card border-border" />
+            <div className="relative flex-1 flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="text" placeholder={t("header.search")}
+                  value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 h-10 text-sm bg-card border-border rounded-full" />
+              </div>
+              <button type="button" onClick={() => {
+                try {
+                  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                  if (!SpeechRecognition) { toast({ title: "Non supporté" }); return; }
+                  const recognition = new SpeechRecognition();
+                  recognition.lang = "fr-FR";
+                  recognition.onresult = (e: any) => { setSearchQuery(e.results[0][0].transcript); };
+                  recognition.start();
+                  toast({ title: "🎙️ Parlez maintenant..." });
+                } catch { toast({ title: "Erreur micro", variant: "destructive" }); }
+              }} className="h-10 w-10 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors flex-shrink-0">
+                <Mic className="w-4 h-4" />
+              </button>
+              <label className="h-10 w-10 flex items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors cursor-pointer flex-shrink-0">
+                <Camera className="w-4 h-4" />
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  if (e.target.files?.[0]) { toast({ title: "📸 Recherche par image", description: "Bientôt disponible" }); }
+                  e.target.value = "";
+                }} />
+              </label>
             </div>
             <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-full sm:w-40 h-10 text-xs"><MapPin className="w-3.5 h-3.5 mr-1" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-40 h-10 text-xs rounded-full"><MapPin className="w-3.5 h-3.5 mr-1" /><SelectValue /></SelectTrigger>
               <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
             </Select>
           </div>
