@@ -71,7 +71,7 @@ const Footer = () => {
           {/* Brand - Logo only, no text name */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <img src={nukuLogo} alt="NUKUCONNECT" className="w-16 h-16 object-contain" />
+              <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-12 object-contain" />
             </Link>
             <p className="text-primary-foreground/70 text-xs sm:text-sm mb-4 sm:mb-6">
               La marketplace agricole intelligente qui connecte producteurs et acheteurs.

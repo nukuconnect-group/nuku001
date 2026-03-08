@@ -377,7 +377,7 @@ const Auth = () => {
                           >
                             <User className={`w-6 h-6 mx-auto mb-2 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
                             <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
-                              Producteur
+                              Fournisseur
                             </span>
                           </button>
                           <button

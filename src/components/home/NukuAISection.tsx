@@ -72,7 +72,7 @@ const NukuAISection = () => {
                   <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-primary-foreground text-sm sm:text-base">NUKU AI</p>
+                  <p className="font-semibold text-primary-foreground text-sm sm:text-base">Nukuconnect IA</p>
                   <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                     <p className="text-xs text-primary-foreground/80">En ligne</p>
