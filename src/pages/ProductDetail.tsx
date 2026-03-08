@@ -266,26 +266,30 @@ const ProductDetail = () => {
 
               <Card>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <img src={product.producer.avatar} alt={product.producer.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div className="flex-1">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <img src={product.producer.avatar} alt={product.producer.name} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover" />
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-heading font-semibold text-foreground">{product.producer.name}</span>
-                        {product.producer.verified && <ShieldCheck className="w-5 h-5 text-primary" />}
+                        <span className="font-heading font-semibold text-sm sm:text-base text-foreground truncate">{product.producer.name}</span>
+                        {product.producer.verified && <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Star className="w-4 h-4 text-accent fill-accent" />
-                        <span className="text-sm font-medium">{product.producer.rating}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Star className="w-3.5 h-3.5 text-accent fill-accent" />
+                        <span className="text-xs sm:text-sm font-medium">{product.producer.rating}</span>
                       </div>
+                      <span className="text-[10px] text-muted-foreground">Fournisseur</span>
                     </div>
                     <Link to={`/producteurs/${product.producer.name}`}>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <User className="w-4 h-4" />{t("product.viewProfile")}
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                        <User className="w-3.5 h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span>
                       </Button>
                     </Link>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Reviews Section */}
+              <ReviewSection productId={product.id} />
             </div>
           </div>
         </div>
