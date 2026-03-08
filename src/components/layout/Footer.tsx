@@ -48,13 +48,15 @@ const Footer = () => {
       <div className="border-b border-white/15 relative z-10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-center gap-3 sm:gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <Smartphone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
-              <div>
-                <h3 className="font-heading text-base sm:text-lg font-bold text-white leading-tight">Téléchargez l'application</h3>
-                <p className="text-white/70 text-[11px] sm:text-sm leading-snug mt-0.5">
+              <div className="text-left">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white leading-tight">
+                  Téléchargez l'application
+                </h3>
+                <p className="text-white/70 text-[11px] sm:text-sm leading-tight">
                   Accédez à NUKUCONNECT partout, tout le temps.
                 </p>
               </div>
