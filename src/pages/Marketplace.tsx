@@ -350,7 +350,7 @@ const Marketplace = () => {
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
+                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} />))}
                 </div>
               </div>
             </>
