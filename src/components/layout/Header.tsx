@@ -170,6 +170,8 @@ const Header = () => {
     { label: t("nav.tracking"), href: "/suivi-livraison" },
     { label: t("nav.about"), href: "/a-propos" },
     { label: t("nav.plans"), href: "/plans" },
+    { label: "Contact", href: "/contact" },
+    { label: "Centre d'aide", href: "/aide" },
   ];
 
   useEffect(() => {

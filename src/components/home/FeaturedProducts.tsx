@@ -70,9 +70,11 @@ const FeaturedProducts = () => {
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+          <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0">
             {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} viewMode="grid" />
+              <div key={product.id} className="min-w-[160px] snap-start sm:min-w-0">
+                <ProductCard product={product} viewMode="grid" />
+              </div>
             ))}
           </div>
         )}
