@@ -136,6 +136,8 @@ const Cart = () => {
         if (error) throw error;
       }
 
+      // Generate PDF invoice
+      generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", profile?.full_name, profile?.phone, deliveryCity, deliveryAddress, mobileNumber);
       toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
       clearCart();
       navigate("/suivi-livraison");
