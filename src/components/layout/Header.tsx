@@ -100,7 +100,6 @@ const Header = () => {
                   <span className="text-sm">{cat.emoji}</span>
                 </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
               </Link>
             ))}
           </div>
