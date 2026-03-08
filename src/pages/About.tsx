@@ -67,7 +67,7 @@ const About = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 max-w-4xl mx-auto">
             {teamMembers.map((member) => (
               <Card key={member.name} className="overflow-hidden group hover:shadow-elevated transition-all">
-                <div className="aspect-square w-full overflow-hidden">
+                <div className="aspect-[4/3] w-full overflow-hidden">
                   <img
                     src={member.avatar}
                     alt={member.name}
