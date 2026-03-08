@@ -15,7 +15,7 @@ import {
   Users, Package, ShoppingCart, DollarSign, TrendingUp, Crown,
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
-  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight
+  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
