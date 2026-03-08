@@ -543,17 +543,40 @@ const Header = () => {
 
       {/* Row 3: Mobile Search - scrolls away */}
       <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
-        <div className="relative">
-          <Input type="text" placeholder={t("header.search")} value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
-            onFocus={() => setShowSearchResults(true)}
-            className="w-full h-9 pl-4 pr-10 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
-          <Button size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full"
-            onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
-            <Search className="w-3.5 h-3.5" />
-          </Button>
-          <SearchResultsDropdown />
+        <div className="relative flex items-center gap-1.5">
+          <div className="relative flex-1">
+            <Input type="text" placeholder={t("header.search")} value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
+              onFocus={() => setShowSearchResults(true)}
+              className="w-full h-9 pl-4 pr-10 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
+            <Button size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full"
+              onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
+              <Search className="w-3.5 h-3.5" />
+            </Button>
+            <SearchResultsDropdown />
+          </div>
+          <button type="button" onClick={() => {
+            try {
+              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (!SpeechRecognition) { toast({ title: "Non supporté", description: "La recherche vocale n'est pas disponible" }); return; }
+              const recognition = new SpeechRecognition();
+              recognition.lang = "fr-FR";
+              recognition.onresult = (e: any) => { const t = e.results[0][0].transcript; setSearchQuery(t); setShowSearchResults(true); };
+              recognition.start();
+              toast({ title: "🎙️ Parlez maintenant..." });
+            } catch { toast({ title: "Erreur", description: "Micro non disponible", variant: "destructive" }); }
+          }} className="h-8 w-8 flex items-center justify-center rounded-full bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30 transition-colors flex-shrink-0">
+            <Mic className="w-4 h-4" />
+          </button>
+          <label className="h-8 w-8 flex items-center justify-center rounded-full bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30 transition-colors cursor-pointer flex-shrink-0">
+            <Camera className="w-4 h-4" />
+            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) { toast({ title: "📸 Recherche par image", description: "Fonctionnalité bientôt disponible" }); }
+              e.target.value = "";
+            }} />
+          </label>
         </div>
       </div>
 
