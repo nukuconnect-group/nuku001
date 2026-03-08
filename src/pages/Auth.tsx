@@ -273,18 +273,12 @@ const Auth = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
             {/* Logo */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <img 
                 src={nukuLogo} 
                 alt="NUKUCONNECT" 
-                className="w-24 h-24 mx-auto mb-4 object-contain"
+                className="w-20 h-20 mx-auto object-contain"
               />
-              <h1 className="font-heading text-2xl font-bold text-foreground">
-                NUKU<span className="text-primary">CONNECT</span>
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Connectez-vous à la plus grande marketplace agricole d'Afrique
-              </p>
             </div>
 
             <Card variant="feature">
