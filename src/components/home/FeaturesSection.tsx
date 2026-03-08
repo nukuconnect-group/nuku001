@@ -54,11 +54,11 @@ const FeaturesSection = () => {
             { icon: Shield, value: "100%", label: "Sécurisé" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-4">
-                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center mx-auto mb-2 sm:mb-4">
+                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <p className="font-heading text-xl sm:text-3xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{stat.label}</p>
+              <p className="font-heading text-xl sm:text-3xl font-bold text-white">{stat.value}</p>
+              <p className="text-[10px] sm:text-sm text-white/70 mt-0.5 sm:mt-1">{stat.label}</p>
             </div>
           ))}
         </div>

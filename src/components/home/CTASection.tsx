@@ -50,8 +50,8 @@ const CTASection = () => {
           </div>
 
           {/* Partners with logos */}
-          <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-border">
-            <p className="text-xs sm:text-sm text-muted-foreground mb-6">Ils nous font confiance</p>
+          <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-white/20">
+            <p className="text-xs sm:text-sm text-white/70 mb-6">Ils nous font confiance</p>
             <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
               {partners.map((partner) => (
                 <div key={partner.name} className="flex items-center justify-center grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300">
