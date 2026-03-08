@@ -301,12 +301,12 @@ const Marketplace = () => {
             }`}>
             Tout
           </button>
-          {marketplaceCategories.filter(c => c.id !== "all").map((category) => (
+          {marketplaceCategories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => setSelectedCategory(category.name.toLowerCase())}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
+                selectedCategory === category.name.toLowerCase() ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
               }`}>
               {category.name}
             </button>

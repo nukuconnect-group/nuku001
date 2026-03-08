@@ -86,8 +86,8 @@ const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder="Choisir" /></SelectTrigger>
               <SelectContent>
-                {marketplaceCategories.filter(c => c.id !== "all").map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
+                {marketplaceCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name} className="text-xs">{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
