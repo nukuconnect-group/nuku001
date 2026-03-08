@@ -37,24 +37,42 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth", { replace: true }); return; }
-      setUser(session.user);
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
+    let isMounted = true;
+
+    const loadDashboard = async (userId: string) => {
+      const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+      if (!isMounted) return;
       setProfile(profileData);
       if (profileData) {
-        // Fetch products and orders in parallel
+        setIsLoading(false);
         const [prodRes, ordersRes] = await Promise.all([
           supabase.from("products").select("*").eq("producer_id", profileData.id).order("created_at", { ascending: false }),
           supabase.from("orders").select("*, products(*)").eq("seller_id", profileData.id).order("created_at", { ascending: false }),
         ]);
+        if (!isMounted) return;
         setProducts(prodRes.data || []);
         setOrders(ordersRes.data || []);
+      } else {
+        if (isMounted) setIsLoading(false);
       }
-      setIsLoading(false);
     };
-    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) { navigate("/auth", { replace: true }); return; }
+      setUser(session.user);
+      loadDashboard(session.user.id);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) { navigate("/auth", { replace: true }); return; }
+      setUser(session.user);
+      loadDashboard(session.user.id);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
