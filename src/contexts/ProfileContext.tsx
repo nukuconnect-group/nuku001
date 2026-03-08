@@ -78,8 +78,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentUser);
       
       if (currentUser) {
-        // Use setTimeout to avoid Supabase deadlock with simultaneous calls
-        setTimeout(() => fetchProfile(currentUser.id), 0);
+        fetchProfile(currentUser.id);
       } else {
         setIsLoading(false);
       }
