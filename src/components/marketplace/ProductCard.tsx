@@ -93,25 +93,28 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
 
   return (
     <Link to={`/produit/${product.id}`} className="block">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto rounded-none sm:rounded-lg">
-        {/* Compact image with square borders */}
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto rounded-xl sm:rounded-lg shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1">
+        {/* Image with smooth zoom */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
+          
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="absolute top-1.5 left-1.5 flex gap-1">
             {product.discount && (
-              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1 py-0 rounded-sm">-{product.discount}%</Badge>
+              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm animate-fade-in">-{product.discount}%</Badge>
             )}
-            {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">NEW</Badge>}
+            {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">NEW</Badge>}
           </div>
 
           {/* Compare & Wishlist buttons */}
           <div className="absolute top-1.5 right-1.5 flex flex-col gap-1">
             <button
               onClick={handleCompare}
-              className="w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+              className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100 sm:translate-x-2 sm:group-hover:translate-x-0"
             >
-              <GitCompareArrows className="w-3 h-3" />
+              <GitCompareArrows className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={(e) => {
@@ -124,50 +127,47 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
                 }
                 toggleWishlist(product.id);
               }}
-              className="w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+              className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100 sm:translate-x-2 sm:group-hover:translate-x-0 sm:delay-75"
             >
-              <Heart className={`w-3 h-3 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground hover:text-destructive"}`} />
+              <Heart className={`w-3.5 h-3.5 transition-colors duration-200 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground hover:text-destructive"}`} />
             </button>
           </div>
 
         </div>
 
-        <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col">
+        <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col gap-0.5">
           {/* Title */}
-          <h3 className="font-heading font-semibold text-foreground text-[11px] sm:text-xs mb-0.5 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+          <h3 className="font-heading font-semibold text-foreground text-[11px] sm:text-xs leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {product.name}
           </h3>
 
           {/* Reviews */}
-          <div className="flex items-center gap-0.5 mb-0.5">
+          <div className="flex items-center gap-0.5">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
+              <Star key={i} className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
             ))}
             <span className="text-[8px] sm:text-[9px] text-muted-foreground ml-0.5">({reviewCount})</span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center gap-1 flex-wrap mb-1 mt-auto">
-            <span className="font-heading text-xs sm:text-sm font-bold text-primary">{formatPrice(product.price)}</span>
+          <div className="flex items-center gap-1 flex-wrap mt-auto">
+            <span className="font-heading text-sm sm:text-base font-bold text-primary">{formatPrice(product.price)}</span>
             {product.originalPrice && (
               <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
             )}
             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
           </div>
 
-          {/* Stock & Location */}
-          <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] text-muted-foreground mb-1">
-            <span className="flex items-center gap-0.5"><MapPin className="w-2 h-2 sm:w-2.5 sm:h-2.5" />{product.location}</span>
+          {/* Location */}
+          <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-muted-foreground">
+            <MapPin className="w-2.5 h-2.5" />
+            <span>{product.location}</span>
           </div>
 
           {/* Fournisseur */}
-          <div className="flex items-center gap-1 pt-1 border-t border-border">
-            <img src={product.producer.avatar} alt={product.producer.name} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-0.5">
-                <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-1.5 pt-1.5 mt-1 border-t border-border">
+            <img src={product.producer.avatar} alt={product.producer.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-border" />
+            <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
           </div>
         </CardContent>
       </Card>
