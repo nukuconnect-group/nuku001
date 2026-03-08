@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
+import heroFarmers from "@/assets/hero-farmers-connected.jpg";
+import heroNetwork from "@/assets/hero-network-agriculture.jpg";
+import heroOrganic from "@/assets/hero-organic-farm.jpg";
+import heroAI from "@/assets/hero-ai-agriculture.jpg";
 
 const slides = [
   {
