@@ -285,6 +285,7 @@ const Cart = () => {
                 isCheckingOut={isCheckingOut}
                 canCheckout={!!user}
                 onCheckout={handleCheckout}
+                onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
               />
             </div>
           </div>
