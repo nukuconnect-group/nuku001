@@ -36,14 +36,14 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
   );
 
   return (
-    <section className="relative py-6 sm:py-8 lg:py-12 overflow-hidden bg-gradient-to-b from-muted/50 to-background">
+    <section className="relative py-6 sm:py-8 lg:py-12 overflow-hidden text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
       {/* Background */}
       {slides.map((slide, index) => (
-        <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}>
+        <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-20" : "opacity-0"}`}>
           <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
         </div>
       ))}
+      <div className="absolute inset-0 bg-black/20" />
 
       <div className="container mx-auto px-3 sm:px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
