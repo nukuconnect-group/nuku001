@@ -64,7 +64,7 @@ const NukuAISection = () => {
 
           {/* Chat Preview */}
           <div className="relative order-1 lg:order-2">
-            <div className="absolute -inset-4 bg-gradient-to-r from-secondary/30 to-primary-foreground/20 rounded-3xl blur-2xl" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-white/20 to-white/10 rounded-3xl blur-2xl" />
             <Card className="relative bg-card border-border/50 overflow-hidden shadow-elevated max-w-sm mx-auto lg:max-w-none">
               <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary to-primary/80">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-foreground flex items-center justify-center">
