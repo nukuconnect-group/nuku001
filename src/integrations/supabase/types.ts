@@ -63,6 +63,62 @@ export type Database = {
           },
         ]
       }
+      demands: {
+        Row: {
+          budget: number | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          profile_id: string
+          quantity: number | null
+          status: string
+          title: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          profile_id: string
+          quantity?: number | null
+          status?: string
+          title: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget?: number | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          profile_id?: string
+          quantity?: number | null
+          status?: string
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demands_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string

@@ -4,18 +4,50 @@ import { Link } from "react-router-dom";
 import { products as mockProducts } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "@/components/marketplace/ProductCard";
 
 const FeaturedProducts = () => {
   const { data: dbProducts, isLoading } = useProducts();
   const { t } = useLanguage();
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const featuredProducts = useMemo(() => {
     const db = dbProducts || [];
     const all = db.length > 0 ? [...db, ...mockProducts] : mockProducts;
+
+    // If user has a profile, prioritize products from their location or related categories
+    if (userProfile) {
+      const userLocation = userProfile.location?.toLowerCase() || "";
+      const scored = all.map((p) => {
+        let score = 0;
+        if (userLocation && p.location.toLowerCase().includes(userLocation)) score += 3;
+        // Boost newer products
+        score += (new Date(p.createdAt).getTime() / Date.now());
+        return { ...p, _score: score };
+      });
+      scored.sort((a, b) => b._score - a._score);
+      return scored.slice(0, 8);
+    }
+
     return all.slice(0, 8);
-  }, [dbProducts]);
+  }, [dbProducts, userProfile]);
 
   return (
     <section className="py-8 sm:py-12 lg:py-16 bg-muted/30">

@@ -103,7 +103,6 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1 py-0 rounded-sm">-{product.discount}%</Badge>
             )}
             {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">NEW</Badge>}
-            {product.isOrganic && <Badge className="bg-secondary text-secondary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">BIO</Badge>}
           </div>
 
           {/* Compare & Wishlist buttons */}
@@ -173,7 +172,6 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-0.5">
                 <span className="text-[9px] sm:text-[10px] font-medium text-foreground truncate">{product.producer.name}</span>
-                {product.producer.verified && <ShieldCheck className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary flex-shrink-0" />}
               </div>
             </div>
           </div>
