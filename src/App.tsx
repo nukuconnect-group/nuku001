@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import Settings from "./pages/Settings";
 import RealtimeNotifications from "./components/RealtimeNotifications";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => {
             )}
             <BrowserRouter>
               <ScrollToTop />
+              <AnalyticsTracker />
               <RealtimeNotifications />
               <Routes>
                 <Route path="/" element={<Index />} />
