@@ -659,6 +659,11 @@ const Header = () => {
         onClose={() => setImageSearchOpen(false)}
         onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
       />
+      <QRScanner
+        isOpen={qrScannerOpen}
+        onClose={() => setQrScannerOpen(false)}
+        onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
+      />
     </>
   );
 };
