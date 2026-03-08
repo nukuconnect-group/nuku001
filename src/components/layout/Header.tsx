@@ -38,12 +38,6 @@ const currencies = [
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
-const mockNotifications = [
-  { id: "1", type: "order", title: "Nouvelle commande", message: "50kg de Maïs commandé", time: "5 min", read: false },
-  { id: "2", type: "message", title: "Nouveau message", message: "De Kofi Mensah", time: "30 min", read: false },
-  { id: "3", type: "system", title: "Produit épuisé", message: "Stock Tomates vide", time: "2h", read: true },
-];
-
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -56,14 +50,40 @@ const Header = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
   const [customLocation, setCustomLocation] = useState("");
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  // Fetch real notifications from DB
+  const fetchNotifications = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setNotifications(data);
+  }, []);
+
+  // Realtime notifications subscription
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("header-notifications")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+        const n = payload.new as any;
+        if (n.user_id === user.id) {
+          setNotifications(prev => [n, ...prev.slice(0, 9)]);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const navLinks = [
     { label: t("nav.home"), href: "/" },
