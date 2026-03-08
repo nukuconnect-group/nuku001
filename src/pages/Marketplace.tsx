@@ -206,7 +206,6 @@ const Marketplace = () => {
             {marketplaceCategories.map((cat) => (
               <SelectItem key={cat.id} value={cat.name.toLowerCase()} className="text-xs">{cat.name}</SelectItem>
             ))}
-            ))}
           </SelectContent>
         </Select>
       </div>
