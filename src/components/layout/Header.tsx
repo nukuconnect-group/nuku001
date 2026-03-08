@@ -8,7 +8,7 @@ import {
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
-import { products as mockProducts } from "@/data/marketplace";
+import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -48,6 +48,7 @@ const Header = () => {
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: dbProducts } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
@@ -65,7 +66,8 @@ const Header = () => {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return { products: [], categories: [] };
     const q = searchQuery.toLowerCase();
-    const matchedProducts = mockProducts.filter(p => 
+    const allProducts = dbProducts || [];
+    const matchedProducts = allProducts.filter(p => 
       p.name.toLowerCase().includes(q) || 
       p.category.toLowerCase().includes(q) ||
       p.producer.name.toLowerCase().includes(q) ||
@@ -75,7 +77,7 @@ const Header = () => {
       c.name.toLowerCase().includes(q)
     ).slice(0, 3);
     return { products: matchedProducts, categories: matchedCategories };
-  }, [searchQuery]);
+  }, [searchQuery, dbProducts, marketplaceCategories]);
 
   const SearchResultsDropdown = ({ className = "" }: { className?: string }) => {
     if (!showSearchResults || !searchQuery.trim() || searchQuery.length < 2) return null;

@@ -5,7 +5,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { products as mockProducts } from "@/data/marketplace";
+
 import ProductCard from "@/components/marketplace/ProductCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +110,7 @@ const PromoBannerSlider = () => {
 
   const recentProducts = useMemo(() => {
     const db = products || [];
-    return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
+    return db.slice(0, 8);
   }, [products]);
 
   // Featured producers with professional avatars

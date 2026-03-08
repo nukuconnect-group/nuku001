@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { products as mockProducts, type Product } from "@/data/marketplace";
+import type { Product } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { MapPin } from "lucide-react";
 
@@ -16,7 +16,7 @@ const SimilarProducts = ({ currentProduct }: SimilarProductsProps) => {
 
   const similar = useMemo(() => {
     const db = dbProducts || [];
-    const pool = db.length > 0 ? [...db, ...mockProducts.slice(0, 4)] : mockProducts;
+    const pool = db;
     
     let results = pool
       .filter(p => p.id !== currentProduct.id && (

@@ -22,7 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { type CurrencyCode } from "@/contexts/LanguageContext";
-import { products as mockProducts } from "@/data/marketplace";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
@@ -45,8 +45,7 @@ const ProductDetail = () => {
 
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
-  const mockProduct = mockProducts.find((p) => p.id === id);
-  const product = dbProduct || mockProduct;
+  const product = dbProduct || null;
 
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);

@@ -5,7 +5,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useProducts } from "@/hooks/useProducts";
-import { products as mockProducts } from "@/data/marketplace";
+
 import { Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -14,7 +14,7 @@ const Favorites = () => {
   const { wishlist, isLoading: wishlistLoading, isAuthenticated } = useWishlist();
   const { data: dbProducts, isLoading: productsLoading } = useProducts();
 
-  const allProducts = [...(dbProducts || []), ...mockProducts];
+  const allProducts = dbProducts || [];
 
   const favoriteProducts = allProducts.filter((p) =>
     wishlist.some((w) => w.product_id === p.id)
