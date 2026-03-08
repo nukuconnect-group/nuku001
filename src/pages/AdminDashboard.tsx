@@ -25,6 +25,7 @@ import CategoryManager from "@/components/admin/CategoryManager";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
+import SupportChat from "@/components/admin/SupportChat";
 
 const COLORS = [
   'hsl(var(--primary))',
