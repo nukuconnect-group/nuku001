@@ -61,22 +61,22 @@ const Marketplace = () => {
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
   
-  // Real DB products first, boosted on top, then a few mock products as filler
+  // Real DB products always first, boosted on top, mock products only as filler at the end
   const allProducts = useMemo(() => {
     const db = dbProducts || [];
-    if (db.length > 0) {
-      const mockFiller = mockProducts.slice(0, Math.max(0, 4 - Math.floor(db.length / 2)));
-      const combined = [...db, ...mockFiller];
-      // Sort: boosted products first
-      const boostedIds = new Set(activeBoosts.map(b => b.product_id));
-      combined.sort((a, b) => {
-        const aBoost = boostedIds.has(a.id) ? 1 : 0;
-        const bBoost = boostedIds.has(b.id) ? 1 : 0;
-        return bBoost - aBoost;
-      });
-      return combined;
-    }
-    return mockProducts;
+    const boostedIds = new Set(activeBoosts.map(b => b.product_id));
+    
+    // Sort real products: boosted first, then by creation date
+    const sortedDb = [...db].sort((a, b) => {
+      const aBoost = boostedIds.has(a.id) ? 1 : 0;
+      const bBoost = boostedIds.has(b.id) ? 1 : 0;
+      if (bBoost !== aBoost) return bBoost - aBoost;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // Only add mock filler if very few real products
+    const mockFiller = db.length < 6 ? mockProducts.slice(0, Math.max(0, 6 - db.length)) : [];
+    return [...sortedDb, ...mockFiller];
   }, [dbProducts, activeBoosts]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
