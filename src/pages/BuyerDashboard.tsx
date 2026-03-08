@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
