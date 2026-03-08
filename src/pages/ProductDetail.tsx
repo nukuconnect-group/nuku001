@@ -85,22 +85,68 @@ const ProductDetail = () => {
     try {
       const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
       if (!buyerProfile) throw new Error("Profile not found");
-      const sellerId = product.producer.id;
-      const { data: existingConv } = await supabase.from("conversations").select("id").eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
+
+      // For DB products, producer.id is the profile ID (producer_id)
+      // For mock products, producer.id is like "p1" — not a valid UUID
+      let sellerId = product.producer.id;
+      const isValidUUID = sellerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sellerId);
+
+      if (!isValidUUID) {
+        // Mock product — try to find a real seller by name
+        const { data: sellerProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_type", "producer")
+          .limit(1)
+          .maybeSingle();
+
+        if (!sellerProfile) {
+          toast({ title: "Fournisseur introuvable", description: "Ce produit de démonstration n'a pas de fournisseur réel associé.", variant: "destructive" });
+          setIsSending(false);
+          return;
+        }
+        sellerId = sellerProfile.id;
+      }
+
+      // Check if buyer is trying to message themselves
+      if (sellerId === buyerProfile.id) {
+        toast({ title: "Action impossible", description: "Vous ne pouvez pas vous envoyer un message à vous-même.", variant: "destructive" });
+        setIsSending(false);
+        return;
+      }
+
+      // Look for existing conversation between buyer and seller
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("buyer_id", buyerProfile.id)
+        .eq("seller_id", sellerId)
+        .maybeSingle();
+
       let conversationId = existingConv?.id;
       if (!conversationId) {
-        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id }).select("id").single();
+        const productId = isValidUUID || /^[0-9a-f]{8}-/i.test(product.id) ? product.id : null;
+        const { data: newConv, error: convError } = await supabase
+          .from("conversations")
+          .insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: productId })
+          .select("id")
+          .single();
         if (convError) throw convError;
         conversationId = newConv.id;
       }
-      await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+
+      const { error: msgError } = await supabase
+        .from("messages")
+        .insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+      if (msgError) throw msgError;
+
       toast({ title: "Message envoyé ✓", description: `Votre message a été envoyé à ${product.producer.name}` });
       setMessage("");
       setShowContactForm(false);
       navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
     } catch (error: any) {
       console.error("Send message error:", error);
-      toast({ title: "Erreur", description: "Impossible d'envoyer le message", variant: "destructive" });
+      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le message", variant: "destructive" });
     } finally {
       setIsSending(false);
     }
