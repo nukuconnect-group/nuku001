@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
 import { products as mockProducts } from "@/data/marketplace";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -48,6 +48,7 @@ const Header = () => {
   const [profile, setProfile] = useState<any>(null);
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
   const [customLocation, setCustomLocation] = useState("");
@@ -99,7 +100,6 @@ const Header = () => {
                   <span className="text-sm">{cat.emoji}</span>
                 </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
               </Link>
             ))}
           </div>
@@ -576,7 +576,7 @@ const Header = () => {
                             <span className="text-xl">{category.emoji}</span>
                           </div>
                           <span className="text-xs font-medium">{category.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{category.count} {t("mp.products")}</span>
+                          <span className="text-[10px] text-muted-foreground">{t("mp.products")}</span>
                         </Link>
                       ))}
                     </div>

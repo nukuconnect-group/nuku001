@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateDemand } from "@/hooks/useDemands";
 import { useToast } from "@/hooks/use-toast";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { HandCoins, Loader2 } from "lucide-react";
 
 interface CreateDemandModalProps {
@@ -15,6 +15,7 @@ interface CreateDemandModalProps {
 }
 
 const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
+  const { data: marketplaceCategories = [] } = useCategories();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -85,8 +86,8 @@ const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder="Choisir" /></SelectTrigger>
               <SelectContent>
-                {marketplaceCategories.filter(c => c.id !== "all").map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
+                {marketplaceCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name} className="text-xs">{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

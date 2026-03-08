@@ -18,7 +18,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { products as mockProducts } from "@/data/marketplace";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
@@ -57,6 +57,7 @@ const Marketplace = () => {
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
+  const { data: marketplaceCategories = [] } = useCategories();
   
   // Merge DB products with mock products (DB first)
   const allProducts = useMemo(() => {
@@ -201,8 +202,9 @@ const Marketplace = () => {
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("mp.allCategories")} /></SelectTrigger>
           <SelectContent>
+            <SelectItem key="all" value="all" className="text-xs">{t("mp.allCategories")}</SelectItem>
             {marketplaceCategories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
+              <SelectItem key={cat.id} value={cat.name.toLowerCase()} className="text-xs">{cat.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -300,12 +302,12 @@ const Marketplace = () => {
             }`}>
             Tout
           </button>
-          {marketplaceCategories.filter(c => c.id !== "all").map((category) => (
+          {marketplaceCategories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => setSelectedCategory(category.name.toLowerCase())}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
+                selectedCategory === category.name.toLowerCase() ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
               }`}>
               {category.name}
             </button>
@@ -374,7 +376,7 @@ const Marketplace = () => {
               <span className="text-[10px] text-muted-foreground">{t("mp.filters")}:</span>
               {selectedCategory !== "all" && (
                 <Badge variant="secondary" className="gap-1 text-[10px] h-5">
-                  {marketplaceCategories.find(c => c.id === selectedCategory)?.name || selectedCategory}
+                  {marketplaceCategories.find(c => c.name.toLowerCase() === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => setSelectedCategory("all")}><X className="w-2.5 h-2.5" /></button>
                 </Badge>
               )}
@@ -416,10 +418,10 @@ const Marketplace = () => {
               <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
               <ProductSection title={t("mp.newArrivals")} icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
               {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
-                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase() || c.id.toLowerCase() === category.toLowerCase());
+                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
                 const categoryEmoji = categoryInfo?.emoji || "📦";
                 return (
-                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.id || category} />
+                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
                 );
               })}
               <div className="mt-6 sm:mt-8">

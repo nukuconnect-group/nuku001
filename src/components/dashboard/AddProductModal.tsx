@@ -17,7 +17,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 
 
 interface AddProductModalProps {
@@ -190,19 +190,28 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     }
   };
 
-  // Fetch dynamic categories from DB and merge with static ones
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
-  useEffect(() => {
-    supabase.from("categories").select("name").eq("is_active", true).order("sort_order").then(({ data }) => {
-      if (data) setDbCategories((data as any[]).map((c: any) => c.name));
-    });
-  }, []);
+  // Fetch categories from DB
+  const { data: dbCategoriesList = [] } = useCategories();
+  const [customCategory, setCustomCategory] = useState("");
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
   const productCategories = useMemo(() => {
-    const staticCats = marketplaceCategories.filter(c => c.id !== 'all').map(c => c.name);
-    const allCats = [...staticCats, ...dbCategories.filter(name => !staticCats.includes(name))];
-    return allCats;
-  }, [dbCategories]);
+    return dbCategoriesList.map(c => c.name);
+  }, [dbCategoriesList]);
+
+  const handleCreateCategory = async () => {
+    if (!customCategory.trim()) return;
+    const { error } = await supabase.from("categories").insert({
+      name: customCategory.trim(),
+      sort_order: dbCategoriesList.length + 1,
+    } as any);
+    if (!error) {
+      setNewProduct({ ...newProduct, category: customCategory.trim() });
+      setCustomCategory("");
+      setShowNewCategory(false);
+      toast({ title: "Catégorie créée !" });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -291,21 +300,41 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
             <div className="space-y-2">
               <Label>Catégorie *</Label>
-              <Select
-                value={newProduct.category}
-                onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productCategories.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {showNewCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Nom de la nouvelle catégorie"
+                    className="flex-1"
+                  />
+                  <Button type="button" size="sm" onClick={handleCreateCategory} disabled={!customCategory.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setShowNewCategory(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Select
+                    value={newProduct.category}
+                    onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productCategories.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setShowNewCategory(true)} title="Créer une catégorie">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
