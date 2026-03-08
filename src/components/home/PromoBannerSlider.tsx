@@ -9,6 +9,7 @@ import { products as mockProducts } from "@/data/marketplace";
 import ProductCard from "@/components/marketplace/ProductCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
 import heroNetwork from "@/assets/hero-network-agriculture.jpg";
