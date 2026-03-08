@@ -300,21 +300,41 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
             <div className="space-y-2">
               <Label>Catégorie *</Label>
-              <Select
-                value={newProduct.category}
-                onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productCategories.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {showNewCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Nom de la nouvelle catégorie"
+                    className="flex-1"
+                  />
+                  <Button type="button" size="sm" onClick={handleCreateCategory} disabled={!customCategory.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setShowNewCategory(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Select
+                    value={newProduct.category}
+                    onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productCategories.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setShowNewCategory(true)} title="Créer une catégorie">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
