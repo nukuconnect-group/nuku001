@@ -126,7 +126,8 @@ const Marketplace = () => {
 
   const handleReset = () => {
     setSearchQuery(""); setSelectedCategory("all"); setPriceRange([0, 500000]);
-    setOrganicOnly(false); setVerifiedOnly(false); setLocation(t("mp.allRegions"));
+    setOrganicOnly(false); setVerifiedOnly(false); setInStockOnly(false);
+    setDiscountOnly(false); setMinRating(0); setLocation(t("mp.allRegions"));
     setSortBy("recent"); setProductSearch("");
   };
 
