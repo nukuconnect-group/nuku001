@@ -67,21 +67,23 @@ const About = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
             {teamMembers.map((member) => (
               <Card key={member.name} className="overflow-hidden group hover:shadow-elevated transition-all">
-                <CardContent className="p-3 sm:p-4 text-center">
+                <div className="aspect-square w-full overflow-hidden">
                   <img
                     src={member.avatar}
                     alt={member.name}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover mx-auto mb-3 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <h3 className="font-heading font-bold text-xs sm:text-sm text-foreground">{member.name}</h3>
-                  <p className="text-[10px] sm:text-xs text-primary font-medium mb-2">{member.role}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-3">{member.bio}</p>
+                </div>
+                <CardContent className="p-4 sm:p-5 text-center">
+                  <h3 className="font-heading font-bold text-sm sm:text-base text-foreground">{member.name}</h3>
+                  <p className="text-xs sm:text-sm text-primary font-medium mb-2">{member.role}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{member.bio}</p>
                   <div className="flex justify-center gap-2 mt-3">
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <Linkedin className="w-3.5 h-3.5" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Linkedin className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <Mail className="w-3.5 h-3.5" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Mail className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
