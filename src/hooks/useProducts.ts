@@ -51,33 +51,48 @@ const mapDbToProduct = (p: DbProduct): Product => ({
   },
 });
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+async function fetchProductsDirect(): Promise<Product[]> {
+  const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio,phone)&order=created_at.desc`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+  });
+  if (!res.ok) throw new Error(`Products fetch failed: ${res.status}`);
+  const data = await res.json();
+  return (data || []).map((p: any) => mapDbToProduct(p));
+}
+
 export const useProducts = () => {
   return useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      // Wait briefly for Supabase client to initialize in iframe contexts
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          producer:profiles!products_producer_id_fkey(
-            id, full_name, avatar_url, is_verified, location, bio, phone
-          )
-        `)
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`
+            *,
+            producer:profiles!products_producer_id_fkey(
+              id, full_name, avatar_url, is_verified, location, bio, phone
+            )
+          `)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Products fetch error:", error);
-        throw error;
+        if (error) throw error;
+        return (data || []).map((p: any) => mapDbToProduct(p));
+      } catch (e) {
+        console.warn("Supabase client failed, using direct fetch:", e);
+        return fetchProductsDirect();
       }
-      return (data || []).map((p: any) => mapDbToProduct(p));
     },
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 5,
-    retry: 5,
-    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 8000),
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 5000),
   });
 };
 
@@ -85,19 +100,34 @@ export const useProduct = (id: string) => {
   return useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          producer:profiles!products_producer_id_fkey(
-            id, full_name, avatar_url, is_verified, location, bio, phone
-          )
-        `)
-        .eq("id", id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`
+            *,
+            producer:profiles!products_producer_id_fkey(
+              id, full_name, avatar_url, is_verified, location, bio, phone
+            )
+          `)
+          .eq("id", id)
+          .single();
 
-      if (error) throw error;
-      return mapDbToProduct(data as any);
+        if (error) throw error;
+        return mapDbToProduct(data as any);
+      } catch (e) {
+        console.warn("Supabase client failed for product, using direct fetch:", e);
+        const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio,phone)&id=eq.${id}`;
+        const res = await fetch(url, {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+        });
+        if (!res.ok) throw new Error(`Product fetch failed: ${res.status}`);
+        const data = await res.json();
+        if (!data?.[0]) throw new Error("Product not found");
+        return mapDbToProduct(data[0]);
+      }
     },
     enabled: !!id,
   });
