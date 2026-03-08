@@ -115,7 +115,12 @@ const PromoBannerSlider = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
-            <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
+            <div className="relative">
+              <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[7px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                {recentProducts.filter(p => p.isOrganic).length}
+              </span>
+            </div>
             <div>
               <p className="text-xs font-bold text-foreground">Bio</p>
               <p className="text-[9px] text-muted-foreground">Certifié</p>

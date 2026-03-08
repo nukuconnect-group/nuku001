@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
+import CompareDrawer from "@/components/marketplace/CompareDrawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -19,15 +20,16 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useProducts } from "@/hooks/useProducts";
-import { useLanguage, type CurrencyCode } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, DollarSign } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
+import { Product } from "@/data/marketplace";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
 
 const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t, formatPrice: fmtPrice, currency, setCurrency } = useLanguage();
+  const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
   
   // Merge DB products with mock products (DB first)
@@ -48,7 +50,18 @@ const Marketplace = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [compareProducts, setCompareProducts] = useState<Product[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const sponsoredRef = useRef<HTMLDivElement>(null);
+
+  const handleCompare = (product: Product) => {
+    setCompareProducts((prev) => {
+      const exists = prev.find((p) => p.id === product.id);
+      if (exists) return prev.filter((p) => p.id !== product.id);
+      if (prev.length >= 4) return prev;
+      return [...prev, product];
+    });
+  };
 
   useEffect(() => {
     const category = searchParams.get("category");
@@ -192,7 +205,7 @@ const Marketplace = () => {
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-        {sectionProducts.slice(0, 5).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
+        {sectionProducts.slice(0, 5).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} />))}
       </div>
     </div>
   );
@@ -240,7 +253,7 @@ const Marketplace = () => {
             <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {sponsoredProducts.map((product) => (
                 <div key={product.id} className="flex-shrink-0 w-[140px] sm:w-[180px] snap-start">
-                  <ProductCard product={product} viewMode="grid" />
+                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} />
                 </div>
               ))}
             </div>
@@ -268,16 +281,6 @@ const Marketplace = () => {
                 {t("mp.verified")}
               </Button>
             </div>
-            {/* Currency selector */}
-            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
-              <SelectTrigger className="w-24 h-8 text-xs"><DollarSign className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="XOF" className="text-xs">FCFA</SelectItem>
-                <SelectItem value="USD" className="text-xs">USD $</SelectItem>
-                <SelectItem value="EUR" className="text-xs">EUR €</SelectItem>
-                <SelectItem value="GBP" className="text-xs">GBP £</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
@@ -317,7 +320,7 @@ const Marketplace = () => {
               </div>
               {filteredProducts.length > 0 ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} />))}
+                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} />))}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -347,7 +350,7 @@ const Marketplace = () => {
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" />))}
+                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} />))}
                 </div>
               </div>
             </>
@@ -355,6 +358,13 @@ const Marketplace = () => {
         </div>
       </section>
 
+      <CompareDrawer
+        products={compareProducts}
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        onRemove={(id) => setCompareProducts((prev) => prev.filter((p) => p.id !== id))}
+        onClear={() => { setCompareProducts([]); setCompareOpen(false); }}
+      />
       <Footer />
       <MobileBottomNav />
     </div>

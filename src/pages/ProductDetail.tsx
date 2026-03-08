@@ -14,8 +14,12 @@ import { useProduct } from "@/hooks/useProducts";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2
+  Loader2, DollarSign
 } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { type CurrencyCode } from "@/contexts/LanguageContext";
 import { products as mockProducts } from "@/data/marketplace";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +30,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
-  const { t, formatPrice } = useLanguage();
+  const { t, formatPrice, currency, setCurrency } = useLanguage();
   const [quantity, setQuantity] = useState(1);
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
@@ -197,9 +201,19 @@ const ProductDetail = () => {
 
             {/* Details */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3 flex-wrap">
-                <Badge variant="secondary" className="capitalize">{product.category}</Badge>
-                <span className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-4 h-4" />{product.location}</span>
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <Badge variant="secondary" className="capitalize text-xs">{product.category}</Badge>
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground"><MapPin className="w-3.5 h-3.5" />{product.location}</span>
+                {/* Currency selector */}
+                <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
+                  <SelectTrigger className="w-24 h-7 text-[10px] ml-auto"><DollarSign className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="XOF" className="text-xs">FCFA</SelectItem>
+                    <SelectItem value="USD" className="text-xs">USD $</SelectItem>
+                    <SelectItem value="EUR" className="text-xs">EUR €</SelectItem>
+                    <SelectItem value="GBP" className="text-xs">GBP £</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <h1 className="font-heading text-xl sm:text-3xl lg:text-4xl font-bold text-foreground">{product.name}</h1>
               <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
