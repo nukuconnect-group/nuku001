@@ -84,13 +84,13 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
           {/* Stats */}
           <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <div key={index} className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <div className="font-heading font-bold text-sm sm:text-lg text-foreground">{stat.value}</div>
-                  <div className="text-[9px] sm:text-xs text-muted-foreground">{stat.label}</div>
+                  <div className="font-heading font-bold text-sm sm:text-lg text-white">{stat.value}</div>
+                  <div className="text-[9px] sm:text-xs text-white/70">{stat.label}</div>
                 </div>
               </div>
             ))}

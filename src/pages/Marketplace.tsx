@@ -279,7 +279,7 @@ const Marketplace = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input type="text" placeholder={t("header.search")}
                 value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 text-sm bg-card border-border" />
+                className="pl-10 h-10 text-sm bg-white/90 border-white/30 text-foreground" />
             </div>
             <Select value={location} onValueChange={setLocation}>
               <SelectTrigger className="w-full sm:w-40 h-10 text-xs"><MapPin className="w-3.5 h-3.5 mr-1" /><SelectValue /></SelectTrigger>
