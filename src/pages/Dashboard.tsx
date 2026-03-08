@@ -138,11 +138,11 @@ const Dashboard = () => {
               <Card className="cursor-pointer hover:shadow-elevated transition-all h-full">
                 <CardContent className="p-3 sm:p-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Truck className="w-4 h-4 text-accent-foreground" />
+                    <ShoppingCart className="w-4 h-4 text-accent-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Livraisons</p>
-                    <p className="text-[10px] text-muted-foreground">Suivre envois</p>
+                    <p className="text-xs font-semibold text-foreground">Commandes</p>
+                    <p className="text-[10px] text-muted-foreground">Suivre commandes</p>
                   </div>
                 </CardContent>
               </Card>
