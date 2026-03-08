@@ -643,6 +643,100 @@ const BuyerDashboard = () => {
         </div>
       </main>
 
+      {/* Migration Modal */}
+      <Dialog open={showMigrationModal} onOpenChange={setShowMigrationModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Store className="w-5 h-5 text-primary" />
+              Devenir fournisseur
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Remplissez les informations de votre activité pour activer votre compte vendeur.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Nom de l'entreprise / exploitation <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={migrationData.businessName}
+                onChange={(e) => setMigrationData(d => ({ ...d, businessName: e.target.value }))}
+                placeholder="Ex: Ferme Komi, Élevage Sena..."
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Type d'activité <span className="text-destructive">*</span>
+              </Label>
+              <Select value={migrationData.businessType} onValueChange={(v) => setMigrationData(d => ({ ...d, businessType: v }))}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Sélectionner votre domaine" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="agriculture">Agriculture</SelectItem>
+                  <SelectItem value="elevage">Élevage</SelectItem>
+                  <SelectItem value="pisciculture">Pisciculture / Aquaculture</SelectItem>
+                  <SelectItem value="aviculture">Aviculture</SelectItem>
+                  <SelectItem value="agroalimentaire">Agroalimentaire</SelectItem>
+                  <SelectItem value="foresterie">Foresterie</SelectItem>
+                  <SelectItem value="agribusiness">Agribusiness</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Téléphone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="tel"
+                value={migrationData.phone}
+                onChange={(e) => setMigrationData(d => ({ ...d, phone: e.target.value }))}
+                placeholder="Ex: +228 90 12 34 56"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Localisation <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={migrationData.location}
+                onChange={(e) => setMigrationData(d => ({ ...d, location: e.target.value }))}
+                placeholder="Ex: Lomé, Kara, Sokodé..."
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Description de votre activité</Label>
+              <Textarea
+                value={migrationData.bio}
+                onChange={(e) => setMigrationData(d => ({ ...d, bio: e.target.value }))}
+                placeholder="Décrivez brièvement vos produits et votre expérience..."
+                className="text-sm min-h-[70px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 sm:gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setShowMigrationModal(false)} className="text-xs flex-1">
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs flex-1"
+              onClick={handleBecomeProducer}
+              disabled={migrating || !migrationData.businessName || !migrationData.phone || !migrationData.location || !migrationData.businessType}
+            >
+              {migrating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Store className="w-3.5 h-3.5" />}
+              Confirmer la migration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
       <MobileBottomNav />
     </div>
