@@ -734,13 +734,13 @@ const Auth = () => {
                           className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                         <label htmlFor="privacy-policy" className="text-xs text-muted-foreground leading-tight">
                           J'accepte les{" "}
-                          <Link to="/terms" target="_blank" className="text-primary underline hover:text-primary/80">
+                          <button type="button" onClick={() => setLegalSheet("terms")} className="text-primary underline hover:text-primary/80">
                             conditions d'utilisation
-                          </Link>{" "}
+                          </button>{" "}
                           et la{" "}
-                          <Link to="/privacy" target="_blank" className="text-primary underline hover:text-primary/80">
+                          <button type="button" onClick={() => setLegalSheet("privacy")} className="text-primary underline hover:text-primary/80">
                             politique de confidentialité
-                          </Link>
+                          </button>
                         </label>
                       </div>
 
