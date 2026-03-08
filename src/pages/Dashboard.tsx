@@ -18,7 +18,7 @@ import DemandsList from "@/components/marketplace/DemandsList";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings
 } from "lucide-react";
 
 const Dashboard = () => {
