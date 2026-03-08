@@ -306,12 +306,14 @@ const Marketplace = () => {
               </SheetContent>
             </Sheet>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
+              <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
+                <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
+                <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
                 <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
                 <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
-                <SelectItem value="rating" className="text-xs">{t("mp.sortRating")}</SelectItem>
+                <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
               </SelectContent>
             </Select>
           </div>
