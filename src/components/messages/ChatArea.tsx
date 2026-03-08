@@ -249,6 +249,23 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-muted/20">
+        {/* Product preview card */}
+        {conversation.productName && conversation.productImage && (
+          <Link to={`/produit/${conversation.productId}`} className="block">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow mx-auto max-w-xs">
+              <img 
+                src={conversation.productImage} 
+                alt={conversation.productName} 
+                className="w-14 h-14 rounded-lg object-cover flex-shrink-0" 
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">{conversation.productName}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Produit concerné</p>
+                <span className="text-[10px] text-primary font-medium">Voir le produit →</span>
+              </div>
+            </div>
+          </Link>
+        )}
         <div className="flex items-center justify-center">
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
