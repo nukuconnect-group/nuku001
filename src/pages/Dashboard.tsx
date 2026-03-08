@@ -13,6 +13,7 @@ import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
