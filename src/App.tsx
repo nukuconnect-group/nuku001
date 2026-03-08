@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/components/cart/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Marketplace from "./pages/Marketplace";
