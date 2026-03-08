@@ -29,6 +29,20 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [showReviews, setShowReviews] = useState(false);
 
+  // Check if there are active demands matching this product's category
+  const { data: matchingDemands = 0 } = useQuery({
+    queryKey: ["demand-count", product.category],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("demands")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .ilike("category", `%${product.category}%`);
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
