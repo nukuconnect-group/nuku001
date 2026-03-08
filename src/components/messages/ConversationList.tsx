@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Search, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +18,8 @@ interface Props {
 }
 
 export default function ConversationList({ conversations, selectedId, onSelect, hidden }: Props) {
-  const [searchQuery, setSearchQuery] = __useState("");
-  const [activeCategory, setActiveCategory] = __useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
 
   const filtered = conversations.filter((conv) => {
     const matchesSearch =
@@ -82,7 +83,7 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
               </div>
               {conv.productName && (
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />
+                  {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
                   <span className="text-[10px] text-primary font-medium truncate">{conv.productName}</span>
                 </div>
               )}
@@ -105,6 +106,3 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
     </div>
   );
 }
-
-// Using React's useState - fixing import
-import { useState as __useState } from "react";
