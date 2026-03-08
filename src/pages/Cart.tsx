@@ -77,8 +77,9 @@ const Cart = () => {
     });
   }, []);
 
+  const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
-  const deliveryPrice = selectedDelivery?.price || 0;
+  const deliveryPrice = dynamicDeliveryPrice || selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice - promoDiscount;
 
   const handleCheckout = async () => {
