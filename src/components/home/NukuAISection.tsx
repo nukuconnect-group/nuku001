@@ -20,7 +20,7 @@ const NukuAISection = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground overflow-hidden relative">
+    <section className="py-12 sm:py-16 lg:py-24 text-white overflow-hidden relative" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-primary-foreground blur-3xl" />
         <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-secondary blur-3xl" />
