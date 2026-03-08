@@ -58,7 +58,7 @@ const HowItWorksSection = () => {
           {steps.map((step, index) => (
             <div 
               key={step.title} 
-              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border"
+              className="group bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-white/20"
             >
               {/* Image */}
               <div className="relative w-full aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
