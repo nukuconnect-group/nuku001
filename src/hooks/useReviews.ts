@@ -14,10 +14,13 @@ export interface Review {
   };
 }
 
+const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 export function useReviews(productId: string) {
   return useQuery({
     queryKey: ["reviews", productId],
     queryFn: async () => {
+      if (!isUUID(productId)) return [];
       const { data, error } = await supabase
         .from("reviews" as any)
         .select("*, profiles:user_id(full_name, avatar_url)")
@@ -42,6 +45,7 @@ export function useSubmitReview() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ productId, rating, comment }: { productId: string; rating: number; comment: string }) => {
+      if (!isUUID(productId)) throw new Error("Les avis ne sont disponibles que pour les produits réels, pas les produits de démonstration.");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("reviews" as any).upsert(
