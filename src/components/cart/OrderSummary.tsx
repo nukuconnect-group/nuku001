@@ -240,12 +240,56 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
           </label>
         </div>
 
+        {/* Promo Code */}
+        <div className="space-y-2 pt-2 border-t border-border">
+          <p className="text-xs font-medium flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-primary" />
+            Code promo
+          </p>
+          {appliedPromo ? (
+            <div className="flex items-center justify-between p-2.5 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="text-xs font-semibold text-primary">{appliedPromo.code}</p>
+                  <p className="text-[10px] text-muted-foreground">{appliedPromo.label}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px] text-primary">-{formatPrice(discountAmount)}</Badge>
+                <button onClick={handleRemovePromo} className="text-muted-foreground hover:text-destructive">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={promoInput}
+                onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                placeholder="Entrer un code"
+                className="h-8 text-xs flex-1"
+              />
+              <Button variant="outline" size="sm" className="h-8 text-xs px-3" onClick={handleApplyPromo}>
+                Appliquer
+              </Button>
+            </div>
+          )}
+          {promoError && <p className="text-[10px] text-destructive">{promoError}</p>}
+        </div>
+
         {/* Totals */}
         <div className="space-y-2 pt-2 border-t border-border">
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Sous-total ({itemCount} articles)</span>
             <span className="font-medium">{formatPrice(total)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-xs sm:text-sm">
+              <span className="text-primary">Réduction ({appliedPromo?.code})</span>
+              <span className="text-primary font-medium">-{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Livraison</span>
             <span className={deliveryPrice === 0 ? "text-primary font-medium" : "font-medium"}>
