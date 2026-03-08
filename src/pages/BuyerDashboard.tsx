@@ -40,8 +40,7 @@ const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatPrice } = useLanguage();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile, isLoading: profileLoading, updateProfile } = useProfile();
   const [orders, setOrders] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -50,60 +49,26 @@ const BuyerDashboard = () => {
   const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
+    if (profileLoading) return;
+    if (!user) { navigate("/auth", { replace: true }); return; }
+    if (!profile) { setIsLoading(false); return; }
+
     let isMounted = true;
-    
-    const loadDashboard = async (userId: string) => {
-      // Fetch profile first
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      
+    const loadData = async () => {
+      const [ordersRes, convsRes, notifsRes] = await Promise.all([
+        supabase.from("orders").select("*, products(*)").eq("buyer_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profile.id).order("updated_at", { ascending: false }).limit(10),
+        supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+      ]);
       if (!isMounted) return;
-      setProfile(profileData);
-      
-      if (profileData) {
-        // Show dashboard immediately, load data in parallel
-        setIsLoading(false);
-        
-        const [ordersRes, convsRes, notifsRes] = await Promise.all([
-          supabase.from("orders").select("*, products(*)").eq("buyer_id", profileData.id).order("created_at", { ascending: false }),
-          supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profileData.id).order("updated_at", { ascending: false }).limit(10),
-          supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
-        ]);
-        
-        if (!isMounted) return;
-        setOrders(ordersRes.data || []);
-        setConversations(convsRes.data || []);
-        setNotifications(notifsRes.data || []);
-      } else {
-        if (isMounted) setIsLoading(false);
-      }
+      setOrders(ordersRes.data || []);
+      setConversations(convsRes.data || []);
+      setNotifications(notifsRes.data || []);
+      setIsLoading(false);
     };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
-      setUser(session.user);
-      loadDashboard(session.user.id);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
-      setUser(session.user);
-      loadDashboard(session.user.id);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    loadData();
+    return () => { isMounted = false; };
+  }, [profileLoading, user, profile, navigate]);
   }, [navigate]);
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
