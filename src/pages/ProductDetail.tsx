@@ -155,6 +155,7 @@ const ProductDetail = () => {
                   src={images[currentImageIndex] || product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                 />
                 {images.length > 1 && (
                   <>
@@ -201,7 +202,23 @@ const ProductDetail = () => {
                   >
                     <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
-                  <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const shareData = {
+                        title: product.name,
+                        text: `${product.name} — ${formatPrice(product.price)}/${product.unit} sur NukuConnect`,
+                        url: window.location.href,
+                      };
+                      if (navigator.share) {
+                        navigator.share(shareData).catch(() => {});
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast({ title: "Lien copié ✓", description: "Le lien du produit a été copié dans le presse-papier" });
+                      }
+                    }}
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  >
                     <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   </button>
                 </div>
