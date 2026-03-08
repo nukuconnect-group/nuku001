@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Users, Leaf, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Leaf, TrendingUp, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { products as mockProducts } from "@/data/marketplace";
 import ProductCard from "@/components/marketplace/ProductCard";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
 import heroNetwork from "@/assets/hero-network-agriculture.jpg";
