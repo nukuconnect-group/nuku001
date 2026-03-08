@@ -174,18 +174,11 @@ const Header = () => {
     { label: "Centre d'aide", href: "/aide" },
   ];
 
+  // Profile location sync
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      else setProfile(null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (profile?.location) setUserLocation(profile.location);
+    if (user?.id) fetchNotifications(user.id);
+  }, [profile, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
