@@ -324,6 +324,10 @@ const BuyerDashboard = () => {
                 <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Paiements
               </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
+                <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Paramètres
+              </TabsTrigger>
             </TabsList>
 
             {/* Orders Tab */}
