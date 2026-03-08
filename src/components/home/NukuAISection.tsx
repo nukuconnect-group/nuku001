@@ -30,7 +30,7 @@ const NukuAISection = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="order-2 lg:order-1">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/20 backdrop-blur-sm mb-4 sm:mb-6">
-              <Sparkles className="w-4 h-4 text-accent" />
+              <Sparkles className="w-4 h-4 text-primary-foreground" />
               <span className="text-xs sm:text-sm font-medium">Par Nukuconnect Technologie</span>
             </div>
             
