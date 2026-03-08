@@ -69,7 +69,7 @@ const BuyerDashboard = () => {
     loadData();
     return () => { isMounted = false; };
   }, [profileLoading, user, profile, navigate]);
-  }, [navigate]);
+  
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const pendingOrders = orders.filter(o => o.status === "pending").length;
