@@ -938,6 +938,16 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Categories Tab */}
+            <TabsContent value="categories">
+              <CategoryManager />
+            </TabsContent>
+
+            {/* Broadcast Notification Tab */}
+            <TabsContent value="broadcast">
+              <BroadcastNotification users={users} />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
