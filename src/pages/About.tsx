@@ -10,8 +10,8 @@ import teamCeo from "@/assets/team-ceo.png";
 import teamCto from "@/assets/team-cto.png";
 
 const teamMembers = [
-  { name: "Edem ADZO Kodzo", role: "CEO & Fondateur", bio: "Visionnaire et entrepreneur, fondateur de NUKUCONNECT. Passionné par l'innovation technologique au service de l'agriculture africaine.", avatar: teamCeo },
-  { name: "Komi Sena AFANDONOUGBO", role: "Directeur Technique (CTO)", bio: "Expert en développement logiciel et architecte de la plateforme NUKUCONNECT. Spécialiste en solutions digitales pour l'agritech.", avatar: teamCto },
+  { name: "Edem ADZO Kodzo", role: "CEO & Co-fondateur", bio: "Visionnaire et entrepreneur, co-fondateur de NUKUCONNECT. Passionné par l'innovation technologique au service de l'agriculture africaine.", avatar: teamCeo },
+  { name: "Komi Sena AFANDONOUGBO", role: "CTO & Co-fondateur", bio: "Expert en développement logiciel et architecte de la plateforme NUKUCONNECT. Spécialiste en solutions digitales pour l'agritech.", avatar: teamCto },
 ];
 
 const values = [
