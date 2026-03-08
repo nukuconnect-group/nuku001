@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
-  LayoutDashboard, Wallet, DollarSign, Leaf
+  LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
 import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
