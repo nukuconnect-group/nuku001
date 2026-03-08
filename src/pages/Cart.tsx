@@ -195,22 +195,6 @@ const Cart = () => {
             </Card>
           )}
 
-          {user && !subLoading && !hasActiveSubscription && (
-            <Card className="mb-6 border-primary">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Crown className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-sm">Abonnement requis</p>
-                    <p className="text-xs text-muted-foreground">Souscrivez à un plan pour passer commande</p>
-                  </div>
-                </div>
-                <Link to="/plans">
-                  <Button variant="hero" size="sm">Voir les plans</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
