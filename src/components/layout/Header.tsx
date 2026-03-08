@@ -125,6 +125,7 @@ const Header = () => {
     const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
     setProfile(data);
     if (data?.location) setUserLocation(data.location);
+    fetchNotifications(userId);
   };
 
   const handleLogout = async () => {
