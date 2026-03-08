@@ -384,7 +384,7 @@ const Marketplace = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input type="text" placeholder={t("header.search")}
                 value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-24 h-10 text-sm bg-card border-border rounded-full" />
+                className="pl-10 pr-28 h-10 text-sm bg-card border-border rounded-full" />
               <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                 <button type="button" onClick={() => setVoiceSearchOpen(true)}
                   className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
