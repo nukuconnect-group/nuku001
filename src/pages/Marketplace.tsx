@@ -416,7 +416,8 @@ const Marketplace = () => {
                 <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
               )}
               <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
-              <ProductSection title={t("mp.newArrivals")} icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
+              {/* New Arrivals - Premium Layout */}
+              <NewArrivalsSection products={newArrivals} />
               {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
                 const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
                 const categoryEmoji = categoryInfo?.emoji || "📦";
