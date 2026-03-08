@@ -263,6 +263,7 @@ const Marketplace = () => {
 
           {/* Toolbar */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
+            <CreateDemandModal />
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
