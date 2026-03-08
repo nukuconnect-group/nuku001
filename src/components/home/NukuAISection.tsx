@@ -20,25 +20,25 @@ const NukuAISection = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24 text-white overflow-hidden relative" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground overflow-hidden relative">
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-primary-foreground blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-secondary blur-3xl" />
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="order-2 lg:order-1">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-4 sm:mb-6">
-              <Sparkles className="w-4 h-4 text-white" />
-              <span className="text-xs sm:text-sm font-medium text-white">Par Nukuconnect Technologie</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/20 backdrop-blur-sm mb-4 sm:mb-6">
+              <Sparkles className="w-4 h-4 text-primary-foreground" />
+              <span className="text-xs sm:text-sm font-medium">Par Nukuconnect Technologie</span>
             </div>
             
-            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 text-white">
-              Rencontrez <span className="text-yellow-300 font-extrabold">Nukuconnect IA</span>
+            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
+              Rencontrez <span className="text-secondary-foreground font-extrabold">Nukuconnect IA</span>
             </h2>
             
-            <p className="text-sm sm:text-base lg:text-lg text-white/90 mb-6 sm:mb-8 leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-primary-foreground/90 mb-6 sm:mb-8 leading-relaxed">
               Votre assistant agricole intelligent disponible 24/7. Posez vos questions 
               sur les cultures, l'élevage, les maladies des plantes et recevez des 
               conseils personnalisés instantanément.
@@ -46,17 +46,17 @@ const NukuAISection = () => {
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
               {features.map((feature) => (
-                <div key={feature.text} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div key={feature.text} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary-foreground/20 flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-white">{feature.text}</span>
+                  <span className="text-xs sm:text-sm font-medium">{feature.text}</span>
                 </div>
               ))}
             </div>
 
             <Link to="/nuku-ai">
-              <Button size="lg" className="bg-white hover:bg-white/90 text-primary font-semibold gap-2 text-sm sm:text-base">
+              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold gap-2 text-sm sm:text-base">
                 Essayer NUKU AI <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
@@ -64,17 +64,17 @@ const NukuAISection = () => {
 
           {/* Chat Preview */}
           <div className="relative order-1 lg:order-2">
-            <div className="absolute -inset-4 bg-gradient-to-r from-white/20 to-white/10 rounded-3xl blur-2xl" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-secondary/30 to-primary-foreground/20 rounded-3xl blur-2xl" />
             <Card className="relative bg-card border-border/50 overflow-hidden shadow-elevated max-w-sm mx-auto lg:max-w-none">
-              <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary to-primary/80">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-foreground flex items-center justify-center">
                   <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-white text-sm sm:text-base">Nukuconnect IA</p>
+                  <p className="font-semibold text-primary-foreground text-sm sm:text-base">Nukuconnect IA</p>
                   <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <p className="text-xs text-white/80">En ligne</p>
+                    <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                    <p className="text-xs text-primary-foreground/80">En ligne</p>
                   </div>
                 </div>
               </div>

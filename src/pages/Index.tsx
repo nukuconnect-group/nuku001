@@ -19,11 +19,11 @@ const Index = () => {
         <div className="hidden md:block">
           <HeroCarousel />
         </div>
-        {/* PromoBannerSlider: mobile only */}
-        <div className="md:hidden">
-          <PromoBannerSlider />
+        {/* PromoBannerSlider: mobile only - with products & farmers */}
+        <PromoBannerSlider />
+        <div className="lg:hidden">
+          <FeaturedProducts />
         </div>
-        <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />

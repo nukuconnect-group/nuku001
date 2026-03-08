@@ -48,15 +48,12 @@ const BuyerDashboard = () => {
   const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
-    let cancelled = false;
-    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/auth", { replace: true });
+        navigate("/auth");
         return;
       }
-      if (cancelled) return;
       setUser(session.user);
       
       const { data: profileData } = await supabase
@@ -64,14 +61,6 @@ const BuyerDashboard = () => {
         .select("*")
         .eq("user_id", session.user.id)
         .single();
-      
-      if (cancelled) return;
-      
-      // If user is a producer, redirect to producer dashboard
-      if (profileData?.user_type === "producer") {
-        navigate("/dashboard", { replace: true });
-        return;
-      }
       
       setProfile(profileData);
       
@@ -83,7 +72,6 @@ const BuyerDashboard = () => {
           supabase.from("notifications").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(20),
         ]);
         
-        if (cancelled) return;
         setOrders(ordersRes.data || []);
         setConversations(convsRes.data || []);
         setNotifications(notifsRes.data || []);
@@ -93,7 +81,6 @@ const BuyerDashboard = () => {
     };
 
     checkAuth();
-    return () => { cancelled = true; };
   }, [navigate]);
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
@@ -132,15 +119,8 @@ const BuyerDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
-          <ShoppingBag className="w-8 h-8 text-white animate-pulse" />
-        </div>
-        <div className="text-center">
-          <p className="font-heading font-semibold text-foreground">Chargement...</p>
-          <p className="text-xs text-muted-foreground mt-1">Récupération de vos données</p>
-        </div>
-        <Loader2 className="w-5 h-5 animate-spin text-primary mt-2" />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }

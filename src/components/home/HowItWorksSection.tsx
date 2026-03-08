@@ -39,16 +39,16 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section className="py-10 sm:py-14 lg:py-20 text-white relative" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+    <section className="py-10 sm:py-14 lg:py-20 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
-          <span className="inline-block px-3 py-1.5 rounded-full bg-white/20 text-white text-xs sm:text-sm font-medium mb-3">
+          <span className="inline-block px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3">
             Comment ça marche ?
           </span>
-          <h2 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-2">
-            Achetez en <span className="text-yellow-300">4 étapes simples</span>
+          <h2 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
+            Achetez en <span className="text-primary">4 étapes simples</span>
           </h2>
-          <p className="text-xs sm:text-sm text-white/80 px-2">
+          <p className="text-xs sm:text-sm text-muted-foreground px-2">
             De la création de compte à la livraison, découvrez comment NUKUCONNECT simplifie vos achats agricoles.
           </p>
         </div>
@@ -58,7 +58,7 @@ const HowItWorksSection = () => {
           {steps.map((step, index) => (
             <div 
               key={step.title} 
-              className="group bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-white/20"
+              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border"
             >
               {/* Image */}
               <div className="relative w-full aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
@@ -79,15 +79,15 @@ const HowItWorksSection = () => {
 
               {/* Content */}
               <div className="p-4 flex flex-col">
-                <h3 className="font-heading text-sm sm:text-base font-bold text-white mb-1">
+                <h3 className="font-heading text-sm sm:text-base font-bold text-foreground mb-1">
                   {step.title}
                 </h3>
-                <p className="text-xs text-white/70 mb-3">
+                <p className="text-xs text-muted-foreground mb-3">
                   {step.description}
                 </p>
                 <Link 
                   to={step.link}
-                  className="text-xs font-semibold text-yellow-300 hover:text-yellow-200 inline-flex items-center gap-1 transition-colors"
+                  className="text-xs font-semibold text-primary hover:text-primary/80 inline-flex items-center gap-1 transition-colors"
                 >
                   {step.linkText}
                   <ArrowRight className="w-3 h-3" />

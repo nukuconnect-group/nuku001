@@ -96,43 +96,33 @@ const Auth = () => {
   // Check if user is already logged in
   useEffect(() => {
     let redirecting = false;
-    let cancelled = false;
     
     const redirectUser = async (userId: string) => {
-      if (redirecting || cancelled) return;
+      if (redirecting) return;
       redirecting = true;
-      try {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("user_id", userId)
-          .single();
-        
-        if (cancelled) return;
-        if (profileData?.user_type === "producer") {
-          navigate("/dashboard", { replace: true });
-        } else {
-          navigate("/buyer-dashboard", { replace: true });
-        }
-      } catch {
-        if (!cancelled) navigate("/buyer-dashboard", { replace: true });
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("user_id", userId)
+        .single();
+      
+      if (profileData?.user_type === "producer") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/buyer-dashboard", { replace: true });
       }
     };
 
-    // Set up listener BEFORE checking session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && !cancelled) redirectUser(session.user.id);
-    });
-
-    // Check existing session
+    // Check existing session first
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && !cancelled) redirectUser(session.user.id);
+      if (session) redirectUser(session.user.id);
     });
 
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) redirectUser(session.user.id);
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
