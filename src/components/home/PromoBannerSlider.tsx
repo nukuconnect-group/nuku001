@@ -60,15 +60,15 @@ const PromoBannerSlider = () => {
   return (
     <div>
       {/* Banner Slider - mobile only */}
-      <div className="md:hidden px-3 pt-2 pb-1">
-        <div className="relative overflow-hidden rounded-2xl shadow-lg">
+      <div className="px-3 sm:px-4 md:px-0 pt-2 pb-1">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg max-w-5xl mx-auto">
           <div
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${current * 100}%)` }}
           >
             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
-                <div className="relative h-48 sm:h-56">
+                <div className="relative h-48 sm:h-56 md:h-72 lg:h-80">
                   <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">

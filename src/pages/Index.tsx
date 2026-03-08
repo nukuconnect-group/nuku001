@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NukuAIFloating from "@/components/home/NukuAIFloating";
-import HeroCarousel from "@/components/home/HeroCarousel";
+
 import PromoBannerSlider from "@/components/home/PromoBannerSlider";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -15,15 +15,8 @@ const Index = () => {
     <div className="min-h-screen pb-14 lg:pb-0">
       <Header />
       <main>
-        {/* HeroCarousel: desktop/tablet only */}
-        <div className="hidden md:block">
-          <HeroCarousel />
-        </div>
-        {/* PromoBannerSlider: mobile only - with products & farmers */}
         <PromoBannerSlider />
-        <div className="lg:hidden">
-          <FeaturedProducts />
-        </div>
+        <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />
