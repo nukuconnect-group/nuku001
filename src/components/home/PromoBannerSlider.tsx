@@ -86,8 +86,24 @@ const PromoBannerSlider = () => {
     return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
   }, [products]);
 
-  // Fetch real producers from the database
-  const { data: realProducers = [] } = useQuery({
+  // Featured producers with professional avatars
+  const featuredProducers = [
+    { id: "eyabane", name: "Eyabanè Bitassa", avatar: avatarMale1 },
+    { id: "fiogbo", name: "Souléïmane FIOGBO", avatar: avatarMale2 },
+    { id: "hounsou", name: "Alban Hounsou", avatar: avatarMale3 },
+    { id: "ahouede", name: "Dela AHOUEDE", avatar: avatarFemale1 },
+    { id: "bissang", name: "Koffi E. BISSANG", avatar: avatarMale4 },
+    { id: "kabassima", name: "Alexandre KABASSIMA", avatar: avatarMale3 },
+    { id: "freehol", name: "Hol Freehol", avatar: avatarMale1 },
+    { id: "horizon", name: "Horizon Agri", avatar: avatarMale2 },
+    { id: "afandonougbo", name: "Komi S. Afandonougbo", avatar: avatarMale4 },
+    { id: "ouro-akpo", name: "Mourdjanatou OURO-AKPO", avatar: avatarFemale2 },
+    { id: "lerampo", name: "TCHABLI LERAMPO", avatar: avatarMale3 },
+    { id: "ziafo", name: "Yannick ZIAFO", avatar: avatarMale1 },
+  ];
+
+  // Also fetch real producers to merge DB avatars when available
+  const { data: dbProducers = [] } = useQuery({
     queryKey: ["homepage-producers"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
@@ -95,12 +111,26 @@ const PromoBannerSlider = () => {
         .select("id, full_name, avatar_url, user_type")
         .eq("user_type", "producer")
         .order("created_at", { ascending: false })
-        .limit(12);
+        .limit(20);
       if (error) throw error;
-      return (profiles || []).filter(p => p.full_name && p.full_name !== "—Inconnu");
+      return profiles || [];
     },
     staleTime: 1000 * 60 * 5,
   });
+
+  // Merge: use DB avatar if available, otherwise use the featured avatar
+  const displayProducers = useMemo(() => {
+    return featuredProducers.map(fp => {
+      const match = dbProducers.find(db =>
+        db.full_name?.toLowerCase().includes(fp.name.split(' ')[0].toLowerCase())
+      );
+      return {
+        id: match?.id || fp.id,
+        name: fp.name,
+        avatar: match?.avatar_url || fp.avatar,
+      };
+    });
+  }, [dbProducers]);
 
   return (
     <div>
