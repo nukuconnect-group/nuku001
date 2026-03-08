@@ -21,7 +21,7 @@ import heroFarmers from "@/assets/hero-farmers-connected.jpg";
 import heroNetwork from "@/assets/hero-network-agriculture.jpg";
 import heroOrganic from "@/assets/hero-organic-farm.jpg";
 import heroAI from "@/assets/hero-ai-agriculture.jpg";
-import promoBanner1 from "@/assets/promo-banner-1.jpg";
+import promoBanner1 from "@/assets/step-4-delivery.jpg";
 
 const banners = [
   {
