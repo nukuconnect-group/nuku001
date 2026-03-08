@@ -80,12 +80,10 @@ const Producers = () => {
         });
       }
 
-      return profiles
-        .filter((p) => (productCounts[p.id] || 0) > 0)
-        .map((p) => ({
+      return profiles.map((p) => ({
           id: p.id,
           user_id: p.user_id,
-          name: p.full_name || "Producteur",
+          name: p.full_name || "Fournisseur",
           avatar: p.avatar_url,
           location: p.location || "Non spécifié",
           verified: p.is_verified,
@@ -122,20 +120,20 @@ const Producers = () => {
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4">
               <Users className="w-3 h-3 mr-1" />
-              Réseau de producteurs
+              Réseau de fournisseurs
             </Badge>
             <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Nos producteurs
+              Nos fournisseurs
             </h1>
             <p className="text-muted-foreground mb-8">
-              Découvrez les producteurs actifs sur la plateforme et connectez-vous directement avec eux.
+              Découvrez les fournisseurs actifs sur la plateforme et connectez-vous directement avec eux.
             </p>
 
             {/* Search */}
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder="Rechercher un producteur..."
+                placeholder="Rechercher un fournisseur..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12 text-base"
@@ -150,7 +148,7 @@ const Producers = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProducers.length}</span> producteur{filteredProducers.length > 1 ? "s" : ""}
+              <span className="font-semibold text-foreground">{filteredProducers.length}</span> fournisseur{filteredProducers.length > 1 ? "s" : ""}
             </p>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger className="w-48">
@@ -177,10 +175,10 @@ const Producers = () => {
           ) : filteredProducers.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-foreground mb-2">Aucun producteur trouvé</h3>
+              <h3 className="font-heading font-semibold text-foreground mb-2">Aucun fournisseur trouvé</h3>
               <p className="text-sm text-muted-foreground">
                 {producers.length === 0
-                  ? "Aucun producteur n'a encore publié de produit sur la plateforme."
+                  ? "Aucun fournisseur n'est encore inscrit sur la plateforme."
                   : "Essayez de modifier vos filtres de recherche."}
               </p>
             </div>
