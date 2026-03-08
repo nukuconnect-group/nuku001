@@ -71,6 +71,9 @@ const banners = [
 
 const PromoBannerSlider = () => {
   const [current, setCurrent] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchDelta, setTouchDelta] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const { data: products } = useProducts();
   const { formatPrice } = useLanguage();
 
@@ -80,6 +83,30 @@ const PromoBannerSlider = () => {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+    setIsSwiping(true);
+    setTouchDelta(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    setTouchDelta(e.touches[0].clientX - touchStart);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart === null) return;
+    const threshold = 50;
+    if (touchDelta < -threshold) {
+      setCurrent((prev) => (prev + 1) % banners.length);
+    } else if (touchDelta > threshold) {
+      setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+    }
+    setTouchStart(null);
+    setTouchDelta(0);
+    setIsSwiping(false);
+  };
 
   const recentProducts = useMemo(() => {
     const db = products || [];
