@@ -28,6 +28,7 @@ import Favorites from "./pages/Favorites";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import RealtimeNotifications from "./components/RealtimeNotifications";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => {
               <SplashScreen onComplete={handleSplashComplete} />
             )}
             <BrowserRouter>
+              <ScrollToTop />
               <RealtimeNotifications />
               <Routes>
                 <Route path="/" element={<Index />} />
