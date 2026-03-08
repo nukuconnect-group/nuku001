@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown } from "lucide-react";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 
