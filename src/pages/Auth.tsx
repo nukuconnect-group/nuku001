@@ -831,6 +831,35 @@ const Auth = () => {
 
       <Footer />
 
+      {/* Forgot password sheet */}
+      <Sheet open={forgotMode} onOpenChange={setForgotMode}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Mot de passe oublié</SheetTitle>
+          </SheetHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+            </p>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="votre@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+            <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Envoyer le lien
+            </Button>
+          </form>
+        </SheetContent>
+      </Sheet>
+
       {/* Legal preview sheet */}
       <Sheet open={legalSheet !== null} onOpenChange={() => setLegalSheet(null)}>
         <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
