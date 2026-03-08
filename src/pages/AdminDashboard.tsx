@@ -15,12 +15,15 @@ import {
   Users, Package, ShoppingCart, DollarSign, TrendingUp, Crown,
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
-  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight
+  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import CategoryManager from "@/components/admin/CategoryManager";
+import BroadcastNotification from "@/components/admin/BroadcastNotification";
+import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -282,6 +285,12 @@ const AdminDashboard = () => {
               <TabsTrigger value="chat" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <MessageCircle className="w-3.5 h-3.5" />Chat
               </TabsTrigger>
+              <TabsTrigger value="categories" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <LayoutGrid className="w-3.5 h-3.5" />Catégories
+              </TabsTrigger>
+              <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Megaphone className="w-3.5 h-3.5" />Notifications
+              </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -537,6 +546,9 @@ const AdminDashboard = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Visitor World Map */}
+                <VisitorWorldMap countryData={countryData} />
 
                 {/* Locations & Pages */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -925,6 +937,16 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Categories Tab */}
+            <TabsContent value="categories">
+              <CategoryManager />
+            </TabsContent>
+
+            {/* Broadcast Notification Tab */}
+            <TabsContent value="broadcast">
+              <BroadcastNotification users={users} />
             </TabsContent>
           </Tabs>
         </div>

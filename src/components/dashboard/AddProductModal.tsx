@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,9 +190,19 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     }
   };
 
-  const productCategories = marketplaceCategories
-    .filter(c => c.id !== 'all')
-    .map(c => c.name);
+  // Fetch dynamic categories from DB and merge with static ones
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
+  useEffect(() => {
+    supabase.from("categories").select("name").eq("is_active", true).order("sort_order").then(({ data }) => {
+      if (data) setDbCategories((data as any[]).map((c: any) => c.name));
+    });
+  }, []);
+
+  const productCategories = useMemo(() => {
+    const staticCats = marketplaceCategories.filter(c => c.id !== 'all').map(c => c.name);
+    const allCats = [...staticCats, ...dbCategories.filter(name => !staticCats.includes(name))];
+    return allCats;
+  }, [dbCategories]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
