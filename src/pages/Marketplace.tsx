@@ -20,6 +20,7 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
 import { Product } from "@/data/marketplace";
