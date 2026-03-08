@@ -67,7 +67,31 @@ const Auth = () => {
   const [buyerLastName, setBuyerLastName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerLocation, setBuyerLocation] = useState("");
-  const [buyerCountry, setBuyerCountry] = useState("Togo");
+  const [buyerCountry, setBuyerCountry] = useState("");
+
+  // Auto-detect country from timezone/locale
+  useEffect(() => {
+    if (buyerCountry) return;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const tzCountryMap: Record<string, string> = {
+        "Africa/Lome": "Togo", "Africa/Porto-Novo": "Bénin", "Africa/Cotonou": "Bénin",
+        "Africa/Accra": "Ghana", "Africa/Abidjan": "Côte d'Ivoire",
+        "Africa/Ouagadougou": "Burkina Faso", "Africa/Niamey": "Niger",
+        "Africa/Bamako": "Mali", "Africa/Dakar": "Sénégal",
+        "Africa/Conakry": "Guinée", "Africa/Douala": "Cameroun",
+        "Africa/Lagos": "Nigeria", "Africa/Kinshasa": "RDC",
+        "Africa/Brazzaville": "Congo", "Africa/Libreville": "Gabon",
+        "Africa/Ndjamena": "Tchad", "Africa/Nouakchott": "Mauritanie",
+        "Africa/Banjul": "Gambie", "Africa/Freetown": "Sierra Leone",
+        "Africa/Monrovia": "Liberia",
+      };
+      const detected = tzCountryMap[tz] || "Togo";
+      setBuyerCountry(detected);
+    } catch {
+      setBuyerCountry("Togo");
+    }
+  }, []);
 
   // Check if user is already logged in
   useEffect(() => {
