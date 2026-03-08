@@ -38,18 +38,22 @@ const DeliveryTracking = () => {
   };
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
       if (!session) { setIsLoading(false); return; }
       setUser(session.user);
       
-      const { data: prof } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("id, user_type").eq("user_id", session.user.id).single();
+      if (!mounted) return;
       setProfile(prof);
       
       if (prof) await fetchOrders(prof);
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     };
     load();
+    return () => { mounted = false; };
   }, []);
 
   // Realtime subscription for order updates
