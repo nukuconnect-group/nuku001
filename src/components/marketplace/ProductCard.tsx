@@ -49,7 +49,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
               {product.discount && (
                 <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{product.discount}%</Badge>
               )}
-              {isNew && <Badge className="bg-blue-500 text-white font-bold text-[10px]">NEW</Badge>}
+              {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">NEW</Badge>}
             </div>
           </div>
           <CardContent className="flex-1 p-4">
