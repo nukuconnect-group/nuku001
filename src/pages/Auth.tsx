@@ -95,16 +95,17 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    let redirecting = false;
+    let redirected = false;
     
     const redirectUser = async (userId: string) => {
-      if (redirecting) return;
-      redirecting = true;
+      if (redirected) return;
+      redirected = true;
+      
       const { data: profileData } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
       
       if (profileData?.user_type === "producer") {
         navigate("/dashboard", { replace: true });
@@ -113,13 +114,12 @@ const Auth = () => {
       }
     };
 
-    // Check existing session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) redirectUser(session.user.id);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) redirectUser(session.user.id);
+      if (session && !redirected) redirectUser(session.user.id);
     });
 
     return () => subscription.unsubscribe();

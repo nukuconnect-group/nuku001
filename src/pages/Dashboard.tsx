@@ -42,7 +42,7 @@ const Dashboard = () => {
     let isMounted = true;
 
     const loadDashboard = async (userId: string) => {
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+      const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
       if (!isMounted) return;
       setProfile(profileData);
       if (profileData) {

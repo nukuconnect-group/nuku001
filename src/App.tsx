@@ -37,7 +37,16 @@ import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import ScrollToTop from "./components/ScrollToTop";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2,
+      gcTime: 1000 * 60 * 10,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
