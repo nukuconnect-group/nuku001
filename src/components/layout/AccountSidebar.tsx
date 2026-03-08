@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
-  Crown, Heart
+  Crown, Heart, Shield
 } from "lucide-react";
 
 interface AccountSidebarProps {
