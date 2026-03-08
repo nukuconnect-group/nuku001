@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Globe, MapPin } from "lucide-react";
+import { Globe } from "lucide-react";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
-// Country coordinates (lat, lng) for common African & global countries
 const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }> = {
   "Togo": { lat: 8.6, lng: 1.2, flag: "🇹🇬" },
   "Ghana": { lat: 7.9, lng: -1.0, flag: "🇬🇭" },
@@ -55,15 +55,16 @@ const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
   const totalVisits = useMemo(() => countryData.reduce((s, c) => s + c.count, 0), [countryData]);
   const maxCount = useMemo(() => Math.max(...countryData.map(c => c.count), 1), [countryData]);
 
-  // SVG world map simplified - focus on Africa + relevant regions
-  // Using a simple mercator-like projection
-  const projectToSvg = (lat: number, lng: number): { x: number; y: number } => {
-    const x = ((lng + 180) / 360) * 800;
-    const latRad = (lat * Math.PI) / 180;
-    const mercY = Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-    const y = 250 - (mercY / Math.PI) * 250;
-    return { x, y };
-  };
+  const markers = useMemo(() =>
+    countryData
+      .filter(c => COUNTRY_COORDS[c.country])
+      .map(c => ({
+        ...c,
+        coords: COUNTRY_COORDS[c.country],
+        radius: Math.max(8, Math.min(30, (c.count / maxCount) * 30)),
+      })),
+    [countryData, maxCount]
+  );
 
   return (
     <Card>
@@ -81,59 +82,39 @@ const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
           <p className="text-xs text-muted-foreground text-center py-8">Les données apparaîtront après quelques visites</p>
         ) : (
           <div className="space-y-4">
-            {/* SVG Map */}
-            <div className="relative bg-muted/30 rounded-xl overflow-hidden border border-border">
-              <svg viewBox="0 0 800 500" className="w-full h-auto" style={{ minHeight: 200 }}>
-                {/* Background */}
-                <rect width="800" height="500" fill="hsl(var(--muted))" opacity="0.2" />
-                
-                {/* Grid lines */}
-                {[-60, -30, 0, 30, 60].map(lat => {
-                  const { y } = projectToSvg(lat, 0);
-                  return <line key={`lat-${lat}`} x1="0" y1={y} x2="800" y2={y} stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4,4" />;
-                })}
-                {[-120, -60, 0, 60, 120].map(lng => {
-                  const { x } = projectToSvg(0, lng);
-                  return <line key={`lng-${lng}`} x1={x} y1="0" x2={x} y2="500" stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4,4" />;
-                })}
-
-                {/* Simplified continent outlines - Africa focus */}
-                <ellipse cx="420" cy="270" rx="60" ry="100" fill="hsl(var(--primary))" opacity="0.06" stroke="hsl(var(--primary))" strokeWidth="0.5" />
-                <ellipse cx="440" cy="140" rx="80" ry="50" fill="hsl(var(--primary))" opacity="0.04" />
-                <ellipse cx="280" cy="200" rx="100" ry="60" fill="hsl(var(--primary))" opacity="0.04" />
-                <ellipse cx="600" cy="220" rx="80" ry="70" fill="hsl(var(--primary))" opacity="0.04" />
-
-                {/* Country markers */}
-                {countryData.map((c, i) => {
-                  const coords = COUNTRY_COORDS[c.country];
-                  if (!coords) return null;
-                  const { x, y } = projectToSvg(coords.lat, coords.lng);
-                  const size = Math.max(8, Math.min(30, (c.count / maxCount) * 30));
-                  const opacity = 0.4 + (c.count / maxCount) * 0.6;
-
-                  return (
-                    <g key={i}>
-                      {/* Pulse ring */}
-                      <circle cx={x} cy={y} r={size + 4} fill="hsl(var(--primary))" opacity={opacity * 0.15}>
-                        <animate attributeName="r" from={size + 2} to={size + 10} dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" from={opacity * 0.2} to="0" dur="2s" repeatCount="indefinite" />
-                      </circle>
-                      {/* Main dot */}
-                      <circle cx={x} cy={y} r={size / 2} fill="hsl(var(--primary))" opacity={opacity} stroke="hsl(var(--primary-foreground))" strokeWidth="1.5" />
-                      {/* Count label */}
-                      <text x={x} y={y + size / 2 + 12} textAnchor="middle" fontSize="9" fill="hsl(var(--foreground))" fontWeight="600">
-                        {c.country}
-                      </text>
-                      <text x={x} y={y - size / 2 - 5} textAnchor="middle" fontSize="8" fill="hsl(var(--primary))" fontWeight="bold">
-                        {c.count}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
+            <div className="rounded-xl overflow-hidden border border-border" style={{ height: 350 }}>
+              <MapContainer
+                center={[8.6, 1.2]}
+                zoom={3}
+                scrollWheelZoom={true}
+                style={{ height: "100%", width: "100%" }}
+                attributionControl={false}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {markers.map((m, i) => (
+                  <CircleMarker
+                    key={i}
+                    center={[m.coords.lat, m.coords.lng]}
+                    radius={m.radius}
+                    pathOptions={{
+                      fillColor: "#1a6b35",
+                      fillOpacity: 0.6,
+                      color: "#1a6b35",
+                      weight: 2,
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-center font-sans">
+                        <span className="text-lg">{m.coords.flag}</span>
+                        <div className="font-semibold">{m.country}</div>
+                        <div className="text-sm text-muted-foreground">{m.count} visites</div>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                ))}
+              </MapContainer>
             </div>
 
-            {/* Country list with bars */}
             <div className="space-y-2">
               {countryData.map((c, i) => {
                 const pct = totalVisits > 0 ? Math.round((c.count / totalVisits) * 100) : 0;
