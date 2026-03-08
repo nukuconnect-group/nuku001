@@ -68,8 +68,8 @@ export const useProducts = () => {
       if (error) throw error;
       return (data || []).map((p: any) => mapDbToProduct(p));
     },
-    staleTime: 1000 * 60 * 5, // 5 min cache
-    gcTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 5,
   });
 };
 
