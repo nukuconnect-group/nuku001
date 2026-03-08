@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
@@ -15,9 +15,10 @@ interface ProductCardProps {
   viewMode?: "grid" | "list";
   onCompare?: (product: Product) => void;
   hideProducer?: boolean;
+  isBoosted?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false }: ProductCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -103,6 +104,11 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="absolute top-1.5 left-1.5 flex gap-1">
+            {isBoosted && (
+              <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
+                <Rocket className="w-2.5 h-2.5" />En vedette
+              </Badge>
+            )}
             {product.discount && (
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm animate-fade-in">-{product.discount}%</Badge>
             )}

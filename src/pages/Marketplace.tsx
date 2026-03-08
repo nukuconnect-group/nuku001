@@ -20,6 +20,7 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
 import { Product } from "@/data/marketplace";
@@ -58,18 +59,25 @@ const Marketplace = () => {
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
+  const { data: activeBoosts = [] } = useActiveBoosts();
   
-  // Real DB products first, then a few mock products as filler
+  // Real DB products first, boosted on top, then a few mock products as filler
   const allProducts = useMemo(() => {
     const db = dbProducts || [];
     if (db.length > 0) {
-      // Show all real products + max 4 mock as "suggestions"
       const mockFiller = mockProducts.slice(0, Math.max(0, 4 - Math.floor(db.length / 2)));
-      return [...db, ...mockFiller];
+      const combined = [...db, ...mockFiller];
+      // Sort: boosted products first
+      const boostedIds = new Set(activeBoosts.map(b => b.product_id));
+      combined.sort((a, b) => {
+        const aBoost = boostedIds.has(a.id) ? 1 : 0;
+        const bBoost = boostedIds.has(b.id) ? 1 : 0;
+        return bBoost - aBoost;
+      });
+      return combined;
     }
-    // No real products yet: show mock as demo
     return mockProducts;
-  }, [dbProducts]);
+  }, [dbProducts, activeBoosts]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
@@ -354,7 +362,7 @@ const Marketplace = () => {
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-        {sectionProducts.slice(0, 5).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} />))}
+        {sectionProducts.slice(0, 5).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
       </div>
     </div>
   );
@@ -426,7 +434,7 @@ const Marketplace = () => {
             <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {sponsoredProducts.map((product) => (
                 <div key={product.id} className="flex-shrink-0 w-[140px] sm:w-[180px] snap-start">
-                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} />
+                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
                 </div>
               ))}
             </div>
@@ -487,7 +495,7 @@ const Marketplace = () => {
               </div>
               {filteredProducts.length > 0 ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} />))}
+                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -519,7 +527,7 @@ const Marketplace = () => {
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} />))}
+                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
                 </div>
               </div>
             </>

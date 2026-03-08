@@ -16,6 +16,8 @@ import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
+import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
@@ -32,7 +34,8 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-
+  const [boostProduct, setBoostProduct] = useState<any>(null);
+  const { data: activeBoosts = [] } = useActiveBoosts();
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
     setProducts(data || []);
@@ -275,6 +278,11 @@ const Dashboard = () => {
                             {product.is_organic && (
                               <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
                             )}
+                            {isProductBoosted(activeBoosts, product.id) && (
+                              <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 gap-0.5 animate-pulse">
+                                <Rocket className="w-2.5 h-2.5" />Boosté
+                              </Badge>
+                            )}
                           </div>
                           <div className="absolute top-2 right-2 flex gap-1">
                             <Badge variant="secondary" className="text-[9px] bg-card/90">
@@ -310,6 +318,11 @@ const Dashboard = () => {
                               onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
                               <Edit className="w-2.5 h-2.5" />Modifier
                             </Button>
+                            {!isProductBoosted(activeBoosts, product.id) && (
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-primary" onClick={() => setBoostProduct(product)}>
+                                <Rocket className="w-3 h-3" />
+                              </Button>
+                            )}
                             <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate(`/tracabilite`)}>
                               <QrCode className="w-3 h-3 text-blue-500" />
                             </Button>
@@ -520,6 +533,13 @@ const Dashboard = () => {
           profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
           editProduct={editingProduct} />
       )}
+
+      <ProductBoostModal
+        open={!!boostProduct}
+        onOpenChange={(open) => { if (!open) setBoostProduct(null); }}
+        product={boostProduct}
+        onBoostSuccess={() => { if (profile) fetchProducts(profile.id); }}
+      />
       <Footer />
       <MobileBottomNav />
     </div>
