@@ -48,12 +48,15 @@ const BuyerDashboard = () => {
   const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
+    let cancelled = false;
+    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/auth");
+        navigate("/auth", { replace: true });
         return;
       }
+      if (cancelled) return;
       setUser(session.user);
       
       const { data: profileData } = await supabase
@@ -61,6 +64,14 @@ const BuyerDashboard = () => {
         .select("*")
         .eq("user_id", session.user.id)
         .single();
+      
+      if (cancelled) return;
+      
+      // If user is a producer, redirect to producer dashboard
+      if (profileData?.user_type === "producer") {
+        navigate("/dashboard", { replace: true });
+        return;
+      }
       
       setProfile(profileData);
       
@@ -72,6 +83,7 @@ const BuyerDashboard = () => {
           supabase.from("notifications").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(20),
         ]);
         
+        if (cancelled) return;
         setOrders(ordersRes.data || []);
         setConversations(convsRes.data || []);
         setNotifications(notifsRes.data || []);
@@ -81,6 +93,7 @@ const BuyerDashboard = () => {
     };
 
     checkAuth();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
