@@ -161,11 +161,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="w-5 h-5 text-primary" />
-            Publier un nouveau produit
+            {editProduct ? <Edit className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+            {editProduct ? "Modifier le produit" : "Publier un nouveau produit"}
           </DialogTitle>
           <DialogDescription>
-            Remplissez les informations pour ajouter votre produit au marketplace
+            {editProduct ? "Modifiez les informations de votre produit" : "Remplissez les informations pour ajouter votre produit au marketplace"}
           </DialogDescription>
         </DialogHeader>
 
