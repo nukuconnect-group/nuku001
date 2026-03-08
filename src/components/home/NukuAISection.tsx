@@ -20,10 +20,10 @@ const NukuAISection = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground overflow-hidden relative">
+    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-primary via-secondary to-primary text-primary-foreground overflow-hidden relative">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-primary-foreground blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-accent blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 rounded-full bg-secondary blur-3xl" />
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
