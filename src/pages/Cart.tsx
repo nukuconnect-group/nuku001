@@ -86,14 +86,25 @@ const Cart = () => {
 
       const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
 
+      const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+      
+      // Check if ALL items are mock (non-UUID) products
+      const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
+      
+      if (!hasRealProducts) {
+        // Simulate successful order for demo/mock products
+        toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
+        clearCart();
+        navigate("/suivi-livraison");
+        setIsCheckingOut(false);
+        return;
+      }
+
       for (const item of items) {
         const sellerId = item.product.producer.id;
         const productId = item.product.id;
         
-        const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-        
         if (!isValidUUID(productId) || !isValidUUID(sellerId)) {
-          console.warn("Skipping mock product:", productId);
           continue;
         }
 
