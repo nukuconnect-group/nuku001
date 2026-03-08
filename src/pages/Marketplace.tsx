@@ -307,8 +307,8 @@ const Marketplace = () => {
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                 selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
               }`}>
-              <span className="text-sm">{category.emoji}</span>
               {category.name}
+            </button>
             </button>
           ))}
         </div>
