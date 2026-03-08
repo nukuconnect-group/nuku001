@@ -263,7 +263,6 @@ const Marketplace = () => {
 
           {/* Toolbar */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <CreateDemandModal />
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
@@ -276,14 +275,6 @@ const Marketplace = () => {
                 <FiltersContent />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1">
-              <Button variant={organicOnly ? "default" : "secondary"} size="sm" onClick={() => setOrganicOnly(!organicOnly)} className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5">
-                <Leaf className="w-3 h-3" />{t("mp.bio")}
-              </Button>
-              <Button variant={verifiedOnly ? "default" : "secondary"} size="sm" onClick={() => setVerifiedOnly(!verifiedOnly)} className="whitespace-nowrap flex-shrink-0 text-[10px] h-8 px-2.5">
-                {t("mp.verified")}
-              </Button>
-            </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
