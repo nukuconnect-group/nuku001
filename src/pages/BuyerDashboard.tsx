@@ -155,32 +155,32 @@ const BuyerDashboard = () => {
         <div className="container mx-auto px-3 sm:px-4">
           {/* Welcome - responsive */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  <User className="w-5 h-5 sm:w-8 sm:h-8 text-primary-foreground" />
+                  <User className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
                 )}
               </div>
               <div className="min-w-0">
-                <h1 className="font-heading text-base sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
+                <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   Bonjour, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                <p className="text-[11px] sm:text-sm text-muted-foreground truncate">
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   Tableau de bord acheteur
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 sm:gap-3">
+            <div className="flex gap-2 flex-shrink-0">
               <Link to="/marketplace" className="flex-1 sm:flex-none">
-                <Button variant="hero" className="gap-1.5 sm:gap-2 w-full text-xs sm:text-sm h-9 sm:h-10">
+                <Button variant="hero" className="gap-1.5 w-full text-xs sm:text-sm h-9 sm:h-10 whitespace-nowrap">
                   <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Explorer
                 </Button>
               </Link>
               <Link to="/suivi-livraison" className="flex-1 sm:flex-none">
-                <Button variant="outline" className="gap-1.5 w-full text-xs sm:text-sm h-9 sm:h-10">
+                <Button variant="outline" className="gap-1.5 w-full text-xs sm:text-sm h-9 sm:h-10 whitespace-nowrap">
                   <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Suivi
                 </Button>
