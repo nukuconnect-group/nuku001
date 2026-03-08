@@ -62,18 +62,10 @@ const Cart = () => {
   const deliveryPrice = selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice;
 
-  const { hasActiveSubscription, isLoading: subLoading } = useSubscription();
-
   const handleCheckout = async () => {
     if (!user) {
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
       navigate("/auth");
-      return;
-    }
-
-    if (!hasActiveSubscription) {
-      toast({ title: "Abonnement requis", description: "Vous devez souscrire à un plan d'adhésion pour passer commande.", variant: "destructive" });
-      navigate("/plans");
       return;
     }
 
