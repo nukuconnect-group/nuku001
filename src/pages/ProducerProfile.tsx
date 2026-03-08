@@ -43,7 +43,7 @@ const ProducerProfile = () => {
             Producteur non trouvé
           </h1>
           <Link to="/producteurs">
-            <Button variant="hero">Voir tous les producteurs</Button>
+            <Button variant="hero">Voir tous les fournisseurs</Button>
           </Link>
         </div>
         <Footer />

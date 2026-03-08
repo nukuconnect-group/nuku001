@@ -313,7 +313,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                         }`}
                       >
                         <User className={`w-5 h-5 mx-auto mb-1 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>Producteur</span>
+                        <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>Fournisseur</span>
                       </button>
                       <button
                         type="button"
