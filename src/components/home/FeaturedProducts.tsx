@@ -1,16 +1,15 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, MapPin, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { products as mockProducts } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMemo } from "react";
+import ProductCard from "@/components/marketplace/ProductCard";
 
 const FeaturedProducts = () => {
   const { data: dbProducts, isLoading } = useProducts();
-  const { t, formatPrice } = useLanguage();
+  const { t } = useLanguage();
 
   const featuredProducts = useMemo(() => {
     const db = dbProducts || [];
@@ -19,83 +18,38 @@ const FeaturedProducts = () => {
   }, [dbProducts]);
 
   return (
-    <section className="py-16 lg:py-24 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
-          <div>
-            <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
-              {t("mp.forYou")}
-            </span>
-            <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">
-              {t("mp.forYou")}
-            </h2>
-          </div>
+    <section className="py-8 sm:py-12 lg:py-16 bg-muted/30">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+          <h2 className="font-heading text-sm sm:text-lg lg:text-2xl font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            {t("mp.forYou")}
+          </h2>
           <Link to="/marketplace">
-            <Button variant="outline" className="group">
+            <Button variant="ghost" size="sm" className="text-xs text-primary gap-1">
               {t("mp.viewAll")}
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {featuredProducts.map((product, index) => (
-              <Link 
-                to={`/produit/${product.id}`} 
-                key={product.id}
-                className="block animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <Card 
-                  variant="feature" 
-                  className="h-full overflow-hidden group hover:shadow-elevated transition-all duration-300 cursor-pointer"
-                >
-                  <div className="relative aspect-square overflow-hidden">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    {product.isOrganic && (
-                      <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs">BIO</Badge>
-                    )}
-                    <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="inline-block px-2 py-1 bg-card/90 backdrop-blur-sm rounded-lg font-heading font-bold text-primary text-sm">
-                        {formatPrice(product.price)}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">{product.location}</span>
-                    </div>
-                    <h3 className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="font-heading font-bold text-primary text-sm">
-                        {formatPrice(product.price)}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-accent fill-accent" />
-                        <span className="text-xs">{product.producer.rating}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} viewMode="grid" />
             ))}
           </div>
         )}
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-6 sm:mt-8">
           <Link to="/marketplace">
-            <Button variant="hero" size="lg" className="group">
+            <Button variant="hero" size="sm" className="group text-xs sm:text-sm">
               {t("nav.marketplace")}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
