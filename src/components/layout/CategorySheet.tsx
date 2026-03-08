@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, ChevronDown } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 interface CategorySheetProps {
@@ -10,6 +11,12 @@ interface CategorySheetProps {
 }
 
 const CategorySheet = ({ open, onOpenChange }: CategorySheetProps) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
@@ -20,47 +27,55 @@ const CategorySheet = ({ open, onOpenChange }: CategorySheetProps) => {
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)]">
-          {/* Grid of categories */}
-          <div className="p-3">
-            <div className="grid grid-cols-3 gap-2">
-              {marketplaceCategories.map((category) => (
-                <Link
-                  key={category.id}
-                  to={`/marketplace?category=${category.id}`}
-                  onClick={() => onOpenChange(false)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted border border-border/50 hover:border-primary/30 transition-all active:scale-95"
-                >
-                  <span className="text-2xl">{category.emoji}</span>
-                  <span className="text-[11px] font-medium text-foreground text-center leading-tight line-clamp-2">
-                    {category.name}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{category.count}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <div className="p-2 space-y-0.5">
+            {marketplaceCategories.map((category) => {
+              const hasSubs = category.subcategories && category.subcategories.length > 0;
+              const isExpanded = expandedId === category.id;
 
-          {/* Popular section */}
-          <div className="p-3 pt-1 border-t border-border">
-            <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider px-1">
-              Populaires
-            </h4>
-            <div className="space-y-0.5">
-              {marketplaceCategories.slice(1, 6).map((cat) => (
-                <Link
-                  key={cat.id}
-                  to={`/marketplace?category=${cat.id}`}
-                  onClick={() => onOpenChange(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <span className="text-lg">{cat.emoji}</span>
-                  <span className="flex-1 text-sm font-medium text-foreground">{cat.name}</span>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {cat.count}
-                  </span>
-                </Link>
-              ))}
-            </div>
+              return (
+                <div key={category.id}>
+                  <div className="flex items-center">
+                    <Link
+                      to={`/marketplace?category=${category.id}`}
+                      onClick={() => onOpenChange(false)}
+                      className="flex-1 flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors active:scale-[0.98]"
+                    >
+                      <span className="text-sm font-medium text-foreground">{category.name}</span>
+                      <span className="text-xs text-muted-foreground ml-auto mr-1 bg-muted px-2 py-0.5 rounded-full">
+                        {category.count}
+                      </span>
+                    </Link>
+                    {hasSubs && (
+                      <button
+                        onClick={() => toggleExpand(category.id)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors flex-shrink-0"
+                      >
+                        <ChevronDown
+                          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  {hasSubs && isExpanded && (
+                    <div className="ml-4 pl-3 border-l-2 border-primary/20 space-y-0.5 pb-1">
+                      {category.subcategories!.map((sub) => (
+                        <Link
+                          key={sub}
+                          to={`/marketplace?category=${sub.toLowerCase()}`}
+                          onClick={() => onOpenChange(false)}
+                          className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        >
+                          {sub}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
       </SheetContent>
