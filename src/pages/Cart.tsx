@@ -4,56 +4,71 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
-  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet
-} from "lucide-react";
+import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-
-const deliveryOptions = [
-  { id: "pickup", name: "Retrait sur place", description: "Récupérez chez le producteur", price: 0, icon: Store, tag: "Gratuit" },
-  { id: "gozem", name: "Gozem Livraison", description: "Livraison nationale (Togo)", price: 1500, icon: Truck, tag: "National" },
-  { id: "standard", name: "Livraison Standard", description: "3-5 jours ouvrables", price: 2500, icon: Package, tag: "Économique" },
-  { id: "dhl", name: "DHL Express", description: "International - 2-5 jours", price: 15000, icon: Package, tag: "International" },
-];
-
-const paymentMethods = [
-  { id: "mobile_money", name: "Mobile Money", description: "TMoney, Flooz, Moov Money", icon: Smartphone, tag: "Populaire" },
-  { id: "wave", name: "Wave", description: "Paiement instantané via Wave", icon: Wallet, tag: "Rapide" },
-  { id: "card", name: "Carte bancaire", description: "Visa, Mastercard", icon: CreditCard, tag: "International" },
-  { id: "cash", name: "Paiement à la livraison", description: "Payez en espèces à la réception", icon: Package, tag: "Cash" },
-];
+import BillingForm from "@/components/cart/BillingForm";
+import DeliveryZoneMap, { deliveryOptions } from "@/components/cart/DeliveryZoneMap";
+import PaymentMethodSelect, { paymentMethods } from "@/components/cart/PaymentMethodSelect";
+import OrderSummary from "@/components/cart/OrderSummary";
 
 const Cart = () => {
-  const { items, removeItem, updateQuantity, clearCart, total, itemCount } = useCart();
+  const { items, clearCart, total, itemCount } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t, formatPrice } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  // Billing
+  const [billing, setBilling] = useState({
+    firstName: "", lastName: "", email: "", phone: "", company: "", country: "Togo",
+  });
+
+  // Delivery
   const [deliveryMethod, setDeliveryMethod] = useState("pickup");
-  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryQuarter, setDeliveryQuarter] = useState("");
+
+  // Payment
+  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [mobileNumber, setMobileNumber] = useState("");
 
+  // Load user profile and auto-fill billing
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Auto-fill email from auth
+        setBilling(prev => ({ ...prev, email: session.user.email || "" }));
+
         supabase.from("profiles").select("*").eq("user_id", session.user.id).single()
-          .then(({ data }) => setProfile(data));
+          .then(({ data }) => {
+            if (data) {
+              setProfile(data);
+              const nameParts = (data.full_name || "").split(" ");
+              setBilling(prev => ({
+                ...prev,
+                firstName: nameParts[0] || "",
+                lastName: nameParts.slice(1).join(" ") || "",
+                phone: data.phone || "",
+              }));
+              // Auto-fill delivery city from profile location
+              if (data.location) {
+                setDeliveryCity(data.location);
+              }
+              // Auto-fill mobile number for payment
+              if (data.phone) {
+                setMobileNumber(data.phone);
+              }
+            }
+          });
       }
     });
   }, []);
@@ -69,12 +84,20 @@ const Cart = () => {
       return;
     }
 
-    if (deliveryMethod !== "pickup" && (!deliveryAddress || !deliveryCity)) {
-      toast({ title: t("cart.addressRequired"), description: t("cart.addressRequiredDesc"), variant: "destructive" });
+    // Validate billing
+    if (!billing.firstName.trim() || !billing.lastName.trim() || !billing.phone.trim()) {
+      toast({ title: "Informations manquantes", description: "Veuillez remplir vos détails de facturation (prénom, nom, téléphone).", variant: "destructive" });
       return;
     }
 
-    if ((paymentMethod === "mobile_money" || paymentMethod === "wave") && !mobileNumber) {
+    // Validate delivery address
+    if (deliveryMethod !== "pickup" && (!deliveryAddress.trim() || !deliveryCity)) {
+      toast({ title: t("cart.addressRequired"), description: "Veuillez sélectionner une ville et entrer votre adresse de livraison.", variant: "destructive" });
+      return;
+    }
+
+    // Validate mobile payment number
+    if ((paymentMethod === "mobile_money" || paymentMethod === "wave") && !mobileNumber.trim()) {
       toast({ title: "Numéro requis", description: "Veuillez entrer votre numéro de téléphone pour le paiement mobile.", variant: "destructive" });
       return;
     }
@@ -87,15 +110,14 @@ const Cart = () => {
       if (!buyerProfile) throw new Error("Profile not found");
 
       const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
+      const fullAddress = [deliveryQuarter, deliveryAddress].filter(Boolean).join(", ");
+      const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
 
       const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-      
-      // Check if ALL items are mock (non-UUID) products
       const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
-      
+
       if (!hasRealProducts) {
-        // Generate invoice for demo products
-        generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", profile?.full_name, profile?.phone, deliveryCity, deliveryAddress, mobileNumber);
+        generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
         toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
         clearCart();
         navigate("/suivi-livraison");
@@ -106,10 +128,7 @@ const Cart = () => {
       for (const item of items) {
         const sellerId = item.product.producer.id;
         const productId = item.product.id;
-        
-        if (!isValidUUID(productId) || !isValidUUID(sellerId)) {
-          continue;
-        }
+        if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
 
         const { error } = await supabase.from("orders").insert({
           buyer_id: buyerProfile.id,
@@ -119,17 +138,17 @@ const Cart = () => {
           total_price: item.product.price * item.quantity,
           status: "pending",
           notes: [
-            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${deliveryAddress}` : "Retrait sur place",
+            `Client: ${buyerFullName} | ${billing.phone}`,
+            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
             `Paiement: ${selectedPayment?.name}`,
-            mobileNumber ? `Tél: ${mobileNumber}` : "",
+            mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
           ].filter(Boolean).join(" | "),
         });
 
         if (error) throw error;
       }
 
-      // Generate PDF invoice
-      generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", profile?.full_name, profile?.phone, deliveryCity, deliveryAddress, mobileNumber);
+      generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
       toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
       clearCart();
       navigate("/suivi-livraison");
@@ -141,6 +160,7 @@ const Cart = () => {
     }
   };
 
+  // Empty cart
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background pb-14 lg:pb-0">
@@ -168,208 +188,73 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
+
+      {/* Success banner */}
+      <div className="bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 py-2.5 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <p className="text-xs sm:text-sm">
+            <Link to="/marketplace" className="underline font-medium">Poursuivre les achats</Link>
+            {" — "}{itemCount} article{itemCount > 1 ? "s" : ""} dans votre panier
+          </p>
+        </div>
+      </div>
+
       <main>
-        <div className="container mx-auto px-4 py-6">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4" /><span>{t("cart.back")}</span>
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm">
+            <ArrowLeft className="w-4 h-4" /><span>Retour</span>
           </button>
 
-          <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground mb-8">
-            {t("cart.title")} ({itemCount} {t("cart.articles")})
-          </h1>
-
           {!user && (
-            <Card className="mb-6 border-accent">
+            <Card className="mb-4 border-accent">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <LogIn className="w-5 h-5 text-accent" />
                   <div>
-                    <p className="font-medium text-sm">{t("cart.loginRequired")}</p>
-                    <p className="text-xs text-muted-foreground">{t("cart.loginRequiredDesc")}</p>
+                    <p className="font-medium text-sm">Déjà client ?</p>
+                    <p className="text-xs text-muted-foreground">Connectez-vous pour pré-remplir vos informations</p>
                   </div>
                 </div>
                 <Link to="/auth">
-                  <Button variant="hero" size="sm">{t("cart.loginBtn")}</Button>
+                  <Button variant="hero" size="sm">Se connecter</Button>
                 </Link>
               </CardContent>
             </Card>
           )}
 
-
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left: Billing + Delivery + Payment */}
             <div className="lg:col-span-2 space-y-4">
-              {items.map((item) => (
-                <Card key={item.product.id}>
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <img src={item.product.image} alt={item.product.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg" />
-                      <div className="flex-1 min-w-0">
-                        <Link to={`/produit/${item.product.id}`} className="font-semibold text-foreground hover:text-primary line-clamp-1">
-                          {item.product.name}
-                        </Link>
-                        <p className="text-sm text-muted-foreground">{t("cart.seller")}: {item.product.producer.name}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{item.product.location}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="font-bold text-primary">
-                            {formatPrice(item.product.price)}
-                            <span className="text-xs text-muted-foreground font-normal">/{item.product.unit}</span>
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted">
-                              <Minus className="w-3 h-3" />
-                            </button>
-                            <span className="w-8 text-center font-medium">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-muted">
-                              <Plus className="w-3 h-3" />
-                            </button>
-                            <button onClick={() => removeItem(item.product.id)}
-                              className="w-8 h-8 rounded-full text-destructive hover:bg-destructive/10 flex items-center justify-center ml-2">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <BillingForm data={billing} onChange={setBilling} />
 
-              {/* Delivery Method */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-primary" />{t("cart.deliveryMethod")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod}>
-                    <div className="space-y-3">
-                      {deliveryOptions.map((option) => (
-                        <div key={option.id}
-                          className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                            deliveryMethod === option.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                          }`}
-                          onClick={() => setDeliveryMethod(option.id)}>
-                          <RadioGroupItem value={option.id} id={option.id} />
-                          <option.icon className="w-5 h-5 text-primary flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Label htmlFor={option.id} className="font-medium cursor-pointer text-sm sm:text-base">{option.name}</Label>
-                              <Badge variant="secondary" className="text-[10px]">{option.tag}</Badge>
-                            </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground">{option.description}</p>
-                          </div>
-                          <span className="font-semibold text-foreground text-sm sm:text-base whitespace-nowrap">
-                            {option.price === 0 ? t("cart.free") : formatPrice(option.price)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </RadioGroup>
+              <DeliveryZoneMap
+                deliveryMethod={deliveryMethod}
+                onDeliveryMethodChange={setDeliveryMethod}
+                city={deliveryCity}
+                onCityChange={setDeliveryCity}
+                address={deliveryAddress}
+                onAddressChange={setDeliveryAddress}
+                quarter={deliveryQuarter}
+                onQuarterChange={setDeliveryQuarter}
+              />
 
-                  {deliveryMethod !== "pickup" && (
-                    <div className="mt-6 space-y-4 p-4 bg-muted rounded-xl">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-primary" />{t("cart.deliveryAddress")}
-                      </h4>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{t("cart.city")}</Label>
-                          <Input placeholder="Ex: Lomé" value={deliveryCity} onChange={(e) => setDeliveryCity(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t("cart.fullAddress")}</Label>
-                          <Input placeholder="Quartier, rue, repère..." value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wallet className="w-5 h-5 text-primary" />Mode de paiement
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="space-y-3">
-                      {paymentMethods.map((method) => (
-                        <div key={method.id}
-                          className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                            paymentMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                          }`}
-                          onClick={() => setPaymentMethod(method.id)}>
-                          <RadioGroupItem value={method.id} id={`pay-${method.id}`} />
-                          <method.icon className="w-5 h-5 text-primary flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Label htmlFor={`pay-${method.id}`} className="font-medium cursor-pointer text-sm sm:text-base">{method.name}</Label>
-                              <Badge variant="secondary" className="text-[10px]">{method.tag}</Badge>
-                            </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground">{method.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </RadioGroup>
-
-                  {(paymentMethod === "mobile_money" || paymentMethod === "wave") && (
-                    <div className="mt-6 space-y-4 p-4 bg-muted rounded-xl">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <Smartphone className="w-4 h-4 text-primary" />Numéro de paiement
-                      </h4>
-                      <div className="space-y-2">
-                        <Label>Numéro de téléphone</Label>
-                        <Input
-                          type="tel"
-                          placeholder="+228 90 XX XX XX"
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          {paymentMethod === "mobile_money"
-                            ? "Vous recevrez une notification pour confirmer le paiement via TMoney, Flooz ou Moov Money."
-                            : "Vous recevrez une notification Wave pour confirmer le paiement."}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <PaymentMethodSelect
+                paymentMethod={paymentMethod}
+                onPaymentMethodChange={setPaymentMethod}
+                mobileNumber={mobileNumber}
+                onMobileNumberChange={setMobileNumber}
+              />
             </div>
 
+            {/* Right: Order Summary */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24">
-                <CardHeader><CardTitle>{t("cart.summary")}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("cart.subtotal")} ({itemCount} {t("cart.articles")})</span>
-                      <span>{formatPrice(total)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{t("cart.delivery")}</span>
-                      <span>{deliveryPrice === 0 ? t("cart.free") : formatPrice(deliveryPrice)}</span>
-                    </div>
-                  </div>
-                  <div className="h-px bg-border" />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>{t("cart.total")}</span>
-                    <span className="text-primary">{formatPrice(finalTotal)}</span>
-                  </div>
-                  <Button variant="hero" className="w-full gap-2" size="lg" onClick={handleCheckout} disabled={isCheckingOut || !user}>
-                    {isCheckingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                    {t("cart.checkout")}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">{t("cart.sellerContact")}</p>
-                </CardContent>
-              </Card>
+              <OrderSummary
+                deliveryPrice={deliveryPrice}
+                isCheckingOut={isCheckingOut}
+                canCheckout={!!user}
+                onCheckout={handleCheckout}
+              />
             </div>
           </div>
         </div>
