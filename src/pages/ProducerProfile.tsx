@@ -68,6 +68,20 @@ const ProducerProfile = () => {
     enabled: products.length > 0,
   });
 
+  // Fetch sales count from orders
+  const { data: salesCount = 0 } = useQuery({
+    queryKey: ["producer-sales", producer?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("seller_id", producer!.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!producer?.id,
+  });
+
   // Map DB products to Product type for ProductCard
   const mappedProducts: Product[] = products.map(p => ({
     id: p.id,
