@@ -96,33 +96,43 @@ const Auth = () => {
   // Check if user is already logged in
   useEffect(() => {
     let redirecting = false;
+    let cancelled = false;
     
     const redirectUser = async (userId: string) => {
-      if (redirecting) return;
+      if (redirecting || cancelled) return;
       redirecting = true;
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("user_id", userId)
-        .single();
-      
-      if (profileData?.user_type === "producer") {
-        navigate("/dashboard", { replace: true });
-      } else {
-        navigate("/buyer-dashboard", { replace: true });
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("user_id", userId)
+          .single();
+        
+        if (cancelled) return;
+        if (profileData?.user_type === "producer") {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/buyer-dashboard", { replace: true });
+        }
+      } catch {
+        if (!cancelled) navigate("/buyer-dashboard", { replace: true });
       }
     };
 
-    // Check existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) redirectUser(session.user.id);
-    });
-
+    // Set up listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) redirectUser(session.user.id);
+      if (session && !cancelled) redirectUser(session.user.id);
     });
 
-    return () => subscription.unsubscribe();
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && !cancelled) redirectUser(session.user.id);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
