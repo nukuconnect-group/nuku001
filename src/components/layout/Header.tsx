@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
 import { products as mockProducts } from "@/data/marketplace";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,

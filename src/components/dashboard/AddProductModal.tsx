@@ -17,7 +17,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 
 
 interface AddProductModalProps {

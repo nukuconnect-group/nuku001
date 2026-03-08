@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, TrendingUp, Users, Package, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { Link } from "react-router-dom";
 
 interface MarketplaceHeroProps {

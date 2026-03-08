@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateDemand } from "@/hooks/useDemands";
 import { useToast } from "@/hooks/use-toast";
-import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+import { useCategories } from "@/hooks/useCategories";
 import { HandCoins, Loader2 } from "lucide-react";
 
 interface CreateDemandModalProps {
