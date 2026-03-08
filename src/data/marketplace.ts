@@ -258,9 +258,9 @@ export const products: Product[] = [
       totalSales: 28,
     },
     images: [
-      "https://images.unsplash.com/photo-1598512752271-33f913a5af13?w=400",
+      "https://images.unsplash.com/photo-1598512752271-33f913a5af13?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1598512752271-33f913a5af13?w=400",
+    image: "https://images.unsplash.com/photo-1598512752271-33f913a5af13?w=800&q=80",
     description: "Manioc frais, parfait pour le gari ou le fufu.",
     isOrganic: false,
     createdAt: "2025-01-22",
