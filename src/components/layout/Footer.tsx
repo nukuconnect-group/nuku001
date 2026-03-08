@@ -38,7 +38,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-primary-foreground">
+    <footer className="text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
       {/* App Download Section */}
       <div className="border-b border-primary-foreground/10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
