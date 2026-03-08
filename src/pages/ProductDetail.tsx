@@ -147,8 +147,8 @@ const ProductDetail = () => {
 
             {/* ===== IMAGE SECTION ===== */}
             <div className="space-y-2 sm:space-y-3">
-              {/* Main image — square, no rounded corners on mobile */}
-              <div className="relative aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg">
+              {/* Main image — 4:3 ratio, compact on mobile */}
+              <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg cursor-zoom-in" onClick={() => setZoomOpen(true)}>
                 <img
                   src={images[currentImageIndex] || product.image}
                   alt={product.name}
@@ -156,20 +156,24 @@ const ProductDetail = () => {
                 />
                 {images.length > 1 && (
                   <>
-                    <button onClick={prevImage} className="absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                       <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <button onClick={nextImage} className="absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                    <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                       <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                       {images.map((_, idx) => (
-                        <button key={idx} onClick={() => setCurrentImageIndex(idx)}
+                        <button key={idx} onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
                           className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${idx === currentImageIndex ? "bg-primary w-4 sm:w-6" : "bg-card/80"}`} />
                       ))}
                     </div>
                   </>
                 )}
+                {/* Zoom hint */}
+                <div className="absolute bottom-3 right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center">
+                  <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                </div>
                 {/* Badges */}
                 <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5">
                   {product.isOrganic && (
@@ -181,7 +185,8 @@ const ProductDetail = () => {
                 </div>
                 <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1.5">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (!isAuthenticated) {
                         toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
                         navigate("/auth");
@@ -194,11 +199,42 @@ const ProductDetail = () => {
                   >
                     <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
-                  <button className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
+                  <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                     <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   </button>
                 </div>
               </div>
+
+              {/* Zoom Dialog */}
+              <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+                <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 bg-black/95 border-none overflow-hidden">
+                  <div className="relative w-full h-[80vh] flex items-center justify-center touch-pinch-zoom">
+                    <img
+                      src={images[currentImageIndex] || product.image}
+                      alt={product.name}
+                      className="max-w-full max-h-full object-contain select-none"
+                      style={{ touchAction: "pinch-zoom" }}
+                    />
+                    {images.length > 1 && (
+                      <>
+                        <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                          <ChevronLeft className="w-5 h-5 text-white" />
+                        </button>
+                        <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                          <ChevronRight className="w-5 h-5 text-white" />
+                        </button>
+                      </>
+                    )}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {images.map((_, idx) => (
+                        <button key={idx} onClick={() => setCurrentImageIndex(idx)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentImageIndex ? "bg-white w-6" : "bg-white/40"}`} />
+                      ))}
+                    </div>
+                    <p className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs">Pincez pour zoomer</p>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               {/* Thumbnails — square, no rounded */}
               {images.length > 1 && (
