@@ -17,7 +17,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { products as mockProducts } from "@/data/marketplace";
+import { Product } from "@/data/marketplace";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
