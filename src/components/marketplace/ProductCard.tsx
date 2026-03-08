@@ -94,7 +94,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
 
   return (
     <Link to={`/produit/${product.id}`} className="block">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full max-w-[280px] mx-auto rounded-none sm:rounded-lg shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-lg shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1">
         {/* Image with smooth zoom */}
         <div className="relative aspect-[4/3] overflow-hidden">
           <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
