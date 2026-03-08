@@ -48,7 +48,7 @@ const MobileBottomNav = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
       setProfile(data);
     } finally {
       setIsLoading(false);
