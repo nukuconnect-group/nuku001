@@ -101,7 +101,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1 py-0 rounded-sm">-{product.discount}%</Badge>
             )}
             {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">NEW</Badge>}
-            {product.isOrganic && <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">BIO</Badge>}
+            {product.isOrganic && <Badge className="bg-secondary text-secondary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">BIO</Badge>}
           </div>
 
           {/* Compare button */}
