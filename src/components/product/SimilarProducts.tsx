@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { products as mockProducts, type Product } from "@/data/marketplace";
+import type { Product } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { MapPin } from "lucide-react";
 

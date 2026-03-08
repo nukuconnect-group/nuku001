@@ -5,7 +5,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useProducts } from "@/hooks/useProducts";
-import { products as mockProducts } from "@/data/marketplace";
+
 import { Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
