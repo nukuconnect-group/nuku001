@@ -45,8 +45,7 @@ const Header = () => {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const { data: marketplaceCategories = [] } = useCategories();
