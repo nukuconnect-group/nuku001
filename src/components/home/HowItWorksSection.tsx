@@ -79,15 +79,15 @@ const HowItWorksSection = () => {
 
               {/* Content */}
               <div className="p-4 flex flex-col">
-                <h3 className="font-heading text-sm sm:text-base font-bold text-foreground mb-1">
+                <h3 className="font-heading text-sm sm:text-base font-bold text-white mb-1">
                   {step.title}
                 </h3>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-xs text-white/70 mb-3">
                   {step.description}
                 </p>
                 <Link 
                   to={step.link}
-                  className="text-xs font-semibold text-primary hover:text-primary/80 inline-flex items-center gap-1 transition-colors"
+                  className="text-xs font-semibold text-yellow-300 hover:text-yellow-200 inline-flex items-center gap-1 transition-colors"
                 >
                   {step.linkText}
                   <ArrowRight className="w-3 h-3" />
