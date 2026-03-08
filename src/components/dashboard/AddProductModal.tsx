@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { Plus, Loader2, Upload, X, Tag, Zap, Edit } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
 
@@ -35,7 +37,9 @@ const promoTypes = [
 
 const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editProduct }: AddProductModalProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { uploadImages, uploading } = useImageUpload();
+  const { subscription, canPublishProduct, hasActiveSubscription } = useSubscription();
   const [isLoading, setIsLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -111,6 +115,26 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check subscription before publishing
+    if (!editProduct) {
+      const check = await canPublishProduct();
+      if (!check.allowed) {
+        if (check.reason === "no_subscription") {
+          toast({ title: "Abonnement requis", description: "Vous devez souscrire à un plan d'adhésion pour publier des produits.", variant: "destructive" });
+          onOpenChange(false);
+          navigate("/plans");
+          return;
+        }
+        if (check.reason === "limit_reached") {
+          toast({ title: "Limite atteinte", description: `Votre plan ${subscription?.plan} est limité à ${subscription?.max_products} produits. Passez au plan supérieur.`, variant: "destructive" });
+          onOpenChange(false);
+          navigate("/plans");
+          return;
+        }
+      }
+    }
+
     setIsLoading(true);
 
     try {

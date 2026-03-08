@@ -399,6 +399,45 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          billing_period: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          max_products: number
+          plan: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_period?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_products?: number
+          plan?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_period?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_products?: number
+          plan?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
@@ -425,7 +464,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      count_user_products: { Args: { p_user_id: string }; Returns: number }
+      get_user_subscription: {
+        Args: { p_user_id: string }
+        Returns: {
+          max_products: number
+          plan: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
