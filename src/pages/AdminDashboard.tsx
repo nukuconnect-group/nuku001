@@ -25,6 +25,7 @@ import CategoryManager from "@/components/admin/CategoryManager";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
+import SupportChat from "@/components/admin/SupportChat";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -297,6 +298,9 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Megaphone className="w-3.5 h-3.5" />Notifications
+              </TabsTrigger>
+              <TabsTrigger value="support" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <MessageCircle className="w-3.5 h-3.5" />Support
               </TabsTrigger>
             </TabsList>
 
@@ -1072,6 +1076,11 @@ const AdminDashboard = () => {
             {/* Broadcast Notification Tab */}
             <TabsContent value="broadcast">
               <BroadcastNotification users={users} />
+            </TabsContent>
+
+            {/* Support Chat Tab */}
+            <TabsContent value="support">
+              <SupportChat adminProfileId={adminProfile?.id} />
             </TabsContent>
           </Tabs>
         </div>
