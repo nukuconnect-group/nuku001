@@ -183,7 +183,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
 
           {/* Min order + delivery */}
           <div className="flex items-center gap-2 text-[8px] sm:text-[9px] text-muted-foreground">
-            <span>Min. {product.minOrder || 1} {product.unit}</span>
+            <span>Min. 1 {product.unit}</span>
             <span className="text-border">•</span>
             <span className="flex items-center gap-0.5"><Truck className="w-2.5 h-2.5" />Livraison</span>
           </div>
