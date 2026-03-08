@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
+import footerBg from "@/assets/footer-bg.jpg";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
 
