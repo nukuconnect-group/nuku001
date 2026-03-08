@@ -105,13 +105,10 @@ const Settings = () => {
     setIsSaving(true);
     try {
       const { error } = await supabase.from("profiles").update({
-        full_name: fullName,
-        phone,
-        location,
-        bio,
+        full_name: fullName, phone, location, bio,
       }).eq("id", profile.id);
       if (error) throw error;
-      setProfile((p: any) => ({ ...p, full_name: fullName, phone, location, bio }));
+      updateProfile({ full_name: fullName, phone, location, bio });
       toast({ title: "Profil mis à jour ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
