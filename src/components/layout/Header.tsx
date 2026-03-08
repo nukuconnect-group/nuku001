@@ -66,7 +66,8 @@ const Header = () => {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return { products: [], categories: [] };
     const q = searchQuery.toLowerCase();
-    const matchedProducts = mockProducts.filter(p => 
+    const allProducts = dbProducts || [];
+    const matchedProducts = allProducts.filter(p => 
       p.name.toLowerCase().includes(q) || 
       p.category.toLowerCase().includes(q) ||
       p.producer.name.toLowerCase().includes(q) ||
@@ -76,7 +77,7 @@ const Header = () => {
       c.name.toLowerCase().includes(q)
     ).slice(0, 3);
     return { products: matchedProducts, categories: matchedCategories };
-  }, [searchQuery]);
+  }, [searchQuery, dbProducts, marketplaceCategories]);
 
   const SearchResultsDropdown = ({ className = "" }: { className?: string }) => {
     if (!showSearchResults || !searchQuery.trim() || searchQuery.length < 2) return null;
