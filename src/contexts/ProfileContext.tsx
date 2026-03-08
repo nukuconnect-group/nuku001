@@ -24,6 +24,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const profileCache = useRef<Record<string, any>>({});
+  const sessionHandled = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     // Use cache to avoid redundant fetches
@@ -66,6 +67,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      sessionHandled.current = true;
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
@@ -78,21 +80,21 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentUser);
       
       if (currentUser) {
-        // Use setTimeout to avoid Supabase deadlock with simultaneous calls
-        setTimeout(() => fetchProfile(currentUser.id), 0);
+        fetchProfile(currentUser.id);
       } else {
         setIsLoading(false);
       }
     });
 
-    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id);
-      } else {
-        setIsLoading(false);
+      if (!sessionHandled.current) {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          fetchProfile(currentUser.id);
+        } else {
+          setIsLoading(false);
+        }
       }
     });
 
