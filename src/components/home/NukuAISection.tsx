@@ -35,7 +35,7 @@ const NukuAISection = () => {
             </div>
             
             <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Rencontrez <span className="text-accent">Nukuconnect IA</span>
+              Rencontrez <span className="text-secondary-foreground font-extrabold">Nukuconnect IA</span>
             </h2>
             
             <p className="text-sm sm:text-base lg:text-lg text-primary-foreground/90 mb-6 sm:mb-8 leading-relaxed">
