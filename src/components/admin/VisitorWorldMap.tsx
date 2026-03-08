@@ -98,7 +98,7 @@ const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
                 })}
 
                 {/* Simplified continent outlines - Africa focus */}
-                <ellipse cx="420" cy="270" rx="60" ry="100" fill="hsl(var(--primary))" opacity="0.06" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity2="0.15" />
+                <ellipse cx="420" cy="270" rx="60" ry="100" fill="hsl(var(--primary))" opacity="0.06" stroke="hsl(var(--primary))" strokeWidth="0.5" />
                 <ellipse cx="440" cy="140" rx="80" ry="50" fill="hsl(var(--primary))" opacity="0.04" />
                 <ellipse cx="280" cy="200" rx="100" ry="60" fill="hsl(var(--primary))" opacity="0.04" />
                 <ellipse cx="600" cy="220" rx="80" ry="70" fill="hsl(var(--primary))" opacity="0.04" />
