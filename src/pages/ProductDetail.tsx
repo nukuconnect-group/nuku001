@@ -242,7 +242,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowContactForm(!showContactForm)}>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={handleContactSeller}>
                     <MessageCircle className="w-4 h-4" />{t("product.contactSeller")}
                   </Button>
                   <Button variant="hero" className="flex-1 gap-2" onClick={handleAddToCart}>
