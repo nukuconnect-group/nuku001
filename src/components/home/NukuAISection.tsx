@@ -66,15 +66,15 @@ const NukuAISection = () => {
           <div className="relative order-1 lg:order-2">
             <div className="absolute -inset-4 bg-gradient-to-r from-white/20 to-white/10 rounded-3xl blur-2xl" />
             <Card className="relative bg-card border-border/50 overflow-hidden shadow-elevated max-w-sm mx-auto lg:max-w-none">
-              <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary to-primary/80">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-foreground flex items-center justify-center">
+              <div className="flex items-center gap-3 p-3 sm:p-4 border-b border-border" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white flex items-center justify-center">
                   <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-primary-foreground text-sm sm:text-base">Nukuconnect IA</p>
+                  <p className="font-semibold text-white text-sm sm:text-base">Nukuconnect IA</p>
                   <div className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                    <p className="text-xs text-primary-foreground/80">En ligne</p>
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <p className="text-xs text-white/80">En ligne</p>
                   </div>
                 </div>
               </div>
