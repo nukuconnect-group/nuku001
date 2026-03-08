@@ -133,7 +133,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'NukuConnect <onboarding@resend.dev>',
+        from: 'NukuConnect <no-reply@nukuconnect.com>',
         to: [data.buyerEmail],
         subject: `Confirmation de commande ${data.invoiceNumber} — NukuConnect`,
         html: emailHTML,
