@@ -284,7 +284,7 @@ const DeliveryTracking = () => {
                               quantity: Number(order.quantity),
                               unitPrice: Number(order.products?.price || 0),
                               unit: order.products?.unit || "unité",
-                              sellerName: "Vendeur",
+                              sellerName: order.profiles?.full_name || "Vendeur",
                             }],
                             subtotal: Number(order.total_price),
                             total: Number(order.total_price),
