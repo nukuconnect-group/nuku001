@@ -16,12 +16,11 @@ const Footer = () => {
       { label: "Formations", href: "/formations" },
       { label: "Traçabilité", href: "/tracabilite" },
       { label: "Tarifs", href: "/plans" },
-      { label: "FAQ", href: "/faq" },
+      { label: "Centre d'aide", href: "/aide" },
     ],
     company: [
-      { label: "À propos", href: "/about" },
+      { label: "À propos", href: "/a-propos" },
       { label: "Contact", href: "/contact" },
-      { label: "Partenaires", href: "/partners" },
     ],
     legal: [
       { label: "Conditions d'utilisation", href: "/terms" },

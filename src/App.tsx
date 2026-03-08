@@ -26,6 +26,10 @@ import About from "./pages/About";
 import Notifications from "./pages/Notifications";
 import Favorites from "./pages/Favorites";
 import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Legal from "./pages/Legal";
+import Contact from "./pages/Contact";
+import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ScrollToTop from "./components/ScrollToTop";
@@ -82,6 +86,11 @@ const App = () => {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/favoris" element={<Favorites />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/legal" element={<Legal />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/aide" element={<Help />} />
+                <Route path="/faq" element={<Help />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
