@@ -7,7 +7,7 @@ import {
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle,
-  Mic, Camera
+  Mic, Camera, QrCode
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
