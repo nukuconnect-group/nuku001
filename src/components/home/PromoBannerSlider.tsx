@@ -47,7 +47,11 @@ const PromoBannerSlider = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const recentProducts = products?.slice(0, 8) || [];
+  // Use DB products, fallback to mock products so sections always show
+  const recentProducts = useMemo(() => {
+    const db = products || [];
+    return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
+  }, [products]);
 
   return (
     <div className="md:hidden">
