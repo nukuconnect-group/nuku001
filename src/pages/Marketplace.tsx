@@ -268,16 +268,6 @@ const Marketplace = () => {
                 {t("mp.verified")}
               </Button>
             </div>
-            {/* Currency selector */}
-            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
-              <SelectTrigger className="w-24 h-8 text-xs"><DollarSign className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="XOF" className="text-xs">FCFA</SelectItem>
-                <SelectItem value="USD" className="text-xs">USD $</SelectItem>
-                <SelectItem value="EUR" className="text-xs">EUR €</SelectItem>
-                <SelectItem value="GBP" className="text-xs">GBP £</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
