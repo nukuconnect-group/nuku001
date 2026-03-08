@@ -319,9 +319,9 @@ export const products: Product[] = [
       totalSales: 78,
     },
     images: [
-      "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400",
+      "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400",
+    image: "https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=800&q=80",
     description: "Tilapia frais élevé en eau douce, qualité premium.",
     isOrganic: false,
     createdAt: "2025-01-20",
