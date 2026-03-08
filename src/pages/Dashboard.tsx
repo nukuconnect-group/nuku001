@@ -28,8 +28,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile, isLoading: profileLoading, updateProfile } = useProfile();
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,48 +36,31 @@ const Dashboard = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
+
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
     setProducts(data || []);
   };
 
   useEffect(() => {
+    if (profileLoading) return;
+    if (!user) { navigate("/auth", { replace: true }); return; }
+    if (!profile) { setIsLoading(false); return; }
+
     let isMounted = true;
-
-    const loadDashboard = async (userId: string) => {
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+    const loadData = async () => {
+      const [prodRes, ordersRes] = await Promise.all([
+        supabase.from("products").select("*").eq("producer_id", profile.id).order("created_at", { ascending: false }),
+        supabase.from("orders").select("*, products(*)").eq("seller_id", profile.id).order("created_at", { ascending: false }),
+      ]);
       if (!isMounted) return;
-      setProfile(profileData);
-      if (profileData) {
-        setIsLoading(false);
-        const [prodRes, ordersRes] = await Promise.all([
-          supabase.from("products").select("*").eq("producer_id", profileData.id).order("created_at", { ascending: false }),
-          supabase.from("orders").select("*, products(*)").eq("seller_id", profileData.id).order("created_at", { ascending: false }),
-        ]);
-        if (!isMounted) return;
-        setProducts(prodRes.data || []);
-        setOrders(ordersRes.data || []);
-      } else {
-        if (isMounted) setIsLoading(false);
-      }
+      setProducts(prodRes.data || []);
+      setOrders(ordersRes.data || []);
+      setIsLoading(false);
     };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) { navigate("/auth", { replace: true }); return; }
-      setUser(session.user);
-      loadDashboard(session.user.id);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { navigate("/auth", { replace: true }); return; }
-      setUser(session.user);
-      loadDashboard(session.user.id);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    loadData();
+    return () => { isMounted = false; };
+  }, [profileLoading, user, profile, navigate]);
   }, [navigate]);
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
