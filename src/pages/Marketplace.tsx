@@ -23,6 +23,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import VoiceSearchModal from "@/components/search/VoiceSearchModal";
+import ImageSearchModal from "@/components/search/ImageSearchModal";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
@@ -94,6 +96,8 @@ const Marketplace = () => {
   const [productSearch, setProductSearch] = useState("");
   const [compareProducts, setCompareProducts] = useState<Product[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
+  const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const sponsoredRef = useRef<HTMLDivElement>(null);
 
   const handleCompare = (product: Product) => {
@@ -380,26 +384,14 @@ const Marketplace = () => {
                 value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-24 h-10 text-sm bg-card border-border rounded-full" />
               <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                <button type="button" onClick={() => {
-                  try {
-                    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                    if (!SpeechRecognition) { toast({ title: "Non supporté" }); return; }
-                    const recognition = new SpeechRecognition();
-                    recognition.lang = "fr-FR";
-                    recognition.onresult = (e: any) => { setSearchQuery(e.results[0][0].transcript); };
-                    recognition.start();
-                    toast({ title: "🎙️ Parlez maintenant..." });
-                  } catch { toast({ title: "Erreur micro", variant: "destructive" }); }
-                }} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
+                <button type="button" onClick={() => setVoiceSearchOpen(true)}
+                  className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
                   <Mic className="w-4 h-4" />
                 </button>
-                <label className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                <button type="button" onClick={() => setImageSearchOpen(true)}
+                  className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
                   <Camera className="w-4 h-4" />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    if (e.target.files?.[0]) { toast({ title: "📸 Recherche par image", description: "Bientôt disponible" }); }
-                    e.target.value = "";
-                  }} />
-                </label>
+                </button>
               </div>
             </div>
             <Select value={location} onValueChange={setLocation}>
@@ -566,6 +558,17 @@ const Marketplace = () => {
       />
       <Footer />
       <MobileBottomNav />
+
+      <VoiceSearchModal
+        open={voiceSearchOpen}
+        onClose={() => setVoiceSearchOpen(false)}
+        onResult={(text) => setSearchQuery(text)}
+      />
+      <ImageSearchModal
+        open={imageSearchOpen}
+        onClose={() => setImageSearchOpen(false)}
+        onSearch={(query) => setSearchQuery(query)}
+      />
     </div>
   );
 };
