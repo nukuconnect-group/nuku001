@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
+import DemandsList from "@/components/marketplace/DemandsList";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
@@ -174,6 +175,18 @@ const Dashboard = () => {
               <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setShowAddProduct(true)}>
                 <Plus className="w-3 h-3" />Publier un produit à vendre
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Buyer Demands */}
+          <Card className="mb-4 sm:mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                <ShoppingCart className="w-3.5 h-3.5 text-accent-foreground" />
+                Demandes d'achat des acheteurs
+              </h3>
+              <p className="text-[10px] text-muted-foreground mb-2">Découvrez ce que les acheteurs recherchent</p>
+              <DemandsList limit={5} />
             </CardContent>
           </Card>
 

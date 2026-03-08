@@ -5,8 +5,6 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import CompareDrawer from "@/components/marketplace/CompareDrawer";
-import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
-import DemandsList from "@/components/marketplace/DemandsList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -23,7 +21,7 @@ import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, HandCoins } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
@@ -263,7 +261,6 @@ const Marketplace = () => {
 
           {/* Toolbar */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <CreateDemandModal />
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
@@ -276,14 +273,6 @@ const Marketplace = () => {
                 <FiltersContent />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1">
-              <Button variant={organicOnly ? "default" : "secondary"} size="sm" onClick={() => setOrganicOnly(!organicOnly)} className="whitespace-nowrap flex-shrink-0 gap-1 text-[10px] h-8 px-2.5">
-                <Leaf className="w-3 h-3" />{t("mp.bio")}
-              </Button>
-              <Button variant={verifiedOnly ? "default" : "secondary"} size="sm" onClick={() => setVerifiedOnly(!verifiedOnly)} className="whitespace-nowrap flex-shrink-0 text-[10px] h-8 px-2.5">
-                {t("mp.verified")}
-              </Button>
-            </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
@@ -336,20 +325,6 @@ const Marketplace = () => {
             </>
           ) : (
             <>
-              {/* Demands section */}
-              <div className="mb-6 sm:mb-8">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <HandCoins className="w-4 h-4 text-accent" />Demandes d'achat
-                  </h2>
-                  <CreateDemandModal trigger={
-                    <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-primary gap-1">
-                      <HandCoins className="w-3 h-3" />Publier une demande
-                    </Button>
-                  } />
-                </div>
-                <DemandsList limit={5} />
-              </div>
 
               {flashDeals.length > 0 && (
                 <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
