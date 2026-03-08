@@ -60,7 +60,7 @@ const PromoBannerSlider = () => {
   return (
     <div>
       {/* Banner Slider - mobile only */}
-      <div className="md:hidden px-3 pt-2 pb-1">
+      <div className="px-3 sm:px-4 md:px-0 pt-2 pb-1">
         <div className="relative overflow-hidden rounded-2xl shadow-lg">
           <div
             className="flex transition-transform duration-500 ease-out"
