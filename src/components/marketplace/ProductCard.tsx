@@ -130,8 +130,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
             </button>
           </div>
 
-          {/* Quick Add overlay */}
-          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {/* Quick Add - always visible on mobile, hover on desktop */}
+          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
             <Button variant="secondary" size="sm" className="w-full text-[10px] h-7 gap-1 rounded-sm" onClick={handleAddToCart}>
               <ShoppingCart className="w-3 h-3" />Ajouter
             </Button>
