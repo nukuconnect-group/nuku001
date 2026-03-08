@@ -22,6 +22,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
+import VoiceSearchModal from "@/components/search/VoiceSearchModal";
+import ImageSearchModal from "@/components/search/ImageSearchModal";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
@@ -46,6 +48,8 @@ const Header = () => {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
+  const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -379,27 +383,14 @@ const Header = () => {
                     onFocus={() => setShowSearchResults(true)}
                     className="w-full h-10 pl-4 pr-36 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
                   <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                    <button type="button" onClick={() => {
-                      try {
-                        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                        if (!SpeechRecognition) { toast({ title: "Non supporté", description: "La recherche vocale n'est pas disponible sur ce navigateur" }); return; }
-                        const recognition = new SpeechRecognition();
-                        recognition.lang = "fr-FR";
-                        recognition.onresult = (e: any) => { const t = e.results[0][0].transcript; setSearchQuery(t); setShowSearchResults(true); };
-                        recognition.start();
-                        toast({ title: "🎙️ Parlez maintenant..." });
-                      } catch { toast({ title: "Erreur", description: "Impossible d'activer le micro", variant: "destructive" }); }
-                    }} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+                    <button type="button" onClick={() => setVoiceSearchOpen(true)}
+                      className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                       <Mic className="w-4 h-4" />
                     </button>
-                    <label className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    <button type="button" onClick={() => setImageSearchOpen(true)}
+                      className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                       <Camera className="w-4 h-4" />
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) { toast({ title: "📸 Recherche par image", description: "Fonctionnalité bientôt disponible" }); }
-                        e.target.value = "";
-                      }} />
-                    </label>
+                    </button>
                     <Button size="sm"
                       className="h-8 px-4 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full text-xs font-medium"
                       onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
@@ -550,27 +541,14 @@ const Header = () => {
               onFocus={() => setShowSearchResults(true)}
               className="w-full h-9 pl-4 pr-24 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-              <button type="button" onClick={() => {
-                try {
-                  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                  if (!SpeechRecognition) { toast({ title: "Non supporté", description: "La recherche vocale n'est pas disponible" }); return; }
-                  const recognition = new SpeechRecognition();
-                  recognition.lang = "fr-FR";
-                  recognition.onresult = (e: any) => { const t = e.results[0][0].transcript; setSearchQuery(t); setShowSearchResults(true); };
-                  recognition.start();
-                  toast({ title: "🎙️ Parlez maintenant..." });
-                } catch { toast({ title: "Erreur", description: "Micro non disponible", variant: "destructive" }); }
-              }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
+              <button type="button" onClick={() => setVoiceSearchOpen(true)}
+                className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                 <Mic className="w-3.5 h-3.5" />
               </button>
-              <label className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+              <button type="button" onClick={() => setImageSearchOpen(true)}
+                className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
                 <Camera className="w-3.5 h-3.5" />
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) { toast({ title: "📸 Recherche par image", description: "Fonctionnalité bientôt disponible" }); }
-                  e.target.value = "";
-                }} />
-              </label>
+              </button>
               <Button size="icon"
                 className="h-7 w-7 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full"
                 onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
@@ -660,6 +638,17 @@ const Header = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <VoiceSearchModal
+        open={voiceSearchOpen}
+        onClose={() => setVoiceSearchOpen(false)}
+        onResult={(text) => { setSearchQuery(text); setShowSearchResults(true); navigate(`/marketplace?search=${text}`); }}
+      />
+      <ImageSearchModal
+        open={imageSearchOpen}
+        onClose={() => setImageSearchOpen(false)}
+        onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
+      />
     </>
   );
 };
