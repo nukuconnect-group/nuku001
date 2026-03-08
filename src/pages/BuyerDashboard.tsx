@@ -94,13 +94,26 @@ const BuyerDashboard = () => {
 
   const handleBecomeProducer = async () => {
     if (!profile) return;
-    const { error } = await supabase.from("profiles").update({ user_type: "producer" }).eq("id", profile.id);
+    if (!migrationData.businessName.trim() || !migrationData.phone.trim() || !migrationData.location.trim() || !migrationData.businessType) {
+      toast({ title: "Veuillez remplir tous les champs obligatoires", variant: "destructive" });
+      return;
+    }
+    setMigrating(true);
+    const { error } = await supabase.from("profiles").update({
+      user_type: "producer",
+      full_name: migrationData.businessName.trim(),
+      phone: migrationData.phone.trim(),
+      location: migrationData.location.trim(),
+      bio: migrationData.bio.trim() || null,
+    }).eq("id", profile.id);
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Félicitations !", description: "Vous êtes maintenant producteur." });
+      toast({ title: "Félicitations ! 🎉", description: "Vous êtes maintenant fournisseur. Bienvenue sur votre tableau de bord vendeur !" });
+      setShowMigrationModal(false);
       setTimeout(() => navigate("/dashboard"), 1500);
     }
+    setMigrating(false);
   };
 
   const getStatusBadge = (status: string) => {
