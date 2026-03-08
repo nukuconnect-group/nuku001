@@ -12,9 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
-  Star, MapPin, Clock, ChevronRight, Loader2, User, Eye, Bell
+  Star, MapPin, Clock, ChevronRight, Loader2, User, Eye, Bell, HandCoins
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
+import DemandsList from "@/components/marketplace/DemandsList";
 
 const purchaseData = [
   { name: 'Jan', achats: 150000 },
