@@ -269,6 +269,7 @@ const Cart = () => {
                 onAddressChange={setDeliveryAddress}
                 quarter={deliveryQuarter}
                 onQuarterChange={setDeliveryQuarter}
+                onDynamicPriceChange={setDynamicDeliveryPrice}
               />
 
               <PaymentMethodSelect
