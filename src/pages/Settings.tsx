@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -17,9 +18,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -35,27 +34,22 @@ const Settings = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const load = async (userId: string) => {
-      const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
-        setPhone(data.phone || "");
-        setLocation(data.location || "");
-        setBio(data.bio || "");
-        const imgs = (data as any).cover_images as string[] | null;
-        setCoverImages(imgs && imgs.length > 0 ? imgs : data.cover_url ? [data.cover_url] : []);
-      }
-      setIsLoading(false);
-    };
+  const profile = ctxProfile;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { navigate("/auth", { replace: true }); return; }
-      setUser(session.user);
-      load(session.user.id);
-    });
-  }, [navigate]);
+  useEffect(() => {
+    if (!isLoading && !user) navigate("/auth", { replace: true });
+  }, [isLoading, user, navigate]);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setPhone(profile.phone || "");
+      setLocation(profile.location || "");
+      setBio(profile.bio || "");
+      const imgs = (profile as any).cover_images as string[] | null;
+      setCoverImages(imgs && imgs.length > 0 ? imgs : profile.cover_url ? [profile.cover_url] : []);
+    }
+  }, [profile]);
 
   // Auto-rotate cover images
   useEffect(() => {
@@ -79,12 +73,13 @@ const Settings = () => {
 
       if (type === "avatar") {
         await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
-        setProfile((p: any) => ({ ...p, avatar_url: publicUrl }));
+        updateProfile({ avatar_url: publicUrl });
       } else {
         const newImages = [...coverImages, publicUrl];
         setCoverImages(newImages);
         await supabase.from("profiles").update({ cover_url: publicUrl, cover_images: newImages } as any).eq("id", profile.id);
         setCurrentCoverIndex(newImages.length - 1);
+        updateProfile({ cover_url: publicUrl, cover_images: newImages });
       }
       toast({ title: "Image mise à jour ✓" });
     } catch (err: any) {
@@ -110,13 +105,10 @@ const Settings = () => {
     setIsSaving(true);
     try {
       const { error } = await supabase.from("profiles").update({
-        full_name: fullName,
-        phone,
-        location,
-        bio,
+        full_name: fullName, phone, location, bio,
       }).eq("id", profile.id);
       if (error) throw error;
-      setProfile((p: any) => ({ ...p, full_name: fullName, phone, location, bio }));
+      updateProfile({ full_name: fullName, phone, location, bio });
       toast({ title: "Profil mis à jour ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });

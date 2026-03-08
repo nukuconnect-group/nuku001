@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ interface ProfileSettingsPanelProps {
 
 const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSettingsPanelProps) => {
   const { toast } = useToast();
+  const { updateProfile: updateCtxProfile } = useProfile();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [location, setLocation] = useState(profile?.location || "");
@@ -65,13 +67,17 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
 
       if (type === "avatar") {
         await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
-        onProfileUpdate({ ...profile, avatar_url: publicUrl });
+        const updated = { ...profile, avatar_url: publicUrl };
+        onProfileUpdate(updated);
+        updateCtxProfile({ avatar_url: publicUrl });
       } else {
         const newImages = [...coverImages, publicUrl];
         setCoverImages(newImages);
         await supabase.from("profiles").update({ cover_url: publicUrl, cover_images: newImages } as any).eq("id", profile.id);
         setCurrentCoverIndex(newImages.length - 1);
-        onProfileUpdate({ ...profile, cover_url: publicUrl, cover_images: newImages });
+        const updated = { ...profile, cover_url: publicUrl, cover_images: newImages };
+        onProfileUpdate(updated);
+        updateCtxProfile({ cover_url: publicUrl, cover_images: newImages });
       }
       toast({ title: "Image mise à jour ✓" });
     } catch (err: any) {
@@ -100,7 +106,9 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
         full_name: fullName, phone, location, bio,
       }).eq("id", profile.id);
       if (error) throw error;
-      onProfileUpdate({ ...profile, full_name: fullName, phone, location, bio });
+      const updated = { ...profile, full_name: fullName, phone, location, bio };
+      onProfileUpdate(updated);
+      updateCtxProfile({ full_name: fullName, phone, location, bio });
       toast({ title: "Profil mis à jour ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });

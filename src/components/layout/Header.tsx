@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,8 +45,7 @@ const Header = () => {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const { data: marketplaceCategories = [] } = useCategories();
@@ -174,18 +174,11 @@ const Header = () => {
     { label: "Centre d'aide", href: "/aide" },
   ];
 
+  // Profile location sync
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      else setProfile(null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (profile?.location) setUserLocation(profile.location);
+    if (user?.id) fetchNotifications(user.id);
+  }, [profile, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -197,13 +190,6 @@ const Header = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-    setProfile(data);
-    if (data?.location) setUserLocation(data.location);
-    fetchNotifications(userId);
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
