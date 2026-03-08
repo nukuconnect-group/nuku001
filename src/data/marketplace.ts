@@ -168,10 +168,10 @@ export const products: Product[] = [
       totalSales: 45,
     },
     images: [
-      "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400",
-      "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400",
+      "https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&q=80",
+      "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400",
+    image: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&q=80",
     description: "Mangues Kent sucrées et juteuses, parfaites pour l'exportation.",
     isOrganic: false,
     createdAt: "2025-01-25",
