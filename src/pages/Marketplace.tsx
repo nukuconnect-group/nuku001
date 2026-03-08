@@ -289,6 +289,31 @@ const Marketplace = () => {
         </div>
       </section>
 
+      {/* Mobile Categories - horizontal swipe */}
+      <div className="lg:hidden bg-card border-b border-border overflow-x-auto scrollbar-hide"
+        style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex items-center gap-1.5 px-3 py-2 min-w-max">
+          <button
+            onClick={() => setSelectedCategory("all")}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+              selectedCategory === "all" ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
+            }`}>
+            Tout
+          </button>
+          {marketplaceCategories.filter(c => c.id !== "all").map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
+              }`}>
+              <category.icon className="w-3.5 h-3.5" />
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
