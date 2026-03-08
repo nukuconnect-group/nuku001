@@ -545,7 +545,7 @@ const Header = () => {
             <Input type="text" placeholder={t("header.search")} value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
-              className="w-full h-9 pl-4 pr-24 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
+              className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
               <button type="button" onClick={() => setQrScannerOpen(true)}
                 className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
