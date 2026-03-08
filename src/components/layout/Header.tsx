@@ -342,13 +342,17 @@ const Header = () => {
                       )}
                     </div>
                     <DropdownMenuSeparator />
-                    {notifications.map((notif) => (
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-muted-foreground">Aucune notification</div>
+                    ) : notifications.map((notif) => (
                       <DropdownMenuItem key={notif.id} className="flex items-start gap-2 p-2 cursor-pointer">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-muted' : 'bg-primary'}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.is_read ? 'bg-muted' : 'bg-primary'}`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium">{notif.title}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{notif.message}</p>
-                          <p className="text-[9px] text-muted-foreground mt-0.5">Il y a {notif.time}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{notif.description}</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5">
+                            {new Date(notif.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </p>
                         </div>
                       </DropdownMenuItem>
                     ))}
