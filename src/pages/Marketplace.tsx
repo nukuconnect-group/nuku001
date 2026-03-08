@@ -327,20 +327,6 @@ const Marketplace = () => {
             </>
           ) : (
             <>
-              {/* Demands section */}
-              <div className="mb-6 sm:mb-8">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <HandCoins className="w-4 h-4 text-accent" />Demandes d'achat
-                  </h2>
-                  <CreateDemandModal trigger={
-                    <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-primary gap-1">
-                      <HandCoins className="w-3 h-3" />Publier une demande
-                    </Button>
-                  } />
-                </div>
-                <DemandsList limit={5} />
-              </div>
 
               {flashDeals.length > 0 && (
                 <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
