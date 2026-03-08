@@ -22,6 +22,7 @@ interface AddProductModalProps {
   onOpenChange: (open: boolean) => void;
   profileId: string;
   onProductAdded: () => void;
+  editProduct?: any;
 }
 
 const promoTypes = [
