@@ -49,7 +49,15 @@ const BuyerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("orders");
   const { wishlist: wishlistItems } = useWishlist();
-
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const [migrationData, setMigrationData] = useState({
+    businessName: "",
+    businessType: "",
+    phone: "",
+    location: "",
+    bio: "",
+  });
+  const [migrating, setMigrating] = useState(false);
   useEffect(() => {
     if (profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
