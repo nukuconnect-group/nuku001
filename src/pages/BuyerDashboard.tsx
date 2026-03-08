@@ -511,6 +511,110 @@ const BuyerDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Payments History Tab */}
+            <TabsContent value="payments">
+              <Card>
+                <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-primary" />
+                    Historique des paiements
+                  </CardTitle>
+                  <CardDescription className="text-[11px] sm:text-sm">Toutes vos transactions et factures</CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6 pt-0">
+                  {orders.length === 0 ? (
+                    <div className="text-center py-8 sm:py-12">
+                      <Receipt className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3">Aucun paiement effectué</p>
+                      <Link to="/marketplace">
+                        <Button variant="hero" className="text-xs sm:text-sm h-9">Découvrir les produits</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {/* Summary */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="p-2.5 bg-primary/5 rounded-xl text-center">
+                          <p className="text-[10px] text-muted-foreground">Total payé</p>
+                          <p className="font-bold text-xs sm:text-sm text-primary">{formatPrice(totalSpent)}</p>
+                        </div>
+                        <div className="p-2.5 bg-muted rounded-xl text-center">
+                          <p className="text-[10px] text-muted-foreground">Transactions</p>
+                          <p className="font-bold text-xs sm:text-sm">{orders.length}</p>
+                        </div>
+                        <div className="p-2.5 bg-muted rounded-xl text-center">
+                          <p className="text-[10px] text-muted-foreground">En attente</p>
+                          <p className="font-bold text-xs sm:text-sm text-accent-foreground">{pendingOrders}</p>
+                        </div>
+                      </div>
+
+                      {orders.map((order) => {
+                        const notesParts = (order.notes || "").split(" | ");
+                        const paymentInfo = notesParts.find((n: string) => n.startsWith("Paiement:"))?.replace("Paiement: ", "") || "Mobile Money";
+
+                        return (
+                          <div key={order.id} className="flex items-center justify-between p-2.5 sm:p-4 bg-muted/50 rounded-xl">
+                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <Receipt className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-xs sm:text-sm truncate">{order.products?.name || "Produit"}</p>
+                                <p className="text-[10px] text-muted-foreground">{paymentInfo}</p>
+                                <p className="text-[9px] text-muted-foreground">
+                                  {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                              <div className="text-right">
+                                {getStatusBadge(order.status)}
+                                <p className="text-xs sm:text-sm font-bold text-primary mt-0.5">{formatPrice(Number(order.total_price))}</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                title="Télécharger la facture"
+                                onClick={() => {
+                                  const created = new Date(order.created_at);
+                                  const invoiceNumber = `NK-${created.getFullYear()}${String(created.getMonth() + 1).padStart(2, "0")}${String(created.getDate()).padStart(2, "0")}-${order.id.substring(0, 6).toUpperCase()}`;
+                                  const deliveryInfo = notesParts.find((n: string) => n.startsWith("Livraison:")) || "Retrait sur place";
+                                  const telInfo = notesParts.find((n: string) => n.startsWith("Tél"))?.replace(/Tél[^:]*: /, "") || "";
+
+                                  generateInvoicePDF({
+                                    invoiceNumber,
+                                    date: created.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+                                    buyerName: profile?.full_name || "Client",
+                                    buyerPhone: profile?.phone,
+                                    deliveryMethod: deliveryInfo,
+                                    deliveryPrice: 0,
+                                    paymentMethod: paymentInfo,
+                                    mobileNumber: telInfo,
+                                    items: [{
+                                      name: order.products?.name || "Produit",
+                                      quantity: Number(order.quantity),
+                                      unitPrice: Number(order.products?.price || 0),
+                                      unit: order.products?.unit || "unité",
+                                      sellerName: "Vendeur",
+                                    }],
+                                    subtotal: Number(order.total_price),
+                                    total: Number(order.total_price),
+                                  });
+                                }}
+                              >
+                                <FileDown className="w-4 h-4 text-primary" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
