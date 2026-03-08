@@ -50,7 +50,18 @@ const Marketplace = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [compareProducts, setCompareProducts] = useState<Product[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const sponsoredRef = useRef<HTMLDivElement>(null);
+
+  const handleCompare = (product: Product) => {
+    setCompareProducts((prev) => {
+      const exists = prev.find((p) => p.id === product.id);
+      if (exists) return prev.filter((p) => p.id !== product.id);
+      if (prev.length >= 4) return prev;
+      return [...prev, product];
+    });
+  };
 
   useEffect(() => {
     const category = searchParams.get("category");
