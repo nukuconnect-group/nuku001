@@ -18,6 +18,7 @@ const plans = [
     monthlyPrice: 0,
     annualPrice: 0,
     maxProducts: 3,
+    commission: 8,
     description: "Pour découvrir NUKUCONNECT",
     icon: Zap,
     color: "bg-muted",
@@ -28,6 +29,7 @@ const plans = [
       "Messagerie de base",
       "Accès au marketplace",
       "Support communautaire",
+      "Commission de 8% sur les ventes",
     ],
     limitations: [
       "Limité à 3 produits",
@@ -42,7 +44,8 @@ const plans = [
     monthlyPrice: 5000,
     annualPrice: 50000,
     maxProducts: 15,
-    description: "Pour les producteurs actifs",
+    commission: 5,
+    description: "Pour les fournisseurs actifs",
     icon: Star,
     color: "bg-primary",
     popular: true,
@@ -55,6 +58,7 @@ const plans = [
       "Support prioritaire",
       "Formations premium",
       "QR codes traçabilité",
+      "Commission réduite à 5% sur les ventes",
     ],
     limitations: [],
   },
@@ -64,6 +68,7 @@ const plans = [
     monthlyPrice: 15000,
     annualPrice: 150000,
     maxProducts: 9999,
+    commission: 3,
     description: "Pour les entreprises agricoles",
     icon: Rocket,
     color: "bg-gradient-hero",
@@ -77,6 +82,7 @@ const plans = [
       "Account manager dédié",
       "Formation sur mesure",
       "Certification qualité",
+      "Commission réduite à 3% sur les ventes",
     ],
     limitations: [],
   },
@@ -86,6 +92,7 @@ const plans = [
     monthlyPrice: -1,
     annualPrice: -1,
     maxProducts: 9999,
+    commission: 2,
     description: "Solutions personnalisées",
     icon: Crown,
     color: "bg-accent",
@@ -99,6 +106,7 @@ const plans = [
       "Support 24/7",
       "Formation équipe",
       "Audit sécurité",
+      "Commission négociable (à partir de 2%)",
     ],
     limitations: [],
   },
@@ -259,6 +267,12 @@ const Plans = () => {
                         </>
                       )}
                     </div>
+                    
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/30 text-primary">
+                        Commission : {plan.commission}%
+                      </Badge>
+                    </div>
 
                     <ul className="space-y-2 sm:space-y-3">
                       {plan.features.map((feature) => (
@@ -320,7 +334,8 @@ const Plans = () => {
               { q: "Comment fonctionne le paiement ?", a: "Nous acceptons Mobile Money (TMoney, Flooz), cartes bancaires et virement. Le paiement est sécurisé." },
               { q: "Puis-je annuler mon abonnement ?", a: "Oui, vous pouvez annuler à tout moment sans frais. Votre compte reste actif jusqu'à la fin de la période payée." },
               { q: "Le plan gratuit est-il vraiment limité à 3 produits ?", a: "Oui, le plan gratuit vous permet de publier jusqu'à 3 produits. Pour plus d'annonces, passez au plan Pro." },
-              { q: "Dois-je m'abonner pour acheter ?", a: "Oui, même le plan gratuit nécessite une inscription. Cela nous permet de sécuriser les transactions et d'assurer un suivi de qualité." },
+              { q: "Comment fonctionnent les commissions ?", a: "NUKUCONNECT prélève une commission sur chaque vente effectuée. Le taux varie selon votre plan : 8% pour le plan Gratuit, 5% pour le Pro, 3% pour le Business, et à partir de 2% pour le plan Entreprise. La commission est automatiquement déduite et le montant net est affiché dans votre tableau de bord." },
+              { q: "Dois-je m'abonner pour acheter ?", a: "Non ! Les acheteurs n'ont pas besoin de s'abonner à un plan payant. Un compte gratuit suffit pour acheter sur la marketplace. Les plans d'adhésion sont destinés aux fournisseurs souhaitant vendre leurs produits." },
             ].map((faq) => (
               <div key={faq.q} className="bg-card rounded-xl p-4 sm:p-6 shadow-soft">
                 <h3 className="font-heading font-semibold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">{faq.q}</h3>

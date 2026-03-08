@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -36,6 +37,7 @@ const Dashboard = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
+  const { subscription } = useSubscription();
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
@@ -67,11 +69,16 @@ const Dashboard = () => {
   const completedOrders = orders.filter(o => o.status === "completed").length;
   const pendingOrders = orders.filter(o => o.status === "pending").length;
   
+  // Commission based on plan
+  const commissionRate = subscription?.plan === "business" ? 3 : subscription?.plan === "pro" ? 5 : 8;
+  const commissionAmount = Math.round(totalSales * commissionRate / 100);
+  const netRevenue = totalSales - commissionAmount;
+  
   const stats = [
     { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary", trend: { value: 12, isPositive: true } },
     { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground", trend: { value: 8, isPositive: true } },
-    { label: "Ventes", value: totalSales.toLocaleString() + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600", trend: { value: 23, isPositive: true } },
-    { label: "Vues", value: "2.4K", icon: Eye, color: "bg-blue-500/20 text-blue-600", trend: { value: 15, isPositive: true } },
+    { label: "Ventes brutes", value: totalSales.toLocaleString() + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600", trend: { value: 23, isPositive: true } },
+    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString() + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600", trend: { value: 15, isPositive: true } },
   ];
 
   const handleDeleteProduct = async (productId: string) => {
