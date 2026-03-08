@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct } from "@/hooks/useProducts";
+import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
@@ -31,6 +32,7 @@ const ProductDetail = () => {
   const { toast } = useToast();
   const { addItem } = useCart();
   const { t, formatPrice, currency, setCurrency } = useLanguage();
+  const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [quantity, setQuantity] = useState(1);
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
@@ -179,8 +181,19 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
-                    <Heart className="w-5 h-5 text-muted-foreground hover:text-destructive" />
+                  <button
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
+                        navigate("/auth");
+                        return;
+                      }
+                      toggleWishlist(product.id);
+                      toast({ title: isInWishlist(product.id) ? "Retiré des favoris" : "Ajouté aux favoris" });
+                    }}
+                    className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  >
+                    <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
                   <button className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
                     <Share2 className="w-5 h-5 text-muted-foreground" />

@@ -5,23 +5,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { Plus, Loader2, Upload, X, Tag, Zap } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
+
 
 interface AddProductModalProps {
   open: boolean;
@@ -40,8 +34,10 @@ const promoTypes = [
 
 const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddProductModalProps) => {
   const { toast } = useToast();
+  const { uploadImages, uploading } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [newProduct, setNewProduct] = useState({
@@ -63,28 +59,23 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     const files = e.target.files;
     if (!files) return;
 
-    // Convert to base64 for preview (in real app, would upload to storage)
     Array.from(files).forEach((file) => {
-      if (images.length >= 5) {
-        toast({
-          title: "Limite atteinte",
-          description: "Maximum 5 images par produit",
-          variant: "destructive",
-        });
+      if (imageFiles.length >= 5) {
+        toast({ title: "Limite atteinte", description: "Maximum 5 images par produit", variant: "destructive" });
         return;
       }
-
+      setImageFiles((prev) => [...prev, file]);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImages((prev) => [...prev, result]);
+      reader.onload = (ev) => {
+        setImagePreviews((prev) => [...prev, ev.target?.result as string]);
       };
       reader.readAsDataURL(file);
     });
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +83,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     setIsLoading(true);
 
     try {
+      // Upload images to storage
+      let imageUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadImages(imageFiles);
+      }
+
       const { error } = await supabase.from("products").insert({
         name: newProduct.name,
         description: newProduct.description,
@@ -103,7 +100,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         is_organic: newProduct.is_organic,
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
-        images: images.length > 0 ? images : null,
+        images: imageUrls.length > 0 ? imageUrls : null,
       });
 
       if (error) throw error;
@@ -114,20 +111,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
       });
 
       setNewProduct({
-        name: "",
-        description: "",
-        price: "",
-        originalPrice: "",
-        discount: "",
-        promoType: "none",
-        category: "",
-        unit: "kg",
-        quantity_available: "",
-        location: "",
-        is_organic: false,
-        min_order: "1",
+        name: "", description: "", price: "", originalPrice: "", discount: "",
+        promoType: "none", category: "", unit: "kg", quantity_available: "",
+        location: "", is_organic: false, min_order: "1",
       });
-      setImages([]);
+      setImageFiles([]);
+      setImagePreviews([]);
       
       onProductAdded();
       onOpenChange(false);
@@ -172,20 +161,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
               className="hidden"
             />
             
-            {images.length > 0 && (
+            {imagePreviews.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
+                {imagePreviews.map((img, idx) => (
                   <div key={idx} className="relative flex-shrink-0">
-                    <img 
-                      src={img} 
-                      alt="" 
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-                    >
+                    <img src={img} alt="" className="w-20 h-20 object-cover rounded-lg" />
+                    <button type="button" onClick={() => removeImage(idx)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -193,18 +175,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
               </div>
             )}
             
-            {images.length < 5 && (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-              >
+            {imagePreviews.length < 5 && (
+              <div onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
                 <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Cliquez pour ajouter des images
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG jusqu'à 5MB ({5 - images.length} restantes)
-                </p>
+                <p className="text-sm text-muted-foreground">Cliquez pour ajouter des images</p>
+                <p className="text-xs text-muted-foreground mt-1">PNG, JPG jusqu'à 5MB ({5 - imagePreviews.length} restantes)</p>
               </div>
             )}
           </div>
