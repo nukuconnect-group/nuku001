@@ -26,7 +26,7 @@ const DeliveryTracking = () => {
   const fetchOrders = async (prof: any) => {
     const { data } = await supabase
       .from("orders")
-      .select("*, products(name, images, category, unit, price)")
+      .select("*, products(name, images, category, unit, price), profiles!orders_seller_id_fkey(full_name)")
       .or(`buyer_id.eq.${prof.id},seller_id.eq.${prof.id}`)
       .order("created_at", { ascending: false });
     setOrders(data || []);
