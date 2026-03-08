@@ -326,7 +326,7 @@ const Marketplace = () => {
                       ))}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="font-heading text-sm font-bold text-primary-foreground">{formatPrice(product.price)}</span>
+                      <span className="font-heading text-sm font-bold text-primary-foreground">{fmtPrice(product.price)}</span>
                       <span className="text-[8px] text-primary-foreground/60">{product.location}</span>
                     </div>
                   </div>
