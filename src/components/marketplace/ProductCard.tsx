@@ -106,13 +106,30 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
             {product.isOrganic && <Badge className="bg-secondary text-secondary-foreground font-bold text-[9px] px-1 py-0 rounded-sm">BIO</Badge>}
           </div>
 
-          {/* Compare button */}
-          <button
-            onClick={handleCompare}
-            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary transition-colors sm:opacity-0 sm:group-hover:opacity-100"
-          >
-            <GitCompareArrows className="w-3 h-3" />
-          </button>
+          {/* Compare & Wishlist buttons */}
+          <div className="absolute top-1.5 right-1.5 flex flex-col gap-1">
+            <button
+              onClick={handleCompare}
+              className="w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+            >
+              <GitCompareArrows className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isAuthenticated) {
+                  toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
+                  navigate("/auth");
+                  return;
+                }
+                toggleWishlist(product.id);
+              }}
+              className="w-6 h-6 rounded-sm bg-white/80 backdrop-blur-sm flex items-center justify-center transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+            >
+              <Heart className={`w-3 h-3 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground hover:text-destructive"}`} />
+            </button>
+          </div>
 
           {/* Quick Add overlay */}
           <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
