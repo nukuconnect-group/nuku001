@@ -15,15 +15,8 @@ const Index = () => {
     <div className="min-h-screen pb-14 lg:pb-0">
       <Header />
       <main>
-        {/* HeroCarousel: desktop/tablet only */}
-        <div className="hidden md:block">
-          <HeroCarousel />
-        </div>
-        {/* PromoBannerSlider: mobile only - with products & farmers */}
         <PromoBannerSlider />
-        <div className="lg:hidden">
-          <FeaturedProducts />
-        </div>
+        <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />
