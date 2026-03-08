@@ -14,26 +14,22 @@ const banners = [
     title: "Livraison gratuite",
     subtitle: "Sur votre première commande",
     code: "NUKU2026",
-    codeLabel: "Code promo",
-    cta: "Commander maintenant",
+    cta: "Commander",
     link: "/marketplace",
-    gradient: "from-primary via-primary/90 to-primary/70",
   },
   {
     image: promoBanner2,
     title: "Produits de saison",
-    subtitle: "Jusqu'à -40% sur les fruits & légumes",
+    subtitle: "Jusqu'à -40%",
     cta: "Voir les offres",
     link: "/marketplace?category=agriculture",
-    gradient: "from-orange-600 via-orange-500 to-amber-500",
   },
   {
     image: promoBanner3,
     title: "Devenez vendeur",
-    subtitle: "Vendez vos produits à des milliers d'acheteurs",
-    cta: "S'inscrire gratuitement",
+    subtitle: "Rejoignez la communauté",
+    cta: "S'inscrire",
     link: "/auth",
-    gradient: "from-emerald-700 via-emerald-600 to-emerald-500",
   },
 ];
 
@@ -53,7 +49,7 @@ const PromoBannerSlider = () => {
 
   return (
     <div className="md:hidden">
-      {/* Promo Banner Slider - Full width with padding */}
+      {/* Banner Slider */}
       <div className="px-3 pt-2 pb-1">
         <div className="relative overflow-hidden rounded-2xl shadow-lg">
           <div
@@ -61,30 +57,33 @@ const PromoBannerSlider = () => {
             style={{ transform: `translateX(-${current * 100}%)` }}
           >
             {banners.map((banner, i) => (
-              <Link key={i} to={banner.link} className="w-full flex-shrink-0 relative block">
-                <div className={`relative h-44 sm:h-52 rounded-2xl overflow-hidden bg-gradient-to-r ${banner.gradient}`}>
+              <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
+                <div className="relative h-48 sm:h-56">
+                  {/* Full image */}
                   <img
                     src={banner.image}
                     alt={banner.title}
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-40"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <div className="relative z-10 h-full flex flex-col justify-center px-5 sm:px-7">
-                    <h3 className="text-white font-heading font-extrabold text-xl sm:text-2xl leading-tight drop-shadow-md">
+                  {/* Dark overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  {/* Text content pinned to bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                    <h3 className="text-white font-heading font-extrabold text-lg sm:text-xl leading-tight">
                       {banner.title}
                     </h3>
-                    <p className="text-white/90 text-sm sm:text-base mt-1 font-medium drop-shadow-sm">
+                    <p className="text-white/80 text-xs sm:text-sm mt-0.5">
                       {banner.subtitle}
                     </p>
-                    {banner.code && (
-                      <div className="mt-3 inline-flex items-center gap-2 bg-white/25 backdrop-blur-sm rounded-lg px-3 py-1.5 w-fit border border-white/20">
-                        <span className="text-white font-bold text-sm sm:text-base tracking-widest">{banner.code}</span>
-                        <span className="text-white/80 text-xs">{banner.codeLabel}</span>
-                      </div>
-                    )}
-                    <div className="mt-3">
-                      <span className="inline-block bg-white text-foreground font-bold text-xs sm:text-sm px-5 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow">
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="inline-block bg-white text-foreground font-bold text-[11px] sm:text-xs px-4 py-1.5 rounded-full">
                         {banner.cta}
                       </span>
+                      {banner.code && (
+                        <span className="inline-block bg-white/20 backdrop-blur-sm text-white font-bold text-[11px] px-3 py-1.5 rounded-full border border-white/30 tracking-wider">
+                          {banner.code}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -92,26 +91,19 @@ const PromoBannerSlider = () => {
             ))}
           </div>
           {/* Dots */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-2 right-4 flex gap-1.5">
             {banners.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`rounded-full transition-all ${i === current ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"}`}
-              />
+              <button key={i} onClick={(e) => { e.preventDefault(); setCurrent(i); }}
+                className={`rounded-full transition-all ${i === current ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`} />
             ))}
           </div>
-          {/* Nav arrows */}
-          <button
-            onClick={() => setCurrent((prev) => (prev - 1 + banners.length) % banners.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-95"
-          >
+          {/* Arrows */}
+          <button onClick={(e) => { e.preventDefault(); setCurrent((prev) => (prev - 1 + banners.length) % banners.length); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => setCurrent((prev) => (prev + 1) % banners.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-95"
-          >
+          <button onClick={(e) => { e.preventDefault(); setCurrent((prev) => (prev + 1) % banners.length); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -127,14 +119,14 @@ const PromoBannerSlider = () => {
               <p className="text-[9px] text-muted-foreground">Producteurs</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-accent/5 border border-accent/10">
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
             <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-foreground">Bio</p>
               <p className="text-[9px] text-muted-foreground">Certifié</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted border border-border">
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
             <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-foreground">50K+</p>
@@ -144,7 +136,7 @@ const PromoBannerSlider = () => {
         </div>
       </div>
 
-      {/* Recent Products Horizontal Scroll */}
+      {/* Recent Products */}
       {recentProducts.length > 0 && (
         <div className="px-3 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -153,8 +145,7 @@ const PromoBannerSlider = () => {
           </div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
             {recentProducts.map((product) => (
-              <Link key={product.id} to={`/produit/${product.id}`}
-                className="flex-shrink-0 w-32 group">
+              <Link key={product.id} to={`/produit/${product.id}`} className="flex-shrink-0 w-32 group">
                 <div className="relative h-28 rounded-xl overflow-hidden bg-muted mb-1.5">
                   <img src={product.image} alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -166,14 +157,13 @@ const PromoBannerSlider = () => {
                 </div>
                 <p className="text-[11px] font-medium text-foreground line-clamp-1">{product.name}</p>
                 <p className="text-[10px] font-bold text-primary">{formatPrice(product.price)}/{product.unit}</p>
-                <p className="text-[9px] text-muted-foreground line-clamp-1">{product.producer.name}</p>
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      {/* Farmers Interconnection */}
+      {/* Active Farmers */}
       {recentProducts.length > 0 && (
         <div className="px-3 py-2">
           <div className="flex items-center justify-between mb-2">
@@ -187,13 +177,9 @@ const PromoBannerSlider = () => {
               <Link key={producer.id} to={`/producteurs/${producer.name}`}
                 className="flex-shrink-0 flex flex-col items-center gap-1 w-16 group">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                  <img src={producer.avatar} alt={producer.name}
-                    className="w-full h-full object-cover" />
+                  <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-[9px] font-medium text-foreground text-center line-clamp-1 w-full">{producer.name.split(' ')[0]}</p>
-                {producer.verified && (
-                  <Badge variant="secondary" className="text-[7px] px-1 py-0 h-3">Vérifié</Badge>
-                )}
               </Link>
             ))}
           </div>
