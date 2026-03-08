@@ -32,6 +32,7 @@ const ProductDetail = () => {
   const { toast } = useToast();
   const { addItem } = useCart();
   const { t, formatPrice, currency, setCurrency } = useLanguage();
+  const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [quantity, setQuantity] = useState(1);
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
