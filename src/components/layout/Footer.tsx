@@ -45,7 +45,7 @@ const Footer = () => {
         <div className="absolute inset-0 backdrop-blur-sm" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.85) 0%, rgba(0, 107, 0, 0.88) 100%)" }} />
       </div>
       {/* App Download Section */}
-      <div className="border-b border-white/15">
+      <div className="border-b border-white/15 relative z-10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-3 sm:gap-4 text-center lg:text-left">
