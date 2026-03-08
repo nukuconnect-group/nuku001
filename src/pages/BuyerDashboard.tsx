@@ -644,6 +644,23 @@ const BuyerDashboard = () => {
               </Card>
             </TabsContent>
 
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <Card>
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <Settings className="w-10 h-10 mx-auto text-primary mb-3" />
+                  <h3 className="font-heading text-sm font-semibold mb-1">Paramètres du profil</h3>
+                  <p className="text-xs text-muted-foreground mb-4">Modifiez votre photo, vos informations et vos images d'arrière-plan</p>
+                  <Link to="/settings">
+                    <Button variant="hero" className="gap-2 text-xs">
+                      <Settings className="w-4 h-4" />
+                      Accéder aux paramètres
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
           </Tabs>
         </div>
       </main>
