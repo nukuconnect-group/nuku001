@@ -74,7 +74,7 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
               <Link key={cat.id} to={`/marketplace?category=${cat.id}`}
                 className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30 hover:bg-card hover:shadow-soft transition-all group">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <cat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-base sm:text-xl">{cat.emoji}</span>
                 </div>
                 <span className="text-[10px] sm:text-xs font-medium text-foreground text-center leading-tight">{cat.name}</span>
               </Link>
