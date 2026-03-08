@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
@@ -44,6 +44,8 @@ const Auth = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -168,6 +170,44 @@ const Auth = () => {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!magicLinkEmail.trim()) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setMagicLinkSent(true);
+      toast({
+        title: "Lien envoyé !",
+        description: "Vérifiez votre boîte email pour vous connecter.",
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue.",
         variant: "destructive",
       });
     } finally {
@@ -368,6 +408,54 @@ const Auth = () => {
                         )}
                       </Button>
                     </form>
+
+                    <div className="relative my-5">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-border" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">ou</span>
+                      </div>
+                    </div>
+
+                    {magicLinkSent ? (
+                      <div className="text-center space-y-3">
+                        <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                          <Mail className="w-6 h-6 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-foreground">Lien envoyé !</p>
+                        <p className="text-xs text-muted-foreground">
+                          Vérifiez votre boîte email <strong>{magicLinkEmail}</strong> et cliquez sur le lien pour vous connecter.
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setMagicLinkSent(false); setMagicLinkEmail(""); }}
+                          className="text-xs"
+                        >
+                          <ArrowLeft className="w-3 h-3 mr-1" /> Réessayer
+                        </Button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleMagicLink} className="space-y-3">
+                        <p className="text-xs text-center text-muted-foreground">Connexion sans mot de passe via email</p>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="email"
+                            placeholder="votre@email.com"
+                            value={magicLinkEmail}
+                            onChange={(e) => setMagicLinkEmail(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" variant="outline" className="w-full gap-2" disabled={isLoading}>
+                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                          Recevoir un lien de connexion
+                        </Button>
+                      </form>
+                    )}
                   </CardContent>
                 </TabsContent>
 
