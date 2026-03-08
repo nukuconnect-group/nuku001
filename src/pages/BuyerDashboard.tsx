@@ -14,7 +14,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown
+  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
