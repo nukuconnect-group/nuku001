@@ -213,7 +213,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                 <div className="flex-1">
                   <SheetTitle className="text-left">{profile?.full_name || user.email}</SheetTitle>
                   <SheetDescription className="text-left">
-                    {profile?.user_type === "producer" ? "Producteur" : "Acheteur"}
+                    {profile?.user_type === "producer" ? "Fournisseur" : "Acheteur"}
                   </SheetDescription>
                 </div>
               </div>
