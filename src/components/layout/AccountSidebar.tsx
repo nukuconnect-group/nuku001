@@ -188,11 +188,13 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     navigate("/");
   };
 
+  const dashboardHref = profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
+
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
-    { icon: LayoutDashboard, label: "Tableau de bord", href: profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard", show: true },
+    { icon: LayoutDashboard, label: "Tableau de bord", href: dashboardHref, show: true },
     { icon: Heart, label: "Mes Favoris", href: "/favoris", show: true },
-    { icon: ShoppingBag, label: "Mes commandes", href: "/orders", show: true },
+    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
     { icon: Crown, label: "Plans & Tarifs", href: "/plans", show: true },
   ];
