@@ -16,6 +16,7 @@ import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/da
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
+import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
