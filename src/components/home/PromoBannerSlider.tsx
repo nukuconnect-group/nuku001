@@ -5,7 +5,6 @@ import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { products as mockProducts } from "@/data/marketplace";
-import { Badge } from "@/components/ui/badge";
 import promoBanner1 from "@/assets/promo-banner-1.jpg";
 import promoBanner2 from "@/assets/promo-banner-2.jpg";
 import promoBanner3 from "@/assets/promo-banner-3.jpg";
