@@ -156,11 +156,10 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-card shadow-sm">
-        {/* Row 1: Top Bar (Desktop) */}
-        <div className="hidden lg:block bg-muted/50 border-b border-border">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-8 text-xs">
+      {/* Row 1: Top Bar (Desktop) - scrolls away */}
+      <div className="hidden lg:block bg-muted/50 border-b border-border z-40">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-8 text-xs">
               <button onClick={() => setLocationDialogOpen(true)}
                 className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                 <Truck className="w-3.5 h-3.5" />
