@@ -16,7 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
-  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet, Crown
+  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet
 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 
