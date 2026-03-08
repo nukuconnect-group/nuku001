@@ -58,6 +58,7 @@ const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
+  const { toast } = useToast();
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
