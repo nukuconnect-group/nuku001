@@ -135,7 +135,7 @@ const PromoBannerSlider = () => {
             <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide md:hidden">
               {recentProducts.map((product) => (
                 <div key={product.id} className="flex-shrink-0 w-[140px]">
-                  <ProductCard product={product} viewMode="grid" />
+                  <ProductCard product={product} viewMode="grid" hideProducer />
                 </div>
               ))}
             </div>
