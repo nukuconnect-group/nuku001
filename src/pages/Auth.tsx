@@ -107,11 +107,18 @@ const Auth = () => {
       if (redirected) return;
       redirected = true;
       
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("user_id", userId)
-        .maybeSingle();
+      // Retry fetching profile in case trigger hasn't created it yet (Google login)
+      let profileData = null;
+      for (let i = 0; i < 4; i++) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("user_id", userId)
+          .maybeSingle();
+        profileData = data;
+        if (profileData) break;
+        await new Promise(r => setTimeout(r, 800));
+      }
       
       if (profileData?.user_type === "producer") {
         navigate("/dashboard", { replace: true });
