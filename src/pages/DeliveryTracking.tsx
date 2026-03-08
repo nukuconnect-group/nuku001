@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
-  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw
+  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown
 } from "lucide-react";
 
 const DeliveryTracking = () => {
