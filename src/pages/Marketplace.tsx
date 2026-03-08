@@ -58,18 +58,25 @@ const Marketplace = () => {
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
+  const { data: activeBoosts = [] } = useActiveBoosts();
   
-  // Real DB products first, then a few mock products as filler
+  // Real DB products first, boosted on top, then a few mock products as filler
   const allProducts = useMemo(() => {
     const db = dbProducts || [];
     if (db.length > 0) {
-      // Show all real products + max 4 mock as "suggestions"
       const mockFiller = mockProducts.slice(0, Math.max(0, 4 - Math.floor(db.length / 2)));
-      return [...db, ...mockFiller];
+      const combined = [...db, ...mockFiller];
+      // Sort: boosted products first
+      const boostedIds = new Set(activeBoosts.map(b => b.product_id));
+      combined.sort((a, b) => {
+        const aBoost = boostedIds.has(a.id) ? 1 : 0;
+        const bBoost = boostedIds.has(b.id) ? 1 : 0;
+        return bBoost - aBoost;
+      });
+      return combined;
     }
-    // No real products yet: show mock as demo
     return mockProducts;
-  }, [dbProducts]);
+  }, [dbProducts, activeBoosts]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
