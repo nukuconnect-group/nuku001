@@ -79,7 +79,7 @@ const Cart = () => {
 
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
   const deliveryPrice = selectedDelivery?.price || 0;
-  const finalTotal = total + deliveryPrice;
+  const finalTotal = total + deliveryPrice - promoDiscount;
 
   const handleCheckout = async () => {
     if (!user) {
