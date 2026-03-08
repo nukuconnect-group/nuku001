@@ -533,6 +533,13 @@ const Dashboard = () => {
           profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
           editProduct={editingProduct} />
       )}
+
+      <ProductBoostModal
+        open={!!boostProduct}
+        onOpenChange={(open) => { if (!open) setBoostProduct(null); }}
+        product={boostProduct}
+        onBoostSuccess={() => { if (profile) fetchProducts(profile.id); }}
+      />
       <Footer />
       <MobileBottomNav />
     </div>
