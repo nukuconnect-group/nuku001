@@ -18,6 +18,7 @@ import Formations from "./pages/Formations";
 import Traceability from "./pages/Traceability";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
@@ -92,6 +93,7 @@ const App = () => {
                 <Route path="/tracabilite" element={<Traceability />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                 <Route path="/panier" element={<Cart />} />

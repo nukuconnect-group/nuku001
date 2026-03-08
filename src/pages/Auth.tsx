@@ -50,6 +50,8 @@ const Auth = () => {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -183,6 +185,28 @@ const Auth = () => {
         description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Email envoyé", description: "Vérifiez votre boîte email pour réinitialiser votre mot de passe." });
+        setForgotMode(false);
+        setForgotEmail("");
+      }
+    } catch {
+      toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -430,6 +454,16 @@ const Auth = () => {
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => { setForgotMode(true); setForgotEmail(loginEmail); }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Mot de passe oublié ?
+                        </button>
                       </div>
 
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
@@ -796,6 +830,35 @@ const Auth = () => {
       </main>
 
       <Footer />
+
+      {/* Forgot password sheet */}
+      <Sheet open={forgotMode} onOpenChange={setForgotMode}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Mot de passe oublié</SheetTitle>
+          </SheetHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+            </p>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="votre@email.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+            <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Envoyer le lien
+            </Button>
+          </form>
+        </SheetContent>
+      </Sheet>
 
       {/* Legal preview sheet */}
       <Sheet open={legalSheet !== null} onOpenChange={() => setLegalSheet(null)}>
