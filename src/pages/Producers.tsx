@@ -14,6 +14,7 @@ import {
   Filter, Users, Package, Navigation, Loader2, User
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
