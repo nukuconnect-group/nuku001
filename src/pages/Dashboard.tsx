@@ -178,6 +178,18 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Buyer Demands */}
+          <Card className="mb-4 sm:mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                <ShoppingCart className="w-3.5 h-3.5 text-accent-foreground" />
+                Demandes d'achat des acheteurs
+              </h3>
+              <p className="text-[10px] text-muted-foreground mb-2">Découvrez ce que les acheteurs recherchent</p>
+              <DemandsList limit={5} />
+            </CardContent>
+          </Card>
+
           {/* Tabs */}
           <Tabs defaultValue="products" className="space-y-3 sm:space-y-4">
             <TabsList className="bg-muted p-0.5 sm:p-1 w-full overflow-x-auto flex">
