@@ -37,24 +37,35 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth", { replace: true }); return; }
+      if (cancelled) return;
       setUser(session.user);
       const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
+      if (cancelled) return;
+      
+      // If user is a buyer, redirect to buyer dashboard
+      if (profileData?.user_type === "buyer") {
+        navigate("/buyer-dashboard", { replace: true });
+        return;
+      }
+      
       setProfile(profileData);
       if (profileData) {
-        // Fetch products and orders in parallel
         const [prodRes, ordersRes] = await Promise.all([
           supabase.from("products").select("*").eq("producer_id", profileData.id).order("created_at", { ascending: false }),
           supabase.from("orders").select("*, products(*)").eq("seller_id", profileData.id).order("created_at", { ascending: false }),
         ]);
+        if (cancelled) return;
         setProducts(prodRes.data || []);
         setOrders(ordersRes.data || []);
       }
       setIsLoading(false);
     };
     checkAuth();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
