@@ -563,6 +563,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_user_subscription: {
+        Args: {
+          p_billing_period: string
+          p_expires_at?: string
+          p_max_products: number
+          p_plan: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
