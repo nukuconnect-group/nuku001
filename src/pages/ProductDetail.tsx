@@ -37,6 +37,7 @@ const ProductDetail = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [message, setMessage] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isSending, setIsSending] = useState(false);
 
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
@@ -61,34 +62,44 @@ const ProductDetail = () => {
     }
   };
 
-  const handleContactSeller = async () => {
+  const handleOpenChat = () => {
     if (!product) return;
+    const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
+    setMessage(autoMessage);
+    setShowContactForm(true);
+  };
+
+  const handleSendAndRedirect = async () => {
+    if (!product || !message.trim()) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le vendeur", variant: "destructive" });
+      toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
       navigate("/auth");
       return;
     }
-    if (message.trim()) {
-      try {
-        const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
-        if (!buyerProfile) throw new Error("Profile not found");
-        const sellerId = product.producer.id;
-        const { data: existingConv } = await supabase.from("conversations").select("id").eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
-        let conversationId = existingConv?.id;
-        if (!conversationId) {
-          const { data: newConv, error: convError } = await supabase.from("conversations").insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id }).select("id").single();
-          if (convError) throw convError;
-          conversationId = newConv.id;
-        }
-        await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
-        setMessage("");
-        setShowContactForm(false);
-      } catch (error: any) {
-        console.error("Send message error:", error);
+    setIsSending(true);
+    try {
+      const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
+      if (!buyerProfile) throw new Error("Profile not found");
+      const sellerId = product.producer.id;
+      const { data: existingConv } = await supabase.from("conversations").select("id").eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
+      let conversationId = existingConv?.id;
+      if (!conversationId) {
+        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id }).select("id").single();
+        if (convError) throw convError;
+        conversationId = newConv.id;
       }
+      await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+      toast({ title: "Message envoyé ✓", description: `Votre message a été envoyé à ${product.producer.name}` });
+      setMessage("");
+      setShowContactForm(false);
+      navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      toast({ title: "Erreur", description: "Impossible d'envoyer le message", variant: "destructive" });
+    } finally {
+      setIsSending(false);
     }
-    navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
   };
 
   if (isLoading && isUUID) {
@@ -262,34 +273,45 @@ const ProductDetail = () => {
                   </div>
                 </div>
 
-                {/* Action buttons — stacked on mobile */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs sm:text-sm w-full sm:w-auto" onClick={handleContactSeller}>
-                    <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{t("product.contactSeller")}
+                {/* Action buttons — marketplace style */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="gap-2 h-10 sm:h-11 text-xs sm:text-sm" onClick={handleAddToCart}>
+                    <ShoppingCart className="w-4 h-4" />Ajouter au panier
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleAddToCart}>
-                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />{t("product.addToCart")}
-                  </Button>
-                  <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleBuyNow}>
-                    <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Acheter
+                  <Button variant="hero" className="gap-2 h-10 sm:h-11 text-xs sm:text-sm" onClick={handleBuyNow}>
+                    <CreditCard className="w-4 h-4" />Acheter maintenant
                   </Button>
                 </div>
+                <Button variant="secondary" className="w-full gap-2 h-10 sm:h-11 text-xs sm:text-sm" onClick={handleOpenChat}>
+                  <MessageCircle className="w-4 h-4" />Discuter avec le fournisseur
+                </Button>
               </div>
 
-              {/* Contact form */}
+              {/* Inline chat form */}
               {showContactForm && (
-                <Card className="animate-fade-in">
+                <Card className="animate-fade-in border-primary/30">
                   <CardHeader className="p-3 pb-2">
-                    <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                    <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
                       <MessageCircle className="w-4 h-4 text-primary" />
-                      {t("product.sendMessage")} {product.producer.name}
+                      Message à {product.producer.name}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-3 pt-0 space-y-3">
-                    <Textarea placeholder={`Bonjour ${product.producer.name}...`} value={message} onChange={(e) => setMessage(e.target.value)} className="min-h-[80px] text-sm" />
-                    <Button variant="hero" size="sm" className="w-full gap-2 text-sm" onClick={handleContactSeller}>
-                      <Send className="w-3.5 h-3.5" />{t("product.send")}
-                    </Button>
+                  <CardContent className="p-3 pt-0 space-y-2">
+                    <Textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="min-h-[80px] text-xs sm:text-sm resize-none"
+                      placeholder="Votre message..."
+                    />
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowContactForm(false)}>
+                        Annuler
+                      </Button>
+                      <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleSendAndRedirect} disabled={isSending || !message.trim()}>
+                        {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        Envoyer et ouvrir la conversation
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
