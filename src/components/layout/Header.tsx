@@ -452,8 +452,11 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Row 4: Desktop Nav */}
-        <nav className="hidden lg:block bg-card border-b border-border">
+        </div>
+      </header>
+
+      {/* Row 4: Desktop Nav - scrolls away */}
+      <nav className="hidden lg:block bg-card border-b border-border z-40">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
               <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
