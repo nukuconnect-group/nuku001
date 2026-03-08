@@ -56,27 +56,26 @@ const PromoBannerSlider = () => {
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${current * 100}%)` }}
           >
-            {banners.map((banner, i) => (
+             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
                 <div className="relative h-48 sm:h-56">
-                  {/* Full image */}
                   <img
                     src={banner.image}
                     alt={banner.title}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                  {/* Dark overlay for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  {/* Text content pinned to bottom */}
+                  {/* Light gradient only at bottom for text */}
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Text pinned to bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                    <h3 className="text-white font-heading font-extrabold text-lg sm:text-xl leading-tight">
+                    <h3 className="text-white font-heading font-extrabold text-lg sm:text-xl leading-tight drop-shadow-lg">
                       {banner.title}
                     </h3>
-                    <p className="text-white/80 text-xs sm:text-sm mt-0.5">
+                    <p className="text-white/90 text-xs sm:text-sm mt-0.5 drop-shadow-md">
                       {banner.subtitle}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="inline-block bg-white text-foreground font-bold text-[11px] sm:text-xs px-4 py-1.5 rounded-full">
+                      <span className="inline-block bg-white text-foreground font-bold text-[11px] sm:text-xs px-4 py-1.5 rounded-full shadow-sm">
                         {banner.cta}
                       </span>
                       {banner.code && (
@@ -90,22 +89,13 @@ const PromoBannerSlider = () => {
               </Link>
             ))}
           </div>
-          {/* Dots */}
+          {/* Dots only - no arrows */}
           <div className="absolute bottom-2 right-4 flex gap-1.5">
             {banners.map((_, i) => (
               <button key={i} onClick={(e) => { e.preventDefault(); setCurrent(i); }}
                 className={`rounded-full transition-all ${i === current ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/50"}`} />
             ))}
           </div>
-          {/* Arrows */}
-          <button onClick={(e) => { e.preventDefault(); setCurrent((prev) => (prev - 1 + banners.length) % banners.length); }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button onClick={(e) => { e.preventDefault(); setCurrent((prev) => (prev + 1) % banners.length); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 flex items-center justify-center text-white">
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
