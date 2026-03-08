@@ -33,7 +33,7 @@ const steps = [
     description: "Suivez votre commande et recevez vos produits frais chez vous.",
     image: step4Image,
     link: "/suivi-livraison",
-    linkText: "Traçabilité"
+    linkText: "Suivre commande"
   }
 ];
 
