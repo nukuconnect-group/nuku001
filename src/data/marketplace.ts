@@ -229,10 +229,10 @@ export const products: Product[] = [
       totalSales: 312,
     },
     images: [
-      "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400",
-      "https://images.unsplash.com/photo-1569121555753-2a01f1c16b16?w=400",
+      "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&q=80",
+      "https://images.unsplash.com/photo-1569121555753-2a01f1c16b16?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400",
+    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&q=80",
     description: "Poulets élevés en plein air, alimentation naturelle garantie.",
     isOrganic: true,
     createdAt: "2025-01-23",
