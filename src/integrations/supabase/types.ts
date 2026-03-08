@@ -441,6 +441,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
@@ -468,6 +489,10 @@ export type Database = {
     }
     Functions: {
       count_user_products: { Args: { p_user_id: string }; Returns: number }
+      get_admin_orders: { Args: never; Returns: Json[] }
+      get_admin_stats: { Args: never; Returns: Json }
+      get_admin_subscriptions: { Args: never; Returns: Json[] }
+      get_admin_users: { Args: never; Returns: Json[] }
       get_user_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -476,9 +501,16 @@ export type Database = {
           status: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -605,6 +637,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
