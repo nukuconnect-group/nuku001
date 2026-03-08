@@ -57,6 +57,7 @@ const Marketplace = () => {
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
+  const { data: marketplaceCategories = [] } = useCategories();
   
   // Merge DB products with mock products (DB first)
   const allProducts = useMemo(() => {

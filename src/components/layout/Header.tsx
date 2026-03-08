@@ -48,6 +48,7 @@ const Header = () => {
   const [profile, setProfile] = useState<any>(null);
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
   const [customLocation, setCustomLocation] = useState("");

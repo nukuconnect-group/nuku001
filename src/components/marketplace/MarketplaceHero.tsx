@@ -73,7 +73,7 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
           {/* Category Icons - 3 per row on mobile */}
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-5 sm:mb-8">
             {mainCategories.map((cat) => (
-              <Link key={cat.id} to={`/marketplace?category=${cat.id}`}
+              <Link key={cat.id} to={`/marketplace?category=${cat.name.toLowerCase()}`}
                 className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30 hover:bg-card hover:shadow-soft transition-all group">
                 <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <span className="text-base sm:text-xl">{cat.emoji}</span>
