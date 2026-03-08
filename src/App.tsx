@@ -24,6 +24,7 @@ import Plans from "./pages/Plans";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
 import Notifications from "./pages/Notifications";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
