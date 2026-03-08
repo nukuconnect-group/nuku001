@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileSpreadsheet, Check, X, AlertTriangle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Check, X, AlertTriangle, Loader2, Pencil } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCategories } from "@/hooks/useCategories";
 
 interface ParsedProduct {
   name: string;
@@ -139,11 +142,23 @@ function parseCSV(text: string): ParsedProduct[] {
 
 const CSVProductImport = ({ profileId, onImportComplete }: CSVProductImportProps) => {
   const { toast } = useToast();
+  const { data: dbCategories = [] } = useCategories();
   const fileRef = useRef<HTMLInputElement>(null);
   const [parsed, setParsed] = useState<ParsedProduct[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"upload" | "preview" | "done">("upload");
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+
+  const updateProduct = (idx: number, field: keyof ParsedProduct, value: string | number) => {
+    setParsed(prev => prev.map((p, i) => {
+      if (i !== idx) return p;
+      const updated = { ...p, [field]: value };
+      updated.valid = updated.price > 0 && updated.name.length > 0;
+      updated.error = !updated.valid ? (updated.price <= 0 ? "Prix invalide" : "Nom manquant") : undefined;
+      return updated;
+    }));
+  };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -243,31 +258,97 @@ const CSVProductImport = ({ profileId, onImportComplete }: CSVProductImportProps
           </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0">
-          <ScrollArea className="h-[300px] mb-4">
+          <ScrollArea className="h-[360px] mb-4">
             <div className="space-y-2">
-              {parsed.map((p, i) => (
-                <div key={i} className={`flex items-center gap-3 p-2 rounded-lg border ${p.valid ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"}`}>
-                  {p.images[0] ? (
-                    <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <FileSpreadsheet className="w-4 h-4 text-muted-foreground" />
+              {parsed.map((p, i) => {
+                const isEditing = editingIdx === i;
+                return (
+                  <div key={i} className={`p-2.5 rounded-lg border transition-all ${p.valid ? "border-border bg-card" : "border-destructive/30 bg-destructive/5"}`}>
+                    <div className="flex items-center gap-3">
+                      {p.images[0] ? (
+                        <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                          <FileSpreadsheet className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
+                        {!isEditing && (
+                          <p className="text-[10px] text-muted-foreground">{p.category} • {p.price.toLocaleString()} FCFA</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => setEditingIdx(isEditing ? null : i)}
+                          className="p-1 rounded-md hover:bg-muted transition-colors"
+                        >
+                          <Pencil className={`w-3.5 h-3.5 ${isEditing ? "text-primary" : "text-muted-foreground"}`} />
+                        </button>
+                        {p.valid ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-destructive" />
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{p.category} • {p.price.toLocaleString()} FCFA</p>
+
+                    {/* Inline edit fields */}
+                    {isEditing && (
+                      <div className="mt-2 grid grid-cols-2 gap-2 animate-fade-in">
+                        <div>
+                          <label className="text-[9px] font-medium text-muted-foreground mb-0.5 block">Catégorie</label>
+                          <Select value={p.category} onValueChange={(v) => updateProduct(i, "category", v)}>
+                            <SelectTrigger className="h-8 text-[10px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dbCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.name} className="text-xs">
+                                  {cat.emoji} {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-medium text-muted-foreground mb-0.5 block">Prix (FCFA)</label>
+                          <Input
+                            type="number"
+                            value={p.price}
+                            onChange={(e) => updateProduct(i, "price", parseFloat(e.target.value) || 0)}
+                            className="h-8 text-[10px]"
+                            min={0}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-medium text-muted-foreground mb-0.5 block">Unité</label>
+                          <Select value={p.unit} onValueChange={(v) => updateProduct(i, "unit", v)}>
+                            <SelectTrigger className="h-8 text-[10px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["kg", "unité", "lot", "tonne", "sac", "litre", "pièce"].map((u) => (
+                                <SelectItem key={u} value={u} className="text-xs">{u}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-medium text-muted-foreground mb-0.5 block">Stock</label>
+                          <Input
+                            type="number"
+                            value={p.quantity}
+                            onChange={(e) => updateProduct(i, "quantity", parseInt(e.target.value) || 0)}
+                            className="h-8 text-[10px]"
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {p.valid ? (
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <X className="w-4 h-4 text-destructive" />
-                      <span className="text-[9px] text-destructive">{p.error}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </ScrollArea>
 
