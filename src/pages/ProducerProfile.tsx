@@ -198,6 +198,13 @@ const ProducerProfile = () => {
                     </div>
                     <span className="text-sm text-muted-foreground">Produits</span>
                   </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <ShoppingBag className="w-5 h-5 text-primary" />
+                      <span className="font-heading text-2xl font-bold text-foreground">{salesCount}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">Ventes</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
