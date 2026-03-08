@@ -18,6 +18,7 @@ import {
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
   CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet, Crown
 } from "lucide-react";
+import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 
 const deliveryOptions = [
   { id: "pickup", name: "Retrait sur place", description: "Récupérez chez le producteur", price: 0, icon: Store, tag: "Gratuit" },
@@ -101,7 +102,8 @@ const Cart = () => {
       const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
       
       if (!hasRealProducts) {
-        // Simulate successful order for demo/mock products
+        // Generate invoice for demo products
+        generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", profile?.full_name, profile?.phone, deliveryCity, deliveryAddress, mobileNumber);
         toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
         clearCart();
         navigate("/suivi-livraison");
@@ -134,6 +136,8 @@ const Cart = () => {
         if (error) throw error;
       }
 
+      // Generate PDF invoice
+      generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", profile?.full_name, profile?.phone, deliveryCity, deliveryAddress, mobileNumber);
       toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
       clearCart();
       navigate("/suivi-livraison");
