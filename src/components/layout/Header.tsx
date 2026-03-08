@@ -305,7 +305,7 @@ const Header = () => {
                 <img src={nukuLogo} alt="NUKUCONNECT"
                   className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5 hidden sm:block" />
                 <img src={nukuLogoWhite} alt="NUKUCONNECT"
-                  className="h-7 object-contain sm:hidden" />
+                  className="h-9 object-contain sm:hidden" />
                 <span className="font-heading font-bold text-sm sm:text-base lg:text-lg text-primary-foreground hidden sm:block">
                   NUKUCONNECT
                 </span>
