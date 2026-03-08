@@ -46,7 +46,7 @@ const Header = () => {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const { lang, setLang, currency, setCurrency, t } = useLanguage();
+  const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
