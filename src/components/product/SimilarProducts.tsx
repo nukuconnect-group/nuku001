@@ -13,15 +13,23 @@ const SimilarProducts = ({ currentProduct }: SimilarProductsProps) => {
   const { formatPrice } = useLanguage();
 
   const similar = useMemo(() => {
-    return mockProducts
+    // First: same category or location
+    let results = mockProducts
       .filter(p => p.id !== currentProduct.id && (
         p.category === currentProduct.category ||
         p.location === currentProduct.location
-      ))
-      .slice(0, 6);
+      ));
+    
+    // If not enough, fill with other products
+    if (results.length < 6) {
+      const remaining = mockProducts.filter(p => 
+        p.id !== currentProduct.id && !results.find(r => r.id === p.id)
+      );
+      results = [...results, ...remaining];
+    }
+    
+    return results.slice(0, 6);
   }, [currentProduct]);
-
-  if (similar.length === 0) return null;
 
   return (
     <div className="mt-8 sm:mt-12">

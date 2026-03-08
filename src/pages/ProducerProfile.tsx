@@ -71,20 +71,25 @@ const ProducerProfile = () => {
       <Header />
 
       <main>
+        {/* Cover Image */}
+        <div className="relative w-full h-32 sm:h-48 lg:h-56 bg-gradient-hero overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
+        </div>
+
         {/* Back Button */}
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 -mt-20 sm:-mt-24 relative z-10">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Retour</span>
           </button>
         </div>
 
-        <div className="container mx-auto px-4 pb-12">
+        <div className="container mx-auto px-4 pb-12 -mt-8 sm:-mt-12 relative z-10">
           {/* Producer Header */}
-          <Card className="mb-8">
+          <Card className="mb-8 shadow-elevated">
             <CardContent className="p-6 lg:p-8">
               <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                 <img
