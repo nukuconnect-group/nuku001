@@ -21,6 +21,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import CategoryManager from "@/components/admin/CategoryManager";
+import BroadcastNotification from "@/components/admin/BroadcastNotification";
+import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 
 const COLORS = [
   'hsl(var(--primary))',
