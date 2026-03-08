@@ -16,6 +16,8 @@ export function useCategories(activeOnly = true) {
     queryKey: ["categories", activeOnly],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
+
+      let query = supabase
         .from("categories")
         .select("*")
         .order("sort_order", { ascending: true });
@@ -32,7 +34,7 @@ export function useCategories(activeOnly = true) {
       return (data as unknown as DbCategory[]) || [];
     },
     staleTime: 1000 * 60 * 5,
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 8000),
   });
 }
