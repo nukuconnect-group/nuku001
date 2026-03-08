@@ -40,6 +40,10 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [mobileNumber, setMobileNumber] = useState("");
 
+  // Promo
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
+
   // Load user profile and auto-fill billing
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
