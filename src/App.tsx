@@ -25,6 +25,7 @@ import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
 import Notifications from "./pages/Notifications";
 import Favorites from "./pages/Favorites";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ const App = () => {
                 <Route path="/a-propos" element={<About />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/favoris" element={<Favorites />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
