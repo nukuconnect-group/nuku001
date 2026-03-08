@@ -622,6 +622,11 @@ const BuyerDashboard = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <SettingsPanel profile={profile} user={user} onProfileUpdate={(updated: any) => setProfile(updated)} />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
