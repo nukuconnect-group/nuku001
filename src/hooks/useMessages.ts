@@ -23,7 +23,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
     const { data } = await supabase
       .from("messages")
-      .select("id, content, sender_id, is_read, created_at")
+      .select("id, content, sender_id, is_read, created_at, reply_to_id")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
