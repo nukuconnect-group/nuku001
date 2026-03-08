@@ -41,7 +41,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare }: ProductCardProps
 
   if (viewMode === "list") {
     return (
-      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300">
+      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-lg">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-48 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
