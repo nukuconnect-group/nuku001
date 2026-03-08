@@ -18,9 +18,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -36,27 +34,22 @@ const Settings = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const load = async (userId: string) => {
-      const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
-        setPhone(data.phone || "");
-        setLocation(data.location || "");
-        setBio(data.bio || "");
-        const imgs = (data as any).cover_images as string[] | null;
-        setCoverImages(imgs && imgs.length > 0 ? imgs : data.cover_url ? [data.cover_url] : []);
-      }
-      setIsLoading(false);
-    };
+  const profile = ctxProfile;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { navigate("/auth", { replace: true }); return; }
-      setUser(session.user);
-      load(session.user.id);
-    });
-  }, [navigate]);
+  useEffect(() => {
+    if (!isLoading && !user) navigate("/auth", { replace: true });
+  }, [isLoading, user, navigate]);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setPhone(profile.phone || "");
+      setLocation(profile.location || "");
+      setBio(profile.bio || "");
+      const imgs = (profile as any).cover_images as string[] | null;
+      setCoverImages(imgs && imgs.length > 0 ? imgs : profile.cover_url ? [profile.cover_url] : []);
+    }
+  }, [profile]);
 
   // Auto-rotate cover images
   useEffect(() => {
