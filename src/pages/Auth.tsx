@@ -49,6 +49,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
