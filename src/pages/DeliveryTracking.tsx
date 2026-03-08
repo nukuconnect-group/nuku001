@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
-  Truck, Package, Clock, CheckCircle2, Phone, 
+  Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw
 } from "lucide-react";
 
