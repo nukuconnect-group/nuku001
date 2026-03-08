@@ -30,10 +30,12 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
     return () => clearInterval(timer);
   }, []);
 
-  // Only show main sector categories (not sub-categories like cereales, fruits etc)
+  const { data: marketplaceCategories = [] } = useCategories();
+  
+  // Only show main sector categories
   const mainCategories = marketplaceCategories.filter(c => 
-    ["agriculture", "elevage", "pisciculture", "aquaculture", "agribusiness", "foresterie"].includes(c.id)
-  );
+    ["agriculture", "élevage", "pisciculture", "aquaculture", "agribusiness", "foresterie"].includes(c.name.toLowerCase())
+  ).slice(0, 6);
 
   return (
     <section className="relative py-6 sm:py-8 lg:py-12 overflow-hidden bg-gradient-to-b from-muted/50 to-background">
