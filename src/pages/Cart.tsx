@@ -12,11 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSubscription } from "@/hooks/useSubscription";
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ShoppingCart, Trash2, Plus, Minus, Truck, MapPin, Package,
-  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet, Crown
+  CreditCard, ArrowLeft, Store, Loader2, LogIn, Smartphone, Wallet
 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 
@@ -62,18 +62,10 @@ const Cart = () => {
   const deliveryPrice = selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice;
 
-  const { hasActiveSubscription, isLoading: subLoading } = useSubscription();
-
   const handleCheckout = async () => {
     if (!user) {
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
       navigate("/auth");
-      return;
-    }
-
-    if (!hasActiveSubscription) {
-      toast({ title: "Abonnement requis", description: "Vous devez souscrire à un plan d'adhésion pour passer commande.", variant: "destructive" });
-      navigate("/plans");
       return;
     }
 
@@ -203,22 +195,6 @@ const Cart = () => {
             </Card>
           )}
 
-          {user && !subLoading && !hasActiveSubscription && (
-            <Card className="mb-6 border-primary">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Crown className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-sm">Abonnement requis</p>
-                    <p className="text-xs text-muted-foreground">Souscrivez à un plan pour passer commande</p>
-                  </div>
-                </div>
-                <Link to="/plans">
-                  <Button variant="hero" size="sm">Voir les plans</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">

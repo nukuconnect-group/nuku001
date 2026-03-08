@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
-  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw
+  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown
 } from "lucide-react";
 
 const DeliveryTracking = () => {
@@ -25,7 +26,7 @@ const DeliveryTracking = () => {
   const fetchOrders = async (prof: any) => {
     const { data } = await supabase
       .from("orders")
-      .select("*, products(name, images, category, unit, price)")
+      .select("*, products(name, images, category, unit, price), profiles!orders_seller_id_fkey(full_name)")
       .or(`buyer_id.eq.${prof.id},seller_id.eq.${prof.id}`)
       .order("created_at", { ascending: false });
     setOrders(data || []);
@@ -45,7 +46,7 @@ const DeliveryTracking = () => {
       if (!session) { setIsLoading(false); return; }
       setUser(session.user);
       
-      const { data: prof } = await supabase.from("profiles").select("id, user_type").eq("user_id", session.user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("id, user_type, full_name, phone").eq("user_id", session.user.id).single();
       if (!mounted) return;
       setProfile(prof);
       
@@ -258,6 +259,38 @@ const DeliveryTracking = () => {
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
                         onClick={() => navigate("/messages")}>
                         <MessageCircle className="w-3.5 h-3.5" />Contacter
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
+                        onClick={() => {
+                          const order = selectedOrder;
+                          const notesParts = (order.notes || "").split(" | ");
+                          const deliveryInfo = notesParts.find((n: string) => n.startsWith("Livraison:")) || "Retrait sur place";
+                          const paymentInfo = notesParts.find((n: string) => n.startsWith("Paiement:"))?.replace("Paiement: ", "") || "Mobile Money";
+                          const telInfo = notesParts.find((n: string) => n.startsWith("Tél:"))?.replace("Tél: ", "") || "";
+                          
+                          const created = new Date(order.created_at);
+                          const invoiceNumber = `NK-${created.getFullYear()}${String(created.getMonth() + 1).padStart(2, "0")}${String(created.getDate()).padStart(2, "0")}-${order.id.substring(0, 6).toUpperCase()}`;
+                          
+                          generateInvoicePDF({
+                            invoiceNumber,
+                            date: created.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+                            buyerName: profile?.full_name || "Client",
+                            deliveryMethod: deliveryInfo,
+                            deliveryPrice: 0,
+                            paymentMethod: paymentInfo,
+                            mobileNumber: telInfo,
+                            items: [{
+                              name: order.products?.name || "Produit",
+                              quantity: Number(order.quantity),
+                              unitPrice: Number(order.products?.price || 0),
+                              unit: order.products?.unit || "unité",
+                              sellerName: order.profiles?.full_name || "Vendeur",
+                            }],
+                            subtotal: Number(order.total_price),
+                            total: Number(order.total_price),
+                          });
+                        }}>
+                        <FileDown className="w-3.5 h-3.5" />Facture PDF
                       </Button>
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
                         <AlertCircle className="w-3.5 h-3.5" />Signaler
