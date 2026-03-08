@@ -137,9 +137,9 @@ export const products: Product[] = [
       totalSales: 89,
     },
     images: [
-      "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400",
+      "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400",
+    image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=800&q=80",
     description: "Ignames de première qualité, récoltés cette saison.",
     isOrganic: true,
     createdAt: "2025-01-26",
