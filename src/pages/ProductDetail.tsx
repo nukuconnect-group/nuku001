@@ -62,34 +62,44 @@ const ProductDetail = () => {
     }
   };
 
-  const handleContactSeller = async () => {
+  const handleOpenChat = () => {
     if (!product) return;
+    const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
+    setMessage(autoMessage);
+    setShowContactForm(true);
+  };
+
+  const handleSendAndRedirect = async () => {
+    if (!product || !message.trim()) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le vendeur", variant: "destructive" });
+      toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
       navigate("/auth");
       return;
     }
-    if (message.trim()) {
-      try {
-        const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
-        if (!buyerProfile) throw new Error("Profile not found");
-        const sellerId = product.producer.id;
-        const { data: existingConv } = await supabase.from("conversations").select("id").eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
-        let conversationId = existingConv?.id;
-        if (!conversationId) {
-          const { data: newConv, error: convError } = await supabase.from("conversations").insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id }).select("id").single();
-          if (convError) throw convError;
-          conversationId = newConv.id;
-        }
-        await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
-        setMessage("");
-        setShowContactForm(false);
-      } catch (error: any) {
-        console.error("Send message error:", error);
+    setIsSending(true);
+    try {
+      const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
+      if (!buyerProfile) throw new Error("Profile not found");
+      const sellerId = product.producer.id;
+      const { data: existingConv } = await supabase.from("conversations").select("id").eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
+      let conversationId = existingConv?.id;
+      if (!conversationId) {
+        const { data: newConv, error: convError } = await supabase.from("conversations").insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: product.id }).select("id").single();
+        if (convError) throw convError;
+        conversationId = newConv.id;
       }
+      await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+      toast({ title: "Message envoyé ✓", description: `Votre message a été envoyé à ${product.producer.name}` });
+      setMessage("");
+      setShowContactForm(false);
+      navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      toast({ title: "Erreur", description: "Impossible d'envoyer le message", variant: "destructive" });
+    } finally {
+      setIsSending(false);
     }
-    navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
   };
 
   if (isLoading && isUUID) {
