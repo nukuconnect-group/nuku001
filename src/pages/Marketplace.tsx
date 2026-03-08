@@ -307,35 +307,33 @@ const Marketplace = () => {
             </div>
           </Link>
 
-          {/* Side cards - 2 columns, matching the hero grid */}
-          {rest.map((product) => (
-            <Link to={`/produit/${product.id}`} key={product.id} className="col-span-1 lg:col-span-auto block group">
-              <div className="relative rounded-xl overflow-hidden bg-muted h-full min-h-[140px] sm:min-h-[160px] lg:min-h-[165px]">
-                <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
-                <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-                  <Badge className="bg-accent/90 text-accent-foreground font-bold text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5 shadow-sm">NEW</Badge>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-2.5 lg:p-3">
-                  <span className="text-[7px] sm:text-[8px] uppercase tracking-wider text-primary-foreground/60 font-medium">{product.category}</span>
-                  <h4 className="font-heading text-[10px] sm:text-xs lg:text-sm font-semibold text-primary-foreground line-clamp-1 mb-0.5">{product.name}</h4>
-                  <div className="flex items-center gap-0.5 mb-0.5 sm:mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-primary-foreground/20"}`} />
-                    ))}
+          {/* Side cards */}
+          <div className="col-span-2 lg:col-span-7 grid grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
+            {rest.map((product) => (
+              <Link to={`/produit/${product.id}`} key={product.id} className="block group">
+                <div className="relative rounded-xl overflow-hidden bg-muted h-full min-h-[140px] sm:min-h-[160px] lg:min-h-[165px]">
+                  <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
+                  <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+                    <Badge className="bg-accent/90 text-accent-foreground font-bold text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5 shadow-sm">NEW</Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-heading text-xs sm:text-sm font-bold text-primary-foreground">{fmtPrice(product.price)}</span>
-                    <span className="text-[7px] sm:text-[8px] text-primary-foreground/60 truncate max-w-[40px] sm:max-w-none">{product.location}</span>
+                  <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-2.5 lg:p-3">
+                    <span className="text-[7px] sm:text-[8px] uppercase tracking-wider text-primary-foreground/60 font-medium">{product.category}</span>
+                    <h4 className="font-heading text-[10px] sm:text-xs lg:text-sm font-semibold text-primary-foreground line-clamp-1 mb-0.5">{product.name}</h4>
+                    <div className="flex items-center gap-0.5 mb-0.5 sm:mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-primary-foreground/20"}`} />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-heading text-xs sm:text-sm font-bold text-primary-foreground">{fmtPrice(product.price)}</span>
+                      <span className="text-[7px] sm:text-[8px] text-primary-foreground/60 truncate max-w-[40px] sm:max-w-none">{product.location}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    );
-  };
+              </Link>
+            ))}
+          </div>
 
   const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof allProducts; viewAll?: string }) => (
     <div className="mb-6 sm:mb-8">
