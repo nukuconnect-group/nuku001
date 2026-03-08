@@ -106,7 +106,9 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
         full_name: fullName, phone, location, bio,
       }).eq("id", profile.id);
       if (error) throw error;
-      onProfileUpdate({ ...profile, full_name: fullName, phone, location, bio });
+      const updated = { ...profile, full_name: fullName, phone, location, bio };
+      onProfileUpdate(updated);
+      updateCtxProfile({ full_name: fullName, phone, location, bio });
       toast({ title: "Profil mis à jour ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
