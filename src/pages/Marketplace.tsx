@@ -44,6 +44,9 @@ const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
   const [organicOnly, setOrganicOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [discountOnly, setDiscountOnly] = useState(false);
+  const [minRating, setMinRating] = useState(0);
   const [location, setLocation] = useState(t("mp.allRegions"));
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
