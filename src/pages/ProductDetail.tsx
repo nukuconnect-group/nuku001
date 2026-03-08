@@ -55,6 +55,13 @@ const ProductDetail = () => {
     }
   };
 
+  const handleBuyNow = () => {
+    if (product) {
+      addItem(product, quantity);
+      navigate("/panier");
+    }
+  };
+
   const handleContactSeller = async () => {
     if (!product) return;
     const { data: { session } } = await supabase.auth.getSession();
