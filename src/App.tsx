@@ -77,6 +77,7 @@ const App = () => {
                 <Route path="/a-propos" element={<About />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/favoris" element={<Favorites />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
