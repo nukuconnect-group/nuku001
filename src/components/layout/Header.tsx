@@ -8,7 +8,7 @@ import {
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
   LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
-import { products as mockProducts } from "@/data/marketplace";
+import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import {
