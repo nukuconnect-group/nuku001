@@ -30,15 +30,15 @@ const FeaturesSection = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
           {features.map((feature, index) => (
-            <Card key={feature.title} variant="feature" className="group cursor-pointer">
+            <Card key={feature.title} variant="feature" className="group cursor-pointer bg-white/10 backdrop-blur-sm border-white/20">
               <CardContent className="p-4 sm:p-6 lg:p-8">
-                <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${feature.bgColor} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className={`w-5 h-5 sm:w-7 sm:h-7 ${feature.color}`} />
+                <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h3 className="font-heading text-sm sm:text-lg lg:text-xl font-semibold text-foreground mb-1 sm:mb-3">
+                <h3 className="font-heading text-sm sm:text-lg lg:text-xl font-semibold text-white mb-1 sm:mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-[11px] sm:text-sm text-muted-foreground leading-relaxed">
+                <p className="text-[11px] sm:text-sm text-white/70 leading-relaxed">
                   {feature.description}
                 </p>
               </CardContent>
