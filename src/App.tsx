@@ -86,6 +86,11 @@ const App = () => {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/favoris" element={<Favorites />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/legal" element={<Legal />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/aide" element={<Help />} />
+                <Route path="/faq" element={<Help />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
