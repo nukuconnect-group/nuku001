@@ -148,7 +148,7 @@ const Producers = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProducers.length}</span> producteur{filteredProducers.length > 1 ? "s" : ""}
+              <span className="font-semibold text-foreground">{filteredProducers.length}</span> fournisseur{filteredProducers.length > 1 ? "s" : ""}
             </p>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger className="w-48">
