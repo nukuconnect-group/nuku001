@@ -253,7 +253,7 @@ const Marketplace = () => {
             <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {sponsoredProducts.map((product) => (
                 <div key={product.id} className="flex-shrink-0 w-[140px] sm:w-[180px] snap-start">
-                  <ProductCard product={product} viewMode="grid" />
+                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} />
                 </div>
               ))}
             </div>
