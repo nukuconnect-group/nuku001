@@ -190,19 +190,28 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     }
   };
 
-  // Fetch dynamic categories from DB and merge with static ones
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
-  useEffect(() => {
-    supabase.from("categories").select("name").eq("is_active", true).order("sort_order").then(({ data }) => {
-      if (data) setDbCategories((data as any[]).map((c: any) => c.name));
-    });
-  }, []);
+  // Fetch categories from DB
+  const { data: dbCategoriesList = [] } = useCategories();
+  const [customCategory, setCustomCategory] = useState("");
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
   const productCategories = useMemo(() => {
-    const staticCats = marketplaceCategories.filter(c => c.id !== 'all').map(c => c.name);
-    const allCats = [...staticCats, ...dbCategories.filter(name => !staticCats.includes(name))];
-    return allCats;
-  }, [dbCategories]);
+    return dbCategoriesList.map(c => c.name);
+  }, [dbCategoriesList]);
+
+  const handleCreateCategory = async () => {
+    if (!customCategory.trim()) return;
+    const { error } = await supabase.from("categories").insert({
+      name: customCategory.trim(),
+      sort_order: dbCategoriesList.length + 1,
+    } as any);
+    if (!error) {
+      setNewProduct({ ...newProduct, category: customCategory.trim() });
+      setCustomCategory("");
+      setShowNewCategory(false);
+      toast({ title: "Catégorie créée !" });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
