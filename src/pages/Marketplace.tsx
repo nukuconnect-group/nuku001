@@ -334,6 +334,10 @@ const Marketplace = () => {
               </Link>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  };
 
   const ProductSection = ({ title, icon, products: sectionProducts, viewAll }: { title: string; icon: React.ReactNode; products: typeof allProducts; viewAll?: string }) => (
     <div className="mb-6 sm:mb-8">
