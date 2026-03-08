@@ -38,6 +38,7 @@ import Settings from "./pages/Settings";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import ScrollToTop from "./components/ScrollToTop";
+import PresenceTracker from "./components/PresenceTracker";
 
 const queryClient = new QueryClient({
   defaultOptions: {
