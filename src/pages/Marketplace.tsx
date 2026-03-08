@@ -272,7 +272,7 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
 
-      <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
+      <section className="border-b border-white/20 py-3 sm:py-4 text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-3xl mx-auto">
             <div className="relative flex-1">
