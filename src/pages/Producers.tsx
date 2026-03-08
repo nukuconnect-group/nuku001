@@ -175,10 +175,10 @@ const Producers = () => {
           ) : filteredProducers.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-foreground mb-2">Aucun producteur trouvé</h3>
+              <h3 className="font-heading font-semibold text-foreground mb-2">Aucun fournisseur trouvé</h3>
               <p className="text-sm text-muted-foreground">
                 {producers.length === 0
-                  ? "Aucun producteur n'a encore publié de produit sur la plateforme."
+                  ? "Aucun fournisseur n'est encore inscrit sur la plateforme."
                   : "Essayez de modifier vos filtres de recherche."}
               </p>
             </div>
