@@ -358,6 +358,13 @@ const Marketplace = () => {
         </div>
       </section>
 
+      <CompareDrawer
+        products={compareProducts}
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        onRemove={(id) => setCompareProducts((prev) => prev.filter((p) => p.id !== id))}
+        onClear={() => { setCompareProducts([]); setCompareOpen(false); }}
+      />
       <Footer />
       <MobileBottomNav />
     </div>
