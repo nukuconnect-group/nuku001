@@ -1,50 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2 } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Notification {
   id: string;
-  type: "order" | "message" | "system";
+  type: string;
   title: string;
-  description: string;
-  time: string;
-  read: boolean;
+  description: string | null;
+  product_id: string | null;
+  is_read: boolean;
+  created_at: string;
 }
 
-const mockNotifications: Notification[] = [
-  { id: "1", type: "order", title: "Nouvelle commande", description: "Jean Dupont a commandé 50kg de Maïs", time: "Il y a 5 min", read: false },
-  { id: "2", type: "message", title: "Nouveau message", description: "Kofi Mensah vous a envoyé un message", time: "Il y a 30 min", read: false },
-  { id: "3", type: "system", title: "Produit épuisé", description: "Votre stock de Tomates est épuisé", time: "Il y a 2h", read: true },
-  { id: "4", type: "order", title: "Commande livrée", description: "Votre commande de Riz a été livrée avec succès", time: "Il y a 1 jour", read: true },
-  { id: "5", type: "system", title: "Bienvenue sur NukuConnect", description: "Découvrez toutes les fonctionnalités de la plateforme", time: "Il y a 3 jours", read: true },
-];
-
 const Notifications = () => {
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const { t } = useLanguage();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!userId) { setIsLoading(false); return; }
+    const fetchNotifs = async () => {
+      const { data } = await supabase
+        .from("notifications" as any)
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      setNotifications((data || []) as unknown as Notification[]);
+      setIsLoading(false);
+    };
+    fetchNotifs();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel("notifications-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+        const newNotif = payload.new as any;
+        if (newNotif.user_id === userId) {
+          setNotifications((prev) => [newNotif as Notification, ...prev]);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const getIcon = (type: string) => {
     switch (type) {
       case "order": return <ShoppingCart className="w-5 h-5 text-primary" />;
-      case "message": return <MessageCircle className="w-5 h-5 text-blue-500" />;
-      default: return <Package className="w-5 h-5 text-muted-foreground" />;
+      case "message": return <MessageCircle className="w-5 h-5 text-secondary" />;
+      case "product": return <Package className="w-5 h-5 text-primary" />;
+      default: return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "À l'instant";
+    if (mins < 60) return `Il y a ${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Il y a ${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    return `Il y a ${days}j`;
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  const markAllAsRead = async () => {
+    if (!userId) return;
+    await supabase.from("notifications" as any).update({ is_read: true } as any).eq("user_id", userId).eq("is_read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  const deleteNotification = async (id: string) => {
+    await supabase.from("notifications" as any).delete().eq("id", id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   return (
@@ -65,38 +107,51 @@ const Notifications = () => {
               </div>
               {unreadCount > 0 && (
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={markAllAsRead}>
-                  <Check className="w-3.5 h-3.5" />Tout marquer comme lu
+                  <Check className="w-3.5 h-3.5" />Tout lire
                 </Button>
               )}
             </div>
 
             <div className="space-y-2">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-16">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : notifications.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
                     <Bell className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Aucune notification</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
                 notifications.map((notif) => (
-                  <Card key={notif.id} className={`transition-all ${!notif.read ? "border-primary/20 bg-primary/5" : ""}`}>
+                  <Card key={notif.id} className={`transition-all ${!notif.is_read ? "border-primary/20 bg-primary/5" : ""}`}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          notif.read ? "bg-muted" : "bg-primary/10"
+                          notif.is_read ? "bg-muted" : "bg-primary/10"
                         }`}>
                           {getIcon(notif.type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`text-sm font-medium ${notif.read ? "text-muted-foreground" : "text-foreground"}`}>
+                            <p className={`text-sm font-medium ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
                               {notif.title}
                             </p>
-                            {!notif.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
+                            {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">{notif.time}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
+                            {notif.product_id && (
+                              <Link to={`/produit/${notif.product_id}`} className="text-[10px] text-primary font-medium">
+                                Voir le produit →
+                              </Link>
+                            )}
+                          </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
                           onClick={() => deleteNotification(notif.id)}>

@@ -24,6 +24,7 @@ import Plans from "./pages/Plans";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
 import Notifications from "./pages/Notifications";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => {
                 <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                 <Route path="/a-propos" element={<About />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/favoris" element={<Favorites />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
