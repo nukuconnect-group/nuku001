@@ -137,14 +137,14 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
       <main>
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /><span className="text-sm">{t("product.back")}</span>
+            <ArrowLeft className="w-4 h-4" /><span className="text-xs sm:text-sm">{t("product.back")}</span>
           </button>
         </div>
 
-        <div className="container mx-auto px-4 pb-12">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="container mx-auto px-3 sm:px-4 pb-8 sm:pb-12">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12">
             {/* Image Section */}
             <div className="space-y-4">
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
