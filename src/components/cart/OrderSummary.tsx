@@ -88,11 +88,46 @@ La décision finale pourra, si nécessaire, être soumise aux juridictions comp�
 Nukuconnect SA se réserve le droit de modifier cette politique à tout moment.
 Toute modification sera publiée sur la Plateforme et applicable aux commandes passées après sa date d'entrée en vigueur.`;
 
-const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }: OrderSummaryProps) => {
+const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange }: OrderSummaryProps) => {
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const { formatPrice } = useLanguage();
-  const finalTotal = total + deliveryPrice;
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number; type: "percent" | "fixed"; label: string } | null>(null);
+  const [promoError, setPromoError] = useState("");
+
+  const discountAmount = appliedPromo
+    ? appliedPromo.type === "percent"
+      ? Math.round(total * appliedPromo.discount / 100)
+      : appliedPromo.discount
+    : 0;
+
+  const finalTotal = total + deliveryPrice - discountAmount;
+
+  const handleApplyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    const promo = promoCodes[code];
+    if (!promo) {
+      setPromoError("Code promo invalide");
+      return;
+    }
+    if (promo.minAmount && total < promo.minAmount) {
+      setPromoError(`Minimum ${formatPrice(promo.minAmount)} requis`);
+      return;
+    }
+    setAppliedPromo({ code, ...promo });
+    setPromoError("");
+    const amt = promo.type === "percent" ? Math.round(total * promo.discount / 100) : promo.discount;
+    onDiscountChange?.(amt, code);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError("");
+    onDiscountChange?.(0, "");
+  };
 
   return (
     <Card className="sticky top-24">
