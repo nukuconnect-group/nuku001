@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/components/cart/CartContext";
-import { CreditCard, Loader2, Minus, Plus, Trash2, MapPin, ShieldCheck } from "lucide-react";
+import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface OrderSummaryProps {
   deliveryPrice: number;
@@ -13,10 +16,72 @@ interface OrderSummaryProps {
   onCheckout: () => void;
 }
 
+const purchasePolicyContent = `Dernière mise à jour : 09 février 2025
+
+Chez Nukuconnect SA, nous avons à cœur de garantir une expérience fiable et transparente à tous nos utilisateurs. La présente politique précise les conditions de remboursement et de retour applicables aux transactions effectuées via la plateforme Nukuconnect.
+
+1. Champ d'application
+
+Cette politique s'applique à toutes les commandes passées sur Nukuconnect, que ce soit pour des produits agricoles, des intrants, ou des services, sauf mention contraire par le vendeur ou dans l'offre.
+Elle ne s'applique pas aux transactions conclues en dehors de la Plateforme.
+
+2. Responsabilité des vendeurs
+
+Chaque vendeur est responsable de la qualité, de la conformité et de la livraison des produits ou services vendus.
+
+Les conditions spécifiques de retour ou de remboursement d'un vendeur doivent être clairement indiquées sur sa page produit.
+
+Nukuconnect SA agit en tant qu'intermédiaire et facilite la communication et, si nécessaire, la médiation en cas de litige.
+
+3. Cas d'éligibilité à un remboursement ou retour
+
+Un remboursement ou un retour peut être demandé dans les situations suivantes :
+
+• Produit non conforme à la description (taille, variété, caractéristiques, etc.)
+• Produit endommagé ou périmé à la réception
+• Produit manquant par rapport à la commande initiale
+• Service non exécuté conformément à ce qui était prévu
+
+4. Procédure de demande
+
+La demande doit être formulée via la messagerie de la plateforme dans un délai de 48 heures après réception du produit ou de l'exécution du service.
+
+L'utilisateur doit fournir des preuves (photos, vidéos, facture) pour appuyer sa réclamation.
+
+Nukuconnect SA transmettra la demande au vendeur concerné et suivra la procédure jusqu'à résolution.
+
+5. Modalités de remboursement
+
+Si le remboursement est approuvé, il sera effectué selon le mode de paiement initial (Mobile Money, carte bancaire, virement) dans un délai maximum de 7 à 14 jours ouvrés.
+
+Les frais de retour (si applicables) peuvent être à la charge de l'acheteur ou du vendeur, selon la cause du retour :
+
+• Défaut du vendeur (produit non conforme, endommagé) → frais à la charge du vendeur
+• Changement d'avis de l'acheteur → frais à la charge de l'acheteur
+
+6. Produits non remboursables / non retournables
+
+Certains produits ne peuvent pas être retournés ni remboursés, sauf défaut ou non-conformité :
+
+• Produits périssables (fruits, légumes, poisson frais, etc.)
+• Produits transformés ou ouverts après livraison
+• Services déjà exécutés ou en cours d'exécution
+
+7. Litiges
+
+En cas de désaccord persistant entre acheteur et vendeur, Nukuconnect SA peut proposer une solution de médiation.
+La décision finale pourra, si nécessaire, être soumise aux juridictions compétentes.
+
+8. Modification de la politique
+
+Nukuconnect SA se réserve le droit de modifier cette politique à tout moment.
+Toute modification sera publiée sur la Plateforme et applicable aux commandes passées après sa date d'entrée en vigueur.`;
+
 const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }: OrderSummaryProps) => {
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const { formatPrice } = useLanguage();
   const finalTotal = total + deliveryPrice;
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   return (
     <Card className="sticky top-24">
@@ -71,6 +136,64 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }:
           ))}
         </div>
 
+        {/* Privacy notice */}
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Vos données personnelles seront utilisées pour traiter votre commande, améliorer votre expérience sur ce site, et pour d'autres finalités décrites dans notre{" "}
+          <Link to="/terms" className="text-primary hover:underline font-medium">politique de confidentialité</Link>.
+        </p>
+
+        {/* Purchase policy miniature */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="border border-border rounded-lg p-3 max-h-[100px] overflow-hidden cursor-pointer hover:border-primary/50 transition-colors relative">
+              <p className="text-[10px] font-semibold text-foreground italic mb-1">Dernière mise à jour : 09 février 2025</p>
+              <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">
+                Chez Nukuconnect SA, nous avons à cœur de garantir une expérience fiable et transparente à tous nos utilisateurs. La présente politique précise les conditions de remboursement et de retour applicables aux transactions effectuées via la plateforme Nukuconnect...
+              </p>
+              <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-card to-transparent" />
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="text-base">Politique d'achat & remboursement</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                {purchasePolicyContent}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Accept terms checkbox */}
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="accept-purchase-terms"
+            checked={acceptedTerms}
+            onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+            className="mt-0.5"
+          />
+          <label htmlFor="accept-purchase-terms" className="text-[10px] sm:text-xs text-muted-foreground cursor-pointer leading-relaxed">
+            J'ai lu et j'accepte les{" "}
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="text-primary hover:underline font-medium cursor-pointer">conditions générales d'achat</span>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle className="text-base">Politique d'achat & remboursement</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] pr-4">
+                  <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                    {purchasePolicyContent}
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+            {" "}<span className="text-destructive">*</span>
+          </label>
+        </div>
+
         {/* Totals */}
         <div className="space-y-2 pt-2 border-t border-border">
           <div className="flex justify-between text-xs sm:text-sm">
@@ -97,7 +220,7 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout }:
           className="w-full gap-2"
           size="lg"
           onClick={onCheckout}
-          disabled={isCheckingOut || !canCheckout}
+          disabled={isCheckingOut || !canCheckout || !acceptedTerms}
         >
           {isCheckingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
           Passer la commande
