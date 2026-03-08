@@ -260,6 +260,38 @@ const DeliveryTracking = () => {
                         onClick={() => navigate("/messages")}>
                         <MessageCircle className="w-3.5 h-3.5" />Contacter
                       </Button>
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
+                        onClick={() => {
+                          const order = selectedOrder;
+                          const notesParts = (order.notes || "").split(" | ");
+                          const deliveryInfo = notesParts.find((n: string) => n.startsWith("Livraison:")) || "Retrait sur place";
+                          const paymentInfo = notesParts.find((n: string) => n.startsWith("Paiement:"))?.replace("Paiement: ", "") || "Mobile Money";
+                          const telInfo = notesParts.find((n: string) => n.startsWith("Tél:"))?.replace("Tél: ", "") || "";
+                          
+                          const created = new Date(order.created_at);
+                          const invoiceNumber = `NK-${created.getFullYear()}${String(created.getMonth() + 1).padStart(2, "0")}${String(created.getDate()).padStart(2, "0")}-${order.id.substring(0, 6).toUpperCase()}`;
+                          
+                          generateInvoicePDF({
+                            invoiceNumber,
+                            date: created.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+                            buyerName: profile?.full_name || "Client",
+                            deliveryMethod: deliveryInfo,
+                            deliveryPrice: 0,
+                            paymentMethod: paymentInfo,
+                            mobileNumber: telInfo,
+                            items: [{
+                              name: order.products?.name || "Produit",
+                              quantity: Number(order.quantity),
+                              unitPrice: Number(order.products?.price || 0),
+                              unit: order.products?.unit || "unité",
+                              sellerName: "Vendeur",
+                            }],
+                            subtotal: Number(order.total_price),
+                            total: Number(order.total_price),
+                          });
+                        }}>
+                        <FileDown className="w-3.5 h-3.5" />Facture PDF
+                      </Button>
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
                         <AlertCircle className="w-3.5 h-3.5" />Signaler
                       </Button>
