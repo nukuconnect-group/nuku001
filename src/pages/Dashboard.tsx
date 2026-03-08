@@ -335,6 +335,12 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* CSV Import */}
+              <CSVProductImport
+                profileId={profile?.id}
+                onImportComplete={() => profile && fetchProducts(profile.id)}
+              />
             </TabsContent>
 
             <TabsContent value="orders">
