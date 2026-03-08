@@ -1064,6 +1064,11 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
 
+            {/* Withdrawals Tab */}
+            <TabsContent value="withdrawals">
+              <WithdrawalManager />
+            </TabsContent>
+
             {/* Broadcast Notification Tab */}
             <TabsContent value="broadcast">
               <BroadcastNotification users={users} />
