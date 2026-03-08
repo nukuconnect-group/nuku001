@@ -64,7 +64,7 @@ const About = () => {
             <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-2">Notre Équipe</h2>
             <p className="text-xs sm:text-sm text-muted-foreground">Des passionnés d'agriculture et de technologie</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 max-w-4xl mx-auto">
             {teamMembers.map((member) => (
               <Card key={member.name} className="overflow-hidden group hover:shadow-elevated transition-all">
                 <div className="aspect-square w-full overflow-hidden">
