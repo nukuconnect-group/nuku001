@@ -55,6 +55,9 @@ export const useProducts = () => {
   return useQuery({
     queryKey: ["products"],
     queryFn: async () => {
+      // Wait briefly for Supabase client to initialize in iframe contexts
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -73,8 +76,8 @@ export const useProducts = () => {
     },
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 5,
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 8000),
   });
 };
 

@@ -15,6 +15,8 @@ export function useCategories(activeOnly = true) {
   return useQuery({
     queryKey: ["categories", activeOnly],
     queryFn: async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       let query = supabase
         .from("categories")
         .select("*")
@@ -25,9 +27,14 @@ export function useCategories(activeOnly = true) {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Categories fetch error:", error);
+        throw error;
+      }
       return (data as unknown as DbCategory[]) || [];
     },
     staleTime: 1000 * 60 * 5,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 8000),
   });
 }
