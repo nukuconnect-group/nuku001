@@ -181,7 +181,27 @@ const BuyerDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Stats */}
+          {/* Buy Intent */}
+          <Card className="mb-8 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/10">
+            <CardContent className="p-6">
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                <HandCoins className="w-5 h-5 text-primary" />
+                Que recherchez-vous ?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">Exprimez vos besoins pour que les fournisseurs vous contactent directement</p>
+              <div className="flex gap-2">
+                <CreateDemandModal trigger={
+                  <Button variant="hero" className="gap-2">
+                    <HandCoins className="w-4 h-4" />Exprimer un besoin d'achat
+                  </Button>
+                } />
+              </div>
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
+                <DemandsList limit={3} />
+              </div>
+            </CardContent>
+          </Card>
           <StatsGrid stats={stats} />
 
           {/* Purchase Chart */}

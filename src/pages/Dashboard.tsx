@@ -163,6 +163,20 @@ const Dashboard = () => {
             </Link>
           </div>
 
+          {/* Buy/Sell Intent */}
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/10">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-primary" />
+                Que souhaitez-vous vendre ?
+              </h3>
+              <p className="text-[10px] text-muted-foreground mb-2">Décrivez vos produits pour attirer des acheteurs potentiels</p>
+              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setShowAddProduct(true)}>
+                <Plus className="w-3 h-3" />Publier un produit à vendre
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Tabs */}
           <Tabs defaultValue="products" className="space-y-3 sm:space-y-4">
             <TabsList className="bg-muted p-0.5 sm:p-1 w-full overflow-x-auto flex">
