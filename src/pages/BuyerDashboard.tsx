@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt
+  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
