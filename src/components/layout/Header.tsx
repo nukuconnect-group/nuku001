@@ -529,6 +529,7 @@ const Header = () => {
             onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
             <Search className="w-3.5 h-3.5" />
           </Button>
+          <SearchResultsDropdown />
         </div>
       </div>
 
