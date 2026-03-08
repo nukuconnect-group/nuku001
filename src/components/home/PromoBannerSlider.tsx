@@ -79,9 +79,21 @@ const PromoBannerSlider = () => {
     return db.length > 0 ? db.slice(0, 8) : mockProducts.slice(0, 8);
   }, [products]);
 
-  const uniqueProducers = useMemo(() => {
-    return Array.from(new Map(recentProducts.map(p => [p.producer.id, p.producer])).values()).slice(0, 8);
-  }, [recentProducts]);
+  // Fetch real producers from the database
+  const { data: realProducers = [] } = useQuery({
+    queryKey: ["homepage-producers"],
+    queryFn: async () => {
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, user_type")
+        .eq("user_type", "producer")
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return (profiles || []).filter(p => p.full_name && p.full_name !== "—Inconnu");
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   return (
     <div>
