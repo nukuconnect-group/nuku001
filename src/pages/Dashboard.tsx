@@ -15,6 +15,7 @@ import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
+import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
@@ -334,6 +335,12 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* CSV Import */}
+              <CSVProductImport
+                profileId={profile?.id}
+                onImportComplete={() => profile && fetchProducts(profile.id)}
+              />
             </TabsContent>
 
             <TabsContent value="orders">
