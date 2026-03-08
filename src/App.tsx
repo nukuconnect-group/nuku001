@@ -27,6 +27,7 @@ import Notifications from "./pages/Notifications";
 import Favorites from "./pages/Favorites";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import RealtimeNotifications from "./components/RealtimeNotifications";
 
 const queryClient = new QueryClient();
 
