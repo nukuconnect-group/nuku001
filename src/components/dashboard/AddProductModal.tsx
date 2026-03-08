@@ -109,13 +109,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     setIsLoading(true);
 
     try {
-      // Upload images to storage
-      let imageUrls: string[] = [];
+      let imageUrls: string[] = editProduct?.images || [];
       if (imageFiles.length > 0) {
-        imageUrls = await uploadImages(imageFiles);
+        const uploaded = await uploadImages(imageFiles);
+        imageUrls = [...imageUrls, ...uploaded];
       }
 
-      const { error } = await supabase.from("products").insert({
+      const productData = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
@@ -127,31 +127,26 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
-      });
+      };
 
-      if (error) throw error;
+      if (editProduct) {
+        const { error } = await supabase.from("products").update(productData).eq("id", editProduct.id);
+        if (error) throw error;
+        toast({ title: "Produit modifié !", description: "Les modifications ont été enregistrées." });
+      } else {
+        const { error } = await supabase.from("products").insert(productData);
+        if (error) throw error;
+        toast({ title: "Produit publié !", description: "Votre produit est maintenant visible sur le marketplace." });
+      }
 
-      toast({
-        title: "Produit publié !",
-        description: "Votre produit est maintenant visible sur le marketplace.",
-      });
-
-      setNewProduct({
-        name: "", description: "", price: "", originalPrice: "", discount: "",
-        promoType: "none", category: "", unit: "kg", quantity_available: "",
-        location: "", is_organic: false, min_order: "1",
-      });
+      setNewProduct(defaultProduct);
       setImageFiles([]);
       setImagePreviews([]);
       
       onProductAdded();
       onOpenChange(false);
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
