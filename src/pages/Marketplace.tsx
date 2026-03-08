@@ -419,10 +419,10 @@ const Marketplace = () => {
               <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
               <ProductSection title={t("mp.newArrivals")} icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
               {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
-                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase() || c.id.toLowerCase() === category.toLowerCase());
+                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
                 const categoryEmoji = categoryInfo?.emoji || "📦";
                 return (
-                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.id || category} />
+                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
                 );
               })}
               <div className="mt-6 sm:mt-8">
