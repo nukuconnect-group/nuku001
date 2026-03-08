@@ -187,24 +187,32 @@ const PromoBannerSlider = () => {
         </div>
       )}
 
-      {/* Active Farmers - all devices */}
-      {uniqueProducers.length > 0 && (
+      {/* Fournisseurs actifs - all devices */}
+      {realProducers.length > 0 && (
         <div className="px-3 sm:px-0 py-2 sm:py-4">
           <div className="sm:container sm:mx-auto sm:px-4">
             <div className="flex items-center justify-between mb-2 sm:mb-4">
               <h3 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-primary" />Agriculteurs actifs
+                <Users className="w-4 h-4 text-primary" />Fournisseurs actifs
               </h3>
               <Link to="/producteurs" className="text-[10px] sm:text-xs text-primary font-medium">Voir tous →</Link>
             </div>
             <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide">
-              {uniqueProducers.map((producer) => (
-                <Link key={producer.id} to={`/producteurs/${producer.name}`}
+              {realProducers.map((producer) => (
+                <Link key={producer.id} to={`/producteurs/${producer.id}`}
                   className="flex-shrink-0 flex flex-col items-center gap-1 w-16 sm:w-20 group">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                    <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-muted">
+                    {producer.avatar_url ? (
+                      <img src={producer.avatar_url} alt={producer.full_name || ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[9px] sm:text-[11px] font-medium text-foreground text-center line-clamp-1 w-full">{producer.name.split(' ')[0]}</p>
+                  <p className="text-[9px] sm:text-[11px] font-medium text-foreground text-center line-clamp-1 w-full">
+                    {(producer.full_name || "").split(' ')[0]}
+                  </p>
                 </Link>
               ))}
             </div>
