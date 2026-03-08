@@ -324,10 +324,6 @@ const BuyerDashboard = () => {
                 <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Paiements
               </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
-                <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Paramètres
-              </TabsTrigger>
             </TabsList>
 
             {/* Orders Tab */}
@@ -644,10 +640,6 @@ const BuyerDashboard = () => {
               </Card>
             </TabsContent>
 
-            {/* Settings Tab */}
-            <TabsContent value="settings">
-              <SettingsPanel profile={profile} user={user} onProfileUpdate={(updated: any) => setProfile(updated)} />
-            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -658,154 +650,5 @@ const BuyerDashboard = () => {
   );
 };
 
-const SettingsPanel = ({ profile, user, onProfileUpdate }: { profile: any; user: any; onProfileUpdate: (p: any) => void }) => {
-  const { toast } = useToast();
-  const [fullName, setFullName] = useState(profile?.full_name || "");
-  const [phone, setPhone] = useState(profile?.phone || "");
-  const [location, setLocation] = useState(profile?.location || "");
-  const [bio, setBio] = useState(profile?.bio || "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUploadImage = async (file: File, type: "avatar" | "cover") => {
-    const setter = type === "avatar" ? setIsUploadingAvatar : setIsUploadingCover;
-    setter(true);
-    try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${type}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(path);
-      
-      const updateField = type === "avatar" ? { avatar_url: publicUrl } : { cover_url: publicUrl };
-      const { error } = await supabase.from("profiles").update(updateField).eq("id", profile.id);
-      if (error) throw error;
-      
-      onProfileUpdate({ ...profile, ...updateField });
-      toast({ title: "Image mise à jour ✓" });
-    } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
-    } finally {
-      setter(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from("profiles").update({
-        full_name: fullName,
-        phone,
-        location,
-        bio,
-      }).eq("id", profile.id);
-      if (error) throw error;
-      onProfileUpdate({ ...profile, full_name: fullName, phone, location, bio });
-      toast({ title: "Profil mis à jour ✓" });
-    } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-4">
-        <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-          <Settings className="w-4 h-4 text-primary" />
-          Paramètres du profil
-        </CardTitle>
-        <CardDescription className="text-[11px] sm:text-sm">Modifiez vos informations personnelles</CardDescription>
-      </CardHeader>
-      <CardContent className="p-3 sm:p-6 pt-0 space-y-5">
-        {/* Cover Image */}
-        <div>
-          <Label className="text-xs font-semibold mb-2 block">Image d'arrière-plan</Label>
-          <div
-            className="relative w-full h-28 sm:h-36 rounded-xl overflow-hidden bg-gradient-hero cursor-pointer group"
-            onClick={() => coverInputRef.current?.click()}
-          >
-            {profile?.cover_url && (
-              <img src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
-            )}
-            <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              {isUploadingCover ? (
-                <Loader2 className="w-6 h-6 animate-spin text-primary-foreground" />
-              ) : (
-                <Camera className="w-6 h-6 text-primary-foreground" />
-              )}
-            </div>
-          </div>
-          <input ref={coverInputRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => { if (e.target.files?.[0]) handleUploadImage(e.target.files[0], "cover"); }} />
-        </div>
-
-        {/* Avatar */}
-        <div>
-          <Label className="text-xs font-semibold mb-2 block">Photo de profil</Label>
-          <div className="flex items-center gap-4">
-            <div
-              className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gradient-hero cursor-pointer group flex-shrink-0"
-              onClick={() => avatarInputRef.current?.click()}
-            >
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary-foreground" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                {isUploadingAvatar ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-primary-foreground" />
-                ) : (
-                  <Camera className="w-5 h-5 text-primary-foreground" />
-                )}
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Cliquez pour changer votre photo de profil
-            </div>
-          </div>
-          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => { if (e.target.files?.[0]) handleUploadImage(e.target.files[0], "avatar"); }} />
-        </div>
-
-        {/* Form Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Nom complet</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Votre nom" className="text-sm h-10" />
-          </div>
-          <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Téléphone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+228 XX XX XX XX" className="text-sm h-10" />
-          </div>
-          <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Localisation</Label>
-            <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Lomé, Togo" className="text-sm h-10" />
-          </div>
-          <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Email</Label>
-            <Input value={user?.email || ""} disabled className="text-sm h-10 bg-muted" />
-          </div>
-        </div>
-        <div>
-          <Label className="text-xs font-semibold mb-1.5 block">Bio</Label>
-          <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Décrivez-vous en quelques mots..." rows={3} className="text-sm" />
-        </div>
-
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Enregistrer les modifications
-        </Button>
-      </CardContent>
-    </Card>
-  );
-};
 
 export default BuyerDashboard;

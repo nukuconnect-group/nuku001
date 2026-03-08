@@ -32,6 +32,7 @@ import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import Settings from "./pages/Settings";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -93,6 +94,7 @@ const App = () => {
                 <Route path="/aide" element={<Help />} />
                 <Route path="/faq" element={<Help />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
