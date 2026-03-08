@@ -142,8 +142,10 @@ const Header = () => {
     setLocationDialogOpen(false);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    if (!user) return;
+    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
   };
 
   const getDashboardLink = () => profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
