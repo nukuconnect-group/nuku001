@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
-  Truck, Package, Clock, CheckCircle2, Phone, 
+  Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw
 } from "lucide-react";
 
@@ -38,18 +38,22 @@ const DeliveryTracking = () => {
   };
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
       if (!session) { setIsLoading(false); return; }
       setUser(session.user);
       
-      const { data: prof } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("id, user_type").eq("user_id", session.user.id).single();
+      if (!mounted) return;
       setProfile(prof);
       
       if (prof) await fetchOrders(prof);
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     };
     load();
+    return () => { mounted = false; };
   }, []);
 
   // Realtime subscription for order updates
@@ -253,7 +257,7 @@ const DeliveryTracking = () => {
                     <div className="flex gap-2 mt-3">
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
                         onClick={() => navigate("/messages")}>
-                        <Phone className="w-3.5 h-3.5" />Contacter
+                        <MessageCircle className="w-3.5 h-3.5" />Contacter
                       </Button>
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
                         <AlertCircle className="w-3.5 h-3.5" />Signaler

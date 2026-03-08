@@ -14,7 +14,6 @@ import {
   Star, 
   ShieldCheck, 
   MessageCircle, 
-  Phone,
   Calendar,
   Package,
   ShoppingBag,
@@ -125,18 +124,10 @@ const ProducerProfile = () => {
                   )}
 
                   <div className="flex flex-wrap gap-4">
-                    <Button variant="hero" className="gap-2" onClick={() => setShowContactForm(!showContactForm)}>
+                    <Button variant="hero" className="gap-2" onClick={() => navigate(`/messages?seller=${encodeURIComponent(producer.name)}`)}>
                       <MessageCircle className="w-4 h-4" />
-                      Contacter
+                      Discuter
                     </Button>
-                    {producer.phone && (
-                      <Button variant="outline" className="gap-2" asChild>
-                        <a href={`tel:${producer.phone}`}>
-                          <Phone className="w-4 h-4" />
-                          Appeler
-                        </a>
-                      </Button>
-                    )}
                   </div>
                 </div>
 
