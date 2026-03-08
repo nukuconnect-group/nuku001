@@ -104,6 +104,11 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="absolute top-1.5 left-1.5 flex gap-1">
+            {isBoosted && (
+              <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
+                <Rocket className="w-2.5 h-2.5" />En vedette
+              </Badge>
+            )}
             {product.discount && (
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm animate-fade-in">-{product.discount}%</Badge>
             )}
