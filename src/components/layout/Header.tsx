@@ -501,8 +501,7 @@ const Header = () => {
               </div>
             </div>
           </div>
-        </nav>
-      </header>
+      </nav>
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
 
