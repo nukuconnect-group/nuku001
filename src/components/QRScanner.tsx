@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Camera, QrCode, X, Loader2, CheckCircle2, AlertCircle, MapPin, Leaf, ChevronRight, Search } from "lucide-react";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface QRScannerProps {
   onScan?: (code: string) => void;
@@ -50,16 +50,43 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
   const [searchDone, setSearchDone] = useState(false);
   const [scannedCode, setScannedCode] = useState("");
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerId = "qr-reader-container";
+  const hasProcessedRef = useRef(false);
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState();
+        if (state === 2) { // SCANNING
+          await scannerRef.current.stop();
+        }
+      } catch {
+        // ignore
+      }
+      try {
+        scannerRef.current.clear();
+      } catch {
+        // ignore
+      }
+      scannerRef.current = null;
+    }
+    setIsScanning(false);
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      stopScanner();
     };
-  }, []);
+  }, [stopScanner]);
+
+  // Stop scanner when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      stopScanner();
+      hasProcessedRef.current = false;
+    }
+  }, [isOpen, stopScanner]);
 
   const searchProducts = async (code: string) => {
     setIsSearching(true);
@@ -67,7 +94,7 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
     setScannedCode(code);
 
     try {
-      // Try exact ID match first
+      // Try exact ID match
       const { data: byId } = await supabase
         .from("products")
         .select("*, profiles!products_producer_id_fkey(id, full_name, is_verified, avatar_url)")
@@ -118,35 +145,45 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
     } : null,
   });
 
-  const startCamera = async () => {
+  const startScanner = async () => {
     setIsScanning(true);
     setCameraError(null);
     resetResults();
+    hasProcessedRef.current = false;
+
+    // Wait for DOM element to be available
+    await new Promise(r => setTimeout(r, 100));
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch {
+      const html5Qr = new Html5Qrcode(scannerContainerId);
+      scannerRef.current = html5Qr;
+
+      await html5Qr.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1,
+        },
+        (decodedText) => {
+          if (!hasProcessedRef.current) {
+            hasProcessedRef.current = true;
+            handleCodeDetected(decodedText);
+          }
+        },
+        () => {
+          // QR code not found in frame — ignore
+        }
+      );
+    } catch (err: any) {
+      console.error("QR scanner error:", err);
       setCameraError("Impossible d'accéder à la caméra. Veuillez entrer le code manuellement.");
       setIsScanning(false);
     }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    setIsScanning(false);
-  };
-
   const handleCodeDetected = (code: string) => {
-    stopCamera();
+    stopScanner();
     onScan?.(code);
     searchProducts(code);
   };
@@ -164,16 +201,24 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
     setScannedCode("");
     setManualCode("");
     setCameraError(null);
+    hasProcessedRef.current = false;
   };
 
   const handleNavigateToProduct = (productId: string) => {
-    onClose();
+    stopScanner();
     resetResults();
+    onClose();
     navigate(`/produit/${productId}`);
   };
 
+  const handleClose = () => {
+    stopScanner();
+    resetResults();
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => { stopCamera(); resetResults(); onClose(); }}>
+    <Dialog open={isOpen} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -188,36 +233,32 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
         <div className="space-y-4">
           {!searchDone && !isSearching ? (
             <>
-              {/* Camera View */}
-              <div className="relative aspect-square bg-muted rounded-xl overflow-hidden">
+              {/* Camera / Scanner View */}
+              <div className="relative rounded-xl overflow-hidden bg-muted">
                 {isScanning ? (
-                  <>
-                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-48 h-48 border-2 border-primary rounded-xl relative">
-                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-full h-0.5 bg-primary animate-pulse" />
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="secondary" size="sm" className="absolute top-4 right-4" onClick={stopCamera}>
+                  <div className="relative">
+                    <div id={scannerContainerId} className="w-full" />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="absolute top-2 right-2 z-10"
+                      onClick={stopScanner}
+                    >
                       <X className="w-4 h-4" />
                     </Button>
-                    <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-primary-foreground bg-foreground/50 mx-4 py-2 rounded-lg">
-                      Scan en cours... Ou entrez le code ci-dessous
-                    </p>
-                  </>
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full p-6">
-                    <Camera className="w-16 h-16 text-muted-foreground mb-4" />
-                    <p className="text-center text-muted-foreground mb-4 text-sm">
-                      {cameraError || "Scannez un QR code produit ou entrez l'ID / nom du produit"}
+                  <div className="flex flex-col items-center justify-center py-16 px-6">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <QrCode className="w-10 h-10 text-primary" />
+                    </div>
+                    <p className="text-center text-muted-foreground mb-1 text-sm font-medium">
+                      {cameraError || "Scanner un QR code produit"}
                     </p>
-                    <Button variant="hero" onClick={startCamera} className="gap-2">
+                    <p className="text-center text-muted-foreground mb-5 text-xs">
+                      La caméra détectera automatiquement le QR code
+                    </p>
+                    <Button variant="hero" onClick={startScanner} className="gap-2">
                       <Camera className="w-4 h-4" />
                       Ouvrir la caméra
                     </Button>
@@ -268,7 +309,7 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
                   <p className="font-heading font-semibold">
                     {products.length > 0 ? `${products.length} produit${products.length > 1 ? 's' : ''} trouvé${products.length > 1 ? 's' : ''}` : "Aucun produit trouvé"}
                   </p>
-                  <p className="text-xs text-muted-foreground">Recherche : "{scannedCode}"</p>
+                  <p className="text-xs text-muted-foreground">Code scanné : "{scannedCode}"</p>
                 </div>
               </div>
 
