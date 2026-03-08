@@ -82,6 +82,7 @@ const App = () => {
             <BrowserRouter>
               <ScrollToTop />
               <AnalyticsTracker />
+              <PresenceTracker />
               <RealtimeNotifications />
               <Routes>
                 <Route path="/" element={<Index />} />
