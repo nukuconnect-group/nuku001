@@ -273,7 +273,6 @@ const Plans = () => {
                         Commission : {plan.commission}%
                       </Badge>
                     </div>
-                    </div>
 
                     <ul className="space-y-2 sm:space-y-3">
                       {plan.features.map((feature) => (
