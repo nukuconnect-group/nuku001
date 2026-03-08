@@ -535,19 +535,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Row 3.5: Mobile Categories - horizontal swipe */}
-      <div className="lg:hidden bg-card border-b border-border overflow-x-auto scrollbar-hide"
-        style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="flex items-center gap-1 px-3 py-1.5 min-w-max">
-          {marketplaceCategories.slice(0, 10).map((category) => (
-            <Link key={category.id} to={`/marketplace?category=${category.id}`}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted/60 hover:bg-primary/10 text-xs font-medium text-foreground whitespace-nowrap transition-colors flex-shrink-0">
-              <category.icon className="w-3.5 h-3.5 text-primary" />
-              {category.name}
-            </Link>
-          ))}
-        </div>
-      </div>
 
       {/* Row 4: Desktop Nav - scrolls away */}
       <nav className="hidden lg:block bg-card border-b border-border z-40">
