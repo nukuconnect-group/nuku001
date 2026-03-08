@@ -43,13 +43,33 @@ function isPWA(): boolean {
     (navigator as any).standalone === true;
 }
 
+// Cache geo data per session to avoid repeated calls
+async function getGeoData(): Promise<{ country: string | null; region: string | null; city: string | null }> {
+  const cached = sessionStorage.getItem("nuku-geo");
+  if (cached) return JSON.parse(cached);
+
+  try {
+    const { data, error } = await supabase.functions.invoke("geolocate-ip");
+    if (!error && data) {
+      sessionStorage.setItem("nuku-geo", JSON.stringify(data));
+      return data;
+    }
+  } catch {
+    // silent
+  }
+  return { country: null, region: null, city: null };
+}
+
 const AnalyticsTracker = () => {
   const location = useLocation();
 
   useEffect(() => {
     const track = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const [{ data: { session } }, geo] = await Promise.all([
+          supabase.auth.getSession(),
+          getGeoData(),
+        ]);
 
         await supabase.from("analytics_visits").insert({
           user_id: session?.user?.id || null,
@@ -61,6 +81,9 @@ const AnalyticsTracker = () => {
           browser: getBrowser(),
           os: getOS(),
           is_pwa: isPWA(),
+          country: geo.country,
+          region: geo.region,
+          city: geo.city,
         } as any);
       } catch {
         // Silent fail for analytics
