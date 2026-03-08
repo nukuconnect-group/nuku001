@@ -86,9 +86,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
-    // Then check existing session (only if not already set by onAuthStateChange)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!user) {
+      if (!sessionHandled.current) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
