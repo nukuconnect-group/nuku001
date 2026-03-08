@@ -238,6 +238,9 @@ const Dashboard = () => {
               <TabsTrigger value="traceability" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
                 <QrCode className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Traçabilité
               </TabsTrigger>
+              <TabsTrigger value="withdrawals" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
+                <Wallet className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Retraits
+              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
                 <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Paramètres
               </TabsTrigger>
