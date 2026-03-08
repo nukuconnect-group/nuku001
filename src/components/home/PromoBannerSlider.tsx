@@ -142,7 +142,7 @@ const PromoBannerSlider = () => {
             {/* Desktop: grid */}
             <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-3">
               {recentProducts.slice(0, 5).map((product) => (
-                <ProductCard key={product.id} product={product} viewMode="grid" />
+                <ProductCard key={product.id} product={product} viewMode="grid" hideProducer />
               ))}
             </div>
           </div>
