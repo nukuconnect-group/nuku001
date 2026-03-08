@@ -199,9 +199,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Upload */}
+          {/* Image Upload - Enhanced Preview */}
           <div className="space-y-3">
-            <Label>Images du produit</Label>
+            <Label className="flex items-center gap-2">
+              Images du produit
+              <span className="text-[10px] text-muted-foreground">({imagePreviews.length}/5)</span>
+            </Label>
             <input
               ref={fileInputRef}
               type="file"
@@ -211,24 +214,45 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               className="hidden"
             />
             
+            {/* Large main preview + thumbnails */}
             {imagePreviews.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {imagePreviews.map((img, idx) => (
-                  <div key={idx} className="relative flex-shrink-0">
-                    <img src={img} alt="" className="w-20 h-20 object-cover rounded-lg" />
-                    <button type="button" onClick={() => removeImage(idx)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
-                      <X className="w-3 h-3" />
-                    </button>
+              <div className="space-y-2">
+                {/* Main large preview */}
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-muted border border-border">
+                  <img 
+                    src={imagePreviews[0]} 
+                    alt="Aperçu principal" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2">
+                    <Badge className="bg-primary text-primary-foreground text-[10px]">Image principale</Badge>
                   </div>
-                ))}
+                  <button type="button" onClick={() => removeImage(0)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {/* Thumbnail row */}
+                {imagePreviews.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {imagePreviews.slice(1).map((img, idx) => (
+                      <div key={idx + 1} className="relative flex-shrink-0 group">
+                        <img src={img} alt="" className="w-20 h-20 object-cover rounded-lg border border-border" />
+                        <button type="button" onClick={() => removeImage(idx + 1)}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             
             {imagePreviews.length < 5 && (
               <div onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Cliquez pour ajouter des images</p>
                 <p className="text-xs text-muted-foreground mt-1">PNG, JPG jusqu'à 5MB ({5 - imagePreviews.length} restantes)</p>
               </div>
@@ -342,6 +366,8 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                     <SelectItem value="sac">sac</SelectItem>
                     <SelectItem value="carton">carton</SelectItem>
                     <SelectItem value="litre">litre</SelectItem>
+                    <SelectItem value="panier">panier</SelectItem>
+                    <SelectItem value="lot">lot</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -357,13 +383,51 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Localisation</Label>
+            <div className="space-y-2">
+              <Label>Localisation *</Label>
               <Input
                 value={newProduct.location}
                 onChange={(e) => setNewProduct({ ...newProduct, location: e.target.value })}
                 placeholder="Ex: Lomé, Togo"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Délai de livraison estimé</Label>
+              <Select
+                value={newProduct.deliveryDelay}
+                onValueChange={(v) => setNewProduct({ ...newProduct, deliveryDelay: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate">Disponible immédiatement</SelectItem>
+                  <SelectItem value="24h">Sous 24 heures</SelectItem>
+                  <SelectItem value="48h">Sous 48 heures</SelectItem>
+                  <SelectItem value="3-5j">3-5 jours</SelectItem>
+                  <SelectItem value="1sem">1 semaine</SelectItem>
+                  <SelectItem value="custom">Sur commande</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Mode de vente</Label>
+              <Select
+                value={newProduct.saleMode}
+                onValueChange={(v) => setNewProduct({ ...newProduct, saleMode: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="retail">Vente au détail</SelectItem>
+                  <SelectItem value="wholesale">Vente en gros</SelectItem>
+                  <SelectItem value="both">Détail & Gros</SelectItem>
+                  <SelectItem value="auction">Enchères</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -372,23 +436,109 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
             <Textarea
               value={newProduct.description}
               onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-              placeholder="Décrivez votre produit, sa qualité, son mode de culture..."
+              placeholder="Décrivez votre produit, sa qualité, son mode de culture, les conditions de stockage..."
               rows={4}
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-            <div>
-              <Label className="text-base">Produit biologique</Label>
-              <p className="text-sm text-muted-foreground">
-                Cochez si votre produit est cultivé sans pesticides chimiques
+          {/* Toggles section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-xl">
+              <div>
+                <Label className="text-sm sm:text-base">Produit biologique</Label>
+                <p className="text-xs text-muted-foreground">
+                  Cultivé sans pesticides chimiques
+                </p>
+              </div>
+              <Switch
+                checked={newProduct.is_organic}
+                onCheckedChange={(v) => setNewProduct({ ...newProduct, is_organic: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-xl">
+              <div>
+                <Label className="text-sm sm:text-base">Négociable</Label>
+                <p className="text-xs text-muted-foreground">
+                  Le prix est ouvert à la négociation
+                </p>
+              </div>
+              <Switch
+                checked={newProduct.negotiable}
+                onCheckedChange={(v) => setNewProduct({ ...newProduct, negotiable: v })}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-xl">
+              <div>
+                <Label className="text-sm sm:text-base">Livraison disponible</Label>
+                <p className="text-xs text-muted-foreground">
+                  Vous proposez la livraison
+                </p>
+              </div>
+              <Switch
+                checked={newProduct.deliveryAvailable}
+                onCheckedChange={(v) => setNewProduct({ ...newProduct, deliveryAvailable: v })}
+              />
+            </div>
+          </div>
+
+          {/* Live Product Preview */}
+          {newProduct.name && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary" />
+                Aperçu de votre annonce
+              </Label>
+              <div className="border border-border rounded-xl overflow-hidden bg-card">
+                <div className="flex gap-3 p-3">
+                  {imagePreviews.length > 0 ? (
+                    <img src={imagePreviews[0]} alt="" className="w-24 h-24 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Package className="w-8 h-8 text-muted-foreground/30" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {newProduct.is_organic && (
+                        <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5">BIO</Badge>
+                      )}
+                      {newProduct.category && (
+                        <Badge variant="secondary" className="text-[9px]">{newProduct.category}</Badge>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-sm text-foreground line-clamp-1">{newProduct.name}</h4>
+                    {newProduct.location && (
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-2.5 h-2.5" />{newProduct.location}
+                      </p>
+                    )}
+                    <div className="flex items-baseline gap-1.5 mt-1.5">
+                      <span className="font-heading text-base font-bold text-primary">
+                        {newProduct.price ? Number(newProduct.price).toLocaleString() : "0"} FCFA
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">/{newProduct.unit}</span>
+                    </div>
+                    {newProduct.quantity_available && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {newProduct.quantity_available} {newProduct.unit}(s) disponibles
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Subscription info */}
+          {subscription && (
+            <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl border border-primary/10">
+              <Crown className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-[11px] text-muted-foreground">
+                Plan <span className="font-semibold text-foreground">{subscription.plan === "free" ? "Gratuit" : subscription.plan === "pro" ? "Pro" : "Business"}</span>
+                {" "}— {subscription.max_products >= 9999 ? "produits illimités" : `${subscription.max_products} produits max`}
               </p>
             </div>
-            <Switch
-              checked={newProduct.is_organic}
-              onCheckedChange={(v) => setNewProduct({ ...newProduct, is_organic: v })}
-            />
-          </div>
+          )}
 
           <div className="flex gap-3 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -403,7 +553,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               ) : (
                 <>
                   <Plus className="w-4 h-4 mr-2" />
-                  Publier le produit
+                  {editProduct ? "Enregistrer" : "Publier le produit"}
                 </>
               )}
             </Button>
