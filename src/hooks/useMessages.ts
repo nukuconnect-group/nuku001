@@ -95,24 +95,24 @@ export function useMessages(conversationId: string | null, profileId: string | n
   }, [conversationId, profileId]);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, replyToId?: string) => {
       if (!conversationId || !profileId || !content.trim()) return;
 
-      // Optimistic add
       const tempId = `temp-${Date.now()}`;
       const optimistic: MessageItem = {
-        id: tempId,
-        senderId: "me",
-        content,
-        timestamp: new Date(),
-        status: "sent",
-        type: "text",
+        id: tempId, senderId: "me", content, timestamp: new Date(),
+        status: "sent", type: "text", replyToId,
       };
       setMessages((prev) => [...prev, optimistic]);
 
+      const insertData: any = { conversation_id: conversationId, sender_id: profileId, content };
+      if (replyToId && !replyToId.startsWith("temp-")) {
+        insertData.reply_to_id = replyToId;
+      }
+
       const { data, error } = await supabase
         .from("messages")
-        .insert({ conversation_id: conversationId, sender_id: profileId, content })
+        .insert(insertData)
         .select("id")
         .single();
 
@@ -121,12 +121,10 @@ export function useMessages(conversationId: string | null, profileId: string | n
         return;
       }
 
-      // Replace temp with real
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, id: data.id, status: "delivered" as const } : m))
       );
 
-      // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
     },
     [conversationId, profileId]
