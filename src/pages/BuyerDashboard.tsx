@@ -260,6 +260,11 @@ const BuyerDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Subscription Management */}
+          <div className="mb-5 sm:mb-8">
+            <SubscriptionCard />
+          </div>
+
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
             <TabsList className="bg-muted p-1 w-full overflow-x-auto flex justify-start sm:justify-center scrollbar-hide">

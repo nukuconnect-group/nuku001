@@ -165,6 +165,11 @@ const Dashboard = () => {
             </Link>
           </div>
 
+          {/* Subscription Management */}
+          <div className="mb-4 sm:mb-6">
+            <SubscriptionCard />
+          </div>
+
           {/* Buy/Sell Intent */}
           <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/10">
             <CardContent className="p-3 sm:p-4">
