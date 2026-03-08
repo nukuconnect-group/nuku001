@@ -198,9 +198,9 @@ export const products: Product[] = [
       totalSales: 67,
     },
     images: [
-      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
+      "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400",
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80",
     description: "Riz paddy cultivé dans les bas-fonds, excellente qualité.",
     isOrganic: true,
     createdAt: "2025-01-24",
