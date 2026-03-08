@@ -56,7 +56,7 @@ const NukuAISection = () => {
             </div>
 
             <Link to="/nuku-ai">
-              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold gap-2 text-sm sm:text-base">
+              <Button size="lg" className="bg-white hover:bg-white/90 text-primary font-semibold gap-2 text-sm sm:text-base">
                 Essayer NUKU AI <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
