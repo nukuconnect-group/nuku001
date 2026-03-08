@@ -203,13 +203,7 @@ const PromoBannerSlider = () => {
                 <Link key={producer.id} to={`/producteurs/${producer.id}`}
                   className="flex-shrink-0 flex flex-col items-center gap-1 w-16 sm:w-20 group">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-muted">
-                    {producer.avatar_url ? (
-                      <img src={producer.avatar_url} alt={producer.full_name || ""} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                    )}
+                    <img src={producer.avatar_url || defaultAvatar} alt={producer.full_name || ""} className="w-full h-full object-cover" />
                   </div>
                   <p className="text-[9px] sm:text-[11px] font-medium text-foreground text-center line-clamp-1 w-full">
                     {(producer.full_name || "").split(' ')[0]}
