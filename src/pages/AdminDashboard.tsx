@@ -15,7 +15,7 @@ import {
   Users, Package, ShoppingCart, DollarSign, TrendingUp, Crown,
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
-  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone
+  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import CategoryManager from "@/components/admin/CategoryManager";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
+import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 
 const COLORS = [
@@ -290,6 +291,9 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="finances" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <HandCoins className="w-3.5 h-3.5" />Finances
+              </TabsTrigger>
+              <TabsTrigger value="withdrawals" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Wallet className="w-3.5 h-3.5" />Retraits
               </TabsTrigger>
               <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Megaphone className="w-3.5 h-3.5" />Notifications
@@ -1058,6 +1062,11 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            {/* Withdrawals Tab */}
+            <TabsContent value="withdrawals">
+              <WithdrawalManager />
             </TabsContent>
 
             {/* Broadcast Notification Tab */}
