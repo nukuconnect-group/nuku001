@@ -15,7 +15,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2, DollarSign
+  Loader2, DollarSign, CreditCard
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -52,6 +52,13 @@ const ProductDetail = () => {
     if (product) {
       addItem(product, quantity);
       toast({ title: t("product.addedToCart"), description: `${quantity} ${product.unit}(s) de ${product.name}` });
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (product) {
+      addItem(product, quantity);
+      navigate("/panier");
     }
   };
 
@@ -242,11 +249,14 @@ const ProductDetail = () => {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handleContactSeller}>
+                  <Button variant="outline" className="gap-2" onClick={handleContactSeller}>
                     <MessageCircle className="w-4 h-4" />{t("product.contactSeller")}
                   </Button>
-                  <Button variant="hero" className="flex-1 gap-2" onClick={handleAddToCart}>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={handleAddToCart}>
                     <ShoppingCart className="w-4 h-4" />{t("product.addToCart")}
+                  </Button>
+                  <Button variant="hero" className="flex-1 gap-2" onClick={handleBuyNow}>
+                    <CreditCard className="w-4 h-4" />Acheter
                   </Button>
                 </div>
               </div>

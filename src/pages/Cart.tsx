@@ -149,7 +149,34 @@ const Cart = () => {
       }
 
       generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
-      toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
+
+      // Send confirmation email (fire & forget)
+      const now = new Date();
+      const invoiceNumber = `NK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+      supabase.functions.invoke("order-confirmation", {
+        body: {
+          buyerEmail: billing.email,
+          buyerName: buyerFullName,
+          orderItems: items.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            unitPrice: item.product.price,
+            unit: item.product.unit,
+            sellerName: item.product.producer.name,
+          })),
+          subtotal: total,
+          deliveryPrice,
+          total: finalTotal,
+          deliveryMethod: selectedDelivery?.name || "Retrait",
+          paymentMethod: selectedPayment?.name || "Mobile Money",
+          deliveryCity,
+          deliveryAddress: fullAddress,
+          invoiceNumber,
+          orderDate: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+        },
+      }).catch(err => console.error("Email confirmation error:", err));
+
+      toast({ title: t("cart.orderSent"), description: "Commande enregistrée ! Un email de confirmation vous sera envoyé." });
       clearCart();
       navigate("/suivi-livraison");
     } catch (error: any) {
