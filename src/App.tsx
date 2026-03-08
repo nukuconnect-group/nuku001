@@ -18,6 +18,7 @@ import Formations from "./pages/Formations";
 import Traceability from "./pages/Traceability";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
