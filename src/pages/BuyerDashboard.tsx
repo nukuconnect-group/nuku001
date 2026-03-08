@@ -40,7 +40,7 @@ const BuyerDashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("orders");
-  const { wishlistItems } = useWishlist();
+  const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
     const checkAuth = async () => {
