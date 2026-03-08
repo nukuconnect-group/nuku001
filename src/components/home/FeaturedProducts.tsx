@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { products as mockProducts } from "@/data/marketplace";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "@/components/marketplace/ProductCard";
 
