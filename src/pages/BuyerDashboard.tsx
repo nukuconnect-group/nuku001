@@ -48,39 +48,60 @@ const BuyerDashboard = () => {
   const { wishlist: wishlistItems } = useWishlist();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-      
+    let isMounted = true;
+    
+    const loadDashboard = async (userId: string) => {
+      // Fetch profile first
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .single();
       
+      if (!isMounted) return;
       setProfile(profileData);
       
       if (profileData) {
-        // Fetch orders, conversations, notifications in parallel
+        // Show dashboard immediately, load data in parallel
+        setIsLoading(false);
+        
         const [ordersRes, convsRes, notifsRes] = await Promise.all([
           supabase.from("orders").select("*, products(*)").eq("buyer_id", profileData.id).order("created_at", { ascending: false }),
           supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profileData.id).order("updated_at", { ascending: false }).limit(10),
-          supabase.from("notifications").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).limit(20),
+          supabase.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
         ]);
         
+        if (!isMounted) return;
         setOrders(ordersRes.data || []);
         setConversations(convsRes.data || []);
         setNotifications(notifsRes.data || []);
+      } else {
+        if (isMounted) setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
-    checkAuth();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      setUser(session.user);
+      loadDashboard(session.user.id);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      setUser(session.user);
+      loadDashboard(session.user.id);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
