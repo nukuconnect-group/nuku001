@@ -21,7 +21,7 @@ import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
@@ -44,6 +44,9 @@ const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500000]);
   const [organicOnly, setOrganicOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [discountOnly, setDiscountOnly] = useState(false);
+  const [minRating, setMinRating] = useState(0);
   const [location, setLocation] = useState(t("mp.allRegions"));
   const [sortBy, setSortBy] = useState("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -75,10 +78,13 @@ const Marketplace = () => {
     if (selectedCategory !== "all") count++;
     if (organicOnly) count++;
     if (verifiedOnly) count++;
+    if (inStockOnly) count++;
+    if (discountOnly) count++;
+    if (minRating > 0) count++;
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") count++;
     if (priceRange[0] > 0 || priceRange[1] < 500000) count++;
     return count;
-  }, [selectedCategory, organicOnly, verifiedOnly, location, priceRange, t]);
+  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, t]);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
@@ -93,14 +99,19 @@ const Marketplace = () => {
     if (organicOnly) result = result.filter(p => p.isOrganic);
     if (verifiedOnly) result = result.filter(p => p.producer.verified);
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") result = result.filter(p => p.location.includes(location));
+    if (inStockOnly) result = result.filter(p => p.quantity > 0);
+    if (discountOnly) result = result.filter(p => p.discount && p.discount > 0);
+    if (minRating > 0) result = result.filter(p => p.producer.rating >= minRating);
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
       case "rating": result.sort((a, b) => b.producer.rating - a.producer.rating); break;
+      case "popular": result.sort((a, b) => (b.producer.totalSales || 0) - (a.producer.totalSales || 0)); break;
+      case "discount": result.sort((a, b) => (b.discount || 0) - (a.discount || 0)); break;
       default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return result;
-  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, location, sortBy, allProducts, t]);
+  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, t]);
 
   const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
   const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
@@ -115,7 +126,8 @@ const Marketplace = () => {
 
   const handleReset = () => {
     setSearchQuery(""); setSelectedCategory("all"); setPriceRange([0, 500000]);
-    setOrganicOnly(false); setVerifiedOnly(false); setLocation(t("mp.allRegions"));
+    setOrganicOnly(false); setVerifiedOnly(false); setInStockOnly(false);
+    setDiscountOnly(false); setMinRating(0); setLocation(t("mp.allRegions"));
     setSortBy("recent"); setProductSearch("");
   };
 
@@ -180,14 +192,34 @@ const Marketplace = () => {
           <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
         </Select>
       </div>
+      {/* Note minimum */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Note minimum</Label>
+        <div className="flex gap-1">
+          {[0, 3, 3.5, 4, 4.5].map((r) => (
+            <button key={r} onClick={() => setMinRating(r)}
+              className={`flex items-center gap-0.5 px-2 py-1 rounded-md text-[10px] border transition-colors ${minRating === r ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50"}`}>
+              {r === 0 ? "Tous" : <><Star className="w-2.5 h-2.5 fill-current" />{r}+</>}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />{t("mp.bioOnly")}</Label>
           <Switch checked={organicOnly} onCheckedChange={setOrganicOnly} />
         </div>
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">{t("mp.verifiedOnly")}</Label>
+          <Label className="text-xs font-medium flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t("mp.verifiedOnly")}</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium flex items-center gap-1.5"><PackageCheck className="w-3.5 h-3.5 text-green-600" />En stock uniquement</Label>
+          <Switch checked={inStockOnly} onCheckedChange={setInStockOnly} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-destructive" />En promotion</Label>
+          <Switch checked={discountOnly} onCheckedChange={setDiscountOnly} />
         </div>
       </div>
       <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">{t("mp.reset")}</Button>
@@ -274,12 +306,14 @@ const Marketplace = () => {
               </SheetContent>
             </Sheet>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
+              <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
+                <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
+                <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
                 <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
                 <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
-                <SelectItem value="rating" className="text-xs">{t("mp.sortRating")}</SelectItem>
+                <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
               </SelectContent>
             </Select>
           </div>
