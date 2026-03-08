@@ -547,6 +547,9 @@ const AdminDashboard = () => {
                   </Card>
                 </div>
 
+                {/* Visitor World Map */}
+                <VisitorWorldMap countryData={countryData} />
+
                 {/* Locations & Pages */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Locations */}
