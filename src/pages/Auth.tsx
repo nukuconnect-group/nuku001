@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -47,6 +49,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -731,13 +734,13 @@ const Auth = () => {
                           className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                         <label htmlFor="privacy-policy" className="text-xs text-muted-foreground leading-tight">
                           J'accepte les{" "}
-                          <Link to="/terms" target="_blank" className="text-primary underline hover:text-primary/80">
+                          <button type="button" onClick={() => setLegalSheet("terms")} className="text-primary underline hover:text-primary/80">
                             conditions d'utilisation
-                          </Link>{" "}
+                          </button>{" "}
                           et la{" "}
-                          <Link to="/privacy" target="_blank" className="text-primary underline hover:text-primary/80">
+                          <button type="button" onClick={() => setLegalSheet("privacy")} className="text-primary underline hover:text-primary/80">
                             politique de confidentialité
-                          </Link>
+                          </button>
                         </label>
                       </div>
 
@@ -786,6 +789,68 @@ const Auth = () => {
       </main>
 
       <Footer />
+
+      {/* Legal preview sheet */}
+      <Sheet open={legalSheet !== null} onOpenChange={() => setLegalSheet(null)}>
+        <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>
+              {legalSheet === "terms" ? "Conditions d'utilisation" : "Politique de confidentialité"}
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(70vh-80px)] mt-4 pr-4">
+            {legalSheet === "terms" ? (
+              <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
+                <h3 className="text-foreground font-semibold">1. Objet</h3>
+                <p>Les présentes Conditions Générales d'Utilisation régissent l'accès et l'utilisation de la plateforme NUKUCONNECT, opérée par Nukuconnect SA. En utilisant la plateforme, vous acceptez ces conditions dans leur intégralité.</p>
+                
+                <h3 className="text-foreground font-semibold">2. Accès à la plateforme</h3>
+                <p>L'inscription est ouverte à toute personne physique ou morale souhaitant acheter ou vendre des produits agricoles. Chaque utilisateur est responsable de la véracité des informations fournies lors de l'inscription.</p>
+                
+                <h3 className="text-foreground font-semibold">3. Services proposés</h3>
+                <p>NUKUCONNECT met en relation acheteurs et fournisseurs de produits agricoles. La plateforme facilite la mise en vente, la recherche, la communication et le suivi des commandes.</p>
+                
+                <h3 className="text-foreground font-semibold">4. Paiements</h3>
+                <p>Les transactions sont effectuées via les moyens de paiement proposés sur la plateforme. NUKUCONNECT peut prélever une commission sur les ventes réalisées.</p>
+                
+                <h3 className="text-foreground font-semibold">5. Responsabilités</h3>
+                <p>NUKUCONNECT agit en tant qu'intermédiaire et ne peut être tenu responsable de la qualité des produits vendus par les fournisseurs. Les litiges entre acheteurs et vendeurs doivent être résolus directement entre les parties.</p>
+                
+                <h3 className="text-foreground font-semibold">6. Propriété intellectuelle</h3>
+                <p>Tous les contenus de la plateforme (logos, textes, images) sont la propriété de Nukuconnect SA et sont protégés par le droit de la propriété intellectuelle.</p>
+
+                <div className="pt-4">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
+                <h3 className="text-foreground font-semibold">1. Collecte des données</h3>
+                <p>Nous collectons les données personnelles nécessaires au fonctionnement de la plateforme : nom, email, téléphone, localisation et informations de profil.</p>
+                
+                <h3 className="text-foreground font-semibold">2. Utilisation des données</h3>
+                <p>Vos données sont utilisées pour gérer votre compte, faciliter les transactions, améliorer nos services et vous envoyer des communications liées à votre activité sur la plateforme.</p>
+                
+                <h3 className="text-foreground font-semibold">3. Protection des données</h3>
+                <p>Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles pour protéger vos données contre tout accès non autorisé, modification ou divulgation.</p>
+                
+                <h3 className="text-foreground font-semibold">4. Partage des données</h3>
+                <p>Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec des partenaires uniquement dans le cadre de l'exécution des services (livraison, paiement).</p>
+                
+                <h3 className="text-foreground font-semibold">5. Vos droits</h3>
+                <p>Vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles. Contactez-nous à support@nukuconnect.com pour exercer ces droits.</p>
+                
+                <h3 className="text-foreground font-semibold">6. Cookies</h3>
+                <p>La plateforme utilise des cookies pour améliorer votre expérience. Vous pouvez gérer vos préférences de cookies dans les paramètres de votre navigateur.</p>
+
+                <div className="pt-4">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button>
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
