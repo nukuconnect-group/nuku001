@@ -71,7 +71,7 @@ const About = () => {
                   <img
                     src={member.avatar}
                     alt={member.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
                 <CardContent className="p-4 sm:p-5 text-center">
