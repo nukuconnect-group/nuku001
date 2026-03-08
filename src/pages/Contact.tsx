@@ -71,7 +71,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-heading font-semibold text-sm text-foreground">Téléphone</h3>
-                    <a href="tel:+22890000000" className="text-sm text-primary hover:underline">+228 90 00 00 00</a>
+                    <a href="tel:+22891971076" className="text-sm text-primary hover:underline">+228 91 97 10 76</a>
+                    <a href="tel:+22891201468" className="text-sm text-primary hover:underline block">+228 91 20 14 68</a>
                     <p className="text-xs text-muted-foreground mt-0.5">Lun - Ven, 8h - 18h</p>
                   </div>
                 </CardContent>
