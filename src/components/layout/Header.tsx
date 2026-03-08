@@ -21,6 +21,7 @@ import CartSidebar from "@/components/cart/CartSidebar";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
+import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 
 const languages = [
   { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
@@ -276,7 +277,9 @@ const Header = () => {
 
               <Link to="/" className="flex items-center gap-2 flex-shrink-0">
                 <img src={nukuLogo} alt="NUKUCONNECT"
-                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5" />
+                  className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 object-contain rounded-full bg-white p-0.5 hidden sm:block" />
+                <img src={nukuLogoWhite} alt="NUKUCONNECT"
+                  className="h-7 object-contain sm:hidden" />
                 <span className="font-heading font-bold text-sm sm:text-base lg:text-lg text-primary-foreground hidden sm:block">
                   NUKUCONNECT
                 </span>

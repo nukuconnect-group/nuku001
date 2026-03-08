@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import nukuLogo from "@/assets/nukuconnect-logo.png";
+import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 
 const sectors = [
   "Céréales & Légumineuses",
@@ -269,16 +269,17 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-earth">
       <Header />
       
-      <main className="pt-24 pb-16">
+      <main className="py-6 sm:py-10">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
             {/* Logo */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <img 
                 src={nukuLogo} 
                 alt="NUKUCONNECT" 
-                className="w-20 h-20 mx-auto object-contain"
+                className="w-24 h-24 sm:w-28 sm:h-28 mx-auto object-contain rounded-full bg-white p-1 shadow-lg"
               />
+              <h2 className="font-heading text-lg sm:text-xl font-bold text-foreground mt-2">NUKUCONNECT</h2>
             </div>
 
             <Card variant="feature">
@@ -376,7 +377,7 @@ const Auth = () => {
                           >
                             <User className={`w-6 h-6 mx-auto mb-2 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
                             <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
-                              Producteur
+                              Fournisseur
                             </span>
                           </button>
                           <button

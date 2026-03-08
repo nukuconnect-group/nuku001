@@ -40,10 +40,10 @@ const ProducerProfile = () => {
         <Header />
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="font-heading text-2xl font-bold text-foreground mb-4">
-            Producteur non trouvé
+            Fournisseur non trouvé
           </h1>
           <Link to="/producteurs">
-            <Button variant="hero">Voir tous les producteurs</Button>
+            <Button variant="hero">Voir tous les fournisseurs</Button>
           </Link>
         </div>
         <Footer />

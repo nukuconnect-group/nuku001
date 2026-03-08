@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
-import nukuLogo from "@/assets/nukuconnect-logo.png";
+import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
 
@@ -8,7 +8,7 @@ const Footer = () => {
   const footerLinks = {
     platform: [
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Producteurs", href: "/producteurs" },
+      { label: "Fournisseurs", href: "/producteurs" },
       { label: "Acheteurs", href: "/buyer-dashboard" },
       { label: "NUKU AI", href: "/nuku-ai" },
     ],
@@ -71,7 +71,7 @@ const Footer = () => {
           {/* Brand - Logo only, no text name */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <img src={nukuLogo} alt="NUKUCONNECT" className="w-16 h-16 object-contain" />
+              <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-12 object-contain" />
             </Link>
             <p className="text-primary-foreground/70 text-xs sm:text-sm mb-4 sm:mb-6">
               La marketplace agricole intelligente qui connecte producteurs et acheteurs.
