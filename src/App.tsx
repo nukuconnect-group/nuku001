@@ -94,6 +94,7 @@ const App = () => {
                 <Route path="/aide" element={<Help />} />
                 <Route path="/faq" element={<Help />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
