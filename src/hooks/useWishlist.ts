@@ -24,7 +24,7 @@ export function useWishlist() {
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as { id: string; user_id: string; product_id: string; created_at: string }[];
+      return (data || []) as unknown as { id: string; user_id: string; product_id: string; created_at: string }[];
     },
     enabled: !!userId,
   });
