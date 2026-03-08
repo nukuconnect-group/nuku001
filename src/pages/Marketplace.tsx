@@ -19,15 +19,15 @@ import {
 import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useProducts } from "@/hooks/useProducts";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
+import { useLanguage, type CurrencyCode } from "@/contexts/LanguageContext";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, DollarSign } from "lucide-react";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
 
 const Marketplace = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t, formatPrice: fmtPrice } = useLanguage();
+  const { t, formatPrice: fmtPrice, currency, setCurrency } = useLanguage();
   const { data: dbProducts, isLoading } = useProducts();
   
   // Merge DB products with mock products (DB first)
@@ -268,6 +268,16 @@ const Marketplace = () => {
                 {t("mp.verified")}
               </Button>
             </div>
+            {/* Currency selector */}
+            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
+              <SelectTrigger className="w-24 h-8 text-xs"><DollarSign className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="XOF" className="text-xs">FCFA</SelectItem>
+                <SelectItem value="USD" className="text-xs">USD $</SelectItem>
+                <SelectItem value="EUR" className="text-xs">EUR €</SelectItem>
+                <SelectItem value="GBP" className="text-xs">GBP £</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-28 sm:w-36 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
               <SelectContent>
