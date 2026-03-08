@@ -115,6 +115,26 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check subscription before publishing
+    if (!editProduct) {
+      const check = await canPublishProduct();
+      if (!check.allowed) {
+        if (check.reason === "no_subscription") {
+          toast({ title: "Abonnement requis", description: "Vous devez souscrire à un plan d'adhésion pour publier des produits.", variant: "destructive" });
+          onOpenChange(false);
+          navigate("/plans");
+          return;
+        }
+        if (check.reason === "limit_reached") {
+          toast({ title: "Limite atteinte", description: `Votre plan ${subscription?.plan} est limité à ${subscription?.max_products} produits. Passez au plan supérieur.`, variant: "destructive" });
+          onOpenChange(false);
+          navigate("/plans");
+          return;
+        }
+      }
+    }
+
     setIsLoading(true);
 
     try {
