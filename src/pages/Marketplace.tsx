@@ -202,8 +202,10 @@ const Marketplace = () => {
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="h-9 text-xs"><SelectValue placeholder={t("mp.allCategories")} /></SelectTrigger>
           <SelectContent>
+            <SelectItem key="all" value="all" className="text-xs">{t("mp.allCategories")}</SelectItem>
             {marketplaceCategories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id} className="text-xs">{cat.name}</SelectItem>
+              <SelectItem key={cat.id} value={cat.name.toLowerCase()} className="text-xs">{cat.name}</SelectItem>
+            ))}
             ))}
           </SelectContent>
         </Select>
