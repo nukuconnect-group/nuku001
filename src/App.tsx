@@ -75,6 +75,7 @@ const App = () => {
                 <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                 <Route path="/a-propos" element={<About />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/favoris" element={<Favorites />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

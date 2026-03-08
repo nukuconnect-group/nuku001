@@ -189,6 +189,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Tableau de bord", href: "/dashboard", show: profile?.user_type === "producer" },
+    { icon: Heart, label: "Mes Favoris", href: "/favoris", show: true },
     { icon: ShoppingBag, label: "Mes commandes", href: "/orders", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
     { icon: Crown, label: "Plans & Tarifs", href: "/plans", show: true },
