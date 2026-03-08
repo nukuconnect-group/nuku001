@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
-  LayoutDashboard, Wallet, DollarSign
+  LayoutDashboard, Wallet, DollarSign, Leaf
 } from "lucide-react";
+import { products as mockProducts } from "@/data/marketplace";
+import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
