@@ -33,7 +33,7 @@ const promoTypes = [
   { value: "nouveau", label: "NOUVEAU", icon: Zap },
 ];
 
-const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddProductModalProps) => {
+const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editProduct }: AddProductModalProps) => {
   const { toast } = useToast();
   const { uploadImages, uploading } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +41,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [newProduct, setNewProduct] = useState({
+  const defaultProduct = {
     name: "",
     description: "",
     price: "",
@@ -54,6 +54,31 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     location: "",
     is_organic: false,
     min_order: "1",
+  };
+
+  const [newProduct, setNewProduct] = useState(defaultProduct);
+
+  // Populate form when editing
+  useState(() => {
+    if (editProduct) {
+      setNewProduct({
+        name: editProduct.name || "",
+        description: editProduct.description || "",
+        price: String(editProduct.price || ""),
+        originalPrice: "",
+        discount: "",
+        promoType: "none",
+        category: editProduct.category || "",
+        unit: editProduct.unit || "kg",
+        quantity_available: String(editProduct.quantity_available || ""),
+        location: editProduct.location || "",
+        is_organic: editProduct.is_organic || false,
+        min_order: String(editProduct.min_order || "1"),
+      });
+      if (editProduct.images?.length) {
+        setImagePreviews(editProduct.images);
+      }
+    }
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
