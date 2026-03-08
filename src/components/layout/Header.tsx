@@ -207,8 +207,8 @@ const Header = () => {
         </div>
 
 
-      {/* Sticky part: Row 2 (main header) + mobile search */}
-      <header className="sticky top-0 z-50 bg-card shadow-sm">
+      {/* Sticky part: Row 2 only (main header bar) */}
+      <header className="sticky top-0 z-50 bg-primary shadow-sm">
         {/* Row 2: Main Header */}
         <div className="bg-primary text-primary-foreground">
           <div className="container mx-auto px-3 sm:px-4">
@@ -439,22 +439,22 @@ const Header = () => {
             </div>
           </div>
         </div>
-
-        {/* Row 3: Mobile Search */}
-        <div className="lg:hidden bg-primary px-3 pb-2" ref={mobileSearchRef}>
-          <div className="relative">
-            <Input type="text" placeholder={t("header.search")} value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
-              onFocus={() => setShowSearchResults(true)}
-              className="w-full h-9 pl-4 pr-10 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
-            <Button size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full"
-              onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
-              <Search className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
       </header>
+
+      {/* Row 3: Mobile Search - scrolls away */}
+      <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
+        <div className="relative">
+          <Input type="text" placeholder={t("header.search")} value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
+            onFocus={() => setShowSearchResults(true)}
+            className="w-full h-9 pl-4 pr-10 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
+          <Button size="icon"
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 bg-accent hover:bg-accent/90 text-accent-foreground rounded-full"
+            onClick={() => { if (searchQuery) { navigate(`/marketplace?search=${searchQuery}`); setShowSearchResults(false); } }}>
+            <Search className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
 
       {/* Row 4: Desktop Nav - scrolls away */}
       <nav className="hidden lg:block bg-card border-b border-border z-40">
