@@ -128,10 +128,28 @@ const BuyerDashboard = () => {
     return <Badge variant={s.variant} className="text-[10px] sm:text-xs">{s.label}</Badge>;
   };
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-20 lg:pb-0">
+        <Header />
+        <main className="py-3 sm:py-6">
+          <div className="container mx-auto px-3 sm:px-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-muted animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-5 w-40 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+            <div className="h-64 bg-muted animate-pulse rounded-xl" />
+          </div>
+        </main>
+        <MobileBottomNav />
       </div>
     );
   }
