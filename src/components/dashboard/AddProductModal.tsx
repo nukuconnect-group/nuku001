@@ -59,6 +59,10 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     location: "",
     is_organic: false,
     min_order: "1",
+    deliveryDelay: "immediate",
+    saleMode: "retail",
+    negotiable: false,
+    deliveryAvailable: true,
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
