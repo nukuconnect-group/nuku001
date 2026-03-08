@@ -25,9 +25,14 @@ export function useCategories(activeOnly = true) {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("Categories fetch error:", error);
+        throw error;
+      }
       return (data as unknown as DbCategory[]) || [];
     },
     staleTime: 1000 * 60 * 5,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 }
