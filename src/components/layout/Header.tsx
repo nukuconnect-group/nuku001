@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Menu, User, LogOut, LayoutGrid, Search, Globe, ChevronDown, Bell, 
   ChevronRight, MapPin, Truck, CreditCard, Settings, Package, 
-  LayoutDashboard, Wallet, DollarSign, Leaf
+  LayoutDashboard, Wallet, DollarSign, Leaf, MessageCircle
 } from "lucide-react";
 import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
@@ -446,8 +446,17 @@ const Header = () => {
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
-                        <User className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden">
+                        {profile?.avatar_url ? (
+                          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-primary-foreground/20 rounded-full">
+                            <span className="text-xs font-bold text-primary-foreground">
+                              {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 bg-card">
@@ -476,6 +485,11 @@ const Header = () => {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                           <Link to="/messages" className="flex items-center gap-2 text-xs">
+                            <MessageCircle className="w-3.5 h-3.5" />Messagerie
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
                             <Package className="w-3.5 h-3.5" />{t("dashboard.orders")}
                           </Link>
                         </DropdownMenuItem>
