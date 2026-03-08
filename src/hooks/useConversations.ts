@@ -134,6 +134,9 @@ export function useConversations() {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => {
         fetchConversations();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_presence" }, () => {
+        fetchConversations();
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
