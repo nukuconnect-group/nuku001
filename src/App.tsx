@@ -59,6 +59,7 @@ const App = () => {
               <SplashScreen onComplete={handleSplashComplete} />
             )}
             <BrowserRouter>
+              <RealtimeNotifications />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/marketplace" element={<Marketplace />} />
