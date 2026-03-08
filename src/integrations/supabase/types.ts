@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_visits: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          is_pwa: boolean | null
+          os: string | null
+          page_path: string
+          referrer: string | null
+          region: string | null
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_pwa?: boolean | null
+          os?: string | null
+          page_path: string
+          referrer?: string | null
+          region?: string | null
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_pwa?: boolean | null
+          os?: string | null
+          page_path?: string
+          referrer?: string | null
+          region?: string | null
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -492,6 +543,7 @@ export type Database = {
     }
     Functions: {
       count_user_products: { Args: { p_user_id: string }; Returns: number }
+      get_admin_analytics: { Args: never; Returns: Json }
       get_admin_orders: { Args: never; Returns: Json[] }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
