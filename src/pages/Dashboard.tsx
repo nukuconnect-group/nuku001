@@ -61,7 +61,7 @@ const Dashboard = () => {
     loadData();
     return () => { isMounted = false; };
   }, [profileLoading, user, profile, navigate]);
-  }, [navigate]);
+  
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const completedOrders = orders.filter(o => o.status === "completed").length;
