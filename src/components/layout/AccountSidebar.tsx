@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
-  Crown, Heart
+  Crown, Heart, Shield
 } from "lucide-react";
 
 interface AccountSidebarProps {
@@ -51,6 +51,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -92,12 +93,12 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
-    setProfile(data);
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    ]);
+    setProfile(profileRes.data);
+    setIsAdmin(!!roleRes.data);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -188,7 +189,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Tableau de bord", href: "/dashboard", show: profile?.user_type === "producer" },
+    { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
+    { icon: LayoutDashboard, label: "Tableau de bord", href: profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard", show: true },
     { icon: Heart, label: "Mes Favoris", href: "/favoris", show: true },
     { icon: ShoppingBag, label: "Mes commandes", href: "/orders", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
