@@ -59,11 +59,15 @@ const Marketplace = () => {
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   
-  // Merge DB products with mock products (DB first)
+  // Real DB products first, then a few mock products as filler
   const allProducts = useMemo(() => {
     const db = dbProducts || [];
-    // If we have DB products, show them first, then mock ones
-    if (db.length > 0) return [...db, ...mockProducts];
+    if (db.length > 0) {
+      // Show all real products + max 4 mock as "suggestions"
+      const mockFiller = mockProducts.slice(0, Math.max(0, 4 - Math.floor(db.length / 2)));
+      return [...db, ...mockFiller];
+    }
+    // No real products yet: show mock as demo
     return mockProducts;
   }, [dbProducts]);
 
