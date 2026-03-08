@@ -80,16 +80,16 @@ const CategoriesSection = () => {
           <div className="w-24 h-1 bg-primary mt-1.5 rounded-full" />
         </div>
 
-        {/* Mobile: horizontal scroll */}
-        <div className="flex gap-3 overflow-x-auto pb-3 -mx-3 px-3 scrollbar-hide md:hidden">
+        {/* Horizontal scroll on all devices */}
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 -mx-3 px-3 md:mx-0 md:px-0 scrollbar-hide">
           {activeCategories.map((cat: any) => (
             <Link
               key={cat.id}
               to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-              className="flex-shrink-0 w-[46vw] max-w-[200px] group"
+              className="flex-shrink-0 w-[46vw] max-w-[200px] md:w-[180px] lg:w-[200px] group"
             >
               <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow">
-                <div className="relative h-32 overflow-hidden">
+                <div className="relative h-32 md:h-36 overflow-hidden">
                   <img
                     src={getCategoryImage(cat.name)}
                     alt={cat.name}
@@ -97,39 +97,10 @@ const CategoriesSection = () => {
                   />
                 </div>
                 <div className="p-3 text-center">
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wide line-clamp-2 leading-tight">
+                  <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide line-clamp-2 leading-tight">
                     {cat.name}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {productCounts[cat.id] || 0} {(productCounts[cat.id] || 0) > 1 ? "produits" : "produit"}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop: grid */}
-        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {activeCategories.map((cat: any) => (
-            <Link
-              key={cat.id}
-              to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-              className="group"
-            >
-              <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow">
-                <div className="relative h-40 overflow-hidden">
-                  <img
-                    src={getCategoryImage(cat.name)}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-3 text-center">
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide line-clamp-2">
-                    {cat.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
                     {productCounts[cat.id] || 0} {(productCounts[cat.id] || 0) > 1 ? "produits" : "produit"}
                   </p>
                 </div>
