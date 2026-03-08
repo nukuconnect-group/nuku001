@@ -15,7 +15,7 @@ export function useCategories(activeOnly = true) {
   return useQuery({
     queryKey: ["categories", activeOnly],
     queryFn: async () => {
-      let query = supabase
+      await new Promise(resolve => setTimeout(resolve, 100));
         .from("categories")
         .select("*")
         .order("sort_order", { ascending: true });
