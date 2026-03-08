@@ -2,18 +2,29 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/components/cart/CartContext";
-import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck } from "lucide-react";
+import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+const promoCodes: Record<string, { discount: number; type: "percent" | "fixed"; label: string; minAmount?: number }> = {
+  "NUKU10": { discount: 10, type: "percent", label: "10% de réduction" },
+  "NUKU20": { discount: 20, type: "percent", label: "20% de réduction", minAmount: 10000 },
+  "BIENVENUE": { discount: 5, type: "percent", label: "5% - Bienvenue !" },
+  "LIVRAISON": { discount: 2500, type: "fixed", label: "2 500 FCFA de réduction" },
+  "PROMO5000": { discount: 5000, type: "fixed", label: "5 000 FCFA de réduction", minAmount: 25000 },
+};
 
 interface OrderSummaryProps {
   deliveryPrice: number;
   isCheckingOut: boolean;
   canCheckout: boolean;
   onCheckout: () => void;
+  onDiscountChange?: (discount: number, code: string) => void;
 }
 
 const purchasePolicyContent = `Dernière mise à jour : 09 février 2025
