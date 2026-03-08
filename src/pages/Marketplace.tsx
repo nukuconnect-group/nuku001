@@ -192,14 +192,34 @@ const Marketplace = () => {
           <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
         </Select>
       </div>
+      {/* Note minimum */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Note minimum</Label>
+        <div className="flex gap-1">
+          {[0, 3, 3.5, 4, 4.5].map((r) => (
+            <button key={r} onClick={() => setMinRating(r)}
+              className={`flex items-center gap-0.5 px-2 py-1 rounded-md text-[10px] border transition-colors ${minRating === r ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50"}`}>
+              {r === 0 ? "Tous" : <><Star className="w-2.5 h-2.5 fill-current" />{r}+</>}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5 text-primary" />{t("mp.bioOnly")}</Label>
           <Switch checked={organicOnly} onCheckedChange={setOrganicOnly} />
         </div>
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium">{t("mp.verifiedOnly")}</Label>
+          <Label className="text-xs font-medium flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t("mp.verifiedOnly")}</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium flex items-center gap-1.5"><PackageCheck className="w-3.5 h-3.5 text-green-600" />En stock uniquement</Label>
+          <Switch checked={inStockOnly} onCheckedChange={setInStockOnly} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-destructive" />En promotion</Label>
+          <Switch checked={discountOnly} onCheckedChange={setDiscountOnly} />
         </div>
       </div>
       <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">{t("mp.reset")}</Button>
