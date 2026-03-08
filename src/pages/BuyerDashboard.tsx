@@ -57,7 +57,7 @@ const BuyerDashboard = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
       
       if (!isMounted) return;
       setProfile(profileData);
