@@ -10,6 +10,7 @@ export interface MessageItem {
   type?: "text" | "image" | "voice" | "file";
   fileUrl?: string;
   fileName?: string;
+  replyToId?: string;
 }
 
 export function useMessages(conversationId: string | null, profileId: string | null) {
