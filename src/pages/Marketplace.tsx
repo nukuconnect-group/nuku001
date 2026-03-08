@@ -295,8 +295,8 @@ const Marketplace = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-heading text-xl font-bold text-primary-foreground">{formatPrice(hero.price)}</span>
-                    {hero.originalPrice && <span className="text-xs text-primary-foreground/50 line-through">{formatPrice(hero.originalPrice)}</span>}
+                    <span className="font-heading text-xl font-bold text-primary-foreground">{fmtPrice(hero.price)}</span>
+                    {hero.originalPrice && <span className="text-xs text-primary-foreground/50 line-through">{fmtPrice(hero.originalPrice)}</span>}
                     <span className="text-[10px] text-primary-foreground/60">/{hero.unit}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-primary-foreground/70">
