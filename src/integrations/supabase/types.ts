@@ -548,6 +548,7 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }
+      get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
       get_user_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -562,6 +563,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      update_user_subscription: {
+        Args: {
+          p_billing_period: string
+          p_expires_at?: string
+          p_max_products: number
+          p_plan: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
