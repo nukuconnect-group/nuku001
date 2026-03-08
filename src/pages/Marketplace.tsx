@@ -5,6 +5,8 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import CompareDrawer from "@/components/marketplace/CompareDrawer";
+import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
+import DemandsList from "@/components/marketplace/DemandsList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -21,7 +23,7 @@ import { products as mockProducts } from "@/data/marketplace";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2 } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, HandCoins } from "lucide-react";
 import { Product } from "@/data/marketplace";
 
 const locations = ["Toutes les régions", "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"];
