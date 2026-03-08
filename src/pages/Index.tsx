@@ -21,7 +21,9 @@ const Index = () => {
         </div>
         {/* PromoBannerSlider: mobile only - with products & farmers */}
         <PromoBannerSlider />
-        <FeaturedProducts />
+        <div className="lg:hidden">
+          <FeaturedProducts />
+        </div>
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />
