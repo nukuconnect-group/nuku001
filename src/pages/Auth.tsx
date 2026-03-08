@@ -443,49 +443,10 @@ const Auth = () => {
                       </div>
                     </div>
 
-                    {magicLinkSent ? (
-                      <div className="text-center space-y-3">
-                        <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                          <Mail className="w-6 h-6 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-foreground">Lien envoyé !</p>
-                        <p className="text-xs text-muted-foreground">
-                          Vérifiez votre boîte email <strong>{magicLinkEmail}</strong> et cliquez sur le lien pour vous connecter.
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => { setMagicLinkSent(false); setMagicLinkEmail(""); }}
-                          className="text-xs"
-                        >
-                          <ArrowLeft className="w-3 h-3 mr-1" /> Réessayer
-                        </Button>
-                      </div>
-                    ) : (
-                      <form onSubmit={handleMagicLink} className="space-y-3">
-                        <p className="text-xs text-center text-muted-foreground">Connexion sans mot de passe via email</p>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            type="email"
-                            placeholder="votre@email.com"
-                            value={magicLinkEmail}
-                            onChange={(e) => setMagicLinkEmail(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
-                        </div>
-                        <Button type="submit" variant="outline" className="w-full gap-2" disabled={isLoading}>
-                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                          Recevoir un lien de connexion
-                        </Button>
-                      </form>
-                    )}
-
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full gap-2 mt-4"
+                      className="w-full gap-2"
                       onClick={handleGoogleSignIn}
                       disabled={isLoading}
                     >
