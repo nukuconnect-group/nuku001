@@ -257,7 +257,7 @@ const DeliveryTracking = () => {
                     <div className="flex gap-2 mt-3">
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
                         onClick={() => navigate("/messages")}>
-                        <Phone className="w-3.5 h-3.5" />Contacter
+                        <MessageCircle className="w-3.5 h-3.5" />Contacter
                       </Button>
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
                         <AlertCircle className="w-3.5 h-3.5" />Signaler

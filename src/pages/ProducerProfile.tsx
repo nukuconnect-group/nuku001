@@ -14,7 +14,6 @@ import {
   Star, 
   ShieldCheck, 
   MessageCircle, 
-  Phone,
   Calendar,
   Package,
   ShoppingBag,
