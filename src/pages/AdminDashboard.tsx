@@ -1077,6 +1077,11 @@ const AdminDashboard = () => {
             <TabsContent value="broadcast">
               <BroadcastNotification users={users} />
             </TabsContent>
+
+            {/* Support Chat Tab */}
+            <TabsContent value="support">
+              <SupportChat adminProfileId={adminProfile?.id} />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
