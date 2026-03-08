@@ -267,6 +267,13 @@ const Plans = () => {
                         </>
                       )}
                     </div>
+                    
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/30 text-primary">
+                        Commission : {plan.commission}%
+                      </Badge>
+                    </div>
+                    </div>
 
                     <ul className="space-y-2 sm:space-y-3">
                       {plan.features.map((feature) => (
