@@ -155,6 +155,7 @@ const ProductDetail = () => {
                   src={images[currentImageIndex] || product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                 />
                 {images.length > 1 && (
                   <>
