@@ -24,6 +24,7 @@ import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
+import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const purchaseData = [
   { name: 'Jan', achats: 150000 },
