@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
+import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import DemandsList from "@/components/marketplace/DemandsList";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
