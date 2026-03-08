@@ -34,8 +34,10 @@ const promoTypes = [
 
 const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddProductModalProps) => {
   const { toast } = useToast();
+  const { uploadImages, uploading } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [newProduct, setNewProduct] = useState({
