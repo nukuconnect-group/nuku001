@@ -350,9 +350,9 @@ export const products: Product[] = [
       totalSales: 256,
     },
     images: [
-      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80",
     ],
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80",
     description: "Huile de palme rouge artisanale, non raffinée, riche en vitamines.",
     isOrganic: true,
     createdAt: "2025-01-19",
