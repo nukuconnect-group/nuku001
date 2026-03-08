@@ -1,17 +1,13 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  Fish, Wheat, Leaf, Apple, CircleDot, Beef, Bird, Factory, 
-  Tractor, Droplets, TreeDeciduous, LayoutGrid, ChevronRight, Menu
-} from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ChevronRight, LayoutGrid } from "lucide-react";
 
 export interface MarketplaceCategory {
   id: string;
   name: string;
-  icon: LucideIcon;
+  emoji: string;
+  color: string;
   count: number;
   subcategories?: string[];
 }
@@ -20,84 +16,96 @@ export const marketplaceCategories: MarketplaceCategory[] = [
   { 
     id: "all", 
     name: "Toutes catégories", 
-    icon: LayoutGrid, 
+    emoji: "🏪",
+    color: "hsl(var(--primary))",
     count: 250,
     subcategories: []
   },
   { 
     id: "agriculture", 
     name: "Agriculture", 
-    icon: Tractor, 
+    emoji: "🚜",
+    color: "#16a34a",
     count: 85,
     subcategories: ["Céréales", "Légumineuses", "Oléagineux", "Cultures maraîchères"]
   },
   { 
     id: "cereales", 
     name: "Céréales", 
-    icon: Wheat, 
+    emoji: "🌾",
+    color: "#ca8a04",
     count: 45,
     subcategories: ["Maïs", "Riz", "Sorgho", "Mil", "Blé"]
   },
   { 
     id: "legumes", 
     name: "Légumes & Maraîchage", 
-    icon: Leaf, 
+    emoji: "🥬",
+    color: "#15803d",
     count: 38,
     subcategories: ["Tomates", "Oignons", "Piments", "Carottes", "Choux"]
   },
   { 
     id: "fruits", 
     name: "Fruits", 
-    icon: Apple, 
+    emoji: "🍊",
+    color: "#ea580c",
     count: 28,
     subcategories: ["Mangues", "Ananas", "Bananes", "Papayes", "Agrumes"]
   },
   { 
     id: "tubercules", 
     name: "Tubercules", 
-    icon: CircleDot, 
+    emoji: "🥔",
+    color: "#92400e",
     count: 22,
     subcategories: ["Ignames", "Manioc", "Patates douces", "Taros"]
   },
   { 
     id: "elevage", 
     name: "Élevage", 
-    icon: Beef, 
+    emoji: "🐄",
+    color: "#b45309",
     count: 35,
     subcategories: ["Bovins", "Ovins", "Caprins", "Porcins"]
   },
   { 
     id: "volailles", 
     name: "Aviculture", 
-    icon: Bird, 
+    emoji: "🐔",
+    color: "#dc2626",
     count: 18,
     subcategories: ["Poulets", "Pintades", "Dindes", "Canards", "Oeufs"]
   },
   { 
     id: "pisciculture", 
     name: "Pisciculture", 
-    icon: Fish, 
+    emoji: "🐟",
+    color: "#0284c7",
     count: 15,
     subcategories: ["Tilapia", "Carpes", "Silures", "Poissons-chats"]
   },
   { 
     id: "aquaculture", 
     name: "Aquaculture", 
-    icon: Droplets, 
+    emoji: "🦐",
+    color: "#0891b2",
     count: 12,
     subcategories: ["Crevettes", "Huîtres", "Spiruline", "Algues"]
   },
   { 
     id: "agribusiness", 
     name: "Agribusiness", 
-    icon: Factory, 
+    emoji: "🏭",
+    color: "#7c3aed",
     count: 20,
     subcategories: ["Transformation", "Conditionnement", "Export", "Équipements"]
   },
   { 
     id: "foresterie", 
     name: "Foresterie", 
-    icon: TreeDeciduous, 
+    emoji: "🌳",
+    color: "#166534",
     count: 8,
     subcategories: ["Bois", "Charbon de bois", "Produits forestiers non-ligneux"]
   },
@@ -117,7 +125,7 @@ export const CategorySidebar = ({ selectedCategory, onCategoryChange }: Category
         <h2 className="font-heading font-semibold text-foreground">Catégories</h2>
       </div>
       <ScrollArea className="h-[calc(100%-60px)]">
-        <div className="p-2">
+        <div className="p-2 space-y-0.5">
           {marketplaceCategories.map((category) => (
             <div key={category.id}>
               <button
@@ -131,7 +139,7 @@ export const CategorySidebar = ({ selectedCategory, onCategoryChange }: Category
                     : 'hover:bg-muted text-foreground'
                 }`}
               >
-                <category.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-lg flex-shrink-0">{category.emoji}</span>
                 <span className="flex-1 text-left text-sm font-medium truncate">{category.name}</span>
                 <span className={`text-xs ${selectedCategory === category.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                   {category.count}
@@ -144,7 +152,7 @@ export const CategorySidebar = ({ selectedCategory, onCategoryChange }: Category
               </button>
               
               {expandedCategory === category.id && category.subcategories && (
-                <div className="ml-6 mt-1 space-y-1">
+                <div className="ml-9 mt-1 space-y-0.5">
                   {category.subcategories.map((sub) => (
                     <button
                       key={sub}
@@ -187,7 +195,7 @@ export const MobileCategorySidebar = ({
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)]">
-          <div className="p-2">
+          <div className="p-2 space-y-0.5">
             {marketplaceCategories.map((category) => (
               <button
                 key={category.id}
@@ -201,7 +209,7 @@ export const MobileCategorySidebar = ({
                     : 'hover:bg-muted text-foreground'
                 }`}
               >
-                <category.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-xl flex-shrink-0">{category.emoji}</span>
                 <span className="flex-1 text-left font-medium">{category.name}</span>
                 <span className={`text-sm ${selectedCategory === category.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                   {category.count}

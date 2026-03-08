@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { LayoutGrid } from "lucide-react";
 import { marketplaceCategories } from "@/components/marketplace/CategorySidebar";
 
@@ -13,7 +12,7 @@ interface CategorySheetProps {
 const CategorySheet = ({ open, onOpenChange }: CategorySheetProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-80 p-0">
+      <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
         <SheetHeader className="p-4 border-b border-border bg-primary text-primary-foreground">
           <SheetTitle className="flex items-center gap-2 text-primary-foreground">
             <LayoutGrid className="w-5 h-5" />
@@ -21,45 +20,44 @@ const CategorySheet = ({ open, onOpenChange }: CategorySheetProps) => {
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)]">
-          <div className="p-2">
-            {marketplaceCategories.map((category) => (
-              <Link
-                key={category.id}
-                to={`/marketplace?category=${category.id}`}
-                onClick={() => onOpenChange(false)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted text-foreground transition-all"
-              >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <category.icon className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <span className="font-medium">{category.name}</span>
-                  <p className="text-xs text-muted-foreground">
-                    {category.count} produits
-                  </p>
-                </div>
-                <Badge variant="secondary" className="text-xs">
-                  {category.count}
-                </Badge>
-              </Link>
-            ))}
+          {/* Grid of categories */}
+          <div className="p-3">
+            <div className="grid grid-cols-3 gap-2">
+              {marketplaceCategories.map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/marketplace?category=${category.id}`}
+                  onClick={() => onOpenChange(false)}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted border border-border/50 hover:border-primary/30 transition-all active:scale-95"
+                >
+                  <span className="text-2xl">{category.emoji}</span>
+                  <span className="text-[11px] font-medium text-foreground text-center leading-tight line-clamp-2">
+                    {category.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{category.count}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-          
-          {/* Featured Categories */}
-          <div className="p-4 border-t border-border">
-            <h4 className="text-sm font-semibold text-muted-foreground mb-3">
-              POPULAIRES
+
+          {/* Popular section */}
+          <div className="p-3 pt-1 border-t border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider px-1">
+              Populaires
             </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {marketplaceCategories.slice(1, 5).map((cat) => (
+            <div className="space-y-0.5">
+              {marketplaceCategories.slice(1, 6).map((cat) => (
                 <Link
                   key={cat.id}
                   to={`/marketplace?category=${cat.id}`}
                   onClick={() => onOpenChange(false)}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <cat.icon className="w-6 h-6 text-primary" />
-                  <span className="text-xs font-medium text-center">{cat.name}</span>
+                  <span className="text-lg">{cat.emoji}</span>
+                  <span className="flex-1 text-sm font-medium text-foreground">{cat.name}</span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {cat.count}
+                  </span>
                 </Link>
               ))}
             </div>

@@ -307,7 +307,7 @@ const Marketplace = () => {
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                 selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground hover:bg-primary/10"
               }`}>
-              <category.icon className="w-3.5 h-3.5" />
+              <span className="text-sm">{category.emoji}</span>
               {category.name}
             </button>
           ))}
@@ -418,9 +418,9 @@ const Marketplace = () => {
               <ProductSection title={t("mp.newArrivals")} icon={<Star className="w-4 h-4 text-accent" />} products={newArrivals} />
               {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
                 const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase() || c.id.toLowerCase() === category.toLowerCase());
-                const CategoryIcon = categoryInfo?.icon || Grid3X3;
+                const categoryEmoji = categoryInfo?.emoji || "📦";
                 return (
-                  <ProductSection key={category} title={category} icon={<CategoryIcon className="w-4 h-4 text-primary" />} products={categoryProducts} viewAll={categoryInfo?.id || category} />
+                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.id || category} />
                 );
               })}
               <div className="mt-6 sm:mt-8">

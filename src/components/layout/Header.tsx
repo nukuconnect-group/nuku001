@@ -96,7 +96,7 @@ const Header = () => {
                 onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
                 className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <cat.icon className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm">{cat.emoji}</span>
                 </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
                 <span className="text-[10px] text-muted-foreground ml-auto">{cat.count} produits</span>
@@ -573,7 +573,7 @@ const Header = () => {
                         <Link key={category.id} to={`/marketplace?category=${category.id}`} onClick={() => setCategoriesOpen(false)}
                           className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all text-center group">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <category.icon className="w-5 h-5 text-primary" />
+                            <span className="text-xl">{category.emoji}</span>
                           </div>
                           <span className="text-xs font-medium">{category.name}</span>
                           <span className="text-[10px] text-muted-foreground">{category.count} {t("mp.products")}</span>
