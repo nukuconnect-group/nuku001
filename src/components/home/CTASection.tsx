@@ -21,8 +21,8 @@ const CTASection = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-hero flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-elevated">
-            <Rocket className="w-7 h-7 sm:w-10 sm:h-10 text-primary-foreground" />
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-elevated">
+            <Rocket className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
           </div>
 
           <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
