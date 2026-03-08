@@ -47,11 +47,11 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
 
       <div className="container mx-auto px-3 sm:px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 sm:mb-4">
-            Marketplace <span className="text-gradient-primary">Agricole</span>
+          <h1 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
+            Marketplace <span className="text-yellow-300">Agricole</span>
           </h1>
           
-          <p className="text-xs sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-2xl mx-auto">
+          <p className="text-xs sm:text-base text-white/80 mb-4 sm:mb-6 max-w-2xl mx-auto">
             Découvrez des milliers de produits agricoles de qualité
           </p>
 
