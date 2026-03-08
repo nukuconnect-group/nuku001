@@ -50,6 +50,8 @@ const Auth = () => {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
