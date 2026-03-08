@@ -95,37 +95,31 @@ const Auth = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        // Fetch profile to determine user type
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("user_id", session.user.id)
-          .single();
-        
-        if (profileData?.user_type === "producer") {
-          navigate("/dashboard");
-        } else {
-          navigate("/buyer-dashboard");
-        }
+    let redirecting = false;
+    
+    const redirectUser = async (userId: string) => {
+      if (redirecting) return;
+      redirecting = true;
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("user_id", userId)
+        .single();
+      
+      if (profileData?.user_type === "producer") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/buyer-dashboard", { replace: true });
       }
+    };
+
+    // Check existing session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) redirectUser(session.user.id);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("user_id", session.user.id)
-          .single();
-        
-        if (profileData?.user_type === "producer") {
-          navigate("/dashboard");
-        } else {
-          navigate("/buyer-dashboard");
-        }
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) redirectUser(session.user.id);
     });
 
     return () => subscription.unsubscribe();

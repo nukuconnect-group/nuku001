@@ -39,14 +39,18 @@ const Dashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth"); return; }
+      if (!session) { navigate("/auth", { replace: true }); return; }
       setUser(session.user);
       const { data: profileData } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
       setProfile(profileData);
       if (profileData) {
-        await fetchProducts(profileData.id);
-        const { data: ordersData } = await supabase.from("orders").select("*, products(*)").eq("seller_id", profileData.id).order("created_at", { ascending: false });
-        setOrders(ordersData || []);
+        // Fetch products and orders in parallel
+        const [prodRes, ordersRes] = await Promise.all([
+          supabase.from("products").select("*").eq("producer_id", profileData.id).order("created_at", { ascending: false }),
+          supabase.from("orders").select("*, products(*)").eq("seller_id", profileData.id).order("created_at", { ascending: false }),
+        ]);
+        setProducts(prodRes.data || []);
+        setOrders(ordersRes.data || []);
       }
       setIsLoading(false);
     };
