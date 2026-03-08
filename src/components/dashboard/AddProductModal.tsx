@@ -83,6 +83,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
     setIsLoading(true);
 
     try {
+      // Upload images to storage
+      let imageUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await uploadImages(imageFiles);
+      }
+
       const { error } = await supabase.from("products").insert({
         name: newProduct.name,
         description: newProduct.description,
@@ -94,7 +100,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
         is_organic: newProduct.is_organic,
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
-        images: images.length > 0 ? images : null,
+        images: imageUrls.length > 0 ? imageUrls : null,
       });
 
       if (error) throw error;
@@ -105,20 +111,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded }: AddP
       });
 
       setNewProduct({
-        name: "",
-        description: "",
-        price: "",
-        originalPrice: "",
-        discount: "",
-        promoType: "none",
-        category: "",
-        unit: "kg",
-        quantity_available: "",
-        location: "",
-        is_organic: false,
-        min_order: "1",
+        name: "", description: "", price: "", originalPrice: "", discount: "",
+        promoType: "none", category: "", unit: "kg", quantity_available: "",
+        location: "", is_organic: false, min_order: "1",
       });
-      setImages([]);
+      setImageFiles([]);
+      setImagePreviews([]);
       
       onProductAdded();
       onOpenChange(false);
