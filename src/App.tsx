@@ -60,6 +60,7 @@ const App = () => {
               <SplashScreen onComplete={handleSplashComplete} />
             )}
             <BrowserRouter>
+              <ScrollToTop />
               <RealtimeNotifications />
               <Routes>
                 <Route path="/" element={<Index />} />
