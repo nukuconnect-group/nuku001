@@ -70,9 +70,10 @@ const FeaturedProducts = () => {
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0">
+          <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}>
             {featuredProducts.map((product) => (
-              <div key={product.id} className="min-w-[160px] snap-start sm:min-w-0">
+              <div key={product.id} className="min-w-[150px] max-w-[170px] snap-start flex-shrink-0 sm:min-w-0 sm:max-w-none">
                 <ProductCard product={product} viewMode="grid" />
               </div>
             ))}

@@ -53,34 +53,36 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        {/* Mobile: 1 per line, Desktop: 4 per line */}
-        <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
+        {/* Mobile: 1 per line stacked, Desktop: 4 per line */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
           {steps.map((step, index) => (
             <div 
               key={step.title} 
-              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border flex sm:flex-col"
+              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border"
             >
               {/* Image */}
-              <div className="relative w-28 sm:w-full aspect-square sm:aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5 p-2 sm:p-3 flex-shrink-0">
+              <div className="relative w-full aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
                 <img 
                   src={step.image} 
                   alt={step.title}
-                  className="w-full h-full object-cover rounded-lg shadow-md group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
                 <div className="absolute top-3 left-3">
-                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground shadow-md">
+                  <span className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground shadow-md">
                     {index + 1}
                   </span>
                 </div>
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
 
               {/* Content */}
-              <div className="p-3 sm:p-4 flex flex-col justify-center flex-1">
+              <div className="p-4 flex flex-col">
                 <h3 className="font-heading text-sm sm:text-base font-bold text-foreground mb-1">
                   {step.title}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mb-2 line-clamp-2">
+                <p className="text-xs text-muted-foreground mb-3">
                   {step.description}
                 </p>
                 <Link 
