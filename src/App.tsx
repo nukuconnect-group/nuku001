@@ -69,6 +69,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <ProfileProvider>
         <CartProvider>
           <TooltipProvider>
             <Toaster />
