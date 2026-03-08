@@ -38,7 +38,12 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+    <footer className="text-white relative overflow-hidden">
+      {/* Background image with blur overlay */}
+      <div className="absolute inset-0 z-0">
+        <img src={footerBg} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 backdrop-blur-sm" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.85) 0%, rgba(0, 107, 0, 0.88) 100%)" }} />
+      </div>
       {/* App Download Section */}
       <div className="border-b border-white/15">
         <div className="container mx-auto px-4 py-6 sm:py-8">
