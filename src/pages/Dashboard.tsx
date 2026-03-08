@@ -16,6 +16,8 @@ import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
+import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
