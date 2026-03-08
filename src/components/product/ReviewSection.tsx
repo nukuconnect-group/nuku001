@@ -13,22 +13,36 @@ interface ReviewSectionProps {
 
 const StarRating = ({ rating, onRate, size = "sm" }: { rating: number; onRate?: (r: number) => void; size?: "sm" | "lg" }) => {
   const [hover, setHover] = useState(0);
-  const w = size === "lg" ? "w-6 h-6" : "w-3.5 h-3.5";
+  const w = size === "lg" ? "w-8 h-8" : "w-3.5 h-3.5";
+  const gap = size === "lg" ? "gap-1" : "gap-0.5";
   return (
-    <div className="flex items-center gap-0.5">
+    <div className={`flex items-center ${gap}`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <button
           key={i}
           type="button"
-          onClick={() => onRate?.(i)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRate?.(i);
+          }}
+          onTouchEnd={(e) => {
+            if (onRate) {
+              e.preventDefault();
+              onRate(i);
+            }
+          }}
           onMouseEnter={() => onRate && setHover(i)}
           onMouseLeave={() => onRate && setHover(0)}
-          className={onRate ? "cursor-pointer" : "cursor-default"}
+          className={`${onRate ? "cursor-pointer" : "cursor-default"} ${size === "lg" ? "p-1" : ""} select-none`}
           disabled={!onRate}
         >
-          <Star className={`${w} ${i <= (hover || rating) ? "text-accent fill-accent" : "text-muted"} transition-colors`} />
+          <Star className={`${w} ${i <= (hover || rating) ? "text-accent fill-accent" : "text-muted-foreground/40"} transition-colors`} />
         </button>
       ))}
+      {size === "lg" && rating > 0 && (
+        <span className="text-sm font-medium text-accent ml-2">{rating}/5</span>
+      )}
     </div>
   );
 };
