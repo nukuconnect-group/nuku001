@@ -8,7 +8,7 @@ const Footer = () => {
   const footerLinks = {
     platform: [
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Producteurs", href: "/producteurs" },
+      { label: "Fournisseurs", href: "/producteurs" },
       { label: "Acheteurs", href: "/buyer-dashboard" },
       { label: "NUKU AI", href: "/nuku-ai" },
     ],
