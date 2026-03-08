@@ -177,6 +177,44 @@ const Auth = () => {
     }
   };
 
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!magicLinkEmail.trim()) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setMagicLinkSent(true);
+      toast({
+        title: "Lien envoyé !",
+        description: "Vérifiez votre boîte email pour vous connecter.",
+      });
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
