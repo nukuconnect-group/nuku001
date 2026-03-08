@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
+import footerBg from "@/assets/footer-bg.jpg";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
 
@@ -37,9 +38,14 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="text-white" style={{ background: "linear-gradient(135deg, #1c98ed 0%, #006b00 100%)" }}>
+    <footer className="text-white relative overflow-hidden">
+      {/* Background image with blur overlay */}
+      <div className="absolute inset-0 z-0">
+        <img src={footerBg} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 backdrop-blur-sm" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.85) 0%, rgba(0, 107, 0, 0.88) 100%)" }} />
+      </div>
       {/* App Download Section */}
-      <div className="border-b border-white/15">
+      <div className="border-b border-white/15 relative z-10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-3 sm:gap-4 text-center lg:text-left">
@@ -65,7 +71,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16 relative z-10">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
