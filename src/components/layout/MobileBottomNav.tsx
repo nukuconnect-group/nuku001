@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, Store, MessageCircle, Plus, Loader2 } from "lucide-react";
+import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AddProductModal from "@/components/dashboard/AddProductModal";
-import CategorySheet from "./CategorySheet";
+import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -17,7 +13,7 @@ const MobileBottomNav = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [showCategories, setShowCategories] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
 
@@ -56,15 +52,12 @@ const MobileBottomNav = () => {
   };
 
   const handleSellClick = async () => {
-    console.log("[SELL] clicked, user:", !!user, "profile:", profile?.user_type, "isLoading:", isLoading);
-    
     if (!user) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour vendre vos produits" });
       navigate("/auth");
       return;
     }
 
-    // Always re-fetch profile to ensure fresh data
     setShowSellLoading(true);
     try {
       const { data, error } = await supabase
@@ -73,7 +66,6 @@ const MobileBottomNav = () => {
         .eq("user_id", user.id)
         .single();
       
-      console.log("[SELL] fetched profile:", data?.user_type, "error:", error?.message);
       setProfile(data);
       setShowSellLoading(false);
       
@@ -83,10 +75,8 @@ const MobileBottomNav = () => {
         return;
       }
       
-      console.log("[SELL] opening modal for profile:", data.id);
       setShowAddProduct(true);
     } catch (err) {
-      console.error("[SELL] error:", err);
       setShowSellLoading(false);
       toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
     }
@@ -109,11 +99,13 @@ const MobileBottomNav = () => {
             <span className="text-[9px] font-medium">Accueil</span>
           </Link>
 
-          <button onClick={() => setShowCategories(true)}
-            className="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors text-muted-foreground hover:text-foreground min-w-[48px]">
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[9px] font-medium">Catégories</span>
-          </button>
+          <Link to="/marketplace"
+            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
+              isActive("/marketplace") ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}>
+            <Store className="w-5 h-5" />
+            <span className="text-[9px] font-medium">Marché</span>
+          </Link>
 
           <div className="relative -mt-7 flex flex-col items-center">
             <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md animate-pulse" />
@@ -130,14 +122,6 @@ const MobileBottomNav = () => {
             </span>
           </div>
 
-          <Link to="/marketplace"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
-              isActive("/marketplace") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}>
-            <Store className="w-5 h-5" />
-            <span className="text-[9px] font-medium">Marché</span>
-          </Link>
-
           <Link to="/messages"
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
               isActive("/messages") ? "text-primary" : "text-muted-foreground hover:text-foreground"
@@ -145,10 +129,16 @@ const MobileBottomNav = () => {
             <MessageCircle className="w-5 h-5" />
             <span className="text-[9px] font-medium">Messages</span>
           </Link>
+
+          <button onClick={() => setShowAccount(true)}
+            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] text-muted-foreground hover:text-foreground`}>
+            <UserCircle className="w-5 h-5" />
+            <span className="text-[9px] font-medium">Compte</span>
+          </button>
         </div>
       </nav>
       
-      <CategorySheet open={showCategories} onOpenChange={setShowCategories} />
+      <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
 
       {profile && (
         <AddProductModal
