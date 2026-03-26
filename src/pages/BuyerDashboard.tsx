@@ -31,14 +31,7 @@ import FormationsSection from "@/components/dashboard/FormationsSection";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
-const purchaseData = [
-  { name: 'Jan', achats: 150000 },
-  { name: 'Fév', achats: 220000 },
-  { name: 'Mar', achats: 180000 },
-  { name: 'Avr', achats: 340000 },
-  { name: 'Mai', achats: 290000 },
-  { name: 'Jun', achats: 450000 },
-];
+// Real purchase data will be computed from orders
 
 const BuyerDashboard = () => {
   const navigate = useNavigate();
