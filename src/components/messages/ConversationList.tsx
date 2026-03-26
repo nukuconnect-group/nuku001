@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { type ConversationItem } from "@/hooks/useConversations";
 
-const CATEGORIES = [
-  { id: "all", label: "Tous" },
+const SORT_OPTIONS = [
+  { id: "recent", label: "Récents" },
   { id: "unread", label: "Non lus" },
   { id: "product", label: "Produits" },
+  { id: "oldest", label: "Anciens" },
 ];
 
 interface Props {
@@ -19,16 +20,23 @@ interface Props {
 
 export default function ConversationList({ conversations, selectedId, onSelect, hidden }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("recent");
 
-  const filtered = conversations.filter((conv) => {
-    const matchesSearch =
-      conv.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.productName?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (activeCategory === "unread") return matchesSearch && conv.unread > 0;
-    if (activeCategory === "product") return matchesSearch && conv.productName;
-    return matchesSearch;
-  });
+  const filtered = conversations
+    .filter((conv) => {
+      const matchesSearch =
+        conv.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        conv.productName?.toLowerCase().includes(searchQuery.toLowerCase());
+      if (activeCategory === "unread") return matchesSearch && conv.unread > 0;
+      if (activeCategory === "product") return matchesSearch && conv.productName;
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (activeCategory === "oldest") return 0; // already sorted, reverse below
+      return 0;
+    });
+
+  const sortedFiltered = activeCategory === "oldest" ? [...filtered].reverse() : filtered;
 
   const totalUnread = conversations.reduce((a, c) => a + c.unread, 0);
 
@@ -47,12 +55,12 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Rechercher..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 h-9 text-sm" />
         </div>
-        <div className="flex gap-1.5">
-          {CATEGORIES.map((cat) => (
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+          {SORT_OPTIONS.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-colors ${
+              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap ${
                 activeCategory === cat.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -64,7 +72,7 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {filtered.map((conv) => (
+        {sortedFiltered.map((conv) => (
           <button
             key={conv.id}
             onClick={() => onSelect(conv)}
@@ -96,7 +104,7 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
             )}
           </button>
         ))}
-        {filtered.length === 0 && (
+        {sortedFiltered.length === 0 && (
           <div className="p-8 text-center">
             <MessageCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">Aucune conversation</p>
