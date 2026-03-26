@@ -17,6 +17,8 @@ import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
+import FormationsSection from "@/components/dashboard/FormationsSection";
+import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
@@ -210,9 +212,21 @@ const Dashboard = () => {
             </Link>
           </div>
 
+          {/* Delivery Tracking Widget */}
+          {profile && (
+            <div className="mb-4 sm:mb-6">
+              <DeliveryTrackingWidget profileId={profile.id} role="seller" />
+            </div>
+          )}
+
           {/* Subscription Management */}
           <div className="mb-4 sm:mb-6">
             <SubscriptionCard />
+          </div>
+
+          {/* Formations Section */}
+          <div className="mb-4 sm:mb-6">
+            <FormationsSection />
           </div>
 
           {/* Buy/Sell Intent */}

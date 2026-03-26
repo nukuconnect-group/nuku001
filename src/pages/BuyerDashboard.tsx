@@ -27,6 +27,8 @@ import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
+import FormationsSection from "@/components/dashboard/FormationsSection";
+import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const purchaseData = [
@@ -293,9 +295,21 @@ const BuyerDashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Delivery Tracking Widget */}
+          {profile && (
+            <div className="mb-5 sm:mb-8">
+              <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
+            </div>
+          )}
+
           {/* Subscription Management */}
           <div className="mb-5 sm:mb-8">
             <SubscriptionCard />
+          </div>
+
+          {/* Formations Section */}
+          <div className="mb-5 sm:mb-8">
+            <FormationsSection />
           </div>
 
           {/* Tabs - responsive with horizontal scroll on mobile */}
