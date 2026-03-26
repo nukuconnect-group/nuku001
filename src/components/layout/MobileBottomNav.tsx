@@ -39,6 +39,30 @@ const MobileBottomNav = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Fetch unread messages count
+  const fetchUnreadMessages = useCallback(async (profileId: string) => {
+    const { count } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .neq("sender_id", profileId)
+      .eq("is_read", false);
+    setUnreadMessages(count || 0);
+  }, []);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    fetchUnreadMessages(profile.id);
+
+    const channel = supabase
+      .channel("mobile-unread-messages")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+        fetchUnreadMessages(profile.id);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id, fetchUnreadMessages]);
+
   const fetchProfile = async (userId: string) => {
     setIsLoading(true);
     try {
