@@ -14,7 +14,7 @@ import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import BillingForm from "@/components/cart/BillingForm";
 import DeliveryZoneMap, { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import PaymentMethodSelect, { paymentMethods } from "@/components/cart/PaymentMethodSelect";
-import AvailableDrivers from "@/components/checkout/AvailableDrivers";
+import OrderSummary from "@/components/cart/OrderSummary";
 import OrderSummary from "@/components/cart/OrderSummary";
 
 const Cart = () => {
