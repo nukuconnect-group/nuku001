@@ -222,6 +222,12 @@ const DriverDashboard = () => {
               onCheckedChange={toggleAvailability}
               disabled={isToggling}
             />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link to="/settings">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Settings className="w-3.5 h-3.5" /> Paramètres
+              </Button>
+            </Link>
           </div>
         </div>
 
