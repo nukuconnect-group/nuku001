@@ -177,7 +177,7 @@ const BuyerDashboard = () => {
                   {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  Tableau de bord acheteur
+                  Bienvenue dans votre espace acheteur
                 </p>
               </div>
             </div>

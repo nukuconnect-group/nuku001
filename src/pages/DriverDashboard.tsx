@@ -199,7 +199,7 @@ const DriverDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">{greeting}, {firstName} 👋</h1>
-            <p className="text-sm text-muted-foreground">Dashboard Livreur</p>
+            <p className="text-sm text-muted-foreground">Bienvenue dans votre espace livreur</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">

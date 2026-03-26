@@ -540,7 +540,7 @@ const Auth = () => {
                     <form onSubmit={handleSignup} className="space-y-4">
                       {/* User Type Selection */}
                       <div className="space-y-2">
-                        <Label>Je suis</Label>
+                        <Label className="text-sm font-semibold">Je suis — Choisir votre profil</Label>
                         <div className="grid grid-cols-3 gap-2">
                           {([
                             { type: "buyer" as const, icon: Store, label: "Acheteur" },

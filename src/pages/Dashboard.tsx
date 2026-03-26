@@ -135,7 +135,7 @@ const Dashboard = () => {
                 <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
                 </h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Tableau de bord fournisseur</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bienvenue dans votre espace fournisseur</p>
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
