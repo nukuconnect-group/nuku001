@@ -353,7 +353,16 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               <Input
                 type="number"
                 value={newProduct.originalPrice}
-                onChange={(e) => setNewProduct({ ...newProduct, originalPrice: e.target.value })}
+                onChange={(e) => {
+                  const originalPrice = e.target.value;
+                  const price = parseFloat(newProduct.price);
+                  const orig = parseFloat(originalPrice);
+                  let discount = newProduct.discount;
+                  if (orig > 0 && price > 0 && orig > price) {
+                    discount = String(Math.round(((orig - price) / orig) * 100));
+                  }
+                  setNewProduct({ ...newProduct, originalPrice, discount });
+                }}
                 placeholder="Ex: 6000"
               />
             </div>
@@ -379,14 +388,28 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
             <div className="space-y-2">
               <Label>Réduction (%)</Label>
-              <Input
-                type="number"
-                value={newProduct.discount}
-                onChange={(e) => setNewProduct({ ...newProduct, discount: e.target.value })}
-                placeholder="Ex: 20"
-                min={0}
-                max={100}
-              />
+              <div className="relative">
+                <Input
+                  type="number"
+                  value={newProduct.discount}
+                  onChange={(e) => setNewProduct({ ...newProduct, discount: e.target.value })}
+                  placeholder="Auto-calculé"
+                  min={0}
+                  max={100}
+                  readOnly={!!(newProduct.originalPrice && newProduct.price)}
+                  className={newProduct.discount ? "pr-8" : ""}
+                />
+                {newProduct.discount && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary">
+                    -{newProduct.discount}%
+                  </span>
+                )}
+              </div>
+              {newProduct.originalPrice && newProduct.price && parseFloat(newProduct.originalPrice) > parseFloat(newProduct.price) && (
+                <p className="text-[10px] text-muted-foreground">
+                  Réduction calculée automatiquement : {newProduct.discount}%
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

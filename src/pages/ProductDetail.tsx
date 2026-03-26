@@ -16,7 +16,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2, DollarSign, CreditCard, ZoomIn, X, QrCode, Download
+  Loader2, DollarSign, CreditCard, ZoomIn, X, QrCode, Download, Copy
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -462,19 +462,34 @@ const ProductDetail = () => {
                       <p className="text-[10px] sm:text-xs text-muted-foreground">
                         Scannez ce QR code pour accéder directement à ce produit ou partagez-le avec vos clients.
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`${window.location.origin}/produit/${product.id}`)}`;
-                          link.download = `qr-${product.name.replace(/\s+/g, "-")}.png`;
-                          link.click();
-                        }}
-                      >
-                        <Download className="w-3 h-3" />Télécharger
-                      </Button>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(`${window.location.origin}/produit/${product.id}`)}`;
+                            link.download = `qr-${product.name.replace(/\s+/g, "-")}.png`;
+                            link.click();
+                          }}
+                        >
+                          <Download className="w-3 h-3" />Télécharger
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
+                          onClick={() => {
+                            const url = `${window.location.origin}/produit/${product.id}`;
+                            navigator.clipboard.writeText(url).then(() => {
+                              toast({ title: "Lien copié !", description: "Le lien du produit a été copié dans le presse-papier." });
+                            });
+                          }}
+                        >
+                          <Copy className="w-3 h-3" />Copier le lien
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
