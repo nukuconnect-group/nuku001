@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck, GraduationCap, BookOpen } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
@@ -61,7 +61,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  const [userType, setUserType] = useState<"producer" | "buyer" | "driver">("buyer");
+  const [userType, setUserType] = useState<"producer" | "buyer" | "driver" | "learner" | "trainer">("buyer");
   
   // Producer fields
   const [producerName, setProducerName] = useState("");
@@ -122,10 +122,12 @@ const Auth = () => {
         await new Promise(r => setTimeout(r, 800));
       }
       
-      if (profileData?.user_type === "producer") {
+      if (profileData?.user_type === "producer" || profileData?.user_type === "trainer") {
         navigate("/dashboard", { replace: true });
       } else if (profileData?.user_type === "driver") {
         navigate("/driver-dashboard", { replace: true });
+      } else if (profileData?.user_type === "learner") {
+        navigate("/formations", { replace: true });
       } else {
         navigate("/buyer-dashboard", { replace: true });
       }
@@ -302,12 +304,12 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const fullName = userType === "buyer" 
+      const fullName = (userType === "buyer" || userType === "learner")
         ? `${buyerFirstName} ${buyerLastName}`
         : producerName;
       
-      const phone = userType === "buyer" ? buyerPhone : producerPhone;
-      const location = userType === "buyer" 
+      const phone = (userType === "buyer" || userType === "learner") ? buyerPhone : producerPhone;
+      const location = (userType === "buyer" || userType === "learner")
         ? `${buyerLocation}, ${buyerCountry}`
         : producerLocation;
       
@@ -380,10 +382,12 @@ const Auth = () => {
         }
 
         // Redirect based on user type
-        if (userType === "producer") {
+        if (userType === "producer" || userType === "trainer") {
           navigate("/dashboard");
         } else if (userType === "driver") {
           navigate("/driver-dashboard");
+        } else if (userType === "learner") {
+          navigate("/formations");
         } else {
           navigate("/buyer-dashboard");
         }
@@ -537,54 +541,35 @@ const Auth = () => {
                       {/* User Type Selection */}
                       <div className="space-y-2">
                         <Label>Je suis</Label>
-                       <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setUserType("producer")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "producer"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <User className={`w-5 h-5 mx-auto mb-1.5 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
-                              Fournisseur
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUserType("buyer")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "buyer"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <Store className={`w-5 h-5 mx-auto mb-1.5 ${userType === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "buyer" ? "text-primary" : "text-foreground"}`}>
-                              Acheteur
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUserType("driver")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "driver"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <Truck className={`w-5 h-5 mx-auto mb-1.5 ${userType === "driver" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "driver" ? "text-primary" : "text-foreground"}`}>
-                              Livreur
-                            </span>
-                          </button>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { type: "buyer" as const, icon: Store, label: "Acheteur" },
+                            { type: "producer" as const, icon: User, label: "Fournisseur" },
+                            { type: "driver" as const, icon: Truck, label: "Livreur" },
+                            { type: "learner" as const, icon: GraduationCap, label: "Apprenant" },
+                            { type: "trainer" as const, icon: BookOpen, label: "Formateur" },
+                          ]).map(({ type, icon: Icon, label }) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setUserType(type)}
+                              className={`p-2.5 rounded-xl border-2 transition-all ${
+                                userType === type
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <Icon className={`w-5 h-5 mx-auto mb-1 ${userType === type ? "text-primary" : "text-muted-foreground"}`} />
+                              <span className={`text-[11px] font-medium block ${userType === type ? "text-primary" : "text-foreground"}`}>
+                                {label}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
 
                       {/* Producer Fields */}
-                      {userType === "producer" && (
+                      {(userType === "producer" || userType === "trainer") && (
                         <>
                           <div className="space-y-2">
                             <Label htmlFor="producer-name">Nom complet</Label>
@@ -635,7 +620,7 @@ const Auth = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="producer-company">Entreprise / Exploitation</Label>
+                            <Label htmlFor="producer-company">{userType === "trainer" ? "Organisme / Institution" : "Entreprise / Exploitation"}</Label>
                             <div className="relative">
                               <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input
@@ -650,7 +635,7 @@ const Auth = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="producer-sector">Secteur d'activité</Label>
+                            <Label htmlFor="producer-sector">{userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"}</Label>
                             <Select value={producerSector} onValueChange={setProducerSector}>
                               <SelectTrigger className="w-full">
                                 <Briefcase className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -669,7 +654,7 @@ const Auth = () => {
                       )}
 
                       {/* Buyer Fields */}
-                      {userType === "buyer" && (
+                      {(userType === "buyer" || userType === "learner") && (
                         <>
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
