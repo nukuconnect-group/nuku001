@@ -149,7 +149,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
       toast({ 
         title: "Inscription réussie !", 
-        description: "Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.",
+        description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
       });
       onClose();
     } catch {
@@ -160,10 +160,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({ title: "Déconnexion réussie", description: "À bientôt sur NUKUCONNECT !" });
-    onClose();
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      toast({ title: "Déconnexion réussie", description: "À bientôt sur NUKUCONNECT !" });
+      onClose();
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout error:", err);
+      onClose();
+      window.location.href = "/";
+    }
   };
 
   const getUserTypeLabel = (type?: string) => {
@@ -326,7 +332,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <form onSubmit={handleSignup} className="space-y-4">
                     {/* Role Selection - All 5 roles */}
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Choisir votre profil</Label>
+                      <Label className="text-xs font-semibold">Je suis — Choisir votre profil</Label>
                       <div className="grid grid-cols-2 gap-2">
                         {userTypeConfig.map((type) => (
                           <button

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -10,15 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign
 } from "lucide-react";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
+  const { lang, setLang, currency, setCurrency } = useLanguage();
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -286,6 +289,56 @@ const Settings = () => {
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Enregistrer les modifications
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Language & Currency */}
+          <Card className="mb-5">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Globe className="w-4 h-4 text-primary" />
+                Langue et devise
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Choisissez votre langue et votre devise préférée
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
+                    <Globe className="w-3 h-3" /> Langue
+                  </Label>
+                  <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
+                    <SelectTrigger className="text-sm h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="ewe">🇹🇬 Ewe</SelectItem>
+                      <SelectItem value="kab">🇹🇬 Kabyè</SelectItem>
+                      <SelectItem value="wo">🇸🇳 Wolof</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
+                    <DollarSign className="w-3 h-3" /> Devise
+                  </Label>
+                  <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
+                    <SelectTrigger className="text-sm h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="XOF">FCFA (XOF)</SelectItem>
+                      <SelectItem value="USD">Dollar ($)</SelectItem>
+                      <SelectItem value="EUR">Euro (€)</SelectItem>
+                      <SelectItem value="GBP">Livre (£)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
