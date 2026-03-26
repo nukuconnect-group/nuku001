@@ -390,10 +390,23 @@ const DeliveryTracking = () => {
                     </div>
 
                     <div className="flex gap-2 mt-3">
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
-                        onClick={() => navigate("/messages")}>
-                        <MessageCircle className="w-3.5 h-3.5" />Contacter
-                      </Button>
+                      {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
+                        <DeliveryChat
+                          deliveryId={deliveries[selectedOrder.id].id}
+                          currentUserRole="buyer"
+                          otherPartyName="Livreur"
+                          trigger={
+                            <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
+                              <MessageCircle className="w-3.5 h-3.5" />Chat livreur
+                            </Button>
+                          }
+                        />
+                      ) : (
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
+                          onClick={() => navigate("/messages")}>
+                          <MessageCircle className="w-3.5 h-3.5" />Contacter
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
                         onClick={() => {
                           const order = selectedOrder;
