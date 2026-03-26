@@ -36,6 +36,7 @@ import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import Settings from "./pages/Settings";
+import DeliveryAddress from "./pages/DeliveryAddress";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import ScrollToTop from "./components/ScrollToTop";
@@ -113,6 +114,7 @@ const App = () => {
                 <Route path="/aide" element={<Help />} />
                 <Route path="/faq" element={<Help />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
