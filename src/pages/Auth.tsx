@@ -541,49 +541,30 @@ const Auth = () => {
                       {/* User Type Selection */}
                       <div className="space-y-2">
                         <Label>Je suis</Label>
-                       <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setUserType("producer")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "producer"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <User className={`w-5 h-5 mx-auto mb-1.5 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
-                              Fournisseur
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUserType("buyer")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "buyer"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <Store className={`w-5 h-5 mx-auto mb-1.5 ${userType === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "buyer" ? "text-primary" : "text-foreground"}`}>
-                              Acheteur
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUserType("driver")}
-                            className={`p-3 rounded-xl border-2 transition-all ${
-                              userType === "driver"
-                                ? "border-primary bg-primary/10"
-                                : "border-border hover:border-primary/50"
-                            }`}
-                          >
-                            <Truck className={`w-5 h-5 mx-auto mb-1.5 ${userType === "driver" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-xs font-medium ${userType === "driver" ? "text-primary" : "text-foreground"}`}>
-                              Livreur
-                            </span>
-                          </button>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { type: "buyer" as const, icon: Store, label: "Acheteur" },
+                            { type: "producer" as const, icon: User, label: "Fournisseur" },
+                            { type: "driver" as const, icon: Truck, label: "Livreur" },
+                            { type: "learner" as const, icon: GraduationCap, label: "Apprenant" },
+                            { type: "trainer" as const, icon: BookOpen, label: "Formateur" },
+                          ]).map(({ type, icon: Icon, label }) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setUserType(type)}
+                              className={`p-2.5 rounded-xl border-2 transition-all ${
+                                userType === type
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <Icon className={`w-5 h-5 mx-auto mb-1 ${userType === type ? "text-primary" : "text-muted-foreground"}`} />
+                              <span className={`text-[11px] font-medium block ${userType === type ? "text-primary" : "text-foreground"}`}>
+                                {label}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
 
