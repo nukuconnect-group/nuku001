@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import DeliveryChat from "@/components/delivery/DeliveryChat";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
@@ -21,6 +22,7 @@ const DeliveryTracking = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,17 @@ const DeliveryTracking = () => {
     if (selectedOrder && data) {
       const updated = data.find((o: any) => o.id === selectedOrder.id);
       if (updated) setSelectedOrder(updated);
+    }
+    // Fetch delivery records for these orders
+    if (data && data.length > 0) {
+      const orderIds = data.map((o: any) => o.id);
+      const { data: dels } = await supabase
+        .from("deliveries" as any)
+        .select("*")
+        .in("order_id", orderIds);
+      const delMap: Record<string, any> = {};
+      ((dels as any[]) || []).forEach((d: any) => { delMap[d.order_id] = d; });
+      setDeliveries(delMap);
     }
   };
 
@@ -377,10 +390,23 @@ const DeliveryTracking = () => {
                     </div>
 
                     <div className="flex gap-2 mt-3">
-                      <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
-                        onClick={() => navigate("/messages")}>
-                        <MessageCircle className="w-3.5 h-3.5" />Contacter
-                      </Button>
+                      {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
+                        <DeliveryChat
+                          deliveryId={deliveries[selectedOrder.id].id}
+                          currentUserRole="buyer"
+                          otherPartyName="Livreur"
+                          trigger={
+                            <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
+                              <MessageCircle className="w-3.5 h-3.5" />Chat livreur
+                            </Button>
+                          }
+                        />
+                      ) : (
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
+                          onClick={() => navigate("/messages")}>
+                          <MessageCircle className="w-3.5 h-3.5" />Contacter
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1"
                         onClick={() => {
                           const order = selectedOrder;

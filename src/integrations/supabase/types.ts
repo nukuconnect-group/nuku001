@@ -268,6 +268,36 @@ export type Database = {
           },
         ]
       }
+      delivery_messages: {
+        Row: {
+          content: string
+          created_at: string
+          delivery_id: string
+          id: string
+          is_read: boolean | null
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          delivery_id: string
+          id?: string
+          is_read?: boolean | null
+          sender_id: string
+          sender_role?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          delivery_id?: string
+          id?: string
+          is_read?: boolean | null
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: []
+      }
       demands: {
         Row: {
           budget: number | null

@@ -16,8 +16,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
-  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone
+  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle
 } from "lucide-react";
+import DeliveryChat from "@/components/delivery/DeliveryChat";
 
 // Fix leaflet icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -399,6 +400,11 @@ const DriverDashboard = () => {
                             <Navigation className="w-4 h-4" />
                           </Button>
                         )}
+                        <DeliveryChat
+                          deliveryId={delivery.id}
+                          currentUserRole="driver"
+                          otherPartyName="Client"
+                        />
                       </div>
                     </CardContent>
                   </Card>
