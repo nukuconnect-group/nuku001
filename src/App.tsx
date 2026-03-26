@@ -23,6 +23,7 @@ import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
 import DriverDashboard from "./pages/DriverDashboard";
+import LearnerDashboard from "./pages/LearnerDashboard";
 import Plans from "./pages/Plans";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
@@ -102,6 +103,7 @@ const App = () => {
                 <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                 <Route path="/panier" element={<Cart />} />
                 <Route path="/driver-dashboard" element={<DriverDashboard />} />
+                <Route path="/learner-dashboard" element={<LearnerDashboard />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                 <Route path="/a-propos" element={<About />} />

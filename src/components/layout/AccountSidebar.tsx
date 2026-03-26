@@ -184,25 +184,32 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     const t = profile?.user_type;
     if (t === "producer" || t === "trainer") return "/dashboard";
     if (t === "driver") return "/driver-dashboard";
-    if (t === "learner") return "/formations";
+    if (t === "learner") return "/learner-dashboard";
     return "/buyer-dashboard";
   };
+
+  const currentUserType = profile?.user_type;
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
     { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
-    { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: true },
+    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: currentUserType === "buyer" },
+    { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
+    { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
+    { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
+    { icon: Store, label: "Devenir vendeur", href: "/about", show: currentUserType === "buyer" },
+    { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: currentUserType === "producer" || currentUserType === "trainer" },
+    { icon: Crown, label: "Mon abonnement", href: "/plans", show: currentUserType === "producer" || currentUserType === "trainer" },
+    { icon: Truck, label: "Livraisons disponibles", href: "/driver-dashboard", show: currentUserType === "driver" },
+    { icon: MapPin, label: "Zone de livraison", href: "/driver-dashboard", show: currentUserType === "driver" },
+    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: currentUserType === "learner" },
+    { icon: BookOpen, label: "Certificats", href: "/formations", show: currentUserType === "learner" },
     { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
-    { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: true },
-    { icon: Heart, label: "Mes favoris", href: "/favoris", show: true },
-    { icon: Crown, label: "Mon abonnement", href: "/plans", show: true },
-    { icon: Store, label: "Comment vendre sur NUKUCONNECT", href: "/about", show: profile?.user_type !== "producer" },
-    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: true },
-    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: true },
+    { icon: GraduationCap, label: "Formations", href: "/formations", show: currentUserType !== "learner" },
+    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
   const bottomItems = [
-    { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: true },
     { icon: Globe, label: "Pays/région, devise et langue", href: "/settings", show: true },
     { icon: HelpCircle, label: "Centre d'assistance", href: "/aide", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },

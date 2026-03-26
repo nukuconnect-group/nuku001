@@ -16,8 +16,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
-  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle
+  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
+  ShoppingBag, Settings
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 
 // Fix leaflet icons
@@ -44,8 +46,10 @@ const DriverDashboard = () => {
   const [driverProfile, setDriverProfile] = useState<any>(null);
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
@@ -83,6 +87,14 @@ const DriverDashboard = () => {
           .order("created_at", { ascending: false });
         
         setMyDeliveries(mine || []);
+
+        // Fetch available products for simulation
+        const { data: products } = await supabase
+          .from("products")
+          .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setAvailableProducts(products || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
@@ -95,6 +107,13 @@ const DriverDashboard = () => {
     if (profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     fetchDriverData();
+    // Get driver position for map
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setDriverPosition([pos.coords.latitude, pos.coords.longitude]),
+        () => {}, { timeout: 5000 }
+      );
+    }
   }, [user, profileLoading, fetchDriverData, navigate]);
 
   // Realtime subscription for new deliveries
@@ -196,20 +215,27 @@ const DriverDashboard = () => {
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
         {/* Header with greeting and availability toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-xl font-bold text-foreground">{greeting}, {firstName} 👋</h1>
             <p className="text-sm text-muted-foreground">Bienvenue dans votre espace livreur</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {driverProfile?.is_available ? "En ligne" : "Hors ligne"}
-            </span>
-            <Switch
-              checked={driverProfile?.is_available || false}
-              onCheckedChange={toggleAvailability}
-              disabled={isToggling}
-            />
+          <div className="flex items-center gap-3">
+            <Link to="/settings">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Settings className="w-3.5 h-3.5" /> Paramètres
+              </Button>
+            </Link>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {driverProfile?.is_available ? "En ligne" : "Hors ligne"}
+              </span>
+              <Switch
+                checked={driverProfile?.is_available || false}
+                onCheckedChange={toggleAvailability}
+                disabled={isToggling}
+              />
+            </div>
           </div>
         </div>
 
@@ -253,16 +279,79 @@ const DriverDashboard = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="products" className="text-xs">
+              Produits
+            </TabsTrigger>
             <TabsTrigger value="available" className="text-xs">
-              Disponibles {availableDeliveries.length > 0 && `(${availableDeliveries.length})`}
+              Dispo {availableDeliveries.length > 0 && `(${availableDeliveries.length})`}
             </TabsTrigger>
             <TabsTrigger value="active" className="text-xs">
               En cours {activeDeliveries.length > 0 && `(${activeDeliveries.length})`}
             </TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">Historique</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs">Histo</TabsTrigger>
           </TabsList>
+
+          {/* Products to deliver */}
+          <TabsContent value="products" className="space-y-3 mt-3">
+            {availableProducts.length === 0 ? (
+              <Card className="p-6 text-center">
+                <ShoppingBag className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Aucun produit disponible</p>
+              </Card>
+            ) : (
+              <>
+                {/* Map showing product locations */}
+                <Card className="overflow-hidden">
+                  <div className="h-48 rounded-lg overflow-hidden">
+                    <MapContainer
+                      center={driverPosition}
+                      zoom={12}
+                      style={{ height: "100%", width: "100%" }}
+                      zoomControl={false}
+                      attributionControl={false}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={driverPosition}>
+                        <Popup>📍 Votre position</Popup>
+                      </Marker>
+                    </MapContainer>
+                  </div>
+                </Card>
+                <p className="text-xs text-muted-foreground">{availableProducts.length} produits disponibles à livrer</p>
+                {availableProducts.map((product: any) => (
+                  <Card key={product.id} className="overflow-hidden">
+                    <CardContent className="p-3 flex gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.price?.toLocaleString()} F / {product.unit}</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{product.location || product.profiles?.location || "Non spécifié"}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Vendeur: {product.profiles?.full_name || "Inconnu"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 justify-center">
+                        <Badge className="text-[10px] whitespace-nowrap">{product.quantity_available} {product.unit}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
+          </TabsContent>
 
           {/* Available Deliveries */}
           <TabsContent value="available" className="space-y-3 mt-3">
