@@ -400,6 +400,11 @@ const DriverDashboard = () => {
                             <Navigation className="w-4 h-4" />
                           </Button>
                         )}
+                        <DeliveryChat
+                          deliveryId={delivery.id}
+                          currentUserRole="driver"
+                          otherPartyName="Client"
+                        />
                       </div>
                     </CardContent>
                   </Card>
