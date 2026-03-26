@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const MobileBottomNav = () => {
   const [showAccount, setShowAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -36,6 +38,30 @@ const MobileBottomNav = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch unread messages count
+  const fetchUnreadMessages = useCallback(async (profileId: string) => {
+    const { count } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .neq("sender_id", profileId)
+      .eq("is_read", false);
+    setUnreadMessages(count || 0);
+  }, []);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    fetchUnreadMessages(profile.id);
+
+    const channel = supabase
+      .channel("mobile-unread-messages")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+        fetchUnreadMessages(profile.id);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id, fetchUnreadMessages]);
 
   const fetchProfile = async (userId: string) => {
     setIsLoading(true);
@@ -123,10 +149,17 @@ const MobileBottomNav = () => {
           </div>
 
           <Link to="/messages"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] relative ${
               isActive("/messages") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
-            <MessageCircle className="w-5 h-5" />
+            <div className="relative">
+              <MessageCircle className="w-5 h-5" />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-destructive text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                  {unreadMessages > 99 ? "99+" : unreadMessages}
+                </span>
+              )}
+            </div>
             <span className="text-[9px] font-medium">Messages</span>
           </Link>
 
