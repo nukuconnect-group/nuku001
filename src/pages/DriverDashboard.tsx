@@ -87,6 +87,14 @@ const DriverDashboard = () => {
           .order("created_at", { ascending: false });
         
         setMyDeliveries(mine || []);
+
+        // Fetch available products for simulation
+        const { data: products } = await supabase
+          .from("products")
+          .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setAvailableProducts(products || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
