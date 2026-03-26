@@ -292,6 +292,56 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* Language & Currency */}
+          <Card className="mb-5">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Globe className="w-4 h-4 text-primary" />
+                Langue et devise
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Choisissez votre langue et votre devise préférée
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
+                    <Globe className="w-3 h-3" /> Langue
+                  </Label>
+                  <Select value={lang} onValueChange={(v) => setLang(v as LangCode)}>
+                    <SelectTrigger className="text-sm h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="ewe">🇹🇬 Ewe</SelectItem>
+                      <SelectItem value="kab">🇹🇬 Kabyè</SelectItem>
+                      <SelectItem value="wo">🇸🇳 Wolof</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold mb-1.5 flex items-center gap-1.5">
+                    <DollarSign className="w-3 h-3" /> Devise
+                  </Label>
+                  <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
+                    <SelectTrigger className="text-sm h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="XOF">FCFA (XOF)</SelectItem>
+                      <SelectItem value="USD">Dollar ($)</SelectItem>
+                      <SelectItem value="EUR">Euro (€)</SelectItem>
+                      <SelectItem value="GBP">Livre (£)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Become Producer (only for buyers) */}
           {profile?.user_type === "buyer" && (
             <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
