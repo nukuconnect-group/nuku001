@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +14,9 @@ const playNotificationSound = () => {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
-    // Pleasant two-tone chime
     osc.type = "sine";
-    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1); // C#6
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
 
@@ -34,7 +33,7 @@ const playNotificationSound = () => {
 const vibrateDevice = () => {
   try {
     if (navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]); // short double vibration
+      navigator.vibrate([100, 50, 100]);
     }
   } catch {
     // Vibration not supported
@@ -42,11 +41,55 @@ const vibrateDevice = () => {
 };
 
 /**
- * Combined notification alert (sound + vibration).
+ * Request browser push notification permission.
  */
-const notifyUser = () => {
+const requestPushPermission = async (): Promise<boolean> => {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  const result = await Notification.requestPermission();
+  return result === "granted";
+};
+
+/**
+ * Send a browser push notification.
+ */
+const sendPushNotification = (title: string, body: string, onClick?: () => void) => {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: "/lovable-uploads/nukuconnect-logo-header.png",
+      badge: "/lovable-uploads/nukuconnect-logo-header.png",
+      tag: `nuku-${Date.now()}`,
+      requireInteraction: false,
+      silent: false,
+    });
+
+    if (onClick) {
+      notification.onclick = () => {
+        window.focus();
+        onClick();
+        notification.close();
+      };
+    }
+
+    setTimeout(() => notification.close(), 8000);
+  } catch {
+    // Push notification failed
+  }
+};
+
+/**
+ * Combined notification alert (sound + vibration + push).
+ */
+const notifyUser = (title?: string, body?: string, onClick?: () => void) => {
   playNotificationSound();
   vibrateDevice();
+  if (document.hidden && title && body) {
+    sendPushNotification(title, body, onClick);
+  }
 };
 
 /**
@@ -56,6 +99,20 @@ const notifyUser = () => {
 const RealtimeNotifications = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const permissionRequested = useRef(false);
+
+  // Request push permission on first user interaction
+  useEffect(() => {
+    const requestOnInteraction = () => {
+      if (!permissionRequested.current) {
+        permissionRequested.current = true;
+        requestPushPermission();
+      }
+    };
+    
+    document.addEventListener("click", requestOnInteraction, { once: true });
+    return () => document.removeEventListener("click", requestOnInteraction);
+  }, []);
 
   const getCurrentUserId = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -76,10 +133,13 @@ const RealtimeNotifications = () => {
             .eq("id", product.producer_id)
             .single();
 
-          notifyUser();
+          const title = "🌱 Nouveau produit disponible !";
+          const body = `${producer?.full_name || "Un producteur"} vient de publier "${product.name}"`;
+          
+          notifyUser(title, body, () => navigate(`/produit/${product.id}`));
           toast({
-            title: "🌱 Nouveau produit disponible !",
-            description: `${producer?.full_name || "Un producteur"} vient de publier "${product.name}"`,
+            title,
+            description: body,
             action: (
               <button
                 onClick={() => navigate(`/produit/${product.id}`)}
@@ -106,10 +166,49 @@ const RealtimeNotifications = () => {
             .single();
 
           if (sellerProfile?.user_id === userId) {
-            notifyUser();
+            const title = "🎉 Nouvelle commande reçue !";
+            const body = `Commande de ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString()} FCFA`;
+            
+            notifyUser(title, body, () => navigate("/suivi-livraison"));
+            toast({ title, description: body });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        async (payload) => {
+          const msg = payload.new as any;
+          const userId = await getCurrentUserId();
+          if (!userId) return;
+
+          // Get the sender profile to check it's not from us
+          const { data: senderProfile } = await supabase
+            .from("profiles")
+            .select("full_name, user_id")
+            .eq("id", msg.sender_id)
+            .single();
+
+          if (senderProfile?.user_id === userId) return; // Don't notify for own messages
+
+          const title = `💬 Message de ${senderProfile?.full_name || "quelqu'un"}`;
+          const body = msg.content?.substring(0, 120) || "Nouveau message";
+
+          notifyUser(title, body, () => navigate("/messages"));
+          
+          // Only show in-app toast if not on messages page
+          if (!window.location.pathname.startsWith("/messages")) {
             toast({
-              title: "🎉 Nouvelle commande reçue !",
-              description: `Commande de ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString()} FCFA`,
+              title,
+              description: body,
+              action: (
+                <button
+                  onClick={() => navigate("/messages")}
+                  className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+                >
+                  Répondre →
+                </button>
+              ),
             });
           }
         }
@@ -122,19 +221,7 @@ const RealtimeNotifications = () => {
           const userId = await getCurrentUserId();
           if (!userId || notif.user_id !== userId) return;
 
-          notifyUser();
-          toast({
-            title: `💬 ${notif.title}`,
-            description: notif.description,
-            action: (
-              <button
-                onClick={() => navigate("/messages")}
-                className="text-xs font-semibold text-primary hover:underline whitespace-nowrap"
-              >
-                Répondre →
-              </button>
-            ),
-          });
+          // Push notification for message notifications (backup, won't duplicate since messages listener handles it)
         }
       )
       .subscribe();
