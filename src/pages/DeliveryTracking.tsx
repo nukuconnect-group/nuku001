@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import DeliveryChat from "@/components/delivery/DeliveryChat";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
@@ -21,6 +22,7 @@ const DeliveryTracking = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,17 @@ const DeliveryTracking = () => {
     if (selectedOrder && data) {
       const updated = data.find((o: any) => o.id === selectedOrder.id);
       if (updated) setSelectedOrder(updated);
+    }
+    // Fetch delivery records for these orders
+    if (data && data.length > 0) {
+      const orderIds = data.map((o: any) => o.id);
+      const { data: dels } = await supabase
+        .from("deliveries" as any)
+        .select("*")
+        .in("order_id", orderIds);
+      const delMap: Record<string, any> = {};
+      ((dels as any[]) || []).forEach((d: any) => { delMap[d.order_id] = d; });
+      setDeliveries(delMap);
     }
   };
 
