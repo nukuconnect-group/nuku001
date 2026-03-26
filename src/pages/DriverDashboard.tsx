@@ -253,15 +253,18 @@ const DriverDashboard = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="products" className="text-xs">
+              Produits
+            </TabsTrigger>
             <TabsTrigger value="available" className="text-xs">
-              Disponibles {availableDeliveries.length > 0 && `(${availableDeliveries.length})`}
+              Dispo {availableDeliveries.length > 0 && `(${availableDeliveries.length})`}
             </TabsTrigger>
             <TabsTrigger value="active" className="text-xs">
               En cours {activeDeliveries.length > 0 && `(${activeDeliveries.length})`}
             </TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">Historique</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs">Histo</TabsTrigger>
           </TabsList>
 
           {/* Available Deliveries */}
