@@ -189,13 +189,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
     { icon: ShoppingCart, label: "Panier d'achat", href: "/cart", show: true },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: true },
-    { icon: Ticket, label: "Mon coupon", href: "/plans", show: false },
+    { icon: Crown, label: "Mon abonnement", href: "/plans", show: true },
     { icon: Store, label: "Comment vendre sur NUKUCONNECT", href: "/about", show: profile?.user_type !== "producer" },
-    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
+    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: true },
+    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: true },
   ];
 
   const bottomItems = [
+    { icon: MapPin, label: "Adresse de livraison", href: "/settings", show: true },
     { icon: Globe, label: "Pays/région, devise et langue", href: "#", show: true },
+    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
   ];
 
