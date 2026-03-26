@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck, GraduationCap, BookOpen } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
@@ -61,7 +61,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  const [userType, setUserType] = useState<"producer" | "buyer" | "driver">("buyer");
+  const [userType, setUserType] = useState<"producer" | "buyer" | "driver" | "learner" | "trainer">("buyer");
   
   // Producer fields
   const [producerName, setProducerName] = useState("");
@@ -122,10 +122,12 @@ const Auth = () => {
         await new Promise(r => setTimeout(r, 800));
       }
       
-      if (profileData?.user_type === "producer") {
+      if (profileData?.user_type === "producer" || profileData?.user_type === "trainer") {
         navigate("/dashboard", { replace: true });
       } else if (profileData?.user_type === "driver") {
         navigate("/driver-dashboard", { replace: true });
+      } else if (profileData?.user_type === "learner") {
+        navigate("/formations", { replace: true });
       } else {
         navigate("/buyer-dashboard", { replace: true });
       }
@@ -302,12 +304,12 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const fullName = userType === "buyer" 
+      const fullName = (userType === "buyer" || userType === "learner")
         ? `${buyerFirstName} ${buyerLastName}`
         : producerName;
       
-      const phone = userType === "buyer" ? buyerPhone : producerPhone;
-      const location = userType === "buyer" 
+      const phone = (userType === "buyer" || userType === "learner") ? buyerPhone : producerPhone;
+      const location = (userType === "buyer" || userType === "learner")
         ? `${buyerLocation}, ${buyerCountry}`
         : producerLocation;
       
@@ -380,10 +382,12 @@ const Auth = () => {
         }
 
         // Redirect based on user type
-        if (userType === "producer") {
+        if (userType === "producer" || userType === "trainer") {
           navigate("/dashboard");
         } else if (userType === "driver") {
           navigate("/driver-dashboard");
+        } else if (userType === "learner") {
+          navigate("/formations");
         } else {
           navigate("/buyer-dashboard");
         }
