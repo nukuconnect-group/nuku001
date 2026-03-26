@@ -124,6 +124,8 @@ const Auth = () => {
       
       if (profileData?.user_type === "producer") {
         navigate("/dashboard", { replace: true });
+      } else if (profileData?.user_type === "driver") {
+        navigate("/driver-dashboard", { replace: true });
       } else {
         navigate("/buyer-dashboard", { replace: true });
       }
@@ -300,14 +302,14 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const fullName = userType === "producer" 
-        ? producerName 
-        : `${buyerFirstName} ${buyerLastName}`;
+      const fullName = userType === "buyer" 
+        ? `${buyerFirstName} ${buyerLastName}`
+        : producerName;
       
-      const phone = userType === "producer" ? producerPhone : buyerPhone;
-      const location = userType === "producer" 
-        ? producerLocation 
-        : `${buyerLocation}, ${buyerCountry}`;
+      const phone = userType === "buyer" ? buyerPhone : producerPhone;
+      const location = userType === "buyer" 
+        ? `${buyerLocation}, ${buyerCountry}`
+        : producerLocation;
       
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail,
@@ -350,7 +352,7 @@ const Auth = () => {
           user_type: userType,
           phone: phone,
           location: location,
-          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : null,
+          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null,
         });
 
         if (profileError) {
@@ -362,9 +364,26 @@ const Auth = () => {
           description: "Bienvenue sur NUKUCONNECT !",
         });
 
+        // Create driver profile if driver type
+        if (userType === "driver") {
+          const { data: newProfile } = await supabase.from("profiles")
+            .select("id").eq("user_id", authData.user.id).maybeSingle();
+          if (newProfile) {
+            await supabase.from("driver_profiles" as any).insert({
+              user_id: authData.user.id,
+              profile_id: newProfile.id,
+              vehicle_type: producerSector || "moto",
+              zone: producerLocation,
+              is_available: true,
+            });
+          }
+        }
+
         // Redirect based on user type
         if (userType === "producer") {
           navigate("/dashboard");
+        } else if (userType === "driver") {
+          navigate("/driver-dashboard");
         } else {
           navigate("/buyer-dashboard");
         }
