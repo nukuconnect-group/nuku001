@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { type ConversationItem } from "@/hooks/useConversations";
 
-const CATEGORIES = [
-  { id: "all", label: "Tous" },
+const SORT_OPTIONS = [
+  { id: "recent", label: "Récents" },
   { id: "unread", label: "Non lus" },
   { id: "product", label: "Produits" },
+  { id: "oldest", label: "Anciens" },
 ];
 
 interface Props {

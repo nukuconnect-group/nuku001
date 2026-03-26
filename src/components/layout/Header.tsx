@@ -448,10 +448,11 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* Account dropdown - hidden on mobile, shown on desktop */}
                 {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden">
+                      <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex">
                         {profile?.avatar_url ? (
                           <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -521,7 +522,7 @@ const Header = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
-                  <Link to="/auth">
+                  <Link to="/auth" className="hidden lg:block">
                     <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
                       <User className="w-4 h-4" />
                     </Button>

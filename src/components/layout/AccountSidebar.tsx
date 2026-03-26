@@ -181,7 +181,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="right" className="w-[85%] max-w-sm sm:max-w-md overflow-y-auto">
         {user ? (
           // Logged in user view
           <div className="h-full flex flex-col">
