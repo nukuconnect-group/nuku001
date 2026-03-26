@@ -31,7 +31,7 @@ import FormationsSection from "@/components/dashboard/FormationsSection";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
-// Real purchase data will be computed from orders
+const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const BuyerDashboard = () => {
   const navigate = useNavigate();
