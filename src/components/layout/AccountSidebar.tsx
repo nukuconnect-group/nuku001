@@ -201,7 +201,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[85%] max-w-sm sm:max-w-md overflow-y-auto p-0">
+      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
         {user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
