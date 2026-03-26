@@ -174,7 +174,6 @@ const BuyerDashboard = () => {
                 <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                </h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   Tableau de bord acheteur
                 </p>
