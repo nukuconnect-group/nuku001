@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -10,15 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign
 } from "lucide-react";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
+  const { lang, setLang, currency, setCurrency } = useLanguage();
 
   // Form state
   const [fullName, setFullName] = useState("");
