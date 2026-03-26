@@ -268,6 +268,57 @@ export type Database = {
           },
         ]
       }
+      delivery_addresses: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          is_default: boolean | null
+          label: string
+          lat: number | null
+          lng: number | null
+          phone: string | null
+          quarter: string | null
+          street: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          quarter?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          quarter?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       delivery_messages: {
         Row: {
           content: string
