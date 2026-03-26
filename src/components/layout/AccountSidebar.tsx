@@ -188,7 +188,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     return "/buyer-dashboard";
   };
 
-  const userType = profile?.user_type;
+  const currentUserType = profile?.user_type;
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
