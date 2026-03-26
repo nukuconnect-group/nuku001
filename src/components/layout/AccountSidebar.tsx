@@ -193,25 +193,20 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
     { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
-    // Buyer-specific
-    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: userType === "buyer" },
-    { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: userType === "buyer" },
-    { icon: Heart, label: "Mes favoris", href: "/favoris", show: userType === "buyer" },
-    { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: userType === "buyer" },
-    { icon: Store, label: "Devenir vendeur", href: "/about", show: userType === "buyer" },
-    // Producer-specific
-    { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: userType === "producer" || userType === "trainer" },
-    { icon: Crown, label: "Mon abonnement", href: "/plans", show: userType === "producer" || userType === "trainer" },
-    // Driver-specific
-    { icon: Truck, label: "Livraisons disponibles", href: "/driver-dashboard", show: userType === "driver" },
-    { icon: MapPin, label: "Zone de livraison", href: "/driver-dashboard", show: userType === "driver" },
-    // Learner-specific
-    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: userType === "learner" },
-    { icon: BookOpen, label: "Certificats", href: "/formations", show: userType === "learner" },
-    // Common
+    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: currentUserType === "buyer" },
+    { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
+    { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
+    { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
+    { icon: Store, label: "Devenir vendeur", href: "/about", show: currentUserType === "buyer" },
+    { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: currentUserType === "producer" || currentUserType === "trainer" },
+    { icon: Crown, label: "Mon abonnement", href: "/plans", show: currentUserType === "producer" || currentUserType === "trainer" },
+    { icon: Truck, label: "Livraisons disponibles", href: "/driver-dashboard", show: currentUserType === "driver" },
+    { icon: MapPin, label: "Zone de livraison", href: "/driver-dashboard", show: currentUserType === "driver" },
+    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: currentUserType === "learner" },
+    { icon: BookOpen, label: "Certificats", href: "/formations", show: currentUserType === "learner" },
     { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
-    { icon: GraduationCap, label: "Formations", href: "/formations", show: userType !== "learner" },
-    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: userType !== "driver" },
+    { icon: GraduationCap, label: "Formations", href: "/formations", show: currentUserType !== "learner" },
+    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
   const bottomItems = [
