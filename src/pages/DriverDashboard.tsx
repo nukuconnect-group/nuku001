@@ -286,6 +286,66 @@ const DriverDashboard = () => {
             <TabsTrigger value="history" className="text-xs">Histo</TabsTrigger>
           </TabsList>
 
+          {/* Products to deliver */}
+          <TabsContent value="products" className="space-y-3 mt-3">
+            {availableProducts.length === 0 ? (
+              <Card className="p-6 text-center">
+                <ShoppingBag className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Aucun produit disponible</p>
+              </Card>
+            ) : (
+              <>
+                {/* Map showing product locations */}
+                <Card className="overflow-hidden">
+                  <div className="h-48 rounded-lg overflow-hidden">
+                    <MapContainer
+                      center={driverPosition}
+                      zoom={12}
+                      style={{ height: "100%", width: "100%" }}
+                      zoomControl={false}
+                      attributionControl={false}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={driverPosition}>
+                        <Popup>📍 Votre position</Popup>
+                      </Marker>
+                    </MapContainer>
+                  </div>
+                </Card>
+                <p className="text-xs text-muted-foreground">{availableProducts.length} produits disponibles à livrer</p>
+                {availableProducts.map((product: any) => (
+                  <Card key={product.id} className="overflow-hidden">
+                    <CardContent className="p-3 flex gap-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.price?.toLocaleString()} F / {product.unit}</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{product.location || product.profiles?.location || "Non spécifié"}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Vendeur: {product.profiles?.full_name || "Inconnu"}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 justify-center">
+                        <Badge className="text-[10px] whitespace-nowrap">{product.quantity_available} {product.unit}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            )}
+          </TabsContent>
+
           {/* Available Deliveries */}
           <TabsContent value="available" className="space-y-3 mt-3">
             {availableDeliveries.length === 0 ? (
