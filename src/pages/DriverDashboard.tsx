@@ -16,8 +16,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
-  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle
+  DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
+  ShoppingBag, Settings
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 
 // Fix leaflet icons
@@ -44,8 +46,10 @@ const DriverDashboard = () => {
   const [driverProfile, setDriverProfile] = useState<any>(null);
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
