@@ -127,7 +127,7 @@ const HeroCarousel = () => {
       <div className="absolute bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {slides.map((_, index) => (
           <button key={index} onClick={() => goToSlide(index)}
-            className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? "w-8 bg-primary" : "w-1.5 bg-primary-foreground/40"}`} />
+            className={`h-1.5 transition-all duration-500 ${index === currentSlide ? "w-8 bg-primary" : "w-1.5 bg-primary-foreground/40"}`} />
         ))}
       </div>
     </section>
