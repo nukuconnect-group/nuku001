@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const MobileBottomNav = () => {
   const [showAccount, setShowAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
