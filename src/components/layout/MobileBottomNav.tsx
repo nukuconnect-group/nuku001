@@ -149,10 +149,17 @@ const MobileBottomNav = () => {
           </div>
 
           <Link to="/messages"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] relative ${
               isActive("/messages") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
-            <MessageCircle className="w-5 h-5" />
+            <div className="relative">
+              <MessageCircle className="w-5 h-5" />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-destructive text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                  {unreadMessages > 99 ? "99+" : unreadMessages}
+                </span>
+              )}
+            </div>
             <span className="text-[9px] font-medium">Messages</span>
           </Link>
 
