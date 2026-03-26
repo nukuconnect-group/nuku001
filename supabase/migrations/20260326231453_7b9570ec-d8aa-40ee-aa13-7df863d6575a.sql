@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles DROP CONSTRAINT profiles_user_type_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_user_type_check CHECK (user_type = ANY (ARRAY['producer'::text, 'buyer'::text, 'trainer'::text, 'admin'::text, 'driver'::text, 'learner'::text]));
