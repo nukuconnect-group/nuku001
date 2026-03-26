@@ -49,13 +49,11 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
       .eq("delivery_id", deliveryId)
       .order("created_at", { ascending: true });
     
-    setMessages((data as Message[]) || []);
+    const msgs = (data as unknown as Message[]) || [];
+    setMessages(msgs);
     
-    // Count unread for badge
     if (userId) {
-      const unread = ((data as Message[]) || []).filter(
-        m => m.sender_id !== userId && !m.is_read
-      ).length;
+      const unread = msgs.filter(m => m.sender_id !== userId && !m.is_read).length;
       setUnreadCount(unread);
     }
   }, [deliveryId, userId]);
