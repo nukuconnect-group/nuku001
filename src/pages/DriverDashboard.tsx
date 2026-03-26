@@ -208,26 +208,27 @@ const DriverDashboard = () => {
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
         {/* Header with greeting and availability toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-xl font-bold text-foreground">{greeting}, {firstName} 👋</h1>
             <p className="text-sm text-muted-foreground">Bienvenue dans votre espace livreur</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {driverProfile?.is_available ? "En ligne" : "Hors ligne"}
-            </span>
-            <Switch
-              checked={driverProfile?.is_available || false}
-              onCheckedChange={toggleAvailability}
-              disabled={isToggling}
-            />
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-3">
             <Link to="/settings">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <Settings className="w-3.5 h-3.5" /> Paramètres
               </Button>
             </Link>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {driverProfile?.is_available ? "En ligne" : "Hors ligne"}
+              </span>
+              <Switch
+                checked={driverProfile?.is_available || false}
+                onCheckedChange={toggleAvailability}
+                disabled={isToggling}
+              />
+            </div>
           </div>
         </div>
 
