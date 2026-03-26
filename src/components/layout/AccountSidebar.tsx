@@ -149,7 +149,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
       toast({ 
         title: "Inscription réussie !", 
-        description: "Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.",
+        description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
       });
       onClose();
     } catch {

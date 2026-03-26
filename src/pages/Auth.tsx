@@ -363,7 +363,7 @@ const Auth = () => {
 
         toast({
           title: "Inscription réussie !",
-          description: "Bienvenue sur NUKUCONNECT !",
+          description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
         });
 
         // Create driver profile if driver type
