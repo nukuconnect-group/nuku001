@@ -184,7 +184,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     const t = profile?.user_type;
     if (t === "producer" || t === "trainer") return "/dashboard";
     if (t === "driver") return "/driver-dashboard";
-    if (t === "learner") return "/formations";
+    if (t === "learner") return "/learner-dashboard";
     return "/buyer-dashboard";
   };
 
