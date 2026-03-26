@@ -569,7 +569,7 @@ const Auth = () => {
                       </div>
 
                       {/* Producer Fields */}
-                      {userType === "producer" && (
+                      {(userType === "producer" || userType === "trainer") && (
                         <>
                           <div className="space-y-2">
                             <Label htmlFor="producer-name">Nom complet</Label>
@@ -620,7 +620,7 @@ const Auth = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="producer-company">Entreprise / Exploitation</Label>
+                            <Label htmlFor="producer-company">{userType === "trainer" ? "Organisme / Institution" : "Entreprise / Exploitation"}</Label>
                             <div className="relative">
                               <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input
@@ -635,7 +635,7 @@ const Auth = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="producer-sector">Secteur d'activité</Label>
+                            <Label htmlFor="producer-sector">{userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"}</Label>
                             <Select value={producerSector} onValueChange={setProducerSector}>
                               <SelectTrigger className="w-full">
                                 <Briefcase className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -654,7 +654,7 @@ const Auth = () => {
                       )}
 
                       {/* Buyer Fields */}
-                      {userType === "buyer" && (
+                      {(userType === "buyer" || userType === "learner") && (
                         <>
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
