@@ -130,12 +130,13 @@ const Cart = () => {
         return;
       }
 
+      const orderIds: string[] = [];
       for (const item of items) {
         const sellerId = item.product.producer.id;
         const productId = item.product.id;
         if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
 
-        const { error } = await supabase.from("orders").insert({
+        const { data: orderData, error } = await supabase.from("orders").insert({
           buyer_id: buyerProfile.id,
           seller_id: sellerId,
           product_id: productId,
@@ -148,9 +149,29 @@ const Cart = () => {
             `Paiement: ${selectedPayment?.name}`,
             mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
           ].filter(Boolean).join(" | "),
-        });
+        }).select("id").single();
 
         if (error) throw error;
+        if (orderData) orderIds.push(orderData.id);
+      }
+
+      // Create delivery records if delivery method is not pickup
+      if (deliveryMethod !== "pickup" && orderIds.length > 0) {
+        const driverFee = Math.round(deliveryPrice * 0.8);
+        const platformFee = deliveryPrice - driverFee;
+        
+        for (const orderId of orderIds) {
+          await supabase.from("deliveries" as any).insert({
+            order_id: orderId,
+            dropoff_address: `${deliveryCity}, ${fullAddress}`,
+            delivery_fee: deliveryPrice,
+            driver_fee: driverFee,
+            platform_fee: platformFee,
+            distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null,
+            estimated_minutes: dynamicDeliveryPrice > 0 ? Math.round((dynamicDeliveryPrice / 100) * 5) : null,
+            status: "pending",
+          });
+        }
       }
 
       generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
