@@ -153,6 +153,89 @@ export type Database = {
           },
         ]
       }
+      deliveries: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_fee: number
+          distance_km: number | null
+          driver_current_lat: number | null
+          driver_current_lng: number | null
+          driver_fee: number
+          driver_id: string | null
+          dropoff_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          estimated_minutes: number | null
+          id: string
+          order_id: string
+          picked_up_at: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          platform_fee: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee?: number
+          distance_km?: number | null
+          driver_current_lat?: number | null
+          driver_current_lng?: number | null
+          driver_fee?: number
+          driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          order_id: string
+          picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_fee?: number
+          distance_km?: number | null
+          driver_current_lat?: number | null
+          driver_current_lng?: number | null
+          driver_fee?: number
+          driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demands: {
         Row: {
           budget: number | null
@@ -208,6 +291,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_profiles: {
+        Row: {
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          id: string
+          is_available: boolean
+          license_plate: string | null
+          profile_id: string
+          rating: number | null
+          total_deliveries: number | null
+          total_earnings: number | null
+          updated_at: string
+          user_id: string
+          vehicle_type: string
+          zone: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          id?: string
+          is_available?: boolean
+          license_plate?: string | null
+          profile_id: string
+          rating?: number | null
+          total_deliveries?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id: string
+          vehicle_type?: string
+          zone?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          id?: string
+          is_available?: boolean
+          license_plate?: string | null
+          profile_id?: string
+          rating?: number | null
+          total_deliveries?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id?: string
+          vehicle_type?: string
+          zone?: string | null
+        }
+        Relationships: []
       }
       messages: {
         Row: {

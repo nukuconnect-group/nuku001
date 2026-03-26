@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
@@ -61,7 +61,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  const [userType, setUserType] = useState<"producer" | "buyer">("buyer");
+  const [userType, setUserType] = useState<"producer" | "buyer" | "driver">("buyer");
   
   // Producer fields
   const [producerName, setProducerName] = useState("");
@@ -124,6 +124,8 @@ const Auth = () => {
       
       if (profileData?.user_type === "producer") {
         navigate("/dashboard", { replace: true });
+      } else if (profileData?.user_type === "driver") {
+        navigate("/driver-dashboard", { replace: true });
       } else {
         navigate("/buyer-dashboard", { replace: true });
       }
@@ -300,14 +302,14 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const fullName = userType === "producer" 
-        ? producerName 
-        : `${buyerFirstName} ${buyerLastName}`;
+      const fullName = userType === "buyer" 
+        ? `${buyerFirstName} ${buyerLastName}`
+        : producerName;
       
-      const phone = userType === "producer" ? producerPhone : buyerPhone;
-      const location = userType === "producer" 
-        ? producerLocation 
-        : `${buyerLocation}, ${buyerCountry}`;
+      const phone = userType === "buyer" ? buyerPhone : producerPhone;
+      const location = userType === "buyer" 
+        ? `${buyerLocation}, ${buyerCountry}`
+        : producerLocation;
       
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail,
@@ -350,7 +352,7 @@ const Auth = () => {
           user_type: userType,
           phone: phone,
           location: location,
-          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : null,
+          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null,
         });
 
         if (profileError) {
@@ -362,9 +364,26 @@ const Auth = () => {
           description: "Bienvenue sur NUKUCONNECT !",
         });
 
+        // Create driver profile if driver type
+        if (userType === "driver") {
+          const { data: newProfile } = await supabase.from("profiles")
+            .select("id").eq("user_id", authData.user.id).maybeSingle();
+          if (newProfile) {
+            await supabase.from("driver_profiles" as any).insert({
+              user_id: authData.user.id,
+              profile_id: newProfile.id,
+              vehicle_type: producerSector || "moto",
+              zone: producerLocation,
+              is_available: true,
+            });
+          }
+        }
+
         // Redirect based on user type
         if (userType === "producer") {
           navigate("/dashboard");
+        } else if (userType === "driver") {
+          navigate("/driver-dashboard");
         } else {
           navigate("/buyer-dashboard");
         }
@@ -518,33 +537,47 @@ const Auth = () => {
                       {/* User Type Selection */}
                       <div className="space-y-2">
                         <Label>Je suis</Label>
-                        <div className="grid grid-cols-2 gap-3">
+                       <div className="grid grid-cols-3 gap-2">
                           <button
                             type="button"
                             onClick={() => setUserType("producer")}
-                            className={`p-4 rounded-xl border-2 transition-all ${
+                            className={`p-3 rounded-xl border-2 transition-all ${
                               userType === "producer"
                                 ? "border-primary bg-primary/10"
                                 : "border-border hover:border-primary/50"
                             }`}
                           >
-                            <User className={`w-6 h-6 mx-auto mb-2 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
+                            <User className={`w-5 h-5 mx-auto mb-1.5 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`text-xs font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>
                               Fournisseur
                             </span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setUserType("buyer")}
-                            className={`p-4 rounded-xl border-2 transition-all ${
+                            className={`p-3 rounded-xl border-2 transition-all ${
                               userType === "buyer"
                                 ? "border-primary bg-primary/10"
                                 : "border-border hover:border-primary/50"
                             }`}
                           >
-                            <Store className={`w-6 h-6 mx-auto mb-2 ${userType === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
-                            <span className={`text-sm font-medium ${userType === "buyer" ? "text-primary" : "text-foreground"}`}>
+                            <Store className={`w-5 h-5 mx-auto mb-1.5 ${userType === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`text-xs font-medium ${userType === "buyer" ? "text-primary" : "text-foreground"}`}>
                               Acheteur
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserType("driver")}
+                            className={`p-3 rounded-xl border-2 transition-all ${
+                              userType === "driver"
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <Truck className={`w-5 h-5 mx-auto mb-1.5 ${userType === "driver" ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className={`text-xs font-medium ${userType === "driver" ? "text-primary" : "text-foreground"}`}>
+                              Livreur
                             </span>
                           </button>
                         </div>
@@ -707,6 +740,51 @@ const Auth = () => {
                                     {country}
                                   </SelectItem>
                                 ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Driver Fields */}
+                      {userType === "driver" && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-name">Nom complet</Label>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-name" type="text" placeholder="Votre nom complet"
+                                value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-phone">Téléphone</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-phone" type="tel" placeholder="+228 XX XX XX XX"
+                                value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-location">Zone d'activité</Label>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-location" type="text" placeholder="Lomé, Kara..."
+                                value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Type de véhicule</Label>
+                            <Select value={producerSector || "moto"} onValueChange={setProducerSector}>
+                              <SelectTrigger className="w-full">
+                                <Truck className="w-4 h-4 mr-2 text-muted-foreground" />
+                                <SelectValue placeholder="Type de véhicule" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="moto">🏍️ Moto</SelectItem>
+                                <SelectItem value="velo">🚲 Vélo</SelectItem>
+                                <SelectItem value="voiture">🚗 Voiture</SelectItem>
+                                <SelectItem value="tricycle">🛺 Tricycle</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

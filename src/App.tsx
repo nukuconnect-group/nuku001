@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
+import DriverDashboard from "./pages/DriverDashboard";
 import Plans from "./pages/Plans";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
@@ -99,6 +100,7 @@ const App = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                 <Route path="/panier" element={<Cart />} />
+                <Route path="/driver-dashboard" element={<DriverDashboard />} />
                 <Route path="/plans" element={<Plans />} />
                 <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                 <Route path="/a-propos" element={<About />} />
