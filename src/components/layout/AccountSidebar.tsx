@@ -24,7 +24,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
-  Crown, Heart, Shield
+  Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket
 } from "lucide-react";
 
 interface AccountSidebarProps {
@@ -33,18 +34,22 @@ interface AccountSidebarProps {
 }
 
 const sectors = [
-  "Céréales & Légumineuses",
-  "Maraîchage",
-  "Fruits",
-  "Tubercules",
-  "Élevage",
-  "Aviculture",
-  "Pêche & Aquaculture",
-  "Transformation agroalimentaire",
+  "Céréales & Légumineuses", "Maraîchage", "Fruits", "Tubercules",
+  "Élevage", "Aviculture", "Pêche & Aquaculture", "Transformation agroalimentaire",
 ];
 
 const countries = [
   "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso", "Niger", "Mali", "Sénégal",
+];
+
+type UserType = "producer" | "buyer" | "driver" | "learner" | "trainer";
+
+const userTypeConfig: { value: UserType; label: string; icon: any; desc: string }[] = [
+  { value: "buyer", label: "Acheteur", icon: ShoppingBag, desc: "Acheter des produits" },
+  { value: "producer", label: "Fournisseur", icon: Store, desc: "Vendre vos produits" },
+  { value: "driver", label: "Livreur", icon: Truck, desc: "Livrer des commandes" },
+  { value: "learner", label: "Apprenant", icon: GraduationCap, desc: "Suivre des formations" },
+  { value: "trainer", label: "Formateur", icon: BookOpen, desc: "Créer des formations" },
 ];
 
 const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
@@ -62,17 +67,13 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   // Signup state
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
-  const [userType, setUserType] = useState<"producer" | "buyer">("buyer");
-  const [producerName, setProducerName] = useState("");
-  const [producerPhone, setProducerPhone] = useState("");
-  const [producerLocation, setProducerLocation] = useState("");
-  const [producerCompany, setProducerCompany] = useState("");
-  const [producerSector, setProducerSector] = useState("");
-  const [buyerFirstName, setBuyerFirstName] = useState("");
-  const [buyerLastName, setBuyerLastName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-  const [buyerLocation, setBuyerLocation] = useState("");
-  const [buyerCountry, setBuyerCountry] = useState("Togo");
+  const [userType, setUserType] = useState<UserType>("buyer");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+  const [company, setCompany] = useState("");
+  const [sector, setSector] = useState("");
+  const [country, setCountry] = useState("Togo");
 
   useEffect(() => {
     if (user?.id) {
@@ -84,27 +85,25 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
+        email: loginEmail, password: loginPassword,
       });
-
       if (error) {
         toast({
           title: "Erreur de connexion",
           description: error.message === "Invalid login credentials" 
-            ? "Email ou mot de passe incorrect." 
+            ? "Email ou mot de passe incorrect."
+            : error.message === "Email not confirmed"
+            ? "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
             : error.message,
           variant: "destructive",
         });
         return;
       }
-
       toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
       onClose();
-    } catch (error) {
+    } catch {
       toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -118,12 +117,9 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
       return;
     }
     setIsLoading(true);
-
     try {
       const redirectUrl = `${window.location.origin}/`;
-      const fullName = userType === "producer" ? producerName : `${buyerFirstName} ${buyerLastName}`;
-      const phone = userType === "producer" ? producerPhone : buyerPhone;
-      const location = userType === "producer" ? producerLocation : `${buyerLocation}, ${buyerCountry}`;
+      const loc = country ? `${location}, ${country}` : location;
 
       const { error } = await supabase.auth.signUp({
         email: signupEmail,
@@ -133,10 +129,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
           data: {
             full_name: fullName,
             user_type: userType,
-            phone: phone,
-            location: location,
-            company: userType === "producer" ? producerCompany : null,
-            sector: userType === "producer" ? producerSector : null,
+            phone,
+            location: loc,
+            company: ["producer", "trainer"].includes(userType) ? company : null,
+            sector: userType === "producer" ? sector : null,
           },
         },
       });
@@ -145,16 +141,18 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         toast({
           title: "Erreur",
           description: error.message.includes("already registered") 
-            ? "Un compte existe déjà avec cet email." 
-            : error.message,
+            ? "Un compte existe déjà avec cet email." : error.message,
           variant: "destructive",
         });
         return;
       }
 
-      toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
+      toast({ 
+        title: "Inscription réussie !", 
+        description: "Un email de confirmation a été envoyé. Veuillez vérifier votre boîte de réception pour activer votre compte.",
+      });
       onClose();
-    } catch (error) {
+    } catch {
       toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -168,226 +166,254 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     navigate("/");
   };
 
-  const dashboardHref = profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
+  const getUserTypeLabel = (type?: string) => {
+    const map: Record<string, string> = {
+      producer: "Fournisseur", buyer: "Acheteur", driver: "Livreur",
+      learner: "Apprenant", trainer: "Formateur",
+    };
+    return map[type || ""] || "Utilisateur";
+  };
+
+  const getDashboardHref = () => {
+    const t = profile?.user_type;
+    if (t === "producer" || t === "trainer") return "/dashboard";
+    if (t === "driver") return "/driver-dashboard";
+    if (t === "learner") return "/formations";
+    return "/buyer-dashboard";
+  };
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
-    { icon: LayoutDashboard, label: "Tableau de bord", href: dashboardHref, show: true },
-    { icon: Heart, label: "Mes Favoris", href: "/favoris", show: true },
-    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: true },
+    { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
+    { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: true },
+    { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
+    { icon: ShoppingCart, label: "Panier d'achat", href: "/cart", show: true },
+    { icon: Heart, label: "Mes favoris", href: "/favoris", show: true },
+    { icon: Ticket, label: "Mon coupon", href: "/plans", show: false },
+    { icon: Store, label: "Comment vendre sur NUKUCONNECT", href: "/about", show: profile?.user_type !== "producer" },
+    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
+  ];
+
+  const bottomItems = [
+    { icon: Globe, label: "Pays/région, devise et langue", href: "#", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
-    { icon: Crown, label: "Plans & Tarifs", href: "/plans", show: true },
   ];
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[85%] max-w-sm sm:max-w-md overflow-y-auto">
+      <SheetContent side="right" className="w-[85%] max-w-sm sm:max-w-md overflow-y-auto p-0">
         {user ? (
-          // Logged in user view
           <div className="h-full flex flex-col">
-            <SheetHeader className="pb-6 border-b border-border">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-hero flex items-center justify-center">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <User className="w-8 h-8 text-primary-foreground" />
-                  )}
+            {/* Header with avatar */}
+            <div className="px-4 py-5 border-b border-border">
+              <SheetHeader className="p-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <SheetTitle className="text-left text-base truncate">{profile?.full_name || user.email}</SheetTitle>
+                    <SheetDescription className="text-left text-xs">
+                      {getUserTypeLabel(profile?.user_type)}
+                    </SheetDescription>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <SheetTitle className="text-left">{profile?.full_name || user.email}</SheetTitle>
-                  <SheetDescription className="text-left">
-                    {profile?.user_type === "producer" ? "Fournisseur" : "Acheteur"}
-                  </SheetDescription>
-                </div>
-              </div>
-            </SheetHeader>
+              </SheetHeader>
+            </div>
 
-            <nav className="flex-1 py-6 space-y-1">
-              {menuItems.filter(item => item.show).map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              ))}
+            {/* Menu items - Alibaba style */}
+            <nav className="flex-1 overflow-y-auto">
+              <div className="py-1">
+                {menuItems.filter(item => item.show).map((item) => (
+                  <Link
+                    key={item.href + item.label}
+                    to={item.href}
+                    onClick={onClose}
+                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
+                  >
+                    <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-sm">{item.label}</span>
+                    {item.badge && (
+                      <span className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
+
+              {/* Separator */}
+              <div className="h-2 bg-muted/40" />
+
+              {/* Bottom items */}
+              <div className="py-1">
+                {bottomItems.filter(item => item.show).map((item) => (
+                  <Link
+                    key={item.href + item.label}
+                    to={item.href}
+                    onClick={onClose}
+                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
+                  >
+                    <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-sm">{item.label}</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
             </nav>
 
-            <div className="pt-6 border-t border-border">
-              <Button variant="outline" className="w-full justify-start gap-3 text-destructive" onClick={handleLogout}>
+            {/* Logout */}
+            <div className="p-4 border-t border-border">
+              <Button variant="outline" className="w-full justify-start gap-3 text-destructive hover:text-destructive" onClick={handleLogout}>
                 <LogOut className="w-5 h-5" />
                 Déconnexion
               </Button>
             </div>
           </div>
         ) : (
-          // Login/Signup view
-          <div>
-            <SheetHeader className="pb-6">
-              <SheetTitle>Mon compte</SheetTitle>
-              <SheetDescription>Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>
-            </SheetHeader>
+          // Not logged in view
+          <div className="h-full flex flex-col">
+            <div className="px-4 pt-5 pb-4 border-b border-border">
+              <SheetHeader className="p-0">
+                <SheetTitle>Mon compte</SheetTitle>
+                <SheetDescription>Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>
+              </SheetHeader>
+            </div>
 
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Connexion</TabsTrigger>
-                <TabsTrigger value="signup">Inscription</TabsTrigger>
-              </TabsList>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-5">
+                  <TabsTrigger value="login">Connexion</TabsTrigger>
+                  <TabsTrigger value="signup">Inscription</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                <TabsContent value="login">
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sidebar-login-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input id="sidebar-login-email" type="email" placeholder="votre@email.com"
+                          value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Mot de passe</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10 pr-10"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                    <div className="space-y-2">
+                      <Label htmlFor="sidebar-login-password">Mot de passe</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input id="sidebar-login-password" type={showPassword ? "text" : "password"} placeholder="••••••••"
+                          value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10 pr-10" required />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    {isLoading ? "Connexion..." : "Se connecter"}
-                  </Button>
-                </form>
-              </TabsContent>
+                    <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {isLoading ? "Connexion..." : "Se connecter"}
+                    </Button>
+                  </form>
+                </TabsContent>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Je suis</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setUserType("producer")}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          userType === "producer" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <User className={`w-5 h-5 mx-auto mb-1 ${userType === "producer" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`text-sm font-medium ${userType === "producer" ? "text-primary" : "text-foreground"}`}>Fournisseur</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setUserType("buyer")}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          userType === "buyer" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <Store className={`w-5 h-5 mx-auto mb-1 ${userType === "buyer" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`text-sm font-medium ${userType === "buyer" ? "text-primary" : "text-foreground"}`}>Acheteur</span>
-                      </button>
+                <TabsContent value="signup">
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    {/* Role Selection - All 5 roles */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Choisir votre profil</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {userTypeConfig.map((type) => (
+                          <button
+                            key={type.value}
+                            type="button"
+                            onClick={() => setUserType(type.value)}
+                            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all text-left ${
+                              userType === type.value
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/40"
+                            }`}
+                          >
+                            <type.icon className={`w-4 h-4 flex-shrink-0 ${userType === type.value ? "text-primary" : "text-muted-foreground"}`} />
+                            <div className="min-w-0">
+                              <p className={`text-xs font-semibold truncate ${userType === type.value ? "text-primary" : "text-foreground"}`}>
+                                {type.label}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground truncate">{type.desc}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {userType === "producer" ? (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Nom complet</Label>
-                        <Input value={producerName} onChange={(e) => setProducerName(e.target.value)} placeholder="Votre nom complet" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Téléphone</Label>
-                        <Input value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} placeholder="+228 XX XX XX XX" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Localisation</Label>
-                        <Input value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} placeholder="Ville, Région" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Entreprise</Label>
-                        <Input value={producerCompany} onChange={(e) => setProducerCompany(e.target.value)} placeholder="Nom de votre entreprise" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Secteur d'activité</Label>
-                        <Select value={producerSector} onValueChange={setProducerSector}>
-                          <SelectTrigger><SelectValue placeholder="Choisir un secteur" /></SelectTrigger>
-                          <SelectContent>
-                            {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label>Prénom</Label>
-                          <Input value={buyerFirstName} onChange={(e) => setBuyerFirstName(e.target.value)} placeholder="Prénom" required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Nom</Label>
-                          <Input value={buyerLastName} onChange={(e) => setBuyerLastName(e.target.value)} placeholder="Nom" required />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Téléphone</Label>
-                        <Input value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} placeholder="+228 XX XX XX XX" required />
-                      </div>
+                    {/* Common fields */}
+                    <div className="space-y-2">
+                      <Label>Nom complet</Label>
+                      <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Votre nom complet" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Téléphone</Label>
+                      <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+228 XX XX XX XX" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-2">
                         <Label>Ville</Label>
-                        <Input value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} placeholder="Votre ville" required />
+                        <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Votre ville" required />
                       </div>
                       <div className="space-y-2">
                         <Label>Pays</Label>
-                        <Select value={buyerCountry} onValueChange={setBuyerCountry}>
+                        <Select value={country} onValueChange={setCountry}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
-                    </>
-                  )}
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="votre@email.com" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Mot de passe</Label>
-                    <Input type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} placeholder="••••••••" required />
-                  </div>
+                    {/* Conditional fields */}
+                    {(userType === "producer" || userType === "trainer") && (
+                      <div className="space-y-2">
+                        <Label>{userType === "trainer" ? "Organisme / Institution" : "Entreprise"}</Label>
+                        <Input value={company} onChange={(e) => setCompany(e.target.value)}
+                          placeholder={userType === "trainer" ? "Votre institution" : "Nom de votre entreprise"} />
+                      </div>
+                    )}
+                    {userType === "producer" && (
+                      <div className="space-y-2">
+                        <Label>Secteur d'activité</Label>
+                        <Select value={sector} onValueChange={setSector}>
+                          <SelectTrigger><SelectValue placeholder="Choisir un secteur" /></SelectTrigger>
+                          <SelectContent>
+                            {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
-                  <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    {isLoading ? "Inscription..." : "Créer mon compte"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="votre@email.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mot de passe</Label>
+                      <Input type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} placeholder="••••••••" required />
+                    </div>
+
+                    <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
+                      {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {isLoading ? "Inscription..." : "Créer mon compte"}
+                    </Button>
+
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Un email de confirmation sera envoyé pour activer votre compte.
+                    </p>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         )}
       </SheetContent>
