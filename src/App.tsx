@@ -22,6 +22,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import Cart from "./pages/Cart";
+import DriverDashboard from "./pages/DriverDashboard";
 import Plans from "./pages/Plans";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import About from "./pages/About";
