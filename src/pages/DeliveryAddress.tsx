@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -12,12 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Save, Loader2, Navigation, Home, Building, ArrowLeft } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapPin, Save, Loader2, Navigation, Home, Building, ArrowLeft, Plus, Trash2, Star, Edit2 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -34,20 +33,43 @@ const countries = [
   "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso", "Niger", "Mali", "Sénégal",
 ];
 
+interface DeliveryAddr {
+  id: string;
+  label: string;
+  full_name: string | null;
+  phone: string | null;
+  city: string | null;
+  quarter: string | null;
+  street: string | null;
+  country: string | null;
+  lat: number | null;
+  lng: number | null;
+  is_default: boolean;
+}
+
 function LocationPicker({ position, onPositionChange }: { position: [number, number]; onPositionChange: (pos: [number, number]) => void }) {
-  useMapEvents({
-    click(e) {
-      onPositionChange([e.latlng.lat, e.latlng.lng]);
-    },
-  });
+  useMapEvents({ click(e) { onPositionChange([e.latlng.lat, e.latlng.lng]); } });
   return <Marker position={position} />;
+}
+
+function MapRecenter({ position }: { position: [number, number] }) {
+  const map = useMap();
+  useEffect(() => { map.setView(position, 13); }, [position, map]);
+  return null;
 }
 
 const DeliveryAddress = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, updateProfile } = useProfile();
+  const { user, profile } = useProfile();
 
+  const [addresses, setAddresses] = useState<DeliveryAddr[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form state
   const [addressLabel, setAddressLabel] = useState("Domicile");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -55,29 +77,50 @@ const DeliveryAddress = () => {
   const [city, setCity] = useState("");
   const [quarter, setQuarter] = useState("");
   const [street, setStreet] = useState("");
-  const [details, setDetails] = useState("");
   const [position, setPosition] = useState<[number, number]>([6.1725, 1.2314]);
-  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      setFullName(profile.full_name || "");
-      setPhone(profile.phone || "");
-      if (profile.location) {
-        const parts = profile.location.split(", ");
-        if (parts.length >= 2) {
-          setCity(parts[0]);
-          setCountry(parts[1] || "Togo");
-        } else {
-          setCity(profile.location);
-        }
-      }
-    }
-  }, [profile]);
+  const fetchAddresses = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("delivery_addresses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("is_default", { ascending: false });
+    setAddresses((data as any) || []);
+    setLoading(false);
+  }, [user]);
 
-  useEffect(() => {
-    if (!user && !profile) return;
-  }, [user, profile]);
+  useEffect(() => { fetchAddresses(); }, [fetchAddresses]);
+
+  const resetForm = () => {
+    setAddressLabel("Domicile");
+    setFullName(profile?.full_name || "");
+    setPhone(profile?.phone || "");
+    setCountry("Togo");
+    setCity("");
+    setQuarter("");
+    setStreet("");
+    setPosition([6.1725, 1.2314]);
+    setEditingId(null);
+  };
+
+  const openNewForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (addr: DeliveryAddr) => {
+    setEditingId(addr.id);
+    setAddressLabel(addr.label);
+    setFullName(addr.full_name || "");
+    setPhone(addr.phone || "");
+    setCountry(addr.country || "Togo");
+    setCity(addr.city || "");
+    setQuarter(addr.quarter || "");
+    setStreet(addr.street || "");
+    setPosition([addr.lat || 6.1725, addr.lng || 1.2314]);
+    setShowForm(true);
+  };
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
@@ -85,36 +128,67 @@ const DeliveryAddress = () => {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setPosition([pos.coords.latitude, pos.coords.longitude]);
-        toast({ title: "Position mise à jour ✓" });
-      },
+      (pos) => { setPosition([pos.coords.latitude, pos.coords.longitude]); toast({ title: "Position mise à jour ✓" }); },
       () => toast({ title: "Impossible d'obtenir votre position", variant: "destructive" })
     );
   };
 
   const handleSave = async () => {
-    if (!profile) return;
+    if (!user) return;
     if (!city.trim() || !phone.trim()) {
-      toast({ title: "Champs requis", description: "Veuillez remplir la ville et le téléphone.", variant: "destructive" });
+      toast({ title: "Champs requis", description: "Ville et téléphone obligatoires.", variant: "destructive" });
       return;
     }
     setIsSaving(true);
     try {
-      const locationStr = `${city}, ${country}`;
-      const { error } = await supabase.from("profiles").update({
-        location: locationStr,
-        phone,
+      const payload = {
+        user_id: user.id,
+        label: addressLabel,
         full_name: fullName,
-      }).eq("id", profile.id);
-      if (error) throw error;
-      updateProfile({ location: locationStr, phone, full_name: fullName });
-      toast({ title: "Adresse enregistrée ✓", description: "Votre adresse de livraison a été mise à jour." });
+        phone,
+        city,
+        quarter,
+        street,
+        country,
+        lat: position[0],
+        lng: position[1],
+        is_default: addresses.length === 0,
+      };
+
+      if (editingId) {
+        const { error } = await supabase.from("delivery_addresses").update(payload).eq("id", editingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("delivery_addresses").insert(payload);
+        if (error) throw error;
+      }
+
+      toast({ title: editingId ? "Adresse modifiée ✓" : "Adresse ajoutée ✓" });
+      setShowForm(false);
+      resetForm();
+      fetchAddresses();
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("delivery_addresses").delete().eq("id", id);
+    if (!error) {
+      toast({ title: "Adresse supprimée" });
+      fetchAddresses();
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    if (!user) return;
+    // Remove default from all
+    await supabase.from("delivery_addresses").update({ is_default: false }).eq("user_id", user.id);
+    await supabase.from("delivery_addresses").update({ is_default: true }).eq("id", id);
+    toast({ title: "Adresse par défaut mise à jour ✓" });
+    fetchAddresses();
   };
 
   if (!user) {
@@ -142,135 +216,149 @@ const DeliveryAddress = () => {
             <ArrowLeft className="w-4 h-4" /><span>Retour</span>
           </button>
 
-          <h1 className="font-heading text-lg sm:text-2xl font-bold text-foreground mb-5 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            Adresse de livraison
-          </h1>
+          <div className="flex items-center justify-between mb-5">
+            <h1 className="font-heading text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Mes adresses de livraison
+            </h1>
+            {!showForm && (
+              <Button size="sm" className="gap-1.5" onClick={openNewForm}>
+                <Plus className="w-4 h-4" /> Ajouter
+              </Button>
+            )}
+          </div>
 
-          {/* Address type */}
-          <Card className="mb-4">
-            <CardHeader className="p-3 sm:p-4 pb-2">
-              <CardTitle className="text-sm">Type d'adresse</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="flex gap-2">
-                {[
-                  { value: "Domicile", icon: Home },
-                  { value: "Bureau", icon: Building },
-                  { value: "Autre", icon: MapPin },
-                ].map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setAddressLabel(type.value)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all text-sm ${
-                      addressLabel === type.value
-                        ? "border-primary bg-primary/10 text-primary font-medium"
-                        : "border-border hover:border-primary/40 text-foreground"
-                    }`}
-                  >
-                    <type.icon className="w-4 h-4" />
-                    {type.value}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Saved addresses list */}
+          {!showForm && (
+            <>
+              {loading ? (
+                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+              ) : addresses.length === 0 ? (
+                <Card className="text-center py-10">
+                  <CardContent>
+                    <MapPin className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm mb-4">Aucune adresse enregistrée</p>
+                    <Button onClick={openNewForm} className="gap-2"><Plus className="w-4 h-4" /> Ajouter une adresse</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {addresses.map((addr) => (
+                    <Card key={addr.id} className={`relative ${addr.is_default ? "border-primary/50 bg-primary/5" : ""}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              {addr.label === "Domicile" ? <Home className="w-4 h-4 text-primary" /> : addr.label === "Bureau" ? <Building className="w-4 h-4 text-primary" /> : <MapPin className="w-4 h-4 text-primary" />}
+                              <span className="font-semibold text-sm">{addr.label}</span>
+                              {addr.is_default && (
+                                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Par défaut</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-foreground">{addr.full_name}</p>
+                            <p className="text-xs text-muted-foreground">{addr.phone}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {[addr.quarter, addr.street, addr.city, addr.country].filter(Boolean).join(", ")}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 ml-2">
+                            {!addr.is_default && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSetDefault(addr.id)} title="Définir par défaut">
+                                <Star className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditForm(addr)}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(addr.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
-          {/* Contact info */}
-          <Card className="mb-4">
-            <CardHeader className="p-3 sm:p-4 pb-2">
-              <CardTitle className="text-sm">Informations de contact</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs font-semibold mb-1.5">Nom complet</Label>
-                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Votre nom" className="text-sm h-10" />
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold mb-1.5">Téléphone</Label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+228 XX XX XX XX" className="text-sm h-10" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Add/Edit form */}
+          {showForm && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="p-3 sm:p-4 pb-2">
+                  <CardTitle className="text-sm">{editingId ? "Modifier l'adresse" : "Nouvelle adresse"}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <div className="flex gap-2 mb-4">
+                    {([{ value: "Domicile", icon: Home }, { value: "Bureau", icon: Building }, { value: "Autre", icon: MapPin }] as const).map((type) => (
+                      <button key={type.value} onClick={() => setAddressLabel(type.value)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all text-sm ${
+                          addressLabel === type.value ? "border-primary bg-primary/10 text-primary font-medium" : "border-border hover:border-primary/40 text-foreground"
+                        }`}>
+                        <type.icon className="w-4 h-4" />{type.value}
+                      </button>
+                    ))}
+                  </div>
 
-          {/* Address details */}
-          <Card className="mb-4">
-            <CardHeader className="p-3 sm:p-4 pb-2">
-              <CardTitle className="text-sm">Détails de l'adresse</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs font-semibold mb-1.5">Pays</Label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger className="text-sm h-10"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold mb-1.5">Ville</Label>
-                  <Select value={city} onValueChange={setCity}>
-                    <SelectTrigger className="text-sm h-10"><SelectValue placeholder="Choisir une ville" /></SelectTrigger>
-                    <SelectContent>
-                      {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs font-semibold mb-1.5">Quartier</Label>
-                <Input value={quarter} onChange={(e) => setQuarter(e.target.value)} placeholder="Ex: Bè, Adidogomé, Tokoin..." className="text-sm h-10" />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold mb-1.5">Rue / Repère</Label>
-                <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rue, à côté de..." className="text-sm h-10" />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold mb-1.5">Informations complémentaires</Label>
-                <Textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Étage, bâtiment, instructions de livraison..." rows={2} className="text-sm" />
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><Label className="text-xs font-semibold mb-1.5">Nom complet</Label>
+                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Votre nom" className="text-sm h-10" /></div>
+                      <div><Label className="text-xs font-semibold mb-1.5">Téléphone</Label>
+                        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+228 XX XX XX XX" className="text-sm h-10" /></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div><Label className="text-xs font-semibold mb-1.5">Pays</Label>
+                        <Select value={country} onValueChange={setCountry}>
+                          <SelectTrigger className="text-sm h-10"><SelectValue /></SelectTrigger>
+                          <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                        </Select></div>
+                      <div><Label className="text-xs font-semibold mb-1.5">Ville</Label>
+                        <Select value={city} onValueChange={setCity}>
+                          <SelectTrigger className="text-sm h-10"><SelectValue placeholder="Choisir une ville" /></SelectTrigger>
+                          <SelectContent>{cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                        </Select></div>
+                    </div>
+                    <div><Label className="text-xs font-semibold mb-1.5">Quartier</Label>
+                      <Input value={quarter} onChange={(e) => setQuarter(e.target.value)} placeholder="Ex: Bè, Adidogomé, Tokoin..." className="text-sm h-10" /></div>
+                    <div><Label className="text-xs font-semibold mb-1.5">Rue / Repère</Label>
+                      <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rue, à côté de..." className="text-sm h-10" /></div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Interactive Map */}
-          <Card className="mb-4">
-            <CardHeader className="p-3 sm:p-4 pb-2">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <span>📍 Localisation sur la carte</span>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7" onClick={handleLocateMe}>
-                  <Navigation className="w-3 h-3" />
-                  Ma position
+              <Card>
+                <CardHeader className="p-3 sm:p-4 pb-2">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span>📍 Localisation</span>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7" onClick={handleLocateMe}>
+                      <Navigation className="w-3 h-3" /> Ma position
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border">
+                    <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+                      <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <LocationPicker position={position} onPositionChange={setPosition} />
+                      <MapRecenter position={position} />
+                    </MapContainer>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">📌 Lat: {position[0].toFixed(4)}, Lng: {position[1].toFixed(4)}</p>
+                </CardContent>
+              </Card>
+
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={() => { setShowForm(false); resetForm(); }}>Annuler</Button>
+                <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2">
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {editingId ? "Modifier" : "Enregistrer"}
                 </Button>
-              </CardTitle>
-              <CardDescription className="text-[11px]">
-                Cliquez sur la carte pour ajuster votre position exacte
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="w-full h-56 sm:h-72 rounded-xl overflow-hidden border border-border">
-                <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <LocationPicker position={position} onPositionChange={setPosition} />
-                </MapContainer>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2">
-                📌 Lat: {position[0].toFixed(4)}, Lng: {position[1].toFixed(4)}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Save */}
-          <Button onClick={handleSave} disabled={isSaving} className="w-full gap-2" size="lg">
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Enregistrer l'adresse
-          </Button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
