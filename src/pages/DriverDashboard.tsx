@@ -107,6 +107,13 @@ const DriverDashboard = () => {
     if (profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     fetchDriverData();
+    // Get driver position for map
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setDriverPosition([pos.coords.latitude, pos.coords.longitude]),
+        () => {}, { timeout: 5000 }
+      );
+    }
   }, [user, profileLoading, fetchDriverData, navigate]);
 
   // Realtime subscription for new deliveries
