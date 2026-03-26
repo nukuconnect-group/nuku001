@@ -193,7 +193,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
     { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: true },
     { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
-    { icon: ShoppingCart, label: "Panier d'achat", href: "/cart", show: true },
+    { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: true },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: true },
     { icon: Crown, label: "Mon abonnement", href: "/plans", show: true },
     { icon: Store, label: "Comment vendre sur NUKUCONNECT", href: "/about", show: profile?.user_type !== "producer" },
@@ -202,9 +202,9 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   ];
 
   const bottomItems = [
-    { icon: MapPin, label: "Adresse de livraison", href: "/settings", show: true },
-    { icon: Globe, label: "Pays/région, devise et langue", href: "#", show: true },
-    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
+    { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: true },
+    { icon: Globe, label: "Pays/région, devise et langue", href: "/settings", show: true },
+    { icon: HelpCircle, label: "Centre d'assistance", href: "/aide", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
   ];
 
