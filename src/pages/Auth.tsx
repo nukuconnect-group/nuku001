@@ -127,7 +127,7 @@ const Auth = () => {
       } else if (profileData?.user_type === "driver") {
         navigate("/driver-dashboard", { replace: true });
       } else if (profileData?.user_type === "learner") {
-        navigate("/formations", { replace: true });
+        navigate("/learner-dashboard", { replace: true });
       } else {
         navigate("/buyer-dashboard", { replace: true });
       }
@@ -387,7 +387,7 @@ const Auth = () => {
         } else if (userType === "driver") {
           navigate("/driver-dashboard");
         } else if (userType === "learner") {
-          navigate("/formations");
+          navigate("/learner-dashboard");
         } else {
           navigate("/buyer-dashboard");
         }
