@@ -189,19 +189,22 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: MessageSquare, label: "Messagerie", href: "/messages", show: true, badge: true },
     { icon: ShoppingCart, label: "Panier d'achat", href: "/cart", show: true },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: true },
-    { icon: Ticket, label: "Mon coupon", href: "/plans", show: false },
+    { icon: Crown, label: "Mon abonnement", href: "/plans", show: true },
     { icon: Store, label: "Comment vendre sur NUKUCONNECT", href: "/about", show: profile?.user_type !== "producer" },
-    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
+    { icon: GraduationCap, label: "Mes formations", href: "/formations", show: true },
+    { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: true },
   ];
 
   const bottomItems = [
+    { icon: MapPin, label: "Adresse de livraison", href: "/settings", show: true },
     { icon: Globe, label: "Pays/région, devise et langue", href: "#", show: true },
+    { icon: HelpCircle, label: "Centre d'assistance", href: "/help", show: true },
     { icon: Settings, label: "Paramètres", href: "/settings", show: true },
   ];
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-[85%] max-w-sm sm:max-w-md overflow-y-auto p-0">
+      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
         {user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
