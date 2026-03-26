@@ -727,6 +727,51 @@ const Auth = () => {
                         </>
                       )}
 
+                      {/* Driver Fields */}
+                      {userType === "driver" && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-name">Nom complet</Label>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-name" type="text" placeholder="Votre nom complet"
+                                value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-phone">Téléphone</Label>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-phone" type="tel" placeholder="+228 XX XX XX XX"
+                                value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="driver-location">Zone d'activité</Label>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input id="driver-location" type="text" placeholder="Lomé, Kara..."
+                                value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Type de véhicule</Label>
+                            <Select value={producerSector || "moto"} onValueChange={setProducerSector}>
+                              <SelectTrigger className="w-full">
+                                <Truck className="w-4 h-4 mr-2 text-muted-foreground" />
+                                <SelectValue placeholder="Type de véhicule" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="moto">🏍️ Moto</SelectItem>
+                                <SelectItem value="velo">🚲 Vélo</SelectItem>
+                                <SelectItem value="voiture">🚗 Voiture</SelectItem>
+                                <SelectItem value="tricycle">🛺 Tricycle</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+
                       {/* Common fields */}
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
