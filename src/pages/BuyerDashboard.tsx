@@ -74,7 +74,24 @@ const BuyerDashboard = () => {
     loadData();
     return () => { isMounted = false; };
   }, [profileLoading, user, profile, navigate]);
-  
+
+  // Compute real purchase chart data from orders
+  const purchaseData = (() => {
+    const monthMap: Record<string, number> = {};
+    orders.forEach(o => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      monthMap[key] = (monthMap[key] || 0) + (Number(o.total_price) || 0);
+    });
+    const now = new Date();
+    const result = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      result.push({ name: monthNames[d.getMonth()], achats: monthMap[key] || 0 });
+    }
+    return result;
+  })();
 
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const pendingOrders = orders.filter(o => o.status === "pending").length;
