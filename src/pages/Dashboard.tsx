@@ -22,6 +22,7 @@ import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidge
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
+import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
@@ -211,6 +212,13 @@ const Dashboard = () => {
               </Card>
             </Link>
           </div>
+
+          {/* AI Recommendations */}
+          {user && profile && (
+            <div className="mb-4 sm:mb-6">
+              <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
+            </div>
+          )}
 
           {/* Delivery Tracking Widget */}
           {profile && (
