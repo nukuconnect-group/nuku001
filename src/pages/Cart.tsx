@@ -15,6 +15,7 @@ import BillingForm from "@/components/cart/BillingForm";
 import DeliveryZoneMap, { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import PaymentMethodSelect, { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import AvailableDrivers from "@/components/checkout/AvailableDrivers";
+import AddressSelector from "@/components/checkout/AddressSelector";
 import OrderSummary from "@/components/cart/OrderSummary";
 
 const Cart = () => {
@@ -44,6 +45,9 @@ const Cart = () => {
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoCode, setPromoCode] = useState("");
+
+  // Saved address
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
 
   // Load user profile and auto-fill billing
   useEffect(() => {
@@ -293,6 +297,19 @@ const Cart = () => {
                 onQuarterChange={setDeliveryQuarter}
                 onDynamicPriceChange={setDynamicDeliveryPrice}
               />
+
+              {/* Saved address selector */}
+              {deliveryMethod !== "pickup" && (
+                <AddressSelector
+                  selectedId={selectedAddress?.id}
+                  onSelect={(addr) => {
+                    setSelectedAddress(addr);
+                    if (addr.city) setDeliveryCity(addr.city);
+                    if (addr.street) setDeliveryAddress(addr.street);
+                    if (addr.quarter) setDeliveryQuarter(addr.quarter);
+                  }}
+                />
+              )}
 
               {/* Available drivers */}
               {deliveryMethod !== "pickup" && (
