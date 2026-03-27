@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
         short_name: "NUKUCONNECT",
         description: "Marketplace agricole intelligent pour l'Afrique",
         theme_color: "#1a6b35",
-        background_color: "#1a6b35",
+        background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
