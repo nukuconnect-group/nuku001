@@ -489,12 +489,12 @@ const ProductDetail = () => {
               </Card>
 
               {/* QR Code — Traçabilité */}
-              <Card className={product.producer.verified ? "border-primary/30" : ""}>
+              <Card className="border-primary/30">
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <QrCode className="w-4 h-4 text-primary" />
                     <span className="font-heading font-semibold text-xs sm:text-sm text-foreground">
-                      {product.producer.verified ? "Traçabilité & QR Code" : "QR Code du produit"}
+                      Traçabilité du produit
                     </span>
                     {product.producer.verified && (
                       <Badge className="bg-primary/10 text-primary border-primary/20 text-[8px] gap-0.5">
@@ -505,51 +505,35 @@ const ProductDetail = () => {
                   <div className="flex items-start gap-4">
                     <div className="bg-white p-2 rounded-lg border border-border flex-shrink-0">
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify({
-                          url: `${window.location.origin}/produit/${product.id}`,
-                          id: product.id,
-                          name: product.name,
-                          category: product.category,
-                          price: product.price,
-                          unit: product.unit,
-                          location: product.location,
-                          producer: product.producer.name,
-                          verified: product.producer.verified,
-                          organic: product.isOrganic,
-                          traceable: product.producer.verified,
-                        }))}`}
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                          `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`
+                        )}`}
                         alt="QR Code traçabilité"
                         className="w-24 h-24 sm:w-28 sm:h-28"
                       />
                     </div>
                     <div className="flex-1 space-y-2">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">
-                        {product.producer.verified
-                          ? "Ce produit est vérifié et traçable. Scannez le QR pour consulter ses informations complètes : origine, fournisseur, certification."
-                          : "Scannez ce QR code pour accéder aux informations du produit."}
+                        Scannez ce QR code pour suivre le parcours complet de ce produit : de la ferme à votre table. Origine, contrôle qualité, transport et certification.
                       </p>
                       <div className="flex gap-2 flex-wrap">
-                        {product.producer.verified && (
-                          <Button
-                            variant="hero"
-                            size="sm"
-                            className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
-                            onClick={() => navigate(`/tracabilite?product=${product.id}`)}
-                          >
-                            <ShieldCheck className="w-3 h-3" />Voir la traçabilité
-                          </Button>
-                        )}
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          className="gap-1.5 text-[10px] sm:text-xs h-8 sm:h-9"
+                          onClick={() => navigate(`/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`)}
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />Voir la traçabilité complète
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
                           onClick={() => {
                             const link = document.createElement("a");
-                            link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(JSON.stringify({
-                              url: `${window.location.origin}/produit/${product.id}`,
-                              id: product.id, name: product.name, producer: product.producer.name,
-                              category: product.category, location: product.location, verified: product.producer.verified,
-                            }))}`;
+                            link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+                              `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}`
+                            )}`;
                             link.download = `qr-tracabilite-${product.name.replace(/\s+/g, "-")}.png`;
                             link.click();
                           }}
@@ -561,9 +545,9 @@ const ProductDetail = () => {
                           size="sm"
                           className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
                           onClick={() => {
-                            const url = `${window.location.origin}/produit/${product.id}`;
+                            const url = `${window.location.origin}/tracabilite?product=${product.id}`;
                             navigator.clipboard.writeText(url).then(() => {
-                              toast({ title: "Lien copié !", description: "Le lien du produit a été copié dans le presse-papier." });
+                              toast({ title: "Lien copié !", description: "Le lien de traçabilité a été copié." });
                             });
                           }}
                         >
