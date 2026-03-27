@@ -315,7 +315,8 @@ const Cart = () => {
               {deliveryMethod !== "pickup" && (
                 <AvailableDrivers 
                   city={deliveryCity} 
-                  distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null} 
+                  distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
+                  cartItems={items.map(item => ({ name: item.name, id: item.id, quantity: item.quantity, price: item.price }))}
                 />
               )}
 
