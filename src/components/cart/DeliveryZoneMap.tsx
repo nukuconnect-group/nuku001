@@ -220,21 +220,12 @@ const DeliveryZoneMap = ({
     onDynamicPriceChange?.(currentPrice);
   }, [currentPrice, onDynamicPriceChange]);
 
-  const mapSrc = useMemo(() => {
-    if (!buyerZone) return null;
-    const points = [{ lat: buyerZone.lat, lng: buyerZone.lng }];
-    sellerLocations.forEach(sl => {
-      if (sl.zone) points.push({ lat: sl.zone.lat, lng: sl.zone.lng });
-    });
-    const lats = points.map(p => p.lat);
-    const lngs = points.map(p => p.lng);
-    const padding = 0.05;
-    const minLat = Math.min(...lats) - padding;
-    const maxLat = Math.max(...lats) + padding;
-    const minLng = Math.min(...lngs) - padding;
-    const maxLng = Math.max(...lngs) + padding;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik&marker=${buyerZone.lat},${buyerZone.lng}`;
-  }, [buyerZone, sellerLocations]);
+  // Set initial marker position when city changes
+  useEffect(() => {
+    if (buyerZone && !markerPos) {
+      setMarkerPos([buyerZone.lat, buyerZone.lng]);
+    }
+  }, [buyerZone]);
 
   return (
     <Card>
