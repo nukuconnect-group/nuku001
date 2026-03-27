@@ -56,19 +56,43 @@ const getCoords = (location: string): [number, number] => {
   return [6.1725, 1.2314]; // Default to Lomé
 };
 
+const demoSuppliers: Record<string, any> = {
+  "demo-1": { id: "demo-1", user_id: "demo-1", full_name: "Agro Togo SARL", avatar_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200", cover_url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800", location: "Lomé, Togo", is_verified: true, bio: "Fournisseur de produits agricoles certifiés biologiques depuis 2015. Nous travaillons avec plus de 200 agriculteurs locaux.", phone: "+228 90 12 34 56", user_type: "producer", created_at: "2024-01-15T00:00:00Z" },
+  "demo-2": { id: "demo-2", user_id: "demo-2", full_name: "Ferme Mensah & Fils", avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200", cover_url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800", location: "Kpalimé, Togo", is_verified: true, bio: "Exploitation familiale spécialisée en fruits tropicaux et épices depuis 3 générations.", phone: "+228 91 23 45 67", user_type: "producer", created_at: "2024-03-20T00:00:00Z" },
+  "demo-3": { id: "demo-3", user_id: "demo-3", full_name: "Coopérative AgriBio", avatar_url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200", cover_url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800", location: "Atakpamé, Togo", is_verified: false, bio: "Coopérative de producteurs locaux regroupant 50 agriculteurs engagés dans l'agriculture durable.", phone: "+228 92 34 56 78", user_type: "producer", created_at: "2024-06-10T00:00:00Z" },
+  "demo-4": { id: "demo-4", user_id: "demo-4", full_name: "Koffi Export", avatar_url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200", cover_url: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800", location: "Sokodé, Togo", is_verified: true, bio: "Leader dans l'exportation de café et cacao premium du Togo vers l'Europe et l'Amérique.", phone: "+228 93 45 67 89", user_type: "producer", created_at: "2023-11-05T00:00:00Z" },
+  "demo-5": { id: "demo-5", user_id: "demo-5", full_name: "Nature & Saveurs", avatar_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200", cover_url: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=800", location: "Lomé, Togo", is_verified: true, bio: "Transformation et conditionnement de produits alimentaires locaux de qualité supérieure.", phone: "+228 94 56 78 90", user_type: "producer", created_at: "2024-02-28T00:00:00Z" },
+  "demo-6": { id: "demo-6", user_id: "demo-6", full_name: "Ets Adzovi", avatar_url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200", cover_url: "https://images.unsplash.com/photo-1530836176759-510f58baebf4?w=800", location: "Tsévié, Togo", is_verified: false, bio: "Jeune entreprise spécialisée dans les légumes frais et bio, livraison rapide à Lomé.", phone: "+228 95 67 89 01", user_type: "producer", created_at: "2024-08-15T00:00:00Z" },
+};
+
+const demoProducts: Record<string, any[]> = {
+  "demo-1": [
+    { id: "dp-1", name: "Tomates Bio", category: "Légumes", price: 1500, unit: "kg", quantity_available: 200, location: "Lomé, Togo", description: "Tomates biologiques cultivées sans pesticides", is_organic: true, images: ["https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400"], created_at: "2024-06-01", producer_id: "demo-1" },
+    { id: "dp-2", name: "Maïs Premium", category: "Céréales", price: 800, unit: "kg", quantity_available: 500, location: "Lomé, Togo", description: "Maïs de qualité supérieure", is_organic: false, images: ["https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400"], created_at: "2024-05-15", producer_id: "demo-1" },
+  ],
+  "demo-2": [
+    { id: "dp-3", name: "Ananas Victoria", category: "Fruits", price: 2000, unit: "pièce", quantity_available: 100, location: "Kpalimé, Togo", description: "Ananas sucré de Kpalimé", is_organic: true, images: ["https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400"], created_at: "2024-07-01", producer_id: "demo-2" },
+  ],
+  "demo-4": [
+    { id: "dp-4", name: "Café Robusta", category: "Boissons", price: 5000, unit: "kg", quantity_available: 300, location: "Sokodé, Togo", description: "Café robusta premium torréfié", is_organic: false, images: ["https://images.unsplash.com/photo-1447933601403-56dc6e10a689?w=400"], created_at: "2024-04-01", producer_id: "demo-4" },
+    { id: "dp-5", name: "Cacao Fin", category: "Boissons", price: 7000, unit: "kg", quantity_available: 150, location: "Sokodé, Togo", description: "Cacao fin de saveur premium pour l'export", is_organic: true, images: ["https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400"], created_at: "2024-03-20", producer_id: "demo-4" },
+  ],
+};
+
 const ProducerProfile = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const profileId = name || "";
+  const isDemo = profileId.startsWith("demo-");
 
-  // Try fetching by ID first, fallback to name
   const { data: producer, isLoading: loadingProducer } = useQuery({
     queryKey: ["producer-profile", profileId],
     queryFn: async () => {
+      if (isDemo) return demoSuppliers[profileId] || null;
       // Try UUID match first
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(profileId);
       if (isUUID) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", profileId)
@@ -92,6 +116,7 @@ const ProducerProfile = () => {
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["producer-products", producer?.id],
     queryFn: async () => {
+      if (isDemo) return demoProducts[producer!.id] || [];
       const { data, error } = await supabase
         .from("products")
         .select("*")
