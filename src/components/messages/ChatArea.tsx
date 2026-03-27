@@ -234,6 +234,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </Badge>
           </Link>
         )}
+        {onToggleFullscreen && (
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={onToggleFullscreen}>
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
@@ -243,6 +248,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               <DropdownMenuItem onClick={() => navigate(`/produit/${conversation.productId}`)}>Voir le produit</DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => navigate(`/producteurs/${conversation.participant.name}`)}>Voir le profil</DropdownMenuItem>
+            {onToggleFullscreen && (
+              <DropdownMenuItem onClick={onToggleFullscreen} className="sm:hidden">
+                {isFullscreen ? "Quitter plein écran" : "Plein écran"}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => toast({ title: "Conversation vidée" })}>Vider la conversation</DropdownMenuItem>
             <DropdownMenuItem onClick={() => toast({ title: "Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué` })} className="text-destructive">Bloquer</DropdownMenuItem>
           </DropdownMenuContent>
@@ -338,6 +348,20 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </div>
           );
         })}
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-2 max-w-[85%] sm:max-w-[75%]">
+              <Card className="px-4 py-2.5 shadow-sm border-0 bg-card rounded-bl-sm">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
