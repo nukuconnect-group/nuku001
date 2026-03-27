@@ -15,16 +15,68 @@ import {
   Package, ShoppingBag
 } from "lucide-react";
 import { Product } from "@/data/marketplace";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix leaflet default icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+// Geocode locations to approximate coordinates
+const locationCoords: Record<string, [number, number]> = {
+  "lomé": [6.1725, 1.2314],
+  "kara": [9.5511, 1.1861],
+  "sokodé": [8.9833, 1.1333],
+  "atakpamé": [7.5333, 1.1333],
+  "kpalimé": [6.9000, 0.6333],
+  "dapaong": [10.8625, 0.2075],
+  "tsévié": [6.4167, 1.2167],
+  "notsé": [6.9500, 1.1667],
+  "togo": [6.1725, 1.2314],
+  "accra": [5.6037, -0.1870],
+  "ghana": [5.6037, -0.1870],
+  "cotonou": [6.3654, 2.4183],
+  "bénin": [6.3654, 2.4183],
+  "abidjan": [5.3600, -4.0083],
+  "côte d'ivoire": [5.3600, -4.0083],
+  "dakar": [14.6928, -17.4467],
+  "sénégal": [14.6928, -17.4467],
+};
+
+const getCoords = (location: string): [number, number] => {
+  const loc = location.toLowerCase();
+  for (const [key, coords] of Object.entries(locationCoords)) {
+    if (loc.includes(key)) return coords;
+  }
+  return [6.1725, 1.2314]; // Default to Lomé
+};
 
 const ProducerProfile = () => {
   const { name } = useParams();
   const navigate = useNavigate();
-  const decodedName = decodeURIComponent(name || "");
+  const profileId = name || "";
 
-  // Fetch producer profile by name
+  // Try fetching by ID first, fallback to name
   const { data: producer, isLoading: loadingProducer } = useQuery({
-    queryKey: ["producer-profile", decodedName],
+    queryKey: ["producer-profile", profileId],
     queryFn: async () => {
+      // Try UUID match first
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(profileId);
+      if (isUUID) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", profileId)
+          .maybeSingle();
+        if (data) return data;
+      }
+      // Fallback: search by name
+      const decodedName = decodeURIComponent(profileId);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -34,10 +86,9 @@ const ProducerProfile = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!decodedName,
+    enabled: !!profileId,
   });
 
-  // Fetch producer's products
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["producer-products", producer?.id],
     queryFn: async () => {
@@ -52,7 +103,6 @@ const ProducerProfile = () => {
     enabled: !!producer?.id,
   });
 
-  // Fetch average rating from reviews
   const { data: avgRating } = useQuery({
     queryKey: ["producer-rating", producer?.id],
     queryFn: async () => {
@@ -68,7 +118,6 @@ const ProducerProfile = () => {
     enabled: products.length > 0,
   });
 
-  // Fetch sales count from orders
   const { data: salesCount = 0 } = useQuery({
     queryKey: ["producer-sales", producer?.id],
     queryFn: async () => {
@@ -82,7 +131,6 @@ const ProducerProfile = () => {
     enabled: !!producer?.id,
   });
 
-  // Map DB products to Product type for ProductCard
   const mappedProducts: Product[] = products.map(p => ({
     id: p.id,
     name: p.name,
@@ -98,8 +146,8 @@ const ProducerProfile = () => {
     createdAt: p.created_at,
     producer: {
       id: producer?.id || "",
-      name: producer?.full_name || "Producteur",
-      avatar: producer?.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      name: producer?.full_name || "Fournisseur",
+      avatar: producer?.avatar_url || "",
       rating: avgRating || 4.5,
       verified: producer?.is_verified || false,
       bio: producer?.bio || "",
@@ -136,6 +184,7 @@ const ProducerProfile = () => {
   }
 
   const rating = avgRating || 0;
+  const coords = getCoords(producer.location || "Togo");
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
@@ -186,7 +235,7 @@ const ProducerProfile = () => {
                     </span>
                   </div>
                   {producer.bio && <p className="text-muted-foreground mb-4">{producer.bio}</p>}
-                  <Button variant="hero" className="gap-2" onClick={() => navigate(`/messages?seller=${encodeURIComponent(producer.full_name || "")}`)}>
+                  <Button variant="hero" className="gap-2" onClick={() => navigate(`/messages?contact=${producer.id}`)}>
                     <MessageCircle className="w-4 h-4" />Discuter
                   </Button>
                 </div>
@@ -210,16 +259,29 @@ const ProducerProfile = () => {
             </CardContent>
           </Card>
 
+          {/* Map Location */}
           {producer.location && (
             <Card className="mb-8">
-              <CardHeader><CardTitle className="flex items-center gap-2"><MapPin className="w-5 h-5 text-primary" />Localisation</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  Localisation — {producer.location}
+                </CardTitle>
+              </CardHeader>
               <CardContent>
-                <div className="bg-muted rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"><MapPin className="w-6 h-6 text-primary" /></div>
-                  <div>
-                    <p className="font-medium text-foreground">{producer.location}</p>
-                    <p className="text-sm text-muted-foreground">Livraison disponible dans la région</p>
-                  </div>
+                <div className="h-48 sm:h-64 rounded-lg overflow-hidden">
+                  <MapContainer center={coords} zoom={12} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={coords}>
+                      <Popup>
+                        <strong>{producer.full_name}</strong><br />
+                        {producer.location}
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -11,10 +11,9 @@ import {
 } from "@/components/ui/select";
 import {
   Search, MapPin, Star, ShieldCheck, MessageCircle,
-  Filter, Users, Package, Navigation, Loader2, User
+  Users, Package, Loader2, Navigation, SlidersHorizontal
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,15 +22,31 @@ const countries = [
   "Burkina Faso", "Sénégal", "Mali", "Niger", "Cameroun", "Nigeria",
 ];
 
+const sortOptions = [
+  { value: "recent", label: "Plus récents" },
+  { value: "rating", label: "Mieux notés" },
+  { value: "products", label: "Plus de produits" },
+  { value: "nearby", label: "Plus proches" },
+];
+
 const Producers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
+  const [sortBy, setSortBy] = useState("recent");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Fetch real producers who have at least 1 product
+  useEffect(() => {
+    if (sortBy === "nearby") {
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
+  }, [sortBy]);
+
   const { data: producers = [], isLoading } = useQuery({
     queryKey: ["real-producers"],
     queryFn: async () => {
-      // Get profiles of type producer
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*")
@@ -40,7 +55,6 @@ const Producers = () => {
       if (error) throw error;
       if (!profiles || profiles.length === 0) return [];
 
-      // For each producer, count their products
       const producerIds = profiles.map((p) => p.id);
       const { data: products } = await supabase
         .from("products")
@@ -52,7 +66,6 @@ const Producers = () => {
         productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
       });
 
-      // Get average ratings per producer via their products
       const { data: allProducts } = await supabase
         .from("products")
         .select("id, producer_id")
@@ -81,25 +94,27 @@ const Producers = () => {
       }
 
       return profiles.map((p) => ({
-          id: p.id,
-          user_id: p.user_id,
-          name: p.full_name || "Fournisseur",
-          avatar: p.avatar_url,
-          location: p.location || "Non spécifié",
-          verified: p.is_verified,
-          products: productCounts[p.id] || 0,
-          bio: p.bio || "",
-          rating: avgRatings[p.id]
-            ? Math.round((avgRatings[p.id].sum / avgRatings[p.id].count) * 10) / 10
-            : 0,
-          reviewCount: avgRatings[p.id]?.count || 0,
-        }));
+        id: p.id,
+        user_id: p.user_id,
+        name: p.full_name || "Fournisseur",
+        avatar: p.avatar_url,
+        cover: p.cover_url || p.cover_images?.[0] || null,
+        location: p.location || "Non spécifié",
+        verified: p.is_verified,
+        products: productCounts[p.id] || 0,
+        bio: p.bio || "",
+        rating: avgRatings[p.id]
+          ? Math.round((avgRatings[p.id].sum / avgRatings[p.id].count) * 10) / 10
+          : 0,
+        reviewCount: avgRatings[p.id]?.count || 0,
+        createdAt: p.created_at,
+      }));
     },
     staleTime: 1000 * 60 * 2,
   });
 
   const filteredProducers = useMemo(() => {
-    return producers.filter((producer) => {
+    let result = producers.filter((producer) => {
       const matchesSearch =
         producer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         producer.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -108,7 +123,22 @@ const Producers = () => {
         producer.location.toLowerCase().includes(selectedCountry.toLowerCase());
       return matchesSearch && matchesCountry;
     });
-  }, [producers, searchQuery, selectedCountry]);
+
+    // Sort
+    switch (sortBy) {
+      case "rating":
+        result = [...result].sort((a, b) => b.rating - a.rating);
+        break;
+      case "products":
+        result = [...result].sort((a, b) => b.products - a.products);
+        break;
+      case "recent":
+        result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+    }
+
+    return result;
+  }, [producers, searchQuery, selectedCountry, sortBy]);
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -129,7 +159,6 @@ const Producers = () => {
               Découvrez les fournisseurs actifs sur la plateforme et connectez-vous directement avec eux.
             </p>
 
-            {/* Search */}
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -144,28 +173,41 @@ const Producers = () => {
       </section>
 
       {/* Filters */}
-      <section className="py-4 border-b border-border bg-card">
+      <section className="py-3 border-b border-border bg-card">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{filteredProducers.length}</span> fournisseur{filteredProducers.length > 1 ? "s" : ""}
             </p>
-            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger className="w-48">
-                <MapPin className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {countries.map((country) => (
-                  <SelectItem key={country} value={country}>{country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                <SelectTrigger className="w-40 h-9 text-xs">
+                  <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Producers Grid */}
+      {/* Producers Grid — square professional cards */}
       <section className="py-8 sm:py-12">
         <div className="container mx-auto px-4">
           {isLoading ? (
@@ -183,74 +225,97 @@ const Producers = () => {
               </p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredProducers.map((producer) => (
-                <Card key={producer.id} className="group hover:shadow-elevated transition-all duration-300">
-                  <CardContent className="p-5 sm:p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                      {producer.avatar ? (
+                <Link key={producer.id} to={`/producteurs/${producer.id}`} className="block group">
+                  <Card className="overflow-hidden h-full border-border/40 hover:border-primary/30 hover:shadow-elevated transition-all duration-300">
+                    {/* Cover/Background — square aspect */}
+                    <div className="relative aspect-square overflow-hidden bg-muted">
+                      {producer.cover ? (
                         <img
-                          src={producer.avatar}
-                          alt={producer.name}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-border"
+                          src={producer.cover}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <img
-                          src={defaultAvatar}
-                          alt={producer.name}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-border bg-primary/5"
-                        />
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10" />
                       )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-heading font-semibold text-foreground truncate">
-                            {producer.name}
-                          </h3>
-                          {producer.verified && (
-                            <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                          <MapPin className="w-3 h-3" />
-                          {producer.location}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {producer.rating > 0 && (
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3.5 h-3.5 text-accent fill-accent" />
-                              <span className="text-xs font-medium">{producer.rating}</span>
-                              <span className="text-[10px] text-muted-foreground">({producer.reviewCount})</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Package className="w-3 h-3" />
-                            {producer.products} produit{producer.products > 1 ? "s" : ""}
+                      {/* Overlay gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                      {/* Avatar centered */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform group-hover:scale-110 transition-transform duration-300">
+                        {producer.avatar ? (
+                          <img
+                            src={producer.avatar}
+                            alt={producer.name}
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-3 border-card shadow-lg"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/20 border-3 border-card shadow-lg flex items-center justify-center">
+                            <Users className="w-7 h-7 text-primary" />
                           </div>
+                        )}
+                      </div>
+
+                      {/* Verified badge */}
+                      {producer.verified && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-primary/90 text-primary-foreground text-[8px] px-1.5 py-0.5 gap-0.5">
+                            <ShieldCheck className="w-2.5 h-2.5" />Vérifié
+                          </Badge>
+                        </div>
+                      )}
+
+                      {/* Bottom info overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3">
+                        <h3 className="font-heading font-semibold text-white text-xs sm:text-sm truncate text-center">
+                          {producer.name}
+                        </h3>
+                        <div className="flex items-center justify-center gap-1 text-white/80 text-[9px] sm:text-[10px] mt-0.5">
+                          <MapPin className="w-2.5 h-2.5" />
+                          <span className="truncate">{producer.location}</span>
                         </div>
                       </div>
                     </div>
 
-                    {producer.bio && (
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                        {producer.bio}
-                      </p>
-                    )}
+                    {/* Info section */}
+                    <CardContent className="p-2.5 sm:p-3 space-y-2">
+                      {/* Stats row */}
+                      <div className="flex items-center justify-between text-[9px] sm:text-[10px]">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Package className="w-3 h-3" />
+                          <span>{producer.products} produit{producer.products > 1 ? "s" : ""}</span>
+                        </div>
+                        {producer.rating > 0 && (
+                          <div className="flex items-center gap-0.5">
+                            <Star className="w-3 h-3 text-accent fill-accent" />
+                            <span className="font-medium text-foreground">{producer.rating}</span>
+                            <span className="text-muted-foreground">({producer.reviewCount})</span>
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2">
-                      <Link to={`/producteurs/${producer.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full text-xs sm:text-sm">
+                      {producer.bio && (
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {producer.bio}
+                        </p>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex gap-1.5">
+                        <Button variant="outline" size="sm" className="flex-1 text-[9px] sm:text-[10px] h-7">
                           Voir profil
                         </Button>
-                      </Link>
-                      <Link to={`/messages?contact=${producer.id}`}>
-                        <Button variant="hero" className="gap-1.5 text-xs sm:text-sm">
-                          <MessageCircle className="w-4 h-4" />
-                          Contacter
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
+                        <Link to={`/messages?contact=${producer.id}`} onClick={(e) => e.stopPropagation()}>
+                          <Button variant="hero" size="sm" className="h-7 px-2">
+                            <MessageCircle className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
