@@ -25,14 +25,11 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
-import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
-import DemandsList from "@/components/marketplace/DemandsList";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import FormationsSection from "@/components/dashboard/FormationsSection";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import BuyerAIRecommendations from "@/components/dashboard/BuyerAIRecommendations";
-import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
