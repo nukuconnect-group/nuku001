@@ -58,23 +58,24 @@ const Cart = () => {
         setBilling(prev => ({ ...prev, email: session.user.email || "" }));
 
         supabase.from("profiles").select("*").eq("user_id", session.user.id).single()
-          .then(({ data }) => {
+          .then(async ({ data }) => {
             if (data) {
               setProfile(data);
               const nameParts = (data.full_name || "").split(" ");
+              // Fetch phone from private table
+              const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", session.user.id).maybeSingle();
+              const phone = privateData?.phone || "";
               setBilling(prev => ({
                 ...prev,
                 firstName: nameParts[0] || "",
                 lastName: nameParts.slice(1).join(" ") || "",
-                phone: data.phone || "",
+                phone,
               }));
-              // Auto-fill delivery city from profile location
               if (data.location) {
                 setDeliveryCity(data.location);
               }
-              // Auto-fill mobile number for payment
-              if (data.phone) {
-                setMobileNumber(data.phone);
+              if (phone) {
+                setMobileNumber(phone);
               }
             }
           });

@@ -46,13 +46,17 @@ const Settings = () => {
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || "");
-      setPhone(profile.phone || "");
       setLocation(profile.location || "");
       setBio(profile.bio || "");
       const imgs = (profile as any).cover_images as string[] | null;
       setCoverImages(imgs && imgs.length > 0 ? imgs : profile.cover_url ? [profile.cover_url] : []);
     }
-  }, [profile]);
+    // Fetch phone from private table
+    if (user) {
+      supabase.from("profile_private").select("phone").eq("user_id", user.id).maybeSingle()
+        .then(({ data }) => setPhone(data?.phone || ""));
+    }
+  }, [profile, user]);
 
   // Auto-rotate cover images
   useEffect(() => {
@@ -104,14 +108,16 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
-    if (!profile) return;
+    if (!profile || !user) return;
     setIsSaving(true);
     try {
       const { error } = await supabase.from("profiles").update({
-        full_name: fullName, phone, location, bio,
+        full_name: fullName, location, bio,
       }).eq("id", profile.id);
       if (error) throw error;
-      updateProfile({ full_name: fullName, phone, location, bio });
+      // Save phone to private table
+      await supabase.from("profile_private").upsert({ user_id: user.id, phone }, { onConflict: "user_id" });
+      updateProfile({ full_name: fullName, location, bio });
       toast({ title: "Profil mis à jour ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });

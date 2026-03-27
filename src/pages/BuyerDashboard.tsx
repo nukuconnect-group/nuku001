@@ -114,10 +114,13 @@ const BuyerDashboard = () => {
     const { error } = await supabase.from("profiles").update({
       user_type: "producer",
       full_name: migrationData.businessName.trim(),
-      phone: migrationData.phone.trim(),
       location: migrationData.location.trim(),
       bio: migrationData.bio.trim() || null,
     }).eq("id", profile.id);
+    // Save phone to private table
+    if (user) {
+      await supabase.from("profile_private").upsert({ user_id: user.id, phone: migrationData.phone.trim() }, { onConflict: "user_id" });
+    }
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {

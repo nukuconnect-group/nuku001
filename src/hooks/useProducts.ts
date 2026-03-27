@@ -47,7 +47,7 @@ const mapDbToProduct = (p: DbProduct): Product => ({
     rating: 4.5,
     verified: p.producer?.is_verified || false,
     bio: p.producer?.bio || "",
-    phone: p.producer?.phone || "",
+    phone: "",
   },
 });
 
@@ -55,7 +55,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 async function fetchProductsDirect(): Promise<Product[]> {
-  const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio,phone)&order=created_at.desc`;
+  const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio)&order=created_at.desc`;
   const res = await fetch(url, {
     headers: {
       apikey: SUPABASE_KEY,

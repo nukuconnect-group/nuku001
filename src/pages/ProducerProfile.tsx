@@ -176,7 +176,7 @@ const ProducerProfile = () => {
       rating: avgRating || 4.5,
       verified: producer?.is_verified || false,
       bio: producer?.bio || "",
-      phone: producer?.phone || "",
+      phone: "",
     },
   }));
 
