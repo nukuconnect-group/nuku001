@@ -112,9 +112,11 @@ const DeliveryZoneMap = ({
   const [quarterSearch, setQuarterSearch] = useState("");
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showQuarterDropdown, setShowQuarterDropdown] = useState(false);
+  const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
   const cityRef = useRef<HTMLDivElement>(null);
   const quarterRef = useRef<HTMLDivElement>(null);
   const hasAutoDetected = useRef(false);
+  const markerRef = useRef<L.Marker>(null);
 
   // Auto-detect location on mount
   useEffect(() => {
