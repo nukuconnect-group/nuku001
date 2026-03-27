@@ -102,7 +102,8 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        setAvailableProducts(products || []);
+        // Use demo products if none exist
+        setAvailableProducts(products && products.length > 0 ? products : demoProducts);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
