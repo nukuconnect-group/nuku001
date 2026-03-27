@@ -62,62 +62,67 @@ const Producers = () => {
           .select("*")
           .eq("user_type", "producer");
 
-      const producerIds = profiles.map((p) => p.id);
-      const { data: products } = await supabase
-        .from("products")
-        .select("producer_id")
-        .in("producer_id", producerIds);
+        if (error || !profiles || profiles.length === 0) return demoProducers;
 
-      const productCounts: Record<string, number> = {};
-      (products || []).forEach((p) => {
-        productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
-      });
+        const producerIds = profiles.map((p) => p.id);
+        const { data: products } = await supabase
+          .from("products")
+          .select("producer_id")
+          .in("producer_id", producerIds);
 
-      const { data: allProducts } = await supabase
-        .from("products")
-        .select("id, producer_id")
-        .in("producer_id", producerIds);
-
-      const productIds = (allProducts || []).map((p) => p.id);
-      let avgRatings: Record<string, { sum: number; count: number }> = {};
-
-      if (productIds.length > 0) {
-        const { data: reviews } = await supabase
-          .from("reviews")
-          .select("product_id, rating")
-          .in("product_id", productIds);
-
-        const productToProducer: Record<string, string> = {};
-        (allProducts || []).forEach((p) => { productToProducer[p.id] = p.producer_id; });
-
-        (reviews || []).forEach((r) => {
-          const pid = productToProducer[r.product_id];
-          if (pid) {
-            if (!avgRatings[pid]) avgRatings[pid] = { sum: 0, count: 0 };
-            avgRatings[pid].sum += r.rating;
-            avgRatings[pid].count += 1;
-          }
+        const productCounts: Record<string, number> = {};
+        (products || []).forEach((p) => {
+          productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
         });
+
+        const { data: allProducts } = await supabase
+          .from("products")
+          .select("id, producer_id")
+          .in("producer_id", producerIds);
+
+        const productIds = (allProducts || []).map((p) => p.id);
+        let avgRatings: Record<string, { sum: number; count: number }> = {};
+
+        if (productIds.length > 0) {
+          const { data: reviews } = await supabase
+            .from("reviews")
+            .select("product_id, rating")
+            .in("product_id", productIds);
+
+          const productToProducer: Record<string, string> = {};
+          (allProducts || []).forEach((p) => { productToProducer[p.id] = p.producer_id; });
+
+          (reviews || []).forEach((r) => {
+            const pid = productToProducer[r.product_id];
+            if (pid) {
+              if (!avgRatings[pid]) avgRatings[pid] = { sum: 0, count: 0 };
+              avgRatings[pid].sum += r.rating;
+              avgRatings[pid].count += 1;
+            }
+          });
+        }
+
+        const realProducers = profiles.map((p) => ({
+          id: p.id,
+          user_id: p.user_id,
+          name: p.full_name || "Fournisseur",
+          avatar: p.avatar_url,
+          cover: p.cover_url || p.cover_images?.[0] || null,
+          location: p.location || "Non spécifié",
+          verified: p.is_verified,
+          products: productCounts[p.id] || 0,
+          bio: p.bio || "",
+          rating: avgRatings[p.id]
+            ? Math.round((avgRatings[p.id].sum / avgRatings[p.id].count) * 10) / 10
+            : 0,
+          reviewCount: avgRatings[p.id]?.count || 0,
+          createdAt: p.created_at,
+        }));
+
+        return realProducers.length > 0 ? realProducers : demoProducers;
+      } catch {
+        return demoProducers;
       }
-
-      const realProducers = profiles.map((p) => ({
-        id: p.id,
-        user_id: p.user_id,
-        name: p.full_name || "Fournisseur",
-        avatar: p.avatar_url,
-        cover: p.cover_url || p.cover_images?.[0] || null,
-        location: p.location || "Non spécifié",
-        verified: p.is_verified,
-        products: productCounts[p.id] || 0,
-        bio: p.bio || "",
-        rating: avgRatings[p.id]
-          ? Math.round((avgRatings[p.id].sum / avgRatings[p.id].count) * 10) / 10
-          : 0,
-        reviewCount: avgRatings[p.id]?.count || 0,
-        createdAt: p.created_at,
-      }));
-
-      return realProducers.length > 0 ? realProducers : demoProducers;
     },
     staleTime: 1000 * 60 * 2,
   });
