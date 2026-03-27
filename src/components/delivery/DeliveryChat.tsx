@@ -44,12 +44,12 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   // Fetch messages
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
-      .from("delivery_messages" as any)
+      .from("delivery_messages")
       .select("*")
       .eq("delivery_id", deliveryId)
       .order("created_at", { ascending: true });
     
-    const msgs = (data as unknown as Message[]) || [];
+    const msgs = (data || []) as unknown as Message[];
     setMessages(msgs);
     
     if (userId) {
@@ -102,8 +102,8 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
     if (!isOpen || !userId || !deliveryId) return;
     const markRead = async () => {
       await supabase
-        .from("delivery_messages" as any)
-        .update({ is_read: true })
+        .from("delivery_messages")
+        .update({ is_read: true } as any)
         .eq("delivery_id", deliveryId)
         .neq("sender_id", userId)
         .eq("is_read", false);
@@ -123,12 +123,12 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
     if (!newMessage.trim() || !userId || sending) return;
     setSending(true);
     try {
-      await supabase.from("delivery_messages" as any).insert({
+      await supabase.from("delivery_messages").insert({
         delivery_id: deliveryId,
         sender_id: userId,
         sender_role: currentUserRole,
         content: newMessage.trim(),
-      });
+      } as any);
       setNewMessage("");
       inputRef.current?.focus();
     } catch (err) {
