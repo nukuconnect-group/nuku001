@@ -8,6 +8,7 @@ const SORT_OPTIONS = [
   { id: "recent", label: "Récents" },
   { id: "unread", label: "Non lus" },
   { id: "product", label: "Produits" },
+  { id: "delivery", label: "🚚 Livraison" },
   { id: "oldest", label: "Anciens" },
 ];
 
@@ -28,7 +29,8 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         conv.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.productName?.toLowerCase().includes(searchQuery.toLowerCase());
       if (activeCategory === "unread") return matchesSearch && conv.unread > 0;
-      if (activeCategory === "product") return matchesSearch && conv.productName;
+      if (activeCategory === "product") return matchesSearch && conv.productName && !conv.isDelivery;
+      if (activeCategory === "delivery") return matchesSearch && conv.isDelivery;
       return matchesSearch;
     })
     .sort((a, b) => {
@@ -89,12 +91,16 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
                 <span className="font-medium text-sm text-foreground truncate">{conv.participant.name}</span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0">{conv.timestamp}</span>
               </div>
-              {conv.productName && (
+              {conv.isDelivery ? (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 truncate">🚚 Chat livraison</span>
+                </div>
+              ) : conv.productName ? (
                 <div className="flex items-center gap-1.5 mb-0.5">
                   {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
                   <span className="text-[10px] text-primary font-medium truncate">{conv.productName}</span>
                 </div>
-              )}
+              ) : null}
               <p className="text-xs text-muted-foreground truncate">{conv.lastMessage}</p>
             </div>
             {conv.unread > 0 && (
