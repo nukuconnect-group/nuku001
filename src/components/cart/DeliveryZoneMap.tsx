@@ -443,32 +443,55 @@ const DeliveryZoneMap = ({
               </div>
             )}
 
-            {/* Map preview */}
+            {/* Interactive Map */}
             {city && (
               <div className="rounded-xl overflow-hidden border border-border">
                 <div className="relative">
-                  <iframe
-                    title="Carte de livraison"
-                    width="100%"
-                    height="220"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    src={mapSrc || `https://www.openstreetmap.org/export/embed.html?bbox=1.0,6.0,1.5,6.4&layer=mapnik&marker=${buyerZone?.lat || 6.1375},${buyerZone?.lng || 1.2123}`}
-                  />
-                  <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm">
+                  <div style={{ height: 240 }}>
+                    <MapContainer
+                      center={markerPos || (buyerZone ? [buyerZone.lat, buyerZone.lng] : [6.1375, 1.2123])}
+                      zoom={12}
+                      style={{ height: "100%", width: "100%" }}
+                      scrollWheelZoom={true}
+                      key={`${markerPos?.[0] || buyerZone?.lat}-${markerPos?.[1] || buyerZone?.lng}`}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker
+                        position={markerPos || (buyerZone ? [buyerZone.lat, buyerZone.lng] : [6.1375, 1.2123])}
+                        draggable={true}
+                        ref={markerRef}
+                        eventHandlers={{
+                          dragend: () => {
+                            const marker = markerRef.current;
+                            if (marker) {
+                              const pos = marker.getLatLng();
+                              handleMarkerDrag(pos.lat, pos.lng);
+                            }
+                          },
+                        }}
+                      >
+                        <Popup>
+                          📍 {city}{quarter ? `, ${quarter}` : ""}<br />
+                          <span className="text-[10px]">Déplacez le marqueur pour changer la zone</span>
+                        </Popup>
+                      </Marker>
+                      {/* Seller markers */}
+                      {sellerLocations.filter(s => s.zone).map((sl, i) => (
+                        <Marker
+                          key={`seller-${i}`}
+                          position={[sl.zone!.lat, sl.zone!.lng]}
+                        >
+                          <Popup>🏪 {sl.name}</Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  </div>
+                  <div className="absolute bottom-2 left-2 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm pointer-events-none">
                     <Navigation className="w-3 h-3 text-primary" />
                     <span className="text-[10px] font-medium text-foreground">
-                      📍 {city}{quarter ? `, ${quarter}` : ""}
+                      📍 {city}{quarter ? `, ${quarter}` : ""} — Déplacez le marqueur
                     </span>
                   </div>
-                  {sellerLocations.length > 0 && sellerLocations.some(s => s.zone) && (
-                    <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 shadow-sm">
-                      <span className="text-[10px] font-medium text-foreground">
-                        🏪 {sellerLocations.map(s => s.name).join(", ")}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
