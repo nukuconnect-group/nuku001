@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const demoDrivers: Driver[] = [
 ];
 
 const AvailableDrivers = ({ city, distanceKm }: Props) => {
+  const navigate = useNavigate();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
@@ -155,9 +157,70 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
               open={!!selectedDriver}
               onOpenChange={(open) => !open && setSelectedDriver(null)}
               distanceKm={distanceKm}
-              onChat={(id) => {
-                toast.success("Chat ouvert avec le livreur");
+              onChat={async (driverId) => {
                 setSelectedDriver(null);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) {
+                    toast.error("Connectez-vous pour discuter avec le livreur");
+                    navigate("/auth");
+                    return;
+                  }
+                  // Find driver's profile_id
+                  const driver = drivers.find(d => d.id === driverId);
+                  if (!driver?.profile) {
+                    toast.error("Profil du livreur introuvable");
+                    return;
+                  }
+                  // Get current user's profile
+                  const { data: myProfile } = await supabase
+                    .from("profiles")
+                    .select("id")
+                    .eq("user_id", session.user.id)
+                    .single();
+                  if (!myProfile) return;
+
+                  // Find or create conversation with driver
+                  const { data: driverProfile } = await supabase
+                    .from("profiles")
+                    .select("id")
+                    .eq("full_name", driver.profile.full_name)
+                    .limit(1)
+                    .maybeSingle();
+
+                  const sellerId = driverProfile?.id || myProfile.id;
+
+                  // Check existing conversation
+                  const { data: existing } = await supabase
+                    .from("conversations")
+                    .select("id")
+                    .eq("buyer_id", myProfile.id)
+                    .eq("seller_id", sellerId)
+                    .limit(1)
+                    .maybeSingle();
+
+                  if (existing) {
+                    navigate(`/messages?conversation=${existing.id}`);
+                  } else {
+                    const { data: newConv } = await supabase
+                      .from("conversations")
+                      .insert({ buyer_id: myProfile.id, seller_id: sellerId })
+                      .select("id")
+                      .single();
+                    if (newConv) {
+                      // Send initial message
+                      await supabase.from("messages").insert({
+                        conversation_id: newConv.id,
+                        sender_id: myProfile.id,
+                        content: `Bonjour ${driver.profile.full_name}, je souhaite discuter de la livraison de ma commande.`,
+                      });
+                      navigate(`/messages?conversation=${newConv.id}`);
+                    }
+                  }
+                  toast.success("Chat ouvert avec le livreur");
+                } catch (err) {
+                  toast.error("Erreur lors de l'ouverture du chat");
+                }
               }}
             />
           </div>
