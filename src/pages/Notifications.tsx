@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2 } from "lucide-react";
+import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2, ArrowRight, Star, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Notification {
