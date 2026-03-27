@@ -432,7 +432,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowAiSuggestions(!showAiSuggestions)}>
             <Sparkles className={`w-4 h-4 ${showAiSuggestions ? "text-primary" : "text-muted-foreground"}`} />
           </Button>
-          <Input ref={inputRef} value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
+          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
           <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
           </Button>

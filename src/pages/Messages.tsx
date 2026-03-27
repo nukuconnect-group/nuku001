@@ -37,6 +37,7 @@ const Messages = () => {
   const [searchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, loading, profileId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
