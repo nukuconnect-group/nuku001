@@ -64,8 +64,31 @@ const Notifications = () => {
       case "order": return <ShoppingCart className="w-5 h-5 text-primary" />;
       case "message": return <MessageCircle className="w-5 h-5 text-secondary" />;
       case "product": return <Package className="w-5 h-5 text-primary" />;
+      case "delivery": return <Truck className="w-5 h-5 text-primary" />;
+      case "review": return <Star className="w-5 h-5 text-accent" />;
       default: return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
+  };
+
+  const getNotifLink = (notif: Notification): string | null => {
+    switch (notif.type) {
+      case "order": return "/acheteur";
+      case "message": return "/messages";
+      case "product": return notif.product_id ? `/produit/${notif.product_id}` : "/marketplace";
+      case "delivery": return "/suivi-livraison";
+      case "review": return notif.product_id ? `/produit/${notif.product_id}` : null;
+      default: return notif.product_id ? `/produit/${notif.product_id}` : null;
+    }
+  };
+
+  const handleNotifClick = async (notif: Notification) => {
+    // Mark as read
+    if (!notif.is_read) {
+      await supabase.from("notifications" as any).update({ is_read: true } as any).eq("id", notif.id);
+      setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+    const link = getNotifLink(notif);
+    if (link) navigate(link);
   };
 
   const timeAgo = (date: string) => {
