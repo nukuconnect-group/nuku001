@@ -316,7 +316,7 @@ const Cart = () => {
                 <AvailableDrivers 
                   city={deliveryCity} 
                   distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
-                  cartItems={items.map(item => ({ name: item.name, id: item.id, quantity: item.quantity, price: item.price }))}
+                  cartItems={items.map(item => ({ name: item.product.name, id: item.product.id, quantity: item.quantity, price: item.product.price }))}
                 />
               )}
 
