@@ -4,36 +4,24 @@ import { useProducts } from "@/hooks/useProducts";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 
-import catAgriculture from "@/assets/cat-agriculture.jpg";
-import catCereales from "@/assets/cat-cereales.jpg";
-import catLegumes from "@/assets/cat-legumes.jpg";
-import catFruits from "@/assets/cat-fruits-legumes.jpg";
-import catTubercules from "@/assets/cat-tubercules.jpg";
-import catElevage from "@/assets/cat-elevage.jpg";
-import catAviculture from "@/assets/cat-aviculture.jpg";
-import catPisciculture from "@/assets/cat-pisciculture.jpg";
-import catAquaculture from "@/assets/cat-aquaculture.jpg";
-import catAgribusiness from "@/assets/cat-agribusiness.jpg";
-import catForesterie from "@/assets/cat-foresterie.jpg";
-import catDefault from "@/assets/cat-default.jpg";
-
+// Realistic Unsplash images for each category
 const categoryImages: Record<string, string> = {
-  agriculture: catAgriculture,
-  céréales: catCereales,
-  cereales: catCereales,
-  "légumes & maraîchage": catLegumes,
-  "légumes": catLegumes,
-  legumes: catLegumes,
-  fruits: catFruits,
-  tubercules: catTubercules,
-  élevage: catElevage,
-  elevage: catElevage,
-  aviculture: catAviculture,
-  pisciculture: catPisciculture,
-  aquaculture: catAquaculture,
-  agribusiness: catAgribusiness,
-  foresterie: catForesterie,
-  agroalimentaire: catAgribusiness,
+  agriculture: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=300&fit=crop&q=80",
+  céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=80",
+  cereales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=80",
+  "légumes & maraîchage": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop&q=80",
+  "légumes": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop&q=80",
+  legumes: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=300&fit=crop&q=80",
+  fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&h=300&fit=crop&q=80",
+  tubercules: "https://images.unsplash.com/photo-1518977676601-b53f82ber3db?w=400&h=300&fit=crop&q=80",
+  élevage: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop&q=80",
+  elevage: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop&q=80",
+  aviculture: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400&h=300&fit=crop&q=80",
+  pisciculture: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop&q=80",
+  aquaculture: "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=400&h=300&fit=crop&q=80",
+  agribusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
+  foresterie: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=300&fit=crop&q=80",
+  agroalimentaire: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
 };
 
 const getCategoryImage = (name: string) => {
