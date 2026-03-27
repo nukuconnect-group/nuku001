@@ -95,7 +95,7 @@ const DeliveryAddress = () => {
   const resetForm = () => {
     setAddressLabel("Domicile");
     setFullName(profile?.full_name || "");
-    setPhone(profile?.phone || "");
+    setPhone("");
     setCountry("Togo");
     setCity("");
     setQuarter("");
