@@ -10,6 +10,8 @@ export interface ConversationItem {
   productName?: string;
   productImage?: string;
   productId?: string;
+  isDelivery?: boolean;
+  deliveryId?: string;
 }
 
 export function useConversations() {
@@ -116,9 +118,111 @@ export function useConversations() {
       })
     );
 
-    setConversations(items);
+    // Fetch delivery conversations
+    const deliveryItems = await fetchDeliveryConversations(session.user.id, profile.id);
+
+    setConversations([...items, ...deliveryItems].sort((a, b) => {
+      // Sort by most recent
+      return 0; // already sorted by updated_at from DB
+    }));
     setLoading(false);
   }, []);
+
+  async function fetchDeliveryConversations(currentUserId: string, currentProfileId: string): Promise<ConversationItem[]> {
+    // Get deliveries where user is buyer (via orders) or driver
+    const { data: driverProfile } = await supabase
+      .from("driver_profiles")
+      .select("id, profile_id")
+      .eq("user_id", currentUserId)
+      .maybeSingle();
+
+    // Get deliveries as buyer
+    const { data: buyerOrders } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("buyer_id", currentProfileId);
+
+    const orderIds = buyerOrders?.map(o => o.id) || [];
+
+    let deliveries: any[] = [];
+
+    if (orderIds.length > 0) {
+      const { data } = await supabase
+        .from("deliveries")
+        .select("id, driver_id, order_id, status, updated_at")
+        .in("order_id", orderIds)
+        .neq("status", "delivered");
+      if (data) deliveries.push(...data);
+    }
+
+    if (driverProfile) {
+      const { data } = await supabase
+        .from("deliveries")
+        .select("id, driver_id, order_id, status, updated_at")
+        .eq("driver_id", driverProfile.id)
+        .neq("status", "delivered");
+      if (data) {
+        const existingIds = new Set(deliveries.map(d => d.id));
+        data.forEach(d => { if (!existingIds.has(d.id)) deliveries.push(d); });
+      }
+    }
+
+    const deliveryConvs: ConversationItem[] = [];
+
+    for (const delivery of deliveries) {
+      // Get last delivery message
+      const { data: msgs } = await supabase
+        .from("delivery_messages")
+        .select("content, created_at, sender_id, is_read")
+        .eq("delivery_id", delivery.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const lastMsg = msgs?.[0];
+
+      const { count } = await supabase
+        .from("delivery_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("delivery_id", delivery.id)
+        .neq("sender_id", currentUserId)
+        .eq("is_read", false);
+
+      // Get the other party name
+      let otherName = "Livreur";
+      if (driverProfile && delivery.driver_id === driverProfile.id) {
+        // I'm the driver, get buyer name
+        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", delivery.order_id).single();
+        if (order) {
+          const { data: buyer } = await supabase.from("profiles").select("full_name").eq("id", order.buyer_id).single();
+          otherName = buyer?.full_name || "Client";
+        }
+      } else if (delivery.driver_id) {
+        // I'm the buyer, get driver name
+        const { data: dp } = await supabase.from("driver_profiles").select("profile_id").eq("id", delivery.driver_id).single();
+        if (dp) {
+          const { data: driverP } = await supabase.from("profiles").select("full_name").eq("id", dp.profile_id).single();
+          otherName = driverP?.full_name || "Livreur";
+        }
+      }
+
+      deliveryConvs.push({
+        id: `delivery-${delivery.id}`,
+        participant: {
+          id: delivery.driver_id || "",
+          name: otherName,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(otherName)}&background=f97316&color=fff`,
+          isOnline: false,
+        },
+        lastMessage: lastMsg?.content || "Chat livraison",
+        timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(delivery.updated_at),
+        unread: count || 0,
+        isDelivery: true,
+        deliveryId: delivery.id,
+      });
+    }
+
+    return deliveryConvs;
+  }
 
   useEffect(() => {
     fetchConversations();
