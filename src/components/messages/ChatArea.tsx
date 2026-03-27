@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply,
+  Loader2, Reply, Maximize2, Minimize2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -32,9 +32,11 @@ interface Props {
   onSend: (content: string, replyToId?: string) => void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef }: Props) {
+export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [messageInput, setMessageInput] = useState("");
@@ -43,10 +45,42 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Typing indicator: listen to realtime presence
+  useEffect(() => {
+    if (!conversation) return;
+    const channel = supabase.channel(`typing-${conversation.id}`);
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const others = Object.values(state).flat().filter((p: any) => p.typing && p.user_id !== "me");
+        setIsTyping(others.length > 0);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [conversation?.id]);
+
+  // Broadcast typing status
+  const broadcastTyping = useCallback(() => {
+    if (!conversation) return;
+    const channel = supabase.channel(`typing-${conversation.id}`);
+    channel.track({ typing: true, user_id: "me" });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      channel.track({ typing: false, user_id: "me" });
+    }, 2000);
+  }, [conversation?.id]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+    broadcastTyping();
+  };
 
   const handleSendMessage = async () => {
     if (imagePreview) {
