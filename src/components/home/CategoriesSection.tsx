@@ -26,7 +26,7 @@ const categoryImages: Record<string, string> = {
 
 const getCategoryImage = (name: string) => {
   const key = name.toLowerCase().trim();
-  return categoryImages[key] || catDefault;
+  return categoryImages[key] || "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop&q=80";
 };
 
 const CategoriesSection = () => {
