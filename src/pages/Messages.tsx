@@ -37,6 +37,7 @@ const Messages = () => {
   const [searchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, loading, profileId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
@@ -100,16 +101,18 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-14 lg:pb-0">
-      <Header />
+    <div className={`min-h-screen bg-background flex flex-col ${isFullscreen ? "" : "pb-14 lg:pb-0"}`}>
+      {!isFullscreen && <Header />}
       <main className="flex-1 flex overflow-hidden">
-        <div className="w-full flex h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-5rem)]">
-          <ConversationList
-            conversations={conversations}
-            selectedId={selectedConversation?.id || null}
-            onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
-            hidden={!!selectedConversation || showWelcome}
-          />
+        <div className={`w-full flex ${isFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-5rem)]"}`}>
+          {!isFullscreen && (
+            <ConversationList
+              conversations={conversations}
+              selectedId={selectedConversation?.id || null}
+              onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
+              hidden={!!selectedConversation || showWelcome}
+            />
+          )}
           <div className={`flex-1 flex flex-col ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
             {showWelcome && !selectedConversation ? (
               <div className="flex-1 flex flex-col">
@@ -151,16 +154,18 @@ const Messages = () => {
               <ChatArea
                 conversation={selectedConversation}
                 messages={messages}
-                onBack={() => setSelectedConversation(null)}
+                onBack={() => { if (isFullscreen) setIsFullscreen(false); setSelectedConversation(null); }}
                 onSend={sendMessage}
                 onLocalMessage={handleLocalMessage}
                 messagesEndRef={messagesEndRef}
+                isFullscreen={isFullscreen}
+                onToggleFullscreen={() => setIsFullscreen(f => !f)}
               />
             )}
           </div>
         </div>
       </main>
-      <MobileBottomNav />
+      {!isFullscreen && <MobileBottomNav />}
     </div>
   );
 };

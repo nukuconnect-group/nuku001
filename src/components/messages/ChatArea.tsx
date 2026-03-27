@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply,
+  Loader2, Reply, Maximize2, Minimize2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -32,9 +32,11 @@ interface Props {
   onSend: (content: string, replyToId?: string) => void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef }: Props) {
+export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [messageInput, setMessageInput] = useState("");
@@ -43,10 +45,42 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Typing indicator: listen to realtime presence
+  useEffect(() => {
+    if (!conversation) return;
+    const channel = supabase.channel(`typing-${conversation.id}`);
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const others = Object.values(state).flat().filter((p: any) => p.typing && p.user_id !== "me");
+        setIsTyping(others.length > 0);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [conversation?.id]);
+
+  // Broadcast typing status
+  const broadcastTyping = useCallback(() => {
+    if (!conversation) return;
+    const channel = supabase.channel(`typing-${conversation.id}`);
+    channel.track({ typing: true, user_id: "me" });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      channel.track({ typing: false, user_id: "me" });
+    }, 2000);
+  }, [conversation?.id]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessageInput(e.target.value);
+    broadcastTyping();
+  };
 
   const handleSendMessage = async () => {
     if (imagePreview) {
@@ -200,6 +234,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </Badge>
           </Link>
         )}
+        {onToggleFullscreen && (
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={onToggleFullscreen}>
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
@@ -209,6 +248,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               <DropdownMenuItem onClick={() => navigate(`/produit/${conversation.productId}`)}>Voir le produit</DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => navigate(`/producteurs/${conversation.participant.name}`)}>Voir le profil</DropdownMenuItem>
+            {onToggleFullscreen && (
+              <DropdownMenuItem onClick={onToggleFullscreen} className="sm:hidden">
+                {isFullscreen ? "Quitter plein écran" : "Plein écran"}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => toast({ title: "Conversation vidée" })}>Vider la conversation</DropdownMenuItem>
             <DropdownMenuItem onClick={() => toast({ title: "Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué` })} className="text-destructive">Bloquer</DropdownMenuItem>
           </DropdownMenuContent>
@@ -304,6 +348,20 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </div>
           );
         })}
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-2 max-w-[85%] sm:max-w-[75%]">
+              <Card className="px-4 py-2.5 shadow-sm border-0 bg-card rounded-bl-sm">
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -374,7 +432,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowAiSuggestions(!showAiSuggestions)}>
             <Sparkles className={`w-4 h-4 ${showAiSuggestions ? "text-primary" : "text-muted-foreground"}`} />
           </Button>
-          <Input ref={inputRef} value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
+          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
           <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
             {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
           </Button>
