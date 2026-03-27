@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Star, MapPin, Clock, Users, Loader2 } from "lucide-react";
+import { Truck, Star, MapPin, Clock, Users, Loader2, ChevronRight } from "lucide-react";
+import DriverDetailSheet from "./DriverDetailSheet";
+import { toast } from "sonner";
 
 interface Props {
   city: string;
@@ -15,7 +17,10 @@ interface Driver {
   rating: number;
   total_deliveries: number;
   zone: string;
-  profile?: { full_name: string; avatar_url: string };
+  current_lat?: number;
+  current_lng?: number;
+  license_plate?: string;
+  profile?: { full_name: string; avatar_url: string; phone?: string };
 }
 
 const demoDrivers: Driver[] = [
