@@ -116,6 +116,7 @@ const ProducerProfile = () => {
   const { data: products = [], isLoading: loadingProducts } = useQuery({
     queryKey: ["producer-products", producer?.id],
     queryFn: async () => {
+      if (isDemo) return demoProducts[producer!.id] || [];
       const { data, error } = await supabase
         .from("products")
         .select("*")
