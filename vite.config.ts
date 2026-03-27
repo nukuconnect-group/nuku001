@@ -12,6 +12,10 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    // Disable source maps in production to prevent code inspection
+    sourcemap: false,
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
