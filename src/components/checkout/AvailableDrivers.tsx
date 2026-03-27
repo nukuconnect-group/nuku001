@@ -10,6 +10,7 @@ import { toast } from "sonner";
 interface Props {
   city: string;
   distanceKm: number | null;
+  cartItems?: Array<{ name: string; id: string; quantity: number; price: number }>;
 }
 
 interface Driver {
@@ -30,7 +31,7 @@ const demoDrivers: Driver[] = [
   { id: "demo-3", vehicle_type: "moto", rating: 4.9, total_deliveries: 215, zone: "Bè", profile: { full_name: "Yao Agbeko", avatar_url: "" } },
 ];
 
-const AvailableDrivers = ({ city, distanceKm }: Props) => {
+const AvailableDrivers = ({ city, distanceKm, cartItems = [] }: Props) => {
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
@@ -159,6 +160,26 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
               distanceKm={distanceKm}
               onChat={async (driverId) => {
                 setSelectedDriver(null);
+                const driver = drivers.find(d => d.id === driverId);
+                if (!driver?.profile) {
+                  toast.error("Profil du livreur introuvable");
+                  return;
+                }
+
+                // Build product summary for the message
+                const productSummary = cartItems.length > 0
+                  ? cartItems.map(p => `• ${p.name} (x${p.quantity}) — ${p.price} FCFA`).join("\n")
+                  : "Produits du panier";
+
+                const chatMessage = `Bonjour ${driver.profile.full_name} 👋,\n\nJe souhaite discuter de la livraison de ma commande :\n${productSummary}\n\nDistance estimée : ${distanceKm ? distanceKm.toFixed(1) + " km" : "non définie"}\nZone : ${city}`;
+
+                // For demo drivers, just navigate to messages with info
+                if (driverId.startsWith("demo-")) {
+                  toast.success(`Chat simulé avec ${driver.profile.full_name}`);
+                  navigate(`/messages?seller=${encodeURIComponent(driver.profile.full_name)}&driverMessage=${encodeURIComponent(chatMessage)}`);
+                  return;
+                }
+
                 try {
                   const { data: { session } } = await supabase.auth.getSession();
                   if (!session) {
@@ -166,13 +187,7 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
                     navigate("/auth");
                     return;
                   }
-                  // Find driver's profile_id
-                  const driver = drivers.find(d => d.id === driverId);
-                  if (!driver?.profile) {
-                    toast.error("Profil du livreur introuvable");
-                    return;
-                  }
-                  // Get current user's profile
+
                   const { data: myProfile } = await supabase
                     .from("profiles")
                     .select("id")
@@ -180,15 +195,14 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
                     .single();
                   if (!myProfile) return;
 
-                  // Find or create conversation with driver
-                  const { data: driverProfile } = await supabase
-                    .from("profiles")
-                    .select("id")
-                    .eq("full_name", driver.profile.full_name)
-                    .limit(1)
-                    .maybeSingle();
+                  // Find driver's profile using profile_id from driver_profiles
+                  const { data: driverData } = await supabase
+                    .from("driver_profiles")
+                    .select("profile_id")
+                    .eq("id", driverId)
+                    .single();
 
-                  const sellerId = driverProfile?.id || myProfile.id;
+                  const sellerId = driverData?.profile_id || myProfile.id;
 
                   // Check existing conversation
                   const { data: existing } = await supabase
@@ -200,25 +214,36 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
                     .maybeSingle();
 
                   if (existing) {
+                    // Send message with product details
+                    await supabase.from("messages").insert({
+                      conversation_id: existing.id,
+                      sender_id: myProfile.id,
+                      content: chatMessage,
+                    });
                     navigate(`/messages?conversation=${existing.id}`);
                   } else {
+                    const firstProductId = cartItems[0]?.id || null;
                     const { data: newConv } = await supabase
                       .from("conversations")
-                      .insert({ buyer_id: myProfile.id, seller_id: sellerId })
+                      .insert({ 
+                        buyer_id: myProfile.id, 
+                        seller_id: sellerId,
+                        ...(firstProductId ? { product_id: firstProductId } : {}),
+                      })
                       .select("id")
                       .single();
                     if (newConv) {
-                      // Send initial message
                       await supabase.from("messages").insert({
                         conversation_id: newConv.id,
                         sender_id: myProfile.id,
-                        content: `Bonjour ${driver.profile.full_name}, je souhaite discuter de la livraison de ma commande.`,
+                        content: chatMessage,
                       });
                       navigate(`/messages?conversation=${newConv.id}`);
                     }
                   }
                   toast.success("Chat ouvert avec le livreur");
                 } catch (err) {
+                  console.error("Driver chat error:", err);
                   toast.error("Erreur lors de l'ouverture du chat");
                 }
               }}
