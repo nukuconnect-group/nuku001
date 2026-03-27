@@ -106,7 +106,11 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
         ) : (
           <div className="space-y-2">
             {drivers.map((driver) => (
-              <div key={driver.id} className="flex items-center gap-2.5 p-2 bg-muted/50 rounded-lg">
+              <button
+                key={driver.id}
+                className="w-full flex items-center gap-2.5 p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-left"
+                onClick={() => setSelectedDriver(driver)}
+              >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {driver.profile?.avatar_url ? (
                     <img src={driver.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
@@ -125,23 +129,37 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
                     <span>{driver.total_deliveries || 0} courses</span>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                    <Clock className="w-2.5 h-2.5" />
-                    {estimateTime(distanceKm)}
-                  </p>
-                  {driver.zone && (
-                    <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                      <MapPin className="w-2.5 h-2.5" />
-                      {driver.zone}
+                <div className="text-right flex-shrink-0 flex items-center gap-1">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      {estimateTime(distanceKm)}
                     </p>
-                  )}
+                    {driver.zone && (
+                      <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                        <MapPin className="w-2.5 h-2.5" />
+                        {driver.zone}
+                      </p>
+                    )}
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
-              </div>
+              </button>
             ))}
             <p className="text-[9px] text-muted-foreground text-center">
-              Le livreur le plus proche sera automatiquement assigné à votre commande
+              Cliquez sur un livreur pour voir son profil et discuter
             </p>
+
+            <DriverDetailSheet
+              driver={selectedDriver}
+              open={!!selectedDriver}
+              onOpenChange={(open) => !open && setSelectedDriver(null)}
+              distanceKm={distanceKm}
+              onChat={(id) => {
+                toast.success("Chat ouvert avec le livreur");
+                setSelectedDriver(null);
+              }}
+            />
           </div>
         )}
       </CardContent>
