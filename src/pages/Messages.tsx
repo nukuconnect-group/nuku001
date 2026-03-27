@@ -104,16 +104,15 @@ const Messages = () => {
     <div className={`min-h-screen bg-background flex flex-col ${isFullscreen ? "" : "pb-14 lg:pb-0"}`}>
       {!isFullscreen && <Header />}
       <main className="flex-1 flex overflow-hidden">
-        <div className={`w-full flex ${isFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-5rem)]"}`}>
-          {!isFullscreen && (
-            <ConversationList
-              conversations={conversations}
-              selectedId={selectedConversation?.id || null}
-              onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
-              hidden={!!selectedConversation || showWelcome}
-            />
-          )}
-          <div className={`flex-1 flex flex-col ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
+        <div className={`w-full flex ${isFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4rem)]"}`}>
+          {/* Conversation list: hidden on mobile when a conversation is selected, always visible on desktop (unless fullscreen) */}
+          <ConversationList
+            conversations={conversations}
+            selectedId={selectedConversation?.id || null}
+            onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
+            hidden={isFullscreen || (!!selectedConversation || showWelcome)}
+          />
+          <div className={`flex-1 flex flex-col min-w-0 ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
             {showWelcome && !selectedConversation ? (
               <div className="flex-1 flex flex-col">
                 <div className="border-b border-border p-3 flex items-center gap-3 bg-card">

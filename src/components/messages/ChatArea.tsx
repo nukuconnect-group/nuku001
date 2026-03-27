@@ -210,9 +210,9 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
 
       {/* Header */}
-      <div className="p-2.5 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card">
-        <button onClick={onBack} className="lg:hidden p-1.5 hover:bg-muted rounded-lg">
-          <ArrowLeft className="w-5 h-5" />
+      <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card">
+        <button onClick={onBack} className="p-1.5 hover:bg-muted rounded-lg lg:hidden">
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <div className="relative flex-shrink-0">
           <img src={conversation.participant.avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
@@ -269,7 +269,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-muted/20">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
         {/* Product preview card */}
         {conversation.productName && conversation.productImage && (
           <Link to={`/produit/${conversation.productId}`} className="block">
@@ -421,24 +421,28 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       )}
 
       {/* Input */}
-      <div className="p-2.5 sm:p-3 border-t border-border bg-card">
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 sm:gap-2">
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
-          </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
-            <ImageIcon className="w-4 h-4 text-muted-foreground" />
-          </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setShowAiSuggestions(!showAiSuggestions)}>
-            <Sparkles className={`w-4 h-4 ${showAiSuggestions ? "text-primary" : "text-muted-foreground"}`} />
-          </Button>
-          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrivez votre message..." className="flex-1 h-9 text-sm" />
-          <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
-          </Button>
-          <Button type="submit" size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90 flex-shrink-0" disabled={!messageInput.trim() && !imagePreview || isUploadingImage}>
-            {isUploadingImage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-          </Button>
+      <div className="p-2 sm:p-3 border-t border-border bg-card safe-area-bottom">
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => imageInputRef.current?.click()}>
+              <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 hidden sm:flex" onClick={() => setShowAiSuggestions(!showAiSuggestions)}>
+              <Sparkles className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${showAiSuggestions ? "text-primary" : "text-muted-foreground"}`} />
+            </Button>
+          </div>
+          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Message..." className="flex-1 min-w-0 h-8 sm:h-9 text-xs sm:text-sm" />
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+            <Button type="button" variant="ghost" size="icon" className={`h-7 w-7 sm:h-8 sm:w-8 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
+              {isRecording ? <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />}
+            </Button>
+            <Button type="submit" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 bg-primary hover:bg-primary/90" disabled={!messageInput.trim() && !imagePreview || isUploadingImage}>
+              {isUploadingImage ? <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" /> : <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
