@@ -8,6 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Truck, Store, Package, MapPin, Navigation, Ruler, AlertCircle, Loader2, LocateFixed } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "./CartContext";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix leaflet default icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 // Zones with lat/lng coordinates and quarters
 const togoZones = [
@@ -101,9 +112,11 @@ const DeliveryZoneMap = ({
   const [quarterSearch, setQuarterSearch] = useState("");
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showQuarterDropdown, setShowQuarterDropdown] = useState(false);
+  const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
   const cityRef = useRef<HTMLDivElement>(null);
   const quarterRef = useRef<HTMLDivElement>(null);
   const hasAutoDetected = useRef(false);
+  const markerRef = useRef<L.Marker>(null);
 
   // Auto-detect location on mount
   useEffect(() => {
@@ -122,6 +135,13 @@ const DeliveryZoneMap = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleMarkerDrag = useCallback((lat: number, lng: number) => {
+    setMarkerPos([lat, lng]);
+    const zone = findClosestZone(lat, lng);
+    onCityChange(zone.name);
+    setCitySearch(zone.name);
+  }, [onCityChange]);
+
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoError("Géolocalisation non supportée");
@@ -131,9 +151,12 @@ const DeliveryZoneMap = ({
     setGeoError("");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const zone = findClosestZone(pos.coords.latitude, pos.coords.longitude);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const zone = findClosestZone(lat, lng);
         onCityChange(zone.name);
         setCitySearch(zone.name);
+        setMarkerPos([lat, lng]);
         setGeoLoading(false);
       },
       () => {
@@ -197,21 +220,12 @@ const DeliveryZoneMap = ({
     onDynamicPriceChange?.(currentPrice);
   }, [currentPrice, onDynamicPriceChange]);
 
-  const mapSrc = useMemo(() => {
-    if (!buyerZone) return null;
-    const points = [{ lat: buyerZone.lat, lng: buyerZone.lng }];
-    sellerLocations.forEach(sl => {
-      if (sl.zone) points.push({ lat: sl.zone.lat, lng: sl.zone.lng });
-    });
-    const lats = points.map(p => p.lat);
-    const lngs = points.map(p => p.lng);
-    const padding = 0.05;
-    const minLat = Math.min(...lats) - padding;
-    const maxLat = Math.max(...lats) + padding;
-    const minLng = Math.min(...lngs) - padding;
-    const maxLng = Math.max(...lngs) + padding;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${minLng},${minLat},${maxLng},${maxLat}&layer=mapnik&marker=${buyerZone.lat},${buyerZone.lng}`;
-  }, [buyerZone, sellerLocations]);
+  // Set initial marker position when city changes
+  useEffect(() => {
+    if (buyerZone && !markerPos) {
+      setMarkerPos([buyerZone.lat, buyerZone.lng]);
+    }
+  }, [buyerZone]);
 
   return (
     <Card>
@@ -317,6 +331,7 @@ const DeliveryZoneMap = ({
                           onCityChange(zone.name);
                           setCitySearch(zone.name);
                           setShowCityDropdown(false);
+                          setMarkerPos([zone.lat, zone.lng]);
                           onQuarterChange("");
                           setQuarterSearch("");
                         }}
@@ -419,32 +434,55 @@ const DeliveryZoneMap = ({
               </div>
             )}
 
-            {/* Map preview */}
+            {/* Interactive Map */}
             {city && (
               <div className="rounded-xl overflow-hidden border border-border">
                 <div className="relative">
-                  <iframe
-                    title="Carte de livraison"
-                    width="100%"
-                    height="220"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    src={mapSrc || `https://www.openstreetmap.org/export/embed.html?bbox=1.0,6.0,1.5,6.4&layer=mapnik&marker=${buyerZone?.lat || 6.1375},${buyerZone?.lng || 1.2123}`}
-                  />
-                  <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm">
+                  <div style={{ height: 240 }}>
+                    <MapContainer
+                      center={markerPos || (buyerZone ? [buyerZone.lat, buyerZone.lng] : [6.1375, 1.2123])}
+                      zoom={12}
+                      style={{ height: "100%", width: "100%" }}
+                      scrollWheelZoom={true}
+                      key={`${markerPos?.[0] || buyerZone?.lat}-${markerPos?.[1] || buyerZone?.lng}`}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker
+                        position={markerPos || (buyerZone ? [buyerZone.lat, buyerZone.lng] : [6.1375, 1.2123])}
+                        draggable={true}
+                        ref={markerRef}
+                        eventHandlers={{
+                          dragend: () => {
+                            const marker = markerRef.current;
+                            if (marker) {
+                              const pos = marker.getLatLng();
+                              handleMarkerDrag(pos.lat, pos.lng);
+                            }
+                          },
+                        }}
+                      >
+                        <Popup>
+                          📍 {city}{quarter ? `, ${quarter}` : ""}<br />
+                          <span className="text-[10px]">Déplacez le marqueur pour changer la zone</span>
+                        </Popup>
+                      </Marker>
+                      {/* Seller markers */}
+                      {sellerLocations.filter(s => s.zone).map((sl, i) => (
+                        <Marker
+                          key={`seller-${i}`}
+                          position={[sl.zone!.lat, sl.zone!.lng]}
+                        >
+                          <Popup>🏪 {sl.name}</Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  </div>
+                  <div className="absolute bottom-2 left-2 z-[1000] bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm pointer-events-none">
                     <Navigation className="w-3 h-3 text-primary" />
                     <span className="text-[10px] font-medium text-foreground">
-                      📍 {city}{quarter ? `, ${quarter}` : ""}
+                      📍 {city}{quarter ? `, ${quarter}` : ""} — Déplacez le marqueur
                     </span>
                   </div>
-                  {sellerLocations.length > 0 && sellerLocations.some(s => s.zone) && (
-                    <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm rounded-lg px-2.5 py-1.5 shadow-sm">
-                      <span className="text-[10px] font-medium text-foreground">
-                        🏪 {sellerLocations.map(s => s.name).join(", ")}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
