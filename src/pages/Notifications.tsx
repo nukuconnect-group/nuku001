@@ -152,7 +152,11 @@ const Notifications = () => {
                 </Card>
               ) : (
                 notifications.map((notif) => (
-                  <Card key={notif.id} className={`transition-all ${!notif.is_read ? "border-primary/20 bg-primary/5" : ""}`}>
+                  <Card 
+                    key={notif.id} 
+                    className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
+                    onClick={() => handleNotifClick(notif)}
+                  >
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -168,17 +172,17 @@ const Notifications = () => {
                             {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1.5">
                             <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
-                            {notif.product_id && (
-                              <Link to={`/produit/${notif.product_id}`} className="text-[10px] text-primary font-medium">
-                                Voir le produit →
-                              </Link>
+                            {getNotifLink(notif) && (
+                              <span className="text-[10px] text-primary font-medium flex items-center gap-0.5">
+                                Voir les détails <ArrowRight className="w-2.5 h-2.5" />
+                              </span>
                             )}
                           </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={() => deleteNotification(notif.id)}>
+                          onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
