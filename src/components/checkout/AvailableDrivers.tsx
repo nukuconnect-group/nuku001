@@ -32,6 +32,7 @@ const demoDrivers: Driver[] = [
 const AvailableDrivers = ({ city, distanceKm }: Props) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
   useEffect(() => {
     if (!city) { setDrivers([]); return; }
