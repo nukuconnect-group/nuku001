@@ -77,7 +77,7 @@ export const useProducts = () => {
           .select(`
             *,
             producer:profiles!products_producer_id_fkey(
-              id, full_name, avatar_url, is_verified, location, bio, phone
+              id, full_name, avatar_url, is_verified, location, bio
             )
           `)
           .order("created_at", { ascending: false });
@@ -106,17 +106,18 @@ export const useProduct = (id: string) => {
           .select(`
             *,
             producer:profiles!products_producer_id_fkey(
-              id, full_name, avatar_url, is_verified, location, bio, phone
+              id, full_name, avatar_url, is_verified, location, bio
             )
           `)
           .eq("id", id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
+        if (!data) throw new Error("Product not found");
         return mapDbToProduct(data as any);
       } catch (e) {
         console.warn("Supabase client failed for product, using direct fetch:", e);
-        const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio,phone)&id=eq.${id}`;
+        const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio)&id=eq.${id}`;
         const res = await fetch(url, {
           headers: {
             apikey: SUPABASE_KEY,
