@@ -364,28 +364,40 @@ const ProductDetail = () => {
                     <Truck className="w-4 h-4 text-primary" />
                     Options de livraison
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <Package className="w-4 h-4 text-primary" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-[10px] font-medium text-foreground">Retrait sur place</p>
                         <p className="text-[9px] text-muted-foreground">Gratuit — {product.location}</p>
                       </div>
+                      <Badge variant="secondary" className="text-[8px]">Gratuit</Badge>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-primary/20">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Truck className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] font-medium text-foreground">Livreur NukuConnect</p>
+                        <p className="text-[9px] text-muted-foreground">Nos livreurs partenaires</p>
+                      </div>
+                      <Badge className="text-[8px] bg-primary/10 text-primary border-primary/20">Recommandé</Badge>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border">
                       <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                         <Truck className="w-4 h-4 text-accent" />
                       </div>
-                      <div>
-                        <p className="text-[10px] font-medium text-foreground">Livraison à domicile</p>
-                        <p className="text-[9px] text-muted-foreground">Frais calculés au panier</p>
+                      <div className="flex-1">
+                        <p className="text-[10px] font-medium text-foreground">Gochap</p>
+                        <p className="text-[9px] text-muted-foreground">Livraison express</p>
                       </div>
+                      <Badge variant="secondary" className="text-[8px]">Express</Badge>
                     </div>
                   </div>
                   <p className="text-[8px] text-muted-foreground text-center">
-                    Des livreurs disponibles seront affichés lors du checkout
+                    Les livreurs disponibles seront affichés lors du checkout
                   </p>
                 </CardContent>
               </Card>
