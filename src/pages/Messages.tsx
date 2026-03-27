@@ -2,15 +2,41 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Bot, Sparkles } from "lucide-react";
 import { useConversations, type ConversationItem } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatArea from "@/components/messages/ChatArea";
+import { Card } from "@/components/ui/card";
+import ReactMarkdown from "react-markdown";
+
+const WELCOME_KEY = "nuku-welcome-shown";
+
+const welcomeContent = `## 👋 Bienvenue sur NukuConnect !
+
+Nous sommes ravis de vous accueillir sur la première plateforme agricole intelligente d'Afrique de l'Ouest.
+
+### Voici ce que vous pouvez faire :
+
+🛒 **Marketplace** — Achetez et vendez des produits agricoles directement entre fournisseurs et acheteurs.
+
+🚚 **Livraison** — Choisissez un livreur NukuConnect ou Gochap pour recevoir vos commandes.
+
+💬 **Messagerie** — Discutez avec les fournisseurs et livreurs en temps réel.
+
+🤖 **NUKU AI** — Posez vos questions agricoles à notre assistant IA intelligent.
+
+📚 **Formations** — Accédez à des cours pour améliorer vos compétences agricoles.
+
+📊 **Traçabilité** — Suivez vos produits de la production à la livraison.
+
+---
+*Si vous avez besoin d'aide, contactez le support depuis la section Aide. Bonne exploration ! 🌱*`;
 
 const Messages = () => {
   const [searchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, loading, profileId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
@@ -18,12 +44,29 @@ const Messages = () => {
     profileId
   );
 
+  // Show welcome message for new users
+  useEffect(() => {
+    if (loading) return;
+    const alreadyShown = localStorage.getItem(WELCOME_KEY);
+    if (!alreadyShown && profileId) {
+      setShowWelcome(true);
+      localStorage.setItem(WELCOME_KEY, "true");
+    }
+  }, [loading, profileId]);
+
   // Auto-select conversation from URL params
   useEffect(() => {
     if (!conversations.length) return;
+    const convId = searchParams.get("conversation");
     const productId = searchParams.get("product");
     const sellerName = searchParams.get("seller");
-    if (productId || sellerName) {
+    
+    if (convId) {
+      const match = conversations.find(c => c.id === convId);
+      if (match && match.id !== selectedConversation?.id) {
+        setSelectedConversation(match);
+      }
+    } else if (productId || sellerName) {
       const match = conversations.find(
         (c) =>
           c.productId === productId ||
@@ -64,18 +107,56 @@ const Messages = () => {
           <ConversationList
             conversations={conversations}
             selectedId={selectedConversation?.id || null}
-            onSelect={setSelectedConversation}
-            hidden={!!selectedConversation}
+            onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
+            hidden={!!selectedConversation || showWelcome}
           />
-          <div className={`flex-1 flex flex-col ${selectedConversation ? "flex" : "hidden lg:flex"}`}>
-            <ChatArea
-              conversation={selectedConversation}
-              messages={messages}
-              onBack={() => setSelectedConversation(null)}
-              onSend={sendMessage}
-              onLocalMessage={handleLocalMessage}
-              messagesEndRef={messagesEndRef}
-            />
+          <div className={`flex-1 flex flex-col ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
+            {showWelcome && !selectedConversation ? (
+              <div className="flex-1 flex flex-col">
+                <div className="border-b border-border p-3 flex items-center gap-3 bg-card">
+                  <div className="w-9 h-9 rounded-full bg-gradient-hero flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm flex items-center gap-1.5">
+                      NukuConnect
+                      <Sparkles className="w-3 h-3 text-accent" />
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground">Message de bienvenue</p>
+                  </div>
+                  <button 
+                    className="ml-auto text-xs text-primary hover:underline"
+                    onClick={() => setShowWelcome(false)}
+                  >
+                    Fermer
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="flex gap-2 max-w-lg">
+                    <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-3.5 h-3.5 text-primary-foreground" />
+                    </div>
+                    <Card className="p-4 bg-card">
+                      <div className="prose prose-sm max-w-none text-xs sm:text-sm leading-relaxed">
+                        <ReactMarkdown>{welcomeContent}</ReactMarkdown>
+                      </div>
+                      <span className="text-[8px] opacity-50 mt-2 block">
+                        {new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ChatArea
+                conversation={selectedConversation}
+                messages={messages}
+                onBack={() => setSelectedConversation(null)}
+                onSend={sendMessage}
+                onLocalMessage={handleLocalMessage}
+                messagesEndRef={messagesEndRef}
+              />
+            )}
           </div>
         </div>
       </main>
