@@ -81,11 +81,28 @@ const NukuAI = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [responseStartTime, setResponseStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Timer for response time display
+  useEffect(() => {
+    if (!isLoading) {
+      setElapsedSeconds(0);
+      setResponseStartTime(null);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (responseStartTime) {
+        setElapsedSeconds(Math.floor((Date.now() - responseStartTime) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isLoading, responseStartTime]);
 
   // Save conversation when messages change (excluding welcome-only state)
   useEffect(() => {
@@ -139,6 +156,7 @@ const NukuAI = () => {
     setSelectedCategory(null);
     setIsLoading(true);
     setIsStreaming(true);
+    setResponseStartTime(Date.now());
 
     try {
       const chatMessages = newMessages.filter(m => m.id !== "welcome").map(m => ({ role: m.role, content: m.content }));
@@ -303,7 +321,7 @@ const NukuAI = () => {
                 </Card>
               </div>
             ))}
-            {isLoading && messages[messages.length - 1]?.content === "" && (
+            {isLoading && (!isStreaming || messages[messages.length - 1]?.content === "") && (
               <div className="flex gap-2">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-hero flex items-center justify-center">
                   <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" />
@@ -311,12 +329,18 @@ const NukuAI = () => {
                 <Card className="p-2.5 sm:p-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
-                    <span className="text-xs">{t("ai.thinking")}</span>
+                    <span className="text-xs font-medium">NUKU AI réfléchit...</span>
                   </div>
+                  {elapsedSeconds > 0 && (
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      <span>Temps de réponse : {elapsedSeconds}s</span>
+                    </div>
+                  )}
                 </Card>
               </div>
             )}

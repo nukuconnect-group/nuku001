@@ -9,9 +9,9 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [phase, setPhase] = useState<"enter" | "visible" | "exit">("enter");
 
   useEffect(() => {
-    const enterTimer = setTimeout(() => setPhase("visible"), 100);
-    const exitTimer = setTimeout(() => setPhase("exit"), 2200);
-    const completeTimer = setTimeout(onComplete, 2700);
+    const enterTimer = setTimeout(() => setPhase("visible"), 50);
+    const exitTimer = setTimeout(() => setPhase("exit"), 1200);
+    const completeTimer = setTimeout(onComplete, 1600);
 
     return () => {
       clearTimeout(enterTimer);
