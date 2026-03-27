@@ -89,6 +89,21 @@ const NukuAI = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Timer for response time display
+  useEffect(() => {
+    if (!isLoading) {
+      setElapsedSeconds(0);
+      setResponseStartTime(null);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (responseStartTime) {
+        setElapsedSeconds(Math.floor((Date.now() - responseStartTime) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isLoading, responseStartTime]);
+
   // Save conversation when messages change (excluding welcome-only state)
   useEffect(() => {
     const realMessages = messages.filter(m => m.id !== "welcome");
