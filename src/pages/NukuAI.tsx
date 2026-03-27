@@ -156,6 +156,7 @@ const NukuAI = () => {
     setSelectedCategory(null);
     setIsLoading(true);
     setIsStreaming(true);
+    setResponseStartTime(Date.now());
 
     try {
       const chatMessages = newMessages.filter(m => m.id !== "welcome").map(m => ({ role: m.role, content: m.content }));
