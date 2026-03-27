@@ -44,6 +44,15 @@ const Producers = () => {
     }
   }, [sortBy]);
 
+  const demoProducers = [
+    { id: "demo-1", user_id: "demo-1", name: "Agro Togo SARL", avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200", cover: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800", location: "Lomé, Togo", verified: true, products: 24, bio: "Fournisseur de produits agricoles certifiés biologiques depuis 2015.", rating: 4.8, reviewCount: 47, createdAt: "2024-01-15" },
+    { id: "demo-2", user_id: "demo-2", name: "Ferme Mensah & Fils", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200", cover: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800", location: "Kpalimé, Togo", verified: true, products: 18, bio: "Exploitation familiale spécialisée en fruits tropicaux et épices.", rating: 4.6, reviewCount: 32, createdAt: "2024-03-20" },
+    { id: "demo-3", user_id: "demo-3", name: "Coopérative AgriBio", avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200", cover: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800", location: "Atakpamé, Togo", verified: false, products: 12, bio: "Coopérative de producteurs locaux regroupant 50 agriculteurs.", rating: 4.3, reviewCount: 19, createdAt: "2024-06-10" },
+    { id: "demo-4", user_id: "demo-4", name: "Koffi Export", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200", cover: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800", location: "Sokodé, Togo", verified: true, products: 31, bio: "Leader dans l'exportation de café et cacao premium du Togo.", rating: 4.9, reviewCount: 63, createdAt: "2023-11-05" },
+    { id: "demo-5", user_id: "demo-5", name: "Nature & Saveurs", avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200", cover: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=800", location: "Lomé, Togo", verified: true, products: 15, bio: "Transformation et conditionnement de produits alimentaires locaux.", rating: 4.5, reviewCount: 28, createdAt: "2024-02-28" },
+    { id: "demo-6", user_id: "demo-6", name: "Ets Adzovi", avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200", cover: "https://images.unsplash.com/photo-1530836176759-510f58baebf4?w=800", location: "Tsévié, Togo", verified: false, products: 8, bio: "Jeune entreprise spécialisée dans les légumes frais et bio.", rating: 4.1, reviewCount: 11, createdAt: "2024-08-15" },
+  ];
+
   const { data: producers = [], isLoading } = useQuery({
     queryKey: ["real-producers"],
     queryFn: async () => {
@@ -53,7 +62,7 @@ const Producers = () => {
         .eq("user_type", "producer");
 
       if (error) throw error;
-      if (!profiles || profiles.length === 0) return [];
+      if (!profiles || profiles.length === 0) return demoProducers;
 
       const producerIds = profiles.map((p) => p.id);
       const { data: products } = await supabase
@@ -93,7 +102,7 @@ const Producers = () => {
         });
       }
 
-      return profiles.map((p) => ({
+      const realProducers = profiles.map((p) => ({
         id: p.id,
         user_id: p.user_id,
         name: p.full_name || "Fournisseur",
@@ -109,6 +118,8 @@ const Producers = () => {
         reviewCount: avgRatings[p.id]?.count || 0,
         createdAt: p.created_at,
       }));
+
+      return realProducers.length > 0 ? realProducers : demoProducers;
     },
     staleTime: 1000 * 60 * 2,
   });
