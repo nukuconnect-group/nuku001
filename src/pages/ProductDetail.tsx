@@ -357,6 +357,39 @@ const ProductDetail = () => {
                 </div>
               </div>
 
+              {/* Delivery options */}
+              <Card className="border-primary/20">
+                <CardContent className="p-3 space-y-2">
+                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Truck className="w-4 h-4 text-primary" />
+                    Options de livraison
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Package className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-medium text-foreground">Retrait sur place</p>
+                        <p className="text-[9px] text-muted-foreground">Gratuit — {product.location}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border">
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        <Truck className="w-4 h-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-medium text-foreground">Livraison à domicile</p>
+                        <p className="text-[9px] text-muted-foreground">Frais calculés au panier</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-muted-foreground text-center">
+                    Des livreurs disponibles seront affichés lors du checkout
+                  </p>
+                </CardContent>
+              </Card>
+
               {/* Quantity selector + total */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
