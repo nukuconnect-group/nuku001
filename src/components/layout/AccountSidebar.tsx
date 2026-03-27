@@ -25,8 +25,9 @@ import {
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
-  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone
 } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 interface AccountSidebarProps {
   isOpen: boolean;
@@ -56,6 +57,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useProfile();
+  const { canInstall, isInstalled, install } = usePWAInstall();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -262,6 +264,43 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
               </div>
 
               {/* Separator */}
+              <div className="h-2 bg-muted/40" />
+
+              {/* PWA Install */}
+              {(canInstall || !isInstalled) && (
+                <div className="py-1">
+                  <button
+                    onClick={async () => {
+                      if (canInstall) {
+                        const accepted = await install();
+                        if (accepted) {
+                          toast({ title: "Application installée !", description: "NUKUCONNECT est maintenant sur votre écran d'accueil." });
+                        }
+                      } else {
+                        toast({ title: "Installer NUKUCONNECT", description: "Ouvrez le menu de votre navigateur → 'Ajouter à l'écran d'accueil' ou 'Installer l'application'." });
+                      }
+                    }}
+                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30 w-full"
+                  >
+                    <Download className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="flex-1 text-left">
+                      <span className="text-sm font-medium">Installer l'application</span>
+                      <p className="text-[10px] text-muted-foreground">Accès rapide depuis votre téléphone</p>
+                    </div>
+                    <Smartphone className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  </button>
+                </div>
+              )}
+
+              {isInstalled && (
+                <div className="py-1">
+                  <div className="flex items-center gap-3.5 px-4 py-3.5 text-foreground border-b border-border/30">
+                    <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground">✅ Application installée</span>
+                  </div>
+                </div>
+              )}
+
               <div className="h-2 bg-muted/40" />
 
               {/* Bottom items */}
