@@ -25,8 +25,9 @@ import {
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
-  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone
 } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 interface AccountSidebarProps {
   isOpen: boolean;
@@ -56,6 +57,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useProfile();
+  const { canInstall, isInstalled, install } = usePWAInstall();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
