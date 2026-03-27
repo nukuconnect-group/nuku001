@@ -340,6 +340,7 @@ const DeliveryZoneMap = ({
                           onCityChange(zone.name);
                           setCitySearch(zone.name);
                           setShowCityDropdown(false);
+                          setMarkerPos([zone.lat, zone.lng]);
                           onQuarterChange("");
                           setQuarterSearch("");
                         }}
