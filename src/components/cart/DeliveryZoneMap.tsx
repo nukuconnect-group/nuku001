@@ -135,6 +135,13 @@ const DeliveryZoneMap = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleMarkerDrag = useCallback((lat: number, lng: number) => {
+    setMarkerPos([lat, lng]);
+    const zone = findClosestZone(lat, lng);
+    onCityChange(zone.name);
+    setCitySearch(zone.name);
+  }, [onCityChange]);
+
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoError("Géolocalisation non supportée");
@@ -144,9 +151,12 @@ const DeliveryZoneMap = ({
     setGeoError("");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const zone = findClosestZone(pos.coords.latitude, pos.coords.longitude);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const zone = findClosestZone(lat, lng);
         onCityChange(zone.name);
         setCitySearch(zone.name);
+        setMarkerPos([lat, lng]);
         setGeoLoading(false);
       },
       () => {
