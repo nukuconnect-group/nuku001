@@ -39,6 +39,14 @@ const statusLabels: Record<string, { label: string; color: string; icon: any }> 
   cancelled: { label: "Annulée", color: "bg-red-100 text-red-800", icon: XCircle },
 };
 
+const demoProducts = [
+  { id: "demo-p1", name: "Tomates fraîches bio", price: 1500, unit: "kg", quantity_available: 50, location: "Lomé", images: ["https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=200"], profiles: { full_name: "Ama Djossou", location: "Lomé" } },
+  { id: "demo-p2", name: "Maïs grain séché", price: 800, unit: "kg", quantity_available: 200, location: "Kara", images: ["https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=200"], profiles: { full_name: "Koffi Mensah", location: "Kara" } },
+  { id: "demo-p3", name: "Ananas sucré", price: 2000, unit: "pièce", quantity_available: 30, location: "Kpalimé", images: ["https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=200"], profiles: { full_name: "Yawa Agbéko", location: "Kpalimé" } },
+  { id: "demo-p4", name: "Huile de palme", price: 3500, unit: "litre", quantity_available: 100, location: "Atakpamé", images: ["https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=200"], profiles: { full_name: "Komi Lawson", location: "Atakpamé" } },
+  { id: "demo-p5", name: "Manioc frais", price: 500, unit: "kg", quantity_available: 150, location: "Sokodé", images: ["https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=200"], profiles: { full_name: "Ablavi Tossou", location: "Sokodé" } },
+];
+
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -94,7 +102,8 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        setAvailableProducts(products || []);
+        // Use demo products if none exist
+        setAvailableProducts(products && products.length > 0 ? products : demoProducts);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);

@@ -57,10 +57,9 @@ function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: 
 }
 
 const baseDeliveryOptions = [
-  { id: "pickup", name: "Retrait sur place", description: "Récupérez chez le fournisseur", icon: Store, tag: "Gratuit", fixed: true, fixedPrice: 0 },
-  { id: "gozem", name: "Gozem Livraison", description: "Livraison rapide moto/véhicule", icon: Truck, tag: "Rapide", fixed: false, fixedPrice: 0 },
-  { id: "standard", name: "Livraison Standard", description: "3-5 jours ouvrables", icon: Package, tag: "Économique", fixed: false, fixedPrice: 0 },
-  { id: "dhl", name: "DHL Express", description: "International - 2-5 jours", icon: Package, tag: "International", fixed: true, fixedPrice: 15000 },
+  { id: "pickup", name: "Retrait sur place", description: "Récupérez directement chez le fournisseur", icon: Store, tag: "Gratuit", fixed: true, fixedPrice: 0 },
+  { id: "livreur", name: "Livreur NukuConnect", description: "Livraison par nos livreurs partenaires", icon: Truck, tag: "Recommandé", fixed: false, fixedPrice: 0 },
+  { id: "gochap", name: "Gochap", description: "Livraison express via Gochap", icon: Truck, tag: "Express", fixed: false, fixedPrice: 0 },
 ];
 
 export function buildDeliveryOptions(distanceKm: number | null) {
@@ -68,7 +67,7 @@ export function buildDeliveryOptions(distanceKm: number | null) {
     if (opt.fixed) return { ...opt, price: opt.fixedPrice };
     if (distanceKm === null) return { ...opt, price: 0 };
     const { price } = getDeliveryPriceByDistance(distanceKm);
-    const multiplier = opt.id === "gozem" ? 1.3 : 1;
+    const multiplier = opt.id === "gochap" ? 1.4 : 1;
     return { ...opt, price: Math.round(price * multiplier / 100) * 100 };
   });
 }

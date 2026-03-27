@@ -18,6 +18,12 @@ interface Driver {
   profile?: { full_name: string; avatar_url: string };
 }
 
+const demoDrivers: Driver[] = [
+  { id: "demo-1", vehicle_type: "moto", rating: 4.8, total_deliveries: 127, zone: "Lomé Centre", profile: { full_name: "Kodjo Mensah", avatar_url: "" } },
+  { id: "demo-2", vehicle_type: "voiture", rating: 4.6, total_deliveries: 89, zone: "Adidogomé", profile: { full_name: "Ama Koffi", avatar_url: "" } },
+  { id: "demo-3", vehicle_type: "moto", rating: 4.9, total_deliveries: 215, zone: "Bè", profile: { full_name: "Yao Agbeko", avatar_url: "" } },
+];
+
 const AvailableDrivers = ({ city, distanceKm }: Props) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +39,6 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
         .limit(5);
 
       if (data && data.length > 0) {
-        // Get profile names
         const profileIds = (data as any[]).map(d => d.profile_id);
         const { data: profiles } = await supabase
           .from("profiles")
@@ -46,7 +51,8 @@ const AvailableDrivers = ({ city, distanceKm }: Props) => {
         }));
         setDrivers(enriched);
       } else {
-        setDrivers([]);
+        // Show demo drivers when no real drivers available
+        setDrivers(demoDrivers);
       }
       setLoading(false);
     };
