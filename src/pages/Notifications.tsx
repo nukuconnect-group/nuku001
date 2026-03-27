@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2 } from "lucide-react";
+import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2, ArrowRight, Star, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Notification {
@@ -19,6 +19,7 @@ interface Notification {
 }
 
 const Notifications = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -63,8 +64,31 @@ const Notifications = () => {
       case "order": return <ShoppingCart className="w-5 h-5 text-primary" />;
       case "message": return <MessageCircle className="w-5 h-5 text-secondary" />;
       case "product": return <Package className="w-5 h-5 text-primary" />;
+      case "delivery": return <Truck className="w-5 h-5 text-primary" />;
+      case "review": return <Star className="w-5 h-5 text-accent" />;
       default: return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
+  };
+
+  const getNotifLink = (notif: Notification): string | null => {
+    switch (notif.type) {
+      case "order": return "/acheteur";
+      case "message": return "/messages";
+      case "product": return notif.product_id ? `/produit/${notif.product_id}` : "/marketplace";
+      case "delivery": return "/suivi-livraison";
+      case "review": return notif.product_id ? `/produit/${notif.product_id}` : null;
+      default: return notif.product_id ? `/produit/${notif.product_id}` : null;
+    }
+  };
+
+  const handleNotifClick = async (notif: Notification) => {
+    // Mark as read
+    if (!notif.is_read) {
+      await supabase.from("notifications" as any).update({ is_read: true } as any).eq("id", notif.id);
+      setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+    const link = getNotifLink(notif);
+    if (link) navigate(link);
   };
 
   const timeAgo = (date: string) => {
@@ -128,7 +152,11 @@ const Notifications = () => {
                 </Card>
               ) : (
                 notifications.map((notif) => (
-                  <Card key={notif.id} className={`transition-all ${!notif.is_read ? "border-primary/20 bg-primary/5" : ""}`}>
+                  <Card 
+                    key={notif.id} 
+                    className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
+                    onClick={() => handleNotifClick(notif)}
+                  >
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -144,17 +172,17 @@ const Notifications = () => {
                             {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1.5">
                             <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
-                            {notif.product_id && (
-                              <Link to={`/produit/${notif.product_id}`} className="text-[10px] text-primary font-medium">
-                                Voir le produit →
-                              </Link>
+                            {getNotifLink(notif) && (
+                              <span className="text-[10px] text-primary font-medium flex items-center gap-0.5">
+                                Voir les détails <ArrowRight className="w-2.5 h-2.5" />
+                              </span>
                             )}
                           </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={() => deleteNotification(notif.id)}>
+                          onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
