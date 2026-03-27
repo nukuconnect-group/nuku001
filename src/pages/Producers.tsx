@@ -321,11 +321,16 @@ const Producers = () => {
                         <Button variant="outline" size="sm" className="flex-1 text-[9px] sm:text-[10px] h-7">
                           Voir profil
                         </Button>
-                        <Link to={`/messages?contact=${producer.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Button variant="hero" size="sm" className="h-7 px-2">
-                            <MessageCircle className="w-3 h-3" />
-                          </Button>
-                        </Link>
+                        <Button
+                          variant="hero" size="sm" className="h-7 px-2"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/messages?contact=${producer.id}`;
+                          }}
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
