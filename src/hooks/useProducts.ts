@@ -83,15 +83,28 @@ export const useProducts = () => {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        return (data || []).map((p: any) => mapDbToProduct(p));
+        const products = (data || []).map((p: any) => mapDbToProduct(p));
+        // Cache for offline use
+        try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
+        return products;
       } catch (e) {
-        console.warn("Supabase client failed, using direct fetch:", e);
-        return fetchProductsDirect();
+        console.warn("Supabase client failed, trying direct fetch:", e);
+        try {
+          const products = await fetchProductsDirect();
+          try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
+          return products;
+        } catch (fetchErr) {
+          // Offline fallback
+          console.warn("Network unavailable, using cached products");
+          const cached = localStorage.getItem("nuku_products_cache");
+          if (cached) return JSON.parse(cached) as Product[];
+          return [];
+        }
       }
     },
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: 2,
     retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 5000),
   });
 };
