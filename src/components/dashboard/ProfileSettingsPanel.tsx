@@ -214,7 +214,12 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">{profile?.full_name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.user_type === "producer" ? "Fournisseur" : "Acheteur"}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {profile?.user_type === "producer" ? "Fournisseur" : 
+                 profile?.user_type === "driver" ? "Livreur" : 
+                 profile?.user_type === "trainer" ? "Formateur" :
+                 profile?.user_type === "learner" ? "Apprenant" : "Acheteur"}
+              </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Cliquez pour changer la photo</p>
             </div>
           </div>

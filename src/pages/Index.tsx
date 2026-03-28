@@ -15,17 +15,16 @@ const Index = () => {
   return (
     <div className="min-h-screen pb-14 lg:pb-0">
       <Header />
-      <main>
+      <main className="space-y-0">
         {/* HeroCarousel: desktop/tablet only */}
         <div className="hidden md:block">
           <HeroCarousel />
         </div>
-        {/* PromoBannerSlider: mobile only - with products & farmers */}
+        {/* PromoBannerSlider: mobile only */}
         <PromoBannerSlider />
         <CategoriesSection />
-        <div className="lg:hidden">
-          <FeaturedProducts />
-        </div>
+        {/* FeaturedProducts: shown on all devices now, scrolling */}
+        <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />

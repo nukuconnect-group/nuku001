@@ -6,6 +6,10 @@ import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -18,6 +22,7 @@ const MobileBottomNav = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [showBecomeSellerDialog, setShowBecomeSellerDialog] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -95,9 +100,9 @@ const MobileBottomNav = () => {
       setProfile(data);
       setShowSellLoading(false);
       
-      if (!data || data.user_type !== "producer") {
-        toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
-        navigate("/auth");
+      if (!data || (data.user_type !== "producer" && data.user_type !== "trainer")) {
+        setShowSellLoading(false);
+        setShowBecomeSellerDialog(true);
         return;
       }
       
@@ -173,9 +178,47 @@ const MobileBottomNav = () => {
       
       <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
 
+      {/* Become Seller Dialog */}
+      <AlertDialog open={showBecomeSellerDialog} onOpenChange={setShowBecomeSellerDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Store className="w-5 h-5 text-primary" />
+              Devenez fournisseur
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              Pour publier des produits et vendre sur NukuConnect, vous devez d'abord devenir fournisseur. 
+              Cela vous donnera accès à un tableau de bord dédié pour gérer vos produits et commandes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-xs">Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="gap-1.5 text-xs"
+              onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.from("profiles")
+                  .update({ user_type: "producer" })
+                  .eq("user_id", user.id);
+                if (error) {
+                  toast({ title: "Erreur", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Félicitations ! 🎉", description: "Vous êtes maintenant fournisseur. Publiez votre premier produit !" });
+                  setProfile({ ...profile, user_type: "producer" });
+                  setShowAddProduct(true);
+                }
+              }}
+            >
+              <Store className="w-3.5 h-3.5" />
+              Devenir fournisseur
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {profile && (
         <AddProductModal
-          open={showAddProduct && profile.user_type === "producer"}
+          open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
           onOpenChange={(open) => {
             if (!open) setShowAddProduct(false);
           }}
