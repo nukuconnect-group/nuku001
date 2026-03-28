@@ -14,7 +14,7 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section className="py-12 sm:py-20 lg:py-28 bg-gradient-earth">
+    <section className="py-6 sm:py-10 lg:py-14 bg-gradient-earth">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-16">
           <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3 sm:mb-4">

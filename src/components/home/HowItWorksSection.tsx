@@ -39,7 +39,7 @@ const steps = [
 
 const HowItWorksSection = () => {
   return (
-    <section className="py-10 sm:py-14 lg:py-20 bg-muted/30">
+    <section className="py-6 sm:py-8 lg:py-12 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
           <span className="inline-block px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3">
