@@ -6,6 +6,10 @@ import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -18,6 +22,7 @@ const MobileBottomNav = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [showBecomeSellerDialog, setShowBecomeSellerDialog] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -95,9 +100,9 @@ const MobileBottomNav = () => {
       setProfile(data);
       setShowSellLoading(false);
       
-      if (!data || data.user_type !== "producer") {
-        toast({ title: "Compte producteur requis", description: "Inscrivez-vous comme producteur pour vendre" });
-        navigate("/auth");
+      if (!data || (data.user_type !== "producer" && data.user_type !== "trainer")) {
+        setShowSellLoading(false);
+        setShowBecomeSellerDialog(true);
         return;
       }
       
