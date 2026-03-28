@@ -19,21 +19,20 @@ const FeaturedProducts = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScrollTimer = useRef<ReturnType<typeof setInterval>>();
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   const startAutoScroll = useCallback(() => {
-    if (!isMobile || !scrollRef.current) return;
+    if (!scrollRef.current) return;
     autoScrollTimer.current = setInterval(() => {
       const el = scrollRef.current;
       if (!el) return;
-      const cardWidth = 160;
+      const cardWidth = 180;
       if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
         el.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
         el.scrollBy({ left: cardWidth, behavior: 'smooth' });
       }
-    }, 3000);
-  }, [isMobile]);
+    }, 3500);
+  }, []);
 
   useEffect(() => {
     startAutoScroll();
@@ -73,7 +72,7 @@ const FeaturedProducts = () => {
             className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide"
             style={{ WebkitOverflowScrolling: 'touch' }}>
             {featuredProducts.map((product) => (
-              <div key={product.id} className="min-w-[150px] max-w-[170px] snap-start flex-shrink-0 sm:min-w-0 sm:max-w-none">
+              <div key={product.id} className="min-w-[150px] max-w-[180px] sm:min-w-[180px] sm:max-w-[220px] snap-start flex-shrink-0">
                 <ProductCard product={product} viewMode="grid" />
               </div>
             ))}
