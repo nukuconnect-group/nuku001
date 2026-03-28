@@ -46,7 +46,7 @@ const FeaturedProducts = () => {
   if (featuredProducts.length === 0 && !isLoading) return null;
 
   return (
-    <section className="py-8 sm:py-12 lg:py-16 bg-muted/30">
+    <section className="py-4 sm:py-6 lg:py-8 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
           <h2 className="font-heading text-sm sm:text-lg lg:text-2xl font-bold text-foreground flex items-center gap-2">
@@ -70,7 +70,7 @@ const FeaturedProducts = () => {
             ref={scrollRef}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-3 sm:overflow-visible sm:pb-0"
+            className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide"
             style={{ WebkitOverflowScrolling: 'touch' }}>
             {featuredProducts.map((product) => (
               <div key={product.id} className="min-w-[150px] max-w-[170px] snap-start flex-shrink-0 sm:min-w-0 sm:max-w-none">
