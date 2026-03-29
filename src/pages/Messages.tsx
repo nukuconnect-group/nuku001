@@ -39,10 +39,11 @@ const Messages = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { conversations, loading, profileId } = useConversations();
+  const { conversations, loading, profileId, userId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
     selectedConversation?.id || null,
-    profileId
+    profileId,
+    userId
   );
 
   // Show welcome message for new users
@@ -64,6 +65,12 @@ const Messages = () => {
     
     if (convId) {
       const match = conversations.find(c => c.id === convId);
+      if (match && match.id !== selectedConversation?.id) {
+        setSelectedConversation(match);
+      }
+    } else if (searchParams.get("delivery")) {
+      const deliveryId = searchParams.get("delivery");
+      const match = conversations.find(c => c.deliveryId === deliveryId);
       if (match && match.id !== selectedConversation?.id) {
         setSelectedConversation(match);
       }

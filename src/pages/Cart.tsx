@@ -48,6 +48,7 @@ const Cart = () => {
 
   // Saved address
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedDriver, setSelectedDriver] = useState<any>(null);
 
   // Load user profile and auto-fill billing
   useEffect(() => {
@@ -123,6 +124,7 @@ const Cart = () => {
       const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
       const fullAddress = [deliveryQuarter, deliveryAddress].filter(Boolean).join(", ");
       const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
+      const selectedRealDriverId = selectedDriver && !String(selectedDriver.id).startsWith("demo-") ? selectedDriver.id : null;
 
       const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
       const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
@@ -153,6 +155,7 @@ const Cart = () => {
             `Client: ${buyerFullName} | ${billing.phone}`,
             deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
             `Paiement: ${selectedPayment?.name}`,
+            selectedRealDriverId ? `Livreur choisi: ${selectedDriver?.profile?.full_name || "Livreur"}` : "Livreur: attribution automatique",
             mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
           ].filter(Boolean).join(" | "),
         }).select("id").single();
@@ -167,16 +170,39 @@ const Cart = () => {
         const platformFee = deliveryPrice - driverFee;
         
         for (const orderId of orderIds) {
-          await supabase.from("deliveries" as any).insert({
+          const deliveryInsert = await supabase.from("deliveries" as any).insert({
             order_id: orderId,
+            driver_id: selectedRealDriverId,
             dropoff_address: `${deliveryCity}, ${fullAddress}`,
             delivery_fee: deliveryPrice,
             driver_fee: driverFee,
             platform_fee: platformFee,
             distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null,
             estimated_minutes: dynamicDeliveryPrice > 0 ? Math.round((dynamicDeliveryPrice / 100) * 5) : null,
-            status: "pending",
-          });
+            status: selectedRealDriverId ? "accepted" : "pending",
+            accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
+          }).select("id").single();
+
+          const deliveryData = deliveryInsert.data as { id: string } | null;
+
+          if (deliveryData?.id) {
+            const orderItemsSummary = items
+              .map((cartItem) => `• ${cartItem.product.name} — ${cartItem.quantity} × ${cartItem.product.price.toLocaleString()} FCFA`)
+              .join("\n");
+
+            await supabase.from("delivery_messages").insert({
+              delivery_id: deliveryData.id,
+              sender_id: user.id,
+              sender_role: "buyer",
+              content: [
+                `Bonjour 👋, voici les détails de ma commande :`,
+                orderItemsSummary,
+                `Adresse : ${deliveryCity}, ${fullAddress}`,
+                `Mode de livraison : ${selectedDelivery?.name}`,
+                `Livreur demandé : ${selectedDriver?.profile?.full_name || "Attribution automatique"}`,
+              ].join("\n"),
+            } as any);
+          }
         }
       }
 
@@ -318,6 +344,8 @@ const Cart = () => {
                   city={deliveryCity} 
                   distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
                   cartItems={items.map(item => ({ name: item.product.name, id: item.product.id, quantity: item.quantity, price: item.product.price }))}
+                  selectedDriverId={selectedDriver?.id || null}
+                  onSelectDriver={setSelectedDriver}
                 />
               )}
 

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
@@ -58,6 +59,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const { toast } = useToast();
   const { user, profile } = useProfile();
   const { canInstall, isInstalled, install } = usePWAInstall();
+  const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -183,14 +185,14 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   };
 
   const getDashboardHref = () => {
-    const t = profile?.user_type;
+    const t = resolvedUserType;
     if (t === "producer" || t === "trainer") return "/dashboard";
     if (t === "driver") return "/driver-dashboard";
     if (t === "learner") return "/learner-dashboard";
     return "/buyer-dashboard";
   };
 
-  const currentUserType = profile?.user_type;
+  const currentUserType = resolvedUserType;
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
@@ -199,7 +201,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
     { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
-    { icon: Store, label: "Devenir vendeur", href: "/about", show: currentUserType === "buyer" },
+    { icon: Store, label: "Devenir vendeur", href: "/devenir-fournisseur", show: currentUserType === "buyer" },
     { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: currentUserType === "producer" || currentUserType === "trainer" },
     { icon: Crown, label: "Mon abonnement", href: "/plans", show: currentUserType === "producer" || currentUserType === "trainer" },
     { icon: Truck, label: "Livraisons disponibles", href: "/driver-dashboard", show: currentUserType === "driver" },
@@ -236,7 +238,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <div className="flex-1 min-w-0">
                     <SheetTitle className="text-left text-base truncate">{profile?.full_name || user.email}</SheetTitle>
                     <SheetDescription className="text-left text-xs">
-                      {getUserTypeLabel(profile?.user_type)}
+                       {getUserTypeLabel(resolvedUserType)}
                     </SheetDescription>
                   </div>
                 </div>

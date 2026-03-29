@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
   User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign
 } from "lucide-react";
@@ -22,6 +23,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
+  const resolvedUserType = useResolvedUserType(user?.id, ctxProfile?.user_type);
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -261,10 +263,10 @@ const Settings = () => {
                 <div>
                   <p className="text-sm font-semibold text-foreground">{profile?.full_name}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {profile?.user_type === "producer" ? "Fournisseur" : 
-                     profile?.user_type === "driver" ? "Livreur" : 
-                     profile?.user_type === "trainer" ? "Formateur" :
-                     profile?.user_type === "learner" ? "Apprenant" : "Acheteur"}
+                    {resolvedUserType === "producer" ? "Fournisseur" : 
+                     resolvedUserType === "driver" ? "Livreur" : 
+                     resolvedUserType === "trainer" ? "Formateur" :
+                     resolvedUserType === "learner" ? "Apprenant" : "Acheteur"}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Cliquez pour changer la photo</p>
                 </div>
@@ -354,7 +356,7 @@ const Settings = () => {
           </Card>
 
           {/* Become Producer (only for buyers) */}
-          {profile?.user_type === "buyer" && (
+          {resolvedUserType === "buyer" && (
             <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
               <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -367,15 +369,7 @@ const Settings = () => {
                   </div>
                 </div>
                 <Button
-                  onClick={async () => {
-                    const { error } = await supabase.from("profiles").update({ user_type: "producer" }).eq("id", profile.id);
-                    if (error) {
-                      toast({ title: "Erreur", description: error.message, variant: "destructive" });
-                    } else {
-                      toast({ title: "Félicitations !", description: "Vous êtes maintenant fournisseur." });
-                      setTimeout(() => navigate("/dashboard"), 1000);
-                    }
-                  }}
+                  onClick={() => navigate("/devenir-fournisseur")}
                   className="gap-1.5 text-xs w-full sm:w-auto"
                 >
                   <Store className="w-3.5 h-3.5" />
