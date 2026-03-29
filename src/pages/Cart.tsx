@@ -170,7 +170,7 @@ const Cart = () => {
         const platformFee = deliveryPrice - driverFee;
         
         for (const orderId of orderIds) {
-          const { data: deliveryData } = await supabase.from("deliveries" as any).insert({
+          const deliveryInsert = await supabase.from("deliveries" as any).insert({
             order_id: orderId,
             driver_id: selectedRealDriverId,
             dropoff_address: `${deliveryCity}, ${fullAddress}`,
@@ -182,6 +182,8 @@ const Cart = () => {
             status: selectedRealDriverId ? "accepted" : "pending",
             accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
           }).select("id").single();
+
+          const deliveryData = deliveryInsert.data as { id: string } | null;
 
           if (deliveryData?.id) {
             const orderItemsSummary = items
