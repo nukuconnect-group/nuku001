@@ -11,6 +11,8 @@ interface Props {
   city: string;
   distanceKm: number | null;
   cartItems?: Array<{ name: string; id: string; quantity: number; price: number }>;
+  selectedDriverId?: string | null;
+  onSelectDriver?: (driver: Driver | null) => void;
 }
 
 interface Driver {
@@ -31,7 +33,7 @@ const demoDrivers: Driver[] = [
   { id: "demo-3", vehicle_type: "moto", rating: 4.9, total_deliveries: 215, zone: "Bè", profile: { full_name: "Yao Agbeko", avatar_url: "" } },
 ];
 
-const AvailableDrivers = ({ city, distanceKm, cartItems = [] }: Props) => {
+const AvailableDrivers = ({ city, distanceKm, cartItems = [], selectedDriverId = null, onSelectDriver }: Props) => {
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,8 +113,13 @@ const AvailableDrivers = ({ city, distanceKm, cartItems = [] }: Props) => {
             {drivers.map((driver) => (
               <button
                 key={driver.id}
-                className="w-full flex items-center gap-2.5 p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors text-left"
-                onClick={() => setSelectedDriver(driver)}
+                className={`w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left border ${
+                  selectedDriverId === driver.id ? "bg-primary/5 border-primary/30" : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}
+                onClick={() => {
+                  onSelectDriver?.(driver);
+                  setSelectedDriver(driver);
+                }}
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {driver.profile?.avatar_url ? (
@@ -134,6 +141,9 @@ const AvailableDrivers = ({ city, distanceKm, cartItems = [] }: Props) => {
                 </div>
                 <div className="text-right flex-shrink-0 flex items-center gap-1">
                   <div>
+                    {selectedDriverId === driver.id && (
+                      <p className="text-[9px] font-semibold text-primary">Choisi</p>
+                    )}
                     <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                       <Clock className="w-2.5 h-2.5" />
                       {estimateTime(distanceKm)}
@@ -150,7 +160,7 @@ const AvailableDrivers = ({ city, distanceKm, cartItems = [] }: Props) => {
               </button>
             ))}
             <p className="text-[9px] text-muted-foreground text-center">
-              Cliquez sur un livreur pour voir son profil et discuter
+              Cliquez pour choisir un livreur, voir son profil et discuter
             </p>
 
             <DriverDetailSheet

@@ -45,6 +45,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
+const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,6 +129,7 @@ const App = () => {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/devenir-fournisseur" element={<BecomeSeller />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

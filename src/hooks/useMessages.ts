@@ -13,25 +13,36 @@ export interface MessageItem {
   replyToId?: string;
 }
 
-export function useMessages(conversationId: string | null, profileId: string | null) {
+export function useMessages(conversationId: string | null, profileId: string | null, userId: string | null) {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const isDeliveryConversation = !!conversationId?.startsWith("delivery-");
+  const deliveryId = isDeliveryConversation ? conversationId.replace("delivery-", "") : null;
 
   const fetchMessages = useCallback(async () => {
     if (!conversationId) { setMessages([]); return; }
     setLoading(true);
 
-    const { data } = await supabase
-      .from("messages")
-      .select("id, content, sender_id, is_read, created_at, reply_to_id")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
+    const query = isDeliveryConversation
+      ? supabase
+          .from("delivery_messages")
+          .select("id, content, sender_id, is_read, created_at, sender_role")
+          .eq("delivery_id", deliveryId)
+          .order("created_at", { ascending: true })
+      : supabase
+          .from("messages")
+          .select("id, content, sender_id, is_read, created_at, reply_to_id")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true });
+
+    const { data } = await query;
 
     if (data) {
       setMessages(
         data.map((m: any) => ({
           id: m.id,
-          senderId: m.sender_id === profileId ? "me" : "other",
+          senderId: m.sender_id === (isDeliveryConversation ? userId : profileId) ? "me" : "other",
           content: m.content,
           timestamp: new Date(m.created_at),
           status: m.is_read ? "read" as const : "delivered" as const,
@@ -41,7 +52,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
       );
 
       // Mark unread messages as read
-      if (profileId) {
+      if (isDeliveryConversation && userId) {
+        await supabase
+          .from("delivery_messages")
+          .update({ is_read: true })
+          .eq("delivery_id", deliveryId)
+          .neq("sender_id", userId)
+          .eq("is_read", false);
+      } else if (profileId) {
         await supabase
           .from("messages")
           .update({ is_read: true })
@@ -52,7 +70,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
     }
 
     setLoading(false);
-  }, [conversationId, profileId]);
+  }, [conversationId, deliveryId, isDeliveryConversation, profileId, userId]);
 
   useEffect(() => {
     fetchMessages();
@@ -66,12 +84,17 @@ export function useMessages(conversationId: string | null, profileId: string | n
       .channel(`messages-${conversationId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: isDeliveryConversation ? "delivery_messages" : "messages",
+          filter: isDeliveryConversation ? `delivery_id=eq.${deliveryId}` : `conversation_id=eq.${conversationId}`,
+        },
         (payload) => {
           const m = payload.new as any;
           const newMsg: MessageItem = {
             id: m.id,
-            senderId: m.sender_id === profileId ? "me" : "other",
+            senderId: m.sender_id === (isDeliveryConversation ? userId : profileId) ? "me" : "other",
             content: m.content,
             timestamp: new Date(m.created_at),
             status: m.is_read ? "read" : "delivered",
@@ -84,7 +107,9 @@ export function useMessages(conversationId: string | null, profileId: string | n
           });
 
           // Auto-mark as read if from other
-          if (m.sender_id !== profileId && profileId) {
+          if (isDeliveryConversation && m.sender_id !== userId && userId) {
+            supabase.from("delivery_messages").update({ is_read: true }).eq("id", m.id).then();
+          } else if (m.sender_id !== profileId && profileId) {
             supabase.from("messages").update({ is_read: true }).eq("id", m.id).then();
           }
         }
@@ -92,11 +117,13 @@ export function useMessages(conversationId: string | null, profileId: string | n
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [conversationId, profileId]);
+  }, [conversationId, deliveryId, isDeliveryConversation, profileId, userId]);
 
   const sendMessage = useCallback(
     async (content: string, replyToId?: string) => {
-      if (!conversationId || !profileId || !content.trim()) return;
+      if (!conversationId || !content.trim()) return;
+      if (isDeliveryConversation && !userId) return;
+      if (!isDeliveryConversation && !profileId) return;
 
       const tempId = `temp-${Date.now()}`;
       const optimistic: MessageItem = {
@@ -105,16 +132,35 @@ export function useMessages(conversationId: string | null, profileId: string | n
       };
       setMessages((prev) => [...prev, optimistic]);
 
-      const insertData: any = { conversation_id: conversationId, sender_id: profileId, content };
-      if (replyToId && !replyToId.startsWith("temp-")) {
-        insertData.reply_to_id = replyToId;
-      }
+      const currentDeliveryRole = await (async () => {
+        if (!isDeliveryConversation || !userId) return null;
+        const { data } = await supabase.from("driver_profiles").select("id").eq("user_id", userId).maybeSingle();
+        return data ? "driver" : "buyer";
+      })();
 
-      const { data, error } = await supabase
-        .from("messages")
-        .insert(insertData)
-        .select("id")
-        .single();
+      const request = isDeliveryConversation
+        ? supabase
+            .from("delivery_messages")
+            .insert({
+              delivery_id: deliveryId,
+              sender_id: userId,
+              sender_role: currentDeliveryRole || "buyer",
+              content,
+            } as any)
+            .select("id")
+            .single()
+        : supabase
+            .from("messages")
+            .insert({
+              conversation_id: conversationId,
+              sender_id: profileId,
+              content,
+              ...(replyToId && !replyToId.startsWith("temp-") ? { reply_to_id: replyToId } : {}),
+            } as any)
+            .select("id")
+            .single();
+
+      const { data, error } = await request;
 
       if (error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -125,9 +171,11 @@ export function useMessages(conversationId: string | null, profileId: string | n
         prev.map((m) => (m.id === tempId ? { ...m, id: data.id, status: "delivered" as const } : m))
       );
 
-      await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
+      if (!isDeliveryConversation) {
+        await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
+      }
     },
-    [conversationId, profileId]
+    [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
   );
 
   return { messages, setMessages, loading, sendMessage };

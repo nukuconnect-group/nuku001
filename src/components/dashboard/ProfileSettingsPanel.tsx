@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
   User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight,
   Phone, MapPin, Mail, FileText, Settings
@@ -21,6 +22,7 @@ interface ProfileSettingsPanelProps {
 const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSettingsPanelProps) => {
   const { toast } = useToast();
   const { updateProfile: updateCtxProfile } = useProfile();
+  const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [location, setLocation] = useState(profile?.location || "");
@@ -215,10 +217,10 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
             <div>
               <p className="text-sm font-semibold text-foreground">{profile?.full_name}</p>
               <p className="text-xs text-muted-foreground capitalize">
-                {profile?.user_type === "producer" ? "Fournisseur" : 
-                 profile?.user_type === "driver" ? "Livreur" : 
-                 profile?.user_type === "trainer" ? "Formateur" :
-                 profile?.user_type === "learner" ? "Apprenant" : "Acheteur"}
+                 {resolvedUserType === "producer" ? "Fournisseur" : 
+                  resolvedUserType === "driver" ? "Livreur" : 
+                  resolvedUserType === "trainer" ? "Formateur" :
+                  resolvedUserType === "learner" ? "Apprenant" : "Acheteur"}
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Cliquez pour changer la photo</p>
             </div>

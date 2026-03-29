@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -91,11 +90,18 @@ const MobileBottomNav = () => {
 
     setShowSellLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const [{ data, error }, { data: subscription }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single(),
+        supabase
+          .from("subscriptions")
+          .select("plan, status")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+      ]);
       
       setProfile(data);
       setShowSellLoading(false);
@@ -103,6 +109,12 @@ const MobileBottomNav = () => {
       if (!data || (data.user_type !== "producer" && data.user_type !== "trainer")) {
         setShowSellLoading(false);
         setShowBecomeSellerDialog(true);
+        return;
+      }
+
+      if (!subscription || subscription.status !== "active") {
+        toast({ title: "Pack requis", description: "Choisissez d'abord un pack d'adhésion pour publier vos produits." });
+        navigate("/plans");
         return;
       }
       
@@ -195,18 +207,9 @@ const MobileBottomNav = () => {
             <AlertDialogCancel className="text-xs">Annuler</AlertDialogCancel>
             <AlertDialogAction
               className="gap-1.5 text-xs"
-              onClick={async () => {
-                if (!user) return;
-                const { error } = await supabase.from("profiles")
-                  .update({ user_type: "producer" })
-                  .eq("user_id", user.id);
-                if (error) {
-                  toast({ title: "Erreur", description: error.message, variant: "destructive" });
-                } else {
-                  toast({ title: "Félicitations ! 🎉", description: "Vous êtes maintenant fournisseur. Publiez votre premier produit !" });
-                  setProfile({ ...profile, user_type: "producer" });
-                  setShowAddProduct(true);
-                }
+              onClick={() => {
+                setShowBecomeSellerDialog(false);
+                navigate("/devenir-fournisseur");
               }}
             >
               <Store className="w-3.5 h-3.5" />

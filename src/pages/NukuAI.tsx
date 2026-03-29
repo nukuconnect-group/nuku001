@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Bot, Send, Sparkles, Leaf, Bug, CloudRain, TrendingUp,
   Lightbulb, User, Loader2, Wheat, Fish, Droplets, Factory,
-  Heart, BookOpen, Sprout, Tractor, Plus, MessageSquare, Trash2, Clock
+  Heart, BookOpen, Sprout, Tractor, Plus, MessageSquare, Trash2, Clock, Maximize2, Minimize2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -83,6 +84,7 @@ const NukuAI = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,11 +133,13 @@ const NukuAI = () => {
 
   const streamChat = async (userMessages: { role: string; content: string }[]) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nuku-ai-chat`;
+    const { data: { session } } = await supabase.auth.getSession();
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       },
       body: JSON.stringify({ messages: userMessages }),
     });
@@ -229,9 +233,9 @@ const NukuAI = () => {
   const hasRealMessages = messages.some(m => m.id !== "welcome");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-14 lg:pb-0">
-      <Header />
-      <main className="flex-1 flex flex-col max-h-[calc(100vh-120px)] lg:max-h-[calc(100vh-180px)]">
+    <div className={`min-h-screen bg-background flex flex-col ${isFullscreen ? "" : "pb-14 lg:pb-0"}`}>
+      {!isFullscreen && <Header />}
+      <main className={`flex-1 flex flex-col ${isFullscreen ? "h-screen" : "max-h-[calc(100vh-120px)] lg:max-h-[calc(100vh-180px)]"}`}>
         {/* Header bar */}
         <div className="border-b border-border bg-card/50 flex-shrink-0">
           <div className="container mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
@@ -249,6 +253,9 @@ const NukuAI = () => {
                 <p className="text-[10px] sm:text-xs text-muted-foreground">{t("ai.subtitle")}</p>
               </div>
               <div className="flex gap-1.5">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen((prev) => !prev)} title="Plein écran">
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHistory(!showHistory)} title="Historique">
                   <Clock className="w-4 h-4" />
                 </Button>
@@ -399,7 +406,7 @@ const NukuAI = () => {
           </div>
         </div>
       </main>
-      <MobileBottomNav />
+      {!isFullscreen && <MobileBottomNav />}
     </div>
   );
 };
