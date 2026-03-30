@@ -39,7 +39,7 @@ const Cart = () => {
   const [deliveryQuarter, setDeliveryQuarter] = useState("");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
+  const [paymentMethod, setPaymentMethod] = useState("kkiapay");
   const [mobileNumber, setMobileNumber] = useState("");
 
   // Promo
@@ -108,11 +108,7 @@ const Cart = () => {
       return;
     }
 
-    // Validate mobile payment number
-    if ((paymentMethod === "mobile_money" || paymentMethod === "wave") && !mobileNumber.trim()) {
-      toast({ title: "Numéro requis", description: "Veuillez entrer votre numéro de téléphone pour le paiement mobile.", variant: "destructive" });
-      return;
-    }
+    // Payment via KKiaPay - no mobile number validation needed
 
     setIsCheckingOut(true);
     try {
@@ -183,7 +179,7 @@ const Cart = () => {
             accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
           }).select("id").single();
 
-          const deliveryData = deliveryInsert.data as { id: string } | null;
+          const deliveryData = deliveryInsert.data as unknown as { id: string } | null;
 
           if (deliveryData?.id) {
             const orderItemsSummary = items
@@ -354,6 +350,7 @@ const Cart = () => {
                 onPaymentMethodChange={setPaymentMethod}
                 mobileNumber={mobileNumber}
                 onMobileNumberChange={setMobileNumber}
+                amount={finalTotal}
               />
             </div>
 

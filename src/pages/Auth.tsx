@@ -17,20 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Wand2, ArrowLeft, Truck, GraduationCap, BookOpen } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Truck, GraduationCap, BookOpen } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 
 const sectors = [
-  "Céréales & Légumineuses",
-  "Maraîchage",
-  "Fruits",
-  "Tubercules",
-  "Élevage",
-  "Aviculture",
-  "Pêche & Aquaculture",
-  "Transformation agroalimentaire",
+  "Céréales & Légumineuses", "Maraîchage", "Fruits", "Tubercules",
+  "Élevage", "Aviculture", "Pêche & Aquaculture", "Transformation agroalimentaire",
 ];
 
 const countries = [
@@ -40,6 +34,14 @@ const countries = [
   "Mauritanie", "Gambie", "Sierra Leone", "Liberia",
   "Cap-Vert", "Guinée-Bissau", "Guinée équatoriale",
   "São Tomé-et-Príncipe", "Centrafrique",
+];
+
+const profileTypes = [
+  { type: "buyer" as const, icon: Store, label: "Acheteur", color: "from-blue-500/20 to-blue-600/10 border-blue-500/30", iconColor: "text-blue-600", desc: "Achetez des produits" },
+  { type: "producer" as const, icon: User, label: "Fournisseur", color: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30", iconColor: "text-emerald-600", desc: "Vendez vos produits" },
+  { type: "driver" as const, icon: Truck, label: "Livreur", color: "from-amber-500/20 to-amber-600/10 border-amber-500/30", iconColor: "text-amber-600", desc: "Livrez les commandes" },
+  { type: "learner" as const, icon: GraduationCap, label: "Apprenant", color: "from-purple-500/20 to-purple-600/10 border-purple-500/30", iconColor: "text-purple-600", desc: "Suivez des formations" },
+  { type: "trainer" as const, icon: BookOpen, label: "Formateur", color: "from-rose-500/20 to-rose-600/10 border-rose-500/30", iconColor: "text-rose-600", desc: "Créez des formations" },
 ];
 
 const Auth = () => {
@@ -53,31 +55,26 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   
-  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   
-  // Common signup state
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [userType, setUserType] = useState<"producer" | "buyer" | "driver" | "learner" | "trainer">("buyer");
   
-  // Producer fields
   const [producerName, setProducerName] = useState("");
   const [producerPhone, setProducerPhone] = useState("");
   const [producerLocation, setProducerLocation] = useState("");
   const [producerCompany, setProducerCompany] = useState("");
   const [producerSector, setProducerSector] = useState("");
   
-  // Buyer fields
   const [buyerFirstName, setBuyerFirstName] = useState("");
   const [buyerLastName, setBuyerLastName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerLocation, setBuyerLocation] = useState("");
   const [buyerCountry, setBuyerCountry] = useState("");
 
-  // Auto-detect country from timezone/locale
   useEffect(() => {
     if (buyerCountry) return;
     try {
@@ -94,104 +91,44 @@ const Auth = () => {
         "Africa/Banjul": "Gambie", "Africa/Freetown": "Sierra Leone",
         "Africa/Monrovia": "Liberia",
       };
-      const detected = tzCountryMap[tz] || "Togo";
-      setBuyerCountry(detected);
-    } catch {
-      setBuyerCountry("Togo");
-    }
+      setBuyerCountry(tzCountryMap[tz] || "Togo");
+    } catch { setBuyerCountry("Togo"); }
   }, []);
 
-  // Check if user is already logged in
   useEffect(() => {
     let redirected = false;
-    
     const redirectUser = async (userId: string) => {
       if (redirected) return;
       redirected = true;
-      
-      // Retry fetching profile in case trigger hasn't created it yet (Google login)
       let profileData = null;
       for (let i = 0; i < 4; i++) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("user_id", userId)
-          .maybeSingle();
+        const { data } = await supabase.from("profiles").select("user_type").eq("user_id", userId).maybeSingle();
         profileData = data;
         if (profileData) break;
         await new Promise(r => setTimeout(r, 800));
       }
-      
-      if (profileData?.user_type === "producer" || profileData?.user_type === "trainer") {
-        navigate("/dashboard", { replace: true });
-      } else if (profileData?.user_type === "driver") {
-        navigate("/driver-dashboard", { replace: true });
-      } else if (profileData?.user_type === "learner") {
-        navigate("/learner-dashboard", { replace: true });
-      } else {
-        navigate("/buyer-dashboard", { replace: true });
-      }
+      if (profileData?.user_type === "producer" || profileData?.user_type === "trainer") navigate("/dashboard", { replace: true });
+      else if (profileData?.user_type === "driver") navigate("/driver-dashboard", { replace: true });
+      else if (profileData?.user_type === "learner") navigate("/learner-dashboard", { replace: true });
+      else navigate("/buyer-dashboard", { replace: true });
     };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) redirectUser(session.user.id);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && !redirected) redirectUser(session.user.id);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => { if (session) redirectUser(session.user.id); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => { if (session && !redirected) redirectUser(session.user.id); });
     return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) {
-        if (error.message === "Invalid login credentials") {
-          toast({
-            title: "Erreur de connexion",
-            description: "Email ou mot de passe incorrect.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes("Email not confirmed")) {
-          toast({
-            title: "Email non confirmé",
-            description: "Veuillez vérifier votre email pour confirmer votre compte.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
+        toast({ title: error.message.includes("Invalid") ? "Erreur de connexion" : "Erreur", description: error.message.includes("Invalid") ? "Email ou mot de passe incorrect." : error.message.includes("not confirmed") ? "Veuillez vérifier votre email." : error.message, variant: "destructive" });
         return;
       }
-
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur NUKUCONNECT !",
-      });
-      
-      // Redirect will be handled by onAuthStateChange
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
+    } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
+    finally { setIsLoading(false); }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -199,225 +136,77 @@ const Auth = () => {
     if (!forgotEmail.trim()) return;
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) {
-        toast({ title: "Erreur", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Email envoyé", description: "Vérifiez votre boîte email pour réinitialiser votre mot de passe." });
-        setForgotMode(false);
-        setForgotEmail("");
-      }
-    } catch {
-      toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, { redirectTo: `${window.location.origin}/reset-password` });
+      if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      else { toast({ title: "Email envoyé", description: "Vérifiez votre boîte email." }); setForgotMode(false); setForgotEmail(""); }
+    } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
+    finally { setIsLoading(false); }
   };
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!magicLinkEmail.trim()) return;
     setIsLoading(true);
-
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: magicLinkEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const { error } = await supabase.auth.signInWithOtp({ email: magicLinkEmail, options: { emailRedirectTo: `${window.location.origin}/` } });
+      if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
       setMagicLinkSent(true);
-      toast({
-        title: "Lien envoyé !",
-        description: "Vérifiez votre boîte email pour vous connecter.",
-      });
-    } catch {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      toast({ title: "Lien envoyé !", description: "Vérifiez votre boîte email." });
+    } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
+    finally { setIsLoading(false); }
   };
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: "La connexion avec Google a échoué.",
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (error) toast({ title: "Erreur", description: "Connexion Google échouée.", variant: "destructive" });
+    } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
+    finally { setIsLoading(false); }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (signupPassword !== signupConfirmPassword) {
-      toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (signupPassword.length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (signupPassword !== signupConfirmPassword) { toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas.", variant: "destructive" }); return; }
+    if (signupPassword.length < 6) { toast({ title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères.", variant: "destructive" }); return; }
     setIsLoading(true);
-
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const fullName = (userType === "buyer" || userType === "learner")
-        ? `${buyerFirstName} ${buyerLastName}`
-        : producerName;
-      
+      const fullName = (userType === "buyer" || userType === "learner") ? `${buyerFirstName} ${buyerLastName}` : producerName;
       const phone = (userType === "buyer" || userType === "learner") ? buyerPhone : producerPhone;
-      const location = (userType === "buyer" || userType === "learner")
-        ? `${buyerLocation}, ${buyerCountry}`
-        : producerLocation;
-      
+      const location = (userType === "buyer" || userType === "learner") ? `${buyerLocation}, ${buyerCountry}` : producerLocation;
       const { data: authData, error } = await supabase.auth.signUp({
-        email: signupEmail,
-        password: signupPassword,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-            user_type: userType,
-            phone: phone,
-            location: location,
-            company: userType === "producer" ? producerCompany : null,
-            sector: userType === "producer" ? producerSector : null,
-          },
-        },
+        email: signupEmail, password: signupPassword,
+        options: { emailRedirectTo: `${window.location.origin}/`, data: { full_name: fullName, user_type: userType, phone, location, company: userType === "producer" ? producerCompany : null, sector: userType === "producer" ? producerSector : null } },
       });
-
-      if (error) {
-        if (error.message.includes("already registered")) {
-          toast({
-            title: "Email déjà utilisé",
-            description: "Un compte existe déjà avec cet email. Essayez de vous connecter.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      // Create profile immediately after signup
+      if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          user_id: authData.user.id,
-          full_name: fullName,
-          user_type: userType,
-          phone: phone,
-          location: location,
-          bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null,
-        });
-
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-        }
-
-        toast({
-          title: "Inscription réussie !",
-          description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
-        });
-
-        // Create driver profile if driver type
+        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
+        toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
         if (userType === "driver") {
-          const { data: newProfile } = await supabase.from("profiles")
-            .select("id").eq("user_id", authData.user.id).maybeSingle();
-          if (newProfile) {
-            await supabase.from("driver_profiles" as any).insert({
-              user_id: authData.user.id,
-              profile_id: newProfile.id,
-              vehicle_type: producerSector || "moto",
-              zone: producerLocation,
-              is_available: true,
-            });
-          }
+          const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
+          if (newProfile) await supabase.from("driver_profiles").insert({ user_id: authData.user.id, profile_id: newProfile.id, vehicle_type: producerSector || "moto", zone: producerLocation, is_available: true });
         }
-
-        // Redirect based on user type
-        if (userType === "producer" || userType === "trainer") {
-          navigate("/dashboard");
-        } else if (userType === "driver") {
-          navigate("/driver-dashboard");
-        } else if (userType === "learner") {
-          navigate("/learner-dashboard");
-        } else {
-          navigate("/buyer-dashboard");
-        }
+        if (userType === "producer" || userType === "trainer") navigate("/dashboard");
+        else if (userType === "driver") navigate("/driver-dashboard");
+        else if (userType === "learner") navigate("/learner-dashboard");
+        else navigate("/buyer-dashboard");
       }
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
+    finally { setIsLoading(false); }
   };
+
+  const selectedProfile = profileTypes.find(p => p.type === userType)!;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
       <Header />
-      
       <main className="py-6 sm:py-10">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="max-w-md mx-auto">
             {/* Logo */}
             <div className="text-center mb-5 sm:mb-6">
               <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-primary flex items-center justify-center shadow-lg mb-3">
-                <img 
-                  src={nukuLogo} 
-                  alt="NUKUCONNECT" 
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white p-1"
-                />
+                <img src={nukuLogo} alt="NUKUCONNECT" className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white p-1" />
               </div>
               <h2 className="font-heading text-lg sm:text-xl font-bold text-primary">NUKUCONNECT</h2>
               <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">La marketplace agricole intelligente</p>
@@ -434,9 +223,7 @@ const Auth = () => {
                 <TabsContent value="login">
                   <CardHeader>
                     <CardTitle>Bienvenue</CardTitle>
-                    <CardDescription>
-                      Connectez-vous à votre compte NUKUCONNECT
-                    </CardDescription>
+                    <CardDescription>Connectez-vous à votre compte NUKUCONNECT</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleLogin} className="space-y-4">
@@ -444,79 +231,33 @@ const Auth = () => {
                         <Label htmlFor="login-email">Email</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="login-email"
-                            type="email"
-                            placeholder="votre@email.com"
-                            value={loginEmail}
-                            onChange={(e) => setLoginEmail(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
+                          <Input id="login-email" type="email" placeholder="votre@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" required />
                         </div>
                       </div>
-
                       <div className="space-y-2">
                         <Label htmlFor="login-password">Mot de passe</Label>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="login-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            className="pl-10 pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
+                          <Input id="login-password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10 pr-10" required />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
                         </div>
                       </div>
-
                       <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => { setForgotMode(true); setForgotEmail(loginEmail); }}
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Mot de passe oublié ?
-                        </button>
+                        <button type="button" onClick={() => { setForgotMode(true); setForgotEmail(loginEmail); }} className="text-xs text-primary hover:underline">Mot de passe oublié ?</button>
                       </div>
-
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Connexion...
-                          </>
-                        ) : (
-                          "Se connecter"
-                        )}
+                        {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Connexion...</> : "Se connecter"}
                       </Button>
                     </form>
 
                     <div className="relative my-5">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-border" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">ou</span>
-                      </div>
+                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                      <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={handleGoogleSignIn}
-                      disabled={isLoading}
-                    >
+                    <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoading}>
                       <svg className="w-4 h-4" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -532,234 +273,118 @@ const Auth = () => {
                 <TabsContent value="signup">
                   <CardHeader>
                     <CardTitle>Créer un compte</CardTitle>
-                    <CardDescription>
-                      Rejoignez la communauté NUKUCONNECT
-                    </CardDescription>
+                    <CardDescription>Rejoignez la communauté NUKUCONNECT</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSignup} className="space-y-4">
-                      {/* User Type Selection */}
+                      {/* User Type Selection - Colored cards */}
                       <div className="space-y-2">
                         <Label className="text-sm font-semibold">Je suis — Choisir votre profil</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {([
-                            { type: "buyer" as const, icon: Store, label: "Acheteur" },
-                            { type: "producer" as const, icon: User, label: "Fournisseur" },
-                            { type: "driver" as const, icon: Truck, label: "Livreur" },
-                            { type: "learner" as const, icon: GraduationCap, label: "Apprenant" },
-                            { type: "trainer" as const, icon: BookOpen, label: "Formateur" },
-                          ]).map(({ type, icon: Icon, label }) => (
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {profileTypes.map(({ type, icon: Icon, label, color, iconColor, desc }) => (
                             <button
                               key={type}
                               type="button"
                               onClick={() => setUserType(type)}
-                              className={`p-2.5 rounded-xl border-2 transition-all ${
-                                userType === type
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border hover:border-primary/50"
+                              className={`relative p-3 rounded-xl border-2 transition-all bg-gradient-to-br ${
+                                userType === type ? `${color} shadow-md scale-[1.02]` : "border-border hover:border-primary/30 bg-card"
                               }`}
                             >
-                              <Icon className={`w-5 h-5 mx-auto mb-1 ${userType === type ? "text-primary" : "text-muted-foreground"}`} />
-                              <span className={`text-[11px] font-medium block ${userType === type ? "text-primary" : "text-foreground"}`}>
-                                {label}
-                              </span>
+                              <Icon className={`w-5 h-5 mx-auto mb-1.5 ${userType === type ? iconColor : "text-muted-foreground"}`} />
+                              <span className={`text-[10px] font-semibold block leading-tight ${userType === type ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
                             </button>
                           ))}
                         </div>
+                        {/* Selected profile description */}
+                        <div className={`rounded-lg bg-gradient-to-r ${selectedProfile.color} p-2.5 flex items-center gap-2`}>
+                          <selectedProfile.icon className={`w-4 h-4 ${selectedProfile.iconColor} flex-shrink-0`} />
+                          <p className="text-[11px] text-foreground font-medium">{selectedProfile.desc}</p>
+                        </div>
                       </div>
 
-                      {/* Producer Fields */}
+                      {/* Producer / Trainer Fields */}
                       {(userType === "producer" || userType === "trainer") && (
-                        <>
+                        <div className="space-y-3 rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-50/50 to-transparent dark:from-emerald-950/20 p-3">
+                          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5" /> Informations {userType === "trainer" ? "formateur" : "fournisseur"}
+                          </p>
                           <div className="space-y-2">
-                            <Label htmlFor="producer-name">Nom complet</Label>
                             <div className="relative">
                               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="producer-name"
-                                type="text"
-                                placeholder="Votre nom complet"
-                                value={producerName}
-                                onChange={(e) => setProducerName(e.target.value)}
-                                className="pl-10"
-                                required
-                              />
+                              <Input type="text" placeholder="Nom complet" value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="producer-phone">Téléphone</Label>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="producer-phone"
-                                type="tel"
-                                placeholder="+228 XX XX XX XX"
-                                value={producerPhone}
-                                onChange={(e) => setProducerPhone(e.target.value)}
-                                className="pl-10"
-                                required
-                              />
+                              <Input type="tel" placeholder="+228 XX XX XX XX" value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="producer-location">Localisation</Label>
                             <div className="relative">
                               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="producer-location"
-                                type="text"
-                                placeholder="Ville, Région"
-                                value={producerLocation}
-                                onChange={(e) => setProducerLocation(e.target.value)}
-                                className="pl-10"
-                                required
-                              />
+                              <Input type="text" placeholder="Ville, Région" value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="producer-company">{userType === "trainer" ? "Organisme / Institution" : "Entreprise / Exploitation"}</Label>
                             <div className="relative">
                               <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="producer-company"
-                                type="text"
-                                placeholder="Nom de votre entreprise"
-                                value={producerCompany}
-                                onChange={(e) => setProducerCompany(e.target.value)}
-                                className="pl-10"
-                              />
+                              <Input type="text" placeholder={userType === "trainer" ? "Organisme / Institution" : "Entreprise / Exploitation"} value={producerCompany} onChange={(e) => setProducerCompany(e.target.value)} className="pl-10" />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="producer-sector">{userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"}</Label>
                             <Select value={producerSector} onValueChange={setProducerSector}>
                               <SelectTrigger className="w-full">
                                 <Briefcase className="w-4 h-4 mr-2 text-muted-foreground" />
-                                <SelectValue placeholder="Choisir un secteur" />
+                                <SelectValue placeholder={userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"} />
                               </SelectTrigger>
                               <SelectContent>
-                                {sectors.map((sector) => (
-                                  <SelectItem key={sector} value={sector}>
-                                    {sector}
-                                  </SelectItem>
-                                ))}
+                                {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
-                        </>
+                        </div>
                       )}
 
-                      {/* Buyer Fields */}
+                      {/* Buyer / Learner Fields */}
                       {(userType === "buyer" || userType === "learner") && (
-                        <>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                              <Label htmlFor="buyer-firstname">Prénom</Label>
-                              <Input
-                                id="buyer-firstname"
-                                type="text"
-                                placeholder="Prénom"
-                                value={buyerFirstName}
-                                onChange={(e) => setBuyerFirstName(e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="buyer-lastname">Nom</Label>
-                              <Input
-                                id="buyer-lastname"
-                                type="text"
-                                placeholder="Nom"
-                                value={buyerLastName}
-                                onChange={(e) => setBuyerLastName(e.target.value)}
-                                required
-                              />
-                            </div>
-                          </div>
-
+                        <div className={`space-y-3 rounded-xl border p-3 ${userType === "learner" ? "border-purple-500/20 bg-gradient-to-br from-purple-50/50 to-transparent dark:from-purple-950/20" : "border-blue-500/20 bg-gradient-to-br from-blue-50/50 to-transparent dark:from-blue-950/20"}`}>
+                          <p className={`text-xs font-semibold flex items-center gap-1.5 ${userType === "learner" ? "text-purple-700 dark:text-purple-400" : "text-blue-700 dark:text-blue-400"}`}>
+                            {userType === "learner" ? <GraduationCap className="w-3.5 h-3.5" /> : <Store className="w-3.5 h-3.5" />}
+                            Informations {userType === "learner" ? "apprenant" : "acheteur"}
+                          </p>
                           <div className="space-y-2">
-                            <Label htmlFor="buyer-phone">Téléphone</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input type="text" placeholder="Prénom" value={buyerFirstName} onChange={(e) => setBuyerFirstName(e.target.value)} required />
+                              <Input type="text" placeholder="Nom" value={buyerLastName} onChange={(e) => setBuyerLastName(e.target.value)} required />
+                            </div>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="buyer-phone"
-                                type="tel"
-                                placeholder="+228 XX XX XX XX"
-                                value={buyerPhone}
-                                onChange={(e) => setBuyerPhone(e.target.value)}
-                                className="pl-10"
-                                required
-                              />
+                              <Input type="tel" placeholder="+228 XX XX XX XX" value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="buyer-location">Ville / Localité</Label>
                             <div className="relative">
                               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input
-                                id="buyer-location"
-                                type="text"
-                                placeholder="Votre ville"
-                                value={buyerLocation}
-                                onChange={(e) => setBuyerLocation(e.target.value)}
-                                className="pl-10"
-                                required
-                              />
+                              <Input type="text" placeholder="Votre ville" value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="buyer-country">Pays</Label>
                             <Select value={buyerCountry} onValueChange={setBuyerCountry}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Choisir un pays" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {countries.map((country) => (
-                                  <SelectItem key={country} value={country}>
-                                    {country}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
+                              <SelectTrigger className="w-full"><SelectValue placeholder="Choisir un pays" /></SelectTrigger>
+                              <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {/* Driver Fields */}
                       {userType === "driver" && (
-                        <>
+                        <div className="space-y-3 rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-50/50 to-transparent dark:from-amber-950/20 p-3">
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5" /> Informations livreur
+                          </p>
                           <div className="space-y-2">
-                            <Label htmlFor="driver-name">Nom complet</Label>
                             <div className="relative">
                               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input id="driver-name" type="text" placeholder="Votre nom complet"
-                                value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
+                              <Input type="text" placeholder="Nom complet" value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="driver-phone">Téléphone</Label>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input id="driver-phone" type="tel" placeholder="+228 XX XX XX XX"
-                                value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} className="pl-10" required />
+                              <Input type="tel" placeholder="+228 XX XX XX XX" value={producerPhone} onChange={(e) => setProducerPhone(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="driver-location">Zone d'activité</Label>
                             <div className="relative">
                               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input id="driver-location" type="text" placeholder="Lomé, Kara..."
-                                value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
+                              <Input type="text" placeholder="Zone d'activité" value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Type de véhicule</Label>
                             <Select value={producerSector || "moto"} onValueChange={setProducerSector}>
                               <SelectTrigger className="w-full">
                                 <Truck className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -773,109 +398,54 @@ const Auth = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {/* Common fields */}
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email">Email</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="signup-email"
-                            type="email"
-                            placeholder="votre@email.com"
-                            value={signupEmail}
-                            onChange={(e) => setSignupEmail(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
+                      <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3">
+                        <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-muted-foreground" /> Identifiants de connexion
+                        </p>
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input type="email" placeholder="votre@email.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} className="pl-10" required />
+                          </div>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input type={showPassword ? "text" : "password"} placeholder="Mot de passe" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} className="pl-10 pr-10" required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input type={showPassword ? "text" : "password"} placeholder="Confirmer le mot de passe" value={signupConfirmPassword} onChange={(e) => setSignupConfirmPassword(e.target.value)} className="pl-10" required />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Mot de passe</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="signup-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={signupPassword}
-                            onChange={(e) => setSignupPassword(e.target.value)}
-                            className="pl-10 pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="confirm-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={signupConfirmPassword}
-                            onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                            className="pl-10"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      {/* Privacy Policy Checkbox */}
                       <div className="flex items-start gap-2">
-                        <input type="checkbox" id="privacy-policy" required
-                          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                        <input type="checkbox" id="privacy-policy" required className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                         <label htmlFor="privacy-policy" className="text-xs text-muted-foreground leading-tight">
                           J'accepte les{" "}
-                          <button type="button" onClick={() => setLegalSheet("terms")} className="text-primary underline hover:text-primary/80">
-                            conditions d'utilisation
-                          </button>{" "}
-                          et la{" "}
-                          <button type="button" onClick={() => setLegalSheet("privacy")} className="text-primary underline hover:text-primary/80">
-                            politique de confidentialité
-                          </button>
+                          <button type="button" onClick={() => setLegalSheet("terms")} className="text-primary underline hover:text-primary/80">conditions d'utilisation</button>
+                          {" "}et la{" "}
+                          <button type="button" onClick={() => setLegalSheet("privacy")} className="text-primary underline hover:text-primary/80">politique de confidentialité</button>
                         </label>
                       </div>
 
                       <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Inscription...
-                          </>
-                        ) : (
-                          "Créer mon compte"
-                        )}
+                        {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : "Créer mon compte"}
                       </Button>
                     </form>
 
                     <div className="relative my-5">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-border" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">ou</span>
-                      </div>
+                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                      <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={handleGoogleSignIn}
-                      disabled={isLoading}
-                    >
+                    <Button type="button" variant="outline" className="w-full gap-2" onClick={handleGoogleSignIn} disabled={isLoading}>
                       <svg className="w-4 h-4" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -897,27 +467,15 @@ const Auth = () => {
       {/* Forgot password sheet */}
       <Sheet open={forgotMode} onOpenChange={setForgotMode}>
         <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>Mot de passe oublié</SheetTitle>
-          </SheetHeader>
+          <SheetHeader><SheetTitle>Mot de passe oublié</SheetTitle></SheetHeader>
           <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
-            <p className="text-sm text-muted-foreground">
-              Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
-            </p>
+            <p className="text-sm text-muted-foreground">Entrez votre email pour recevoir un lien de réinitialisation.</p>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder="votre@email.com"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                className="pl-10"
-                required
-              />
+              <Input type="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="pl-10" required />
             </div>
             <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Envoyer le lien
+              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}Envoyer le lien
             </Button>
           </form>
         </SheetContent>
@@ -927,58 +485,38 @@ const Auth = () => {
       <Sheet open={legalSheet !== null} onOpenChange={() => setLegalSheet(null)}>
         <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
           <SheetHeader>
-            <SheetTitle>
-              {legalSheet === "terms" ? "Conditions d'utilisation" : "Politique de confidentialité"}
-            </SheetTitle>
+            <SheetTitle>{legalSheet === "terms" ? "Conditions d'utilisation" : "Politique de confidentialité"}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(70vh-80px)] mt-4 pr-4">
             {legalSheet === "terms" ? (
               <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
                 <h3 className="text-foreground font-semibold">1. Objet</h3>
-                <p>Les présentes Conditions Générales d'Utilisation régissent l'accès et l'utilisation de la plateforme NUKUCONNECT, opérée par Nukuconnect SA. En utilisant la plateforme, vous acceptez ces conditions dans leur intégralité.</p>
-                
-                <h3 className="text-foreground font-semibold">2. Accès à la plateforme</h3>
-                <p>L'inscription est ouverte à toute personne physique ou morale souhaitant acheter ou vendre des produits agricoles. Chaque utilisateur est responsable de la véracité des informations fournies lors de l'inscription.</p>
-                
-                <h3 className="text-foreground font-semibold">3. Services proposés</h3>
-                <p>NUKUCONNECT met en relation acheteurs et fournisseurs de produits agricoles. La plateforme facilite la mise en vente, la recherche, la communication et le suivi des commandes.</p>
-                
+                <p>Les présentes CGU régissent l'accès et l'utilisation de NUKUCONNECT. En utilisant la plateforme, vous acceptez ces conditions.</p>
+                <h3 className="text-foreground font-semibold">2. Accès</h3>
+                <p>L'inscription est ouverte à toute personne souhaitant acheter ou vendre des produits agricoles.</p>
+                <h3 className="text-foreground font-semibold">3. Services</h3>
+                <p>NUKUCONNECT facilite la mise en relation, la vente, la communication et le suivi des commandes.</p>
                 <h3 className="text-foreground font-semibold">4. Paiements</h3>
-                <p>Les transactions sont effectuées via les moyens de paiement proposés sur la plateforme. NUKUCONNECT peut prélever une commission sur les ventes réalisées.</p>
-                
+                <p>Les transactions sont effectuées via KKiaPay. NUKUCONNECT peut prélever une commission.</p>
                 <h3 className="text-foreground font-semibold">5. Responsabilités</h3>
-                <p>NUKUCONNECT agit en tant qu'intermédiaire et ne peut être tenu responsable de la qualité des produits vendus par les fournisseurs. Les litiges entre acheteurs et vendeurs doivent être résolus directement entre les parties.</p>
-                
+                <p>NUKUCONNECT agit en tant qu'intermédiaire.</p>
                 <h3 className="text-foreground font-semibold">6. Propriété intellectuelle</h3>
-                <p>Tous les contenus de la plateforme (logos, textes, images) sont la propriété de Nukuconnect SA et sont protégés par le droit de la propriété intellectuelle.</p>
-
-                <div className="pt-4">
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button>
-                </div>
+                <p>Tous les contenus sont la propriété de Nukuconnect SA.</p>
+                <div className="pt-4"><Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button></div>
               </div>
             ) : (
               <div className="prose prose-sm max-w-none text-muted-foreground space-y-4">
                 <h3 className="text-foreground font-semibold">1. Collecte des données</h3>
-                <p>Nous collectons les données personnelles nécessaires au fonctionnement de la plateforme : nom, email, téléphone, localisation et informations de profil.</p>
-                
-                <h3 className="text-foreground font-semibold">2. Utilisation des données</h3>
-                <p>Vos données sont utilisées pour gérer votre compte, faciliter les transactions, améliorer nos services et vous envoyer des communications liées à votre activité sur la plateforme.</p>
-                
-                <h3 className="text-foreground font-semibold">3. Protection des données</h3>
-                <p>Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles pour protéger vos données contre tout accès non autorisé, modification ou divulgation.</p>
-                
-                <h3 className="text-foreground font-semibold">4. Partage des données</h3>
-                <p>Vos données ne sont jamais vendues à des tiers. Elles peuvent être partagées avec des partenaires uniquement dans le cadre de l'exécution des services (livraison, paiement).</p>
-                
+                <p>Nous collectons les données nécessaires : nom, email, téléphone, localisation.</p>
+                <h3 className="text-foreground font-semibold">2. Utilisation</h3>
+                <p>Vos données servent à gérer votre compte et faciliter les transactions.</p>
+                <h3 className="text-foreground font-semibold">3. Protection</h3>
+                <p>Nous appliquons des mesures de sécurité pour protéger vos données.</p>
+                <h3 className="text-foreground font-semibold">4. Partage</h3>
+                <p>Vos données ne sont jamais vendues à des tiers.</p>
                 <h3 className="text-foreground font-semibold">5. Vos droits</h3>
-                <p>Vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles. Contactez-nous à support@nukuconnect.com pour exercer ces droits.</p>
-                
-                <h3 className="text-foreground font-semibold">6. Cookies</h3>
-                <p>La plateforme utilise des cookies pour améliorer votre expérience. Vous pouvez gérer vos préférences de cookies dans les paramètres de votre navigateur.</p>
-
-                <div className="pt-4">
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button>
-                </div>
+                <p>Contactez support@nukuconnect.com pour exercer vos droits.</p>
+                <div className="pt-4"><Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button></div>
               </div>
             )}
           </ScrollArea>
