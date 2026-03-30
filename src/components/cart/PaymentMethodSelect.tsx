@@ -1,17 +1,23 @@
+import { useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Wallet, Smartphone, CreditCard, Package } from "lucide-react";
+import { Wallet, ShieldCheck, CreditCard, Smartphone } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
+declare global {
+  interface Window {
+    openKkiapayWidget: (config: any) => void;
+    addKkiapayListener: (event: string, callback: (data: any) => void) => void;
+    removeKkiapayListener: (event: string, callback: (data: any) => void) => void;
+  }
+}
+
+const KKIAPAY_PUBLIC_KEY = "7ff92c1a22c93addfdc25cec653a1a3e20e0258c";
+
+// Keep export for backward compat
 const paymentMethods = [
-  { id: "mobile_money", name: "Mobile Money", description: "TMoney, Flooz, Moov Money", icon: Smartphone, tag: "Populaire" },
-  { id: "wave", name: "Wave", description: "Paiement instantané via Wave", icon: Wallet, tag: "Rapide" },
-  { id: "card", name: "Carte bancaire", description: "Visa, Mastercard", icon: CreditCard, tag: "International" },
-  { id: "cash", name: "Paiement à la livraison", description: "Payez en espèces à la réception", icon: Package, tag: "Cash" },
+  { id: "kkiapay", name: "KKiaPay", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
 ];
-
 export { paymentMethods };
 
 interface PaymentMethodSelectProps {
@@ -19,12 +25,52 @@ interface PaymentMethodSelectProps {
   onPaymentMethodChange: (method: string) => void;
   mobileNumber: string;
   onMobileNumberChange: (number: string) => void;
+  amount?: number;
+  onPaymentSuccess?: (transactionId: string) => void;
 }
 
 const PaymentMethodSelect = ({
-  paymentMethod, onPaymentMethodChange,
-  mobileNumber, onMobileNumberChange
+  paymentMethod,
+  onPaymentMethodChange,
+  mobileNumber,
+  onMobileNumberChange,
+  amount,
+  onPaymentSuccess,
 }: PaymentMethodSelectProps) => {
+
+  const handleKkiapaySuccess = useCallback((response: any) => {
+    if (response?.transactionId) {
+      onPaymentSuccess?.(response.transactionId);
+    }
+  }, [onPaymentSuccess]);
+
+  useEffect(() => {
+    if (typeof window.addKkiapayListener === "function") {
+      window.addKkiapayListener("success", handleKkiapaySuccess);
+    }
+    return () => {
+      if (typeof window.removeKkiapayListener === "function") {
+        window.removeKkiapayListener("success", handleKkiapaySuccess);
+      }
+    };
+  }, [handleKkiapaySuccess]);
+
+  const openPayment = () => {
+    if (typeof window.openKkiapayWidget !== "function") {
+      console.error("KKiaPay SDK not loaded");
+      return;
+    }
+    window.openKkiapayWidget({
+      amount: amount || 1,
+      position: "center",
+      callback: "",
+      data: "",
+      theme: "#1a6b35",
+      key: KKIAPAY_PUBLIC_KEY,
+      sandbox: false,
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="p-4 pb-2">
@@ -33,51 +79,46 @@ const PaymentMethodSelect = ({
           Mode de paiement
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-2 space-y-3">
-        <RadioGroup value={paymentMethod} onValueChange={onPaymentMethodChange}>
-          <div className="space-y-2">
-            {paymentMethods.map((method) => (
-              <div key={method.id}
-                className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
-                  paymentMethod === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                }`}
-                onClick={() => onPaymentMethodChange(method.id)}>
-                <RadioGroupItem value={method.id} id={`pay-${method.id}`} />
-                <method.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Label htmlFor={`pay-${method.id}`} className="font-medium cursor-pointer text-xs sm:text-sm">{method.name}</Label>
-                    <Badge variant="secondary" className="text-[9px]">{method.tag}</Badge>
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">{method.description}</p>
-                </div>
+      <CardContent className="p-4 pt-2 space-y-4">
+        {/* KKiaPay info card */}
+        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm text-foreground">KKiaPay</p>
+                <Badge className="text-[9px] bg-primary/20 text-primary border-0">Sécurisé</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Paiement sécurisé pour l'Afrique</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Smartphone, label: "Mobile Money", desc: "TMoney, Flooz, Moov, MTN" },
+              { icon: CreditCard, label: "Carte bancaire", desc: "Visa, Mastercard" },
+              { icon: Wallet, label: "Wave", desc: "Paiement Wave" },
+            ].map((m) => (
+              <div key={m.label} className="rounded-xl bg-background border border-border p-2.5 text-center">
+                <m.icon className="w-4 h-4 mx-auto text-primary mb-1" />
+                <p className="text-[10px] font-medium text-foreground leading-tight">{m.label}</p>
+                <p className="text-[8px] text-muted-foreground mt-0.5">{m.desc}</p>
               </div>
             ))}
           </div>
-        </RadioGroup>
 
-        {(paymentMethod === "mobile_money" || paymentMethod === "wave") && (
-          <div className="space-y-3 p-3 bg-muted/50 rounded-xl border border-border">
-            <h4 className="font-medium text-xs flex items-center gap-2">
-              <Smartphone className="w-3.5 h-3.5 text-primary" />
-              Numéro de paiement
-            </h4>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Numéro de téléphone <span className="text-destructive">*</span></Label>
-              <Input
-                type="tel"
-                placeholder="+228 90 XX XX XX"
-                value={mobileNumber}
-                onChange={(e) => onMobileNumberChange(e.target.value)}
-                className="h-9 text-sm"
-              />
-              <p className="text-[9px] text-muted-foreground">
-                {paymentMethod === "mobile_money"
-                  ? "Vous recevrez une notification pour confirmer via TMoney, Flooz ou Moov Money."
-                  : "Vous recevrez une notification Wave pour confirmer le paiement."}
-              </p>
-            </div>
-          </div>
+          <p className="text-[10px] text-muted-foreground text-center">
+            🔒 Transaction chiffrée et sécurisée via KKiaPay — conforme PCI DSS
+          </p>
+        </div>
+
+        {amount && amount > 0 && (
+          <Button variant="hero" className="w-full gap-2" onClick={openPayment}>
+            <ShieldCheck className="w-4 h-4" />
+            Payer {amount.toLocaleString()} FCFA avec KKiaPay
+          </Button>
         )}
       </CardContent>
     </Card>

@@ -183,7 +183,7 @@ const Cart = () => {
             accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
           }).select("id").single();
 
-          const deliveryData = deliveryInsert.data as { id: string } | null;
+          const deliveryData = deliveryInsert.data as unknown as { id: string } | null;
 
           if (deliveryData?.id) {
             const orderItemsSummary = items
