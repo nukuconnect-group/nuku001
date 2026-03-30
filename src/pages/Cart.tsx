@@ -39,7 +39,7 @@ const Cart = () => {
   const [deliveryQuarter, setDeliveryQuarter] = useState("");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
+  const [paymentMethod, setPaymentMethod] = useState("kkiapay");
   const [mobileNumber, setMobileNumber] = useState("");
 
   // Promo
