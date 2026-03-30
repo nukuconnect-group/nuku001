@@ -108,11 +108,7 @@ const Cart = () => {
       return;
     }
 
-    // Validate mobile payment number
-    if ((paymentMethod === "mobile_money" || paymentMethod === "wave") && !mobileNumber.trim()) {
-      toast({ title: "Numéro requis", description: "Veuillez entrer votre numéro de téléphone pour le paiement mobile.", variant: "destructive" });
-      return;
-    }
+    // Payment via KKiaPay - no mobile number validation needed
 
     setIsCheckingOut(true);
     try {
