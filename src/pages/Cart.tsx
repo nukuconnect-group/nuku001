@@ -354,6 +354,7 @@ const Cart = () => {
                 onPaymentMethodChange={setPaymentMethod}
                 mobileNumber={mobileNumber}
                 onMobileNumberChange={setMobileNumber}
+                amount={finalTotal}
               />
             </div>
 
