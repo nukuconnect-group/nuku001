@@ -182,8 +182,8 @@ const PaymentMethodSelect = ({
                 )}
                 {pollingStatus === "completed" && (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <span className="text-xs font-medium text-green-700">Paiement confirmé !</span>
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-medium text-primary">Paiement confirmé !</span>
                   </>
                 )}
                 {(pollingStatus === "failed" || pollingStatus === "expired") && (
