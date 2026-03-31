@@ -497,7 +497,7 @@ const Auth = () => {
                 <h3 className="text-foreground font-semibold">3. Services</h3>
                 <p>NUKUCONNECT facilite la mise en relation, la vente, la communication et le suivi des commandes.</p>
                 <h3 className="text-foreground font-semibold">4. Paiements</h3>
-                <p>Les transactions sont effectuées via KKiaPay. NUKUCONNECT peut prélever une commission.</p>
+                <p>Les transactions sont effectuées via Paygate Global. NUKUCONNECT peut prélever une commission.</p>
                 <h3 className="text-foreground font-semibold">5. Responsabilités</h3>
                 <p>NUKUCONNECT agit en tant qu'intermédiaire.</p>
                 <h3 className="text-foreground font-semibold">6. Propriété intellectuelle</h3>

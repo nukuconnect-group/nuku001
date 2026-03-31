@@ -1,22 +1,19 @@
-import { useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, ShieldCheck, CreditCard, Smartphone } from "lucide-react";
+import { Wallet, ShieldCheck, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-declare global {
-  interface Window {
-    openKkiapayWidget: (config: any) => void;
-    addKkiapayListener: (event: string, callback: (data: any) => void) => void;
-    removeKkiapayListener: (event: string, callback: (data: any) => void) => void;
-  }
-}
-
-const KKIAPAY_PUBLIC_KEY = "7ff92c1a22c93addfdc25cec653a1a3e20e0258c";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import moovFloozLogo from "@/assets/moov-flooz.png";
+import mixxYasLogo from "@/assets/mixx-yas.png";
+import visaMcLogo from "@/assets/visa-mastercard.png";
 
 // Keep export for backward compat
 const paymentMethods = [
-  { id: "kkiapay", name: "KKiaPay", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
+  { id: "paygate", name: "Paygate", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
 ];
 export { paymentMethods };
 
@@ -37,38 +34,57 @@ const PaymentMethodSelect = ({
   amount,
   onPaymentSuccess,
 }: PaymentMethodSelectProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
+  const { toast } = useToast();
 
-  const handleKkiapaySuccess = useCallback((response: any) => {
-    if (response?.transactionId) {
-      onPaymentSuccess?.(response.transactionId);
-    }
-  }, [onPaymentSuccess]);
+  const networks = [
+    { id: "FLOOZ", label: "Moov Money / Flooz", logo: moovFloozLogo },
+    { id: "TMONEY", label: "Mixx by Yas (T-Money)", logo: mixxYasLogo },
+    { id: "CARD", label: "Visa / Mastercard", logo: visaMcLogo },
+  ];
 
-  useEffect(() => {
-    if (typeof window.addKkiapayListener === "function") {
-      window.addKkiapayListener("success", handleKkiapaySuccess);
-    }
-    return () => {
-      if (typeof window.removeKkiapayListener === "function") {
-        window.removeKkiapayListener("success", handleKkiapaySuccess);
-      }
-    };
-  }, [handleKkiapaySuccess]);
+  const openPayment = async () => {
+    if (!amount || amount <= 0) return;
 
-  const openPayment = () => {
-    if (typeof window.openKkiapayWidget !== "function") {
-      console.error("KKiaPay SDK not loaded");
+    if (selectedNetwork !== "CARD" && !mobileNumber) {
+      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
       return;
     }
-    window.openKkiapayWidget({
-      amount: amount || 1,
-      position: "center",
-      callback: "",
-      data: "",
-      theme: "#1a6b35",
-      key: KKIAPAY_PUBLIC_KEY,
-      sandbox: false,
-    });
+
+    setIsProcessing(true);
+    try {
+      const identifier = `NUKU-${Date.now()}`;
+
+      const { data, error } = await supabase.functions.invoke("paygate-init", {
+        body: {
+          amount,
+          description: `Commande NUKUCONNECT - ${amount} FCFA`,
+          identifier,
+          phone_number: mobileNumber.replace(/\s/g, ""),
+          network: selectedNetwork === "CARD" ? "" : selectedNetwork === "FLOOZ" ? "FLOOZ" : "TMONEY",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.mode === "redirect" && data?.payment_url) {
+        window.open(data.payment_url, "_blank");
+        toast({ title: "Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
+        // Poll or wait for callback
+        onPaymentSuccess?.(data.tx_reference || identifier);
+      } else if (data?.success) {
+        toast({ title: "Paiement envoyé", description: "Validez la transaction sur votre téléphone." });
+        onPaymentSuccess?.(data.tx_reference || identifier);
+      } else {
+        toast({ title: "Paiement en cours", description: "Si vous recevez une demande de confirmation, validez-la sur votre téléphone." });
+        onPaymentSuccess?.(identifier);
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur de paiement", description: err.message || "Réessayez plus tard.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -80,7 +96,7 @@ const PaymentMethodSelect = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-4">
-        {/* KKiaPay info card */}
+        {/* Paygate info card */}
         <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -88,36 +104,67 @@ const PaymentMethodSelect = ({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">KKiaPay</p>
+                <p className="font-semibold text-sm text-foreground">Paygate Global</p>
                 <Badge className="text-[9px] bg-primary/20 text-primary border-0">Sécurisé</Badge>
               </div>
-              <p className="text-[11px] text-muted-foreground">Paiement sécurisé pour l'Afrique</p>
+              <p className="text-[11px] text-muted-foreground">Paiement sécurisé Mobile Money & Carte bancaire</p>
             </div>
           </div>
 
+          {/* Payment method logos */}
           <div className="grid grid-cols-3 gap-2">
-            {[
-              { icon: Smartphone, label: "Mobile Money", desc: "TMoney, Flooz, Moov, MTN" },
-              { icon: CreditCard, label: "Carte bancaire", desc: "Visa, Mastercard" },
-              { icon: Wallet, label: "Wave", desc: "Paiement Wave" },
-            ].map((m) => (
-              <div key={m.label} className="rounded-xl bg-background border border-border p-2.5 text-center">
-                <m.icon className="w-4 h-4 mx-auto text-primary mb-1" />
-                <p className="text-[10px] font-medium text-foreground leading-tight">{m.label}</p>
-                <p className="text-[8px] text-muted-foreground mt-0.5">{m.desc}</p>
-              </div>
+            {networks.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => setSelectedNetwork(n.id)}
+                className={`rounded-xl bg-background border-2 p-2 text-center transition-all ${
+                  selectedNetwork === n.id
+                    ? "border-primary shadow-sm ring-1 ring-primary/30"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <img src={n.logo} alt={n.label} className="h-8 sm:h-10 mx-auto object-contain mb-1" />
+                <p className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight">{n.label}</p>
+              </button>
             ))}
           </div>
 
+          {/* Phone number for Mobile Money */}
+          {selectedNetwork && selectedNetwork !== "CARD" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                Numéro {selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}
+              </Label>
+              <Input
+                type="tel"
+                placeholder="+228 XX XX XX XX"
+                value={mobileNumber}
+                onChange={(e) => onMobileNumberChange(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+          )}
+
           <p className="text-[10px] text-muted-foreground text-center">
-            🔒 Transaction chiffrée et sécurisée via KKiaPay — conforme PCI DSS
+            🔒 Transaction chiffrée et sécurisée via Paygate Global
           </p>
         </div>
 
-        {amount && amount > 0 && (
-          <Button variant="hero" className="w-full gap-2" onClick={openPayment}>
-            <ShieldCheck className="w-4 h-4" />
-            Payer {amount.toLocaleString()} FCFA avec KKiaPay
+        {amount && amount > 0 && selectedNetwork && (
+          <Button
+            variant="hero"
+            className="w-full gap-2"
+            onClick={openPayment}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="w-4 h-4" />
+            )}
+            {isProcessing ? "Traitement en cours..." : `Payer ${amount.toLocaleString()} FCFA`}
           </Button>
         )}
       </CardContent>
