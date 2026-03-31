@@ -58,7 +58,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useProfile();
-  const { canInstall, isInstalled, install } = usePWAInstall();
+  const { canInstall, isInstalled, install, showInstallOption } = usePWAInstall();
   const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -269,17 +269,19 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
               <div className="h-2 bg-muted/40" />
 
               {/* PWA Install */}
-              {(canInstall || !isInstalled) && (
+              {showInstallOption && (
                 <div className="py-1">
                   <button
                     onClick={async () => {
-                      if (canInstall) {
-                        const accepted = await install();
-                        if (accepted) {
-                          toast({ title: "Application installée !", description: "NUKUCONNECT est maintenant sur votre écran d'accueil." });
-                        }
-                      } else {
-                        toast({ title: "Installer NUKUCONNECT", description: "Ouvrez le menu de votre navigateur → 'Ajouter à l'écran d'accueil' ou 'Installer l'application'." });
+                      const result = await install();
+                      if (result === true) {
+                        toast({ title: "Application installée !", description: "NUKUCONNECT est maintenant sur votre écran d'accueil." });
+                      } else if (result === null) {
+                        // No deferred prompt - show manual instructions
+                        toast({
+                          title: "Installer NUKUCONNECT",
+                          description: "Ouvrez le menu de votre navigateur (⋮) → 'Ajouter à l'écran d'accueil' ou 'Installer l'application'.",
+                        });
                       }
                     }}
                     className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30 w-full"
