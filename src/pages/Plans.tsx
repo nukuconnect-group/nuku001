@@ -346,7 +346,7 @@ const Plans = () => {
                         {pollingEnabled && (
                           <div className="rounded-lg bg-muted/50 p-2 flex items-center gap-2">
                             {pollingStatus === "pending" && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
-                            {pollingStatus === "completed" && <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />}
+                            {pollingStatus === "completed" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
                             {(pollingStatus === "failed" || pollingStatus === "expired") && <XCircle className="w-3.5 h-3.5 text-destructive" />}
                             <span className="text-[10px] font-medium">
                               {pollingStatus === "pending" ? `Vérification... (${attempts}/60)` : pollingStatus === "completed" ? "Confirmé !" : "Échoué"}
