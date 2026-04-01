@@ -24,6 +24,8 @@ interface PaymentMethodSelectProps {
   onMobileNumberChange: (number: string) => void;
   amount?: number;
   onPaymentSuccess?: (transactionId: string) => void;
+  hidePayButton?: boolean;
+  isPolling?: boolean;
 }
 
 const PaymentMethodSelect = ({
@@ -33,6 +35,8 @@ const PaymentMethodSelect = ({
   onMobileNumberChange,
   amount,
   onPaymentSuccess,
+  hidePayButton = false,
+  isPolling = false,
 }: PaymentMethodSelectProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<string>("");
@@ -40,6 +44,7 @@ const PaymentMethodSelect = ({
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const { toast } = useToast();
 
+  // Only use internal polling when NOT in hidePayButton mode (standalone usage)
   const handleCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     setIsProcessing(false);
@@ -61,7 +66,7 @@ const PaymentMethodSelect = ({
 
   const { status: pollingStatus, attempts } = usePaygatePolling({
     identifier: paymentIdentifier,
-    enabled: pollingEnabled,
+    enabled: pollingEnabled && !hidePayButton,
     intervalMs: 5000,
     maxAttempts: 60,
     onCompleted: handleCompleted,
@@ -74,6 +79,9 @@ const PaymentMethodSelect = ({
     { id: "TMONEY", label: "Mixx by Yas (T-Money)", logo: mixxYasLogo },
     { id: "CARD", label: "Visa / Mastercard", logo: visaMcLogo },
   ];
+
+  const showPolling = hidePayButton ? isPolling : pollingEnabled;
+  const isDisabled = isProcessing || showPolling;
 
   const openPayment = async () => {
     if (!amount || amount <= 0) return;
@@ -103,7 +111,6 @@ const PaymentMethodSelect = ({
         window.open(data.payment_url, "_blank");
       }
 
-      // Start polling for transaction status
       setPollingEnabled(true);
       toast({ title: "Paiement initié", description: selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre ouverte." : "Validez la transaction sur votre téléphone." });
     } catch (err: any) {
@@ -140,12 +147,12 @@ const PaymentMethodSelect = ({
               <button
                 key={n.id}
                 type="button"
-                onClick={() => !isProcessing && setSelectedNetwork(n.id)}
+                onClick={() => !isDisabled && setSelectedNetwork(n.id)}
                 className={`rounded-xl bg-background border-2 p-2 text-center transition-all ${
                   selectedNetwork === n.id
                     ? "border-primary shadow-sm ring-1 ring-primary/30"
                     : "border-border hover:border-primary/40"
-                } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <img src={n.logo} alt={n.label} className="h-8 sm:h-10 mx-auto object-contain mb-1" />
                 <p className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight">{n.label}</p>
@@ -153,7 +160,7 @@ const PaymentMethodSelect = ({
             ))}
           </div>
 
-          {selectedNetwork && selectedNetwork !== "CARD" && !pollingEnabled && (
+          {selectedNetwork && selectedNetwork !== "CARD" && !showPolling && (
             <div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" />
@@ -165,42 +172,24 @@ const PaymentMethodSelect = ({
                 value={mobileNumber}
                 onChange={(e) => onMobileNumberChange(e.target.value)}
                 className="h-9 text-sm"
-                disabled={isProcessing}
+                disabled={isDisabled}
               />
             </div>
           )}
 
           {/* Polling status indicator */}
-          {pollingEnabled && (
+          {showPolling && (
             <div className="rounded-xl bg-muted/50 p-3 space-y-2">
               <div className="flex items-center gap-2">
-                {pollingStatus === "pending" && (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-xs font-medium text-foreground">Vérification du paiement en cours...</span>
-                  </>
-                )}
-                {pollingStatus === "completed" && (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-medium text-primary">Paiement confirmé !</span>
-                  </>
-                )}
-                {(pollingStatus === "failed" || pollingStatus === "expired") && (
-                  <>
-                    <XCircle className="w-4 h-4 text-destructive" />
-                    <span className="text-xs font-medium text-destructive">Paiement échoué</span>
-                  </>
-                )}
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-xs font-medium text-foreground">Vérification du paiement en cours...</span>
               </div>
-              {pollingStatus === "pending" && (
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground">
-                    {selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre..." : "Validez sur votre téléphone..."} ({attempts}/60)
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground">
+                  {selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre..." : "Validez sur votre téléphone..."}
+                </span>
+              </div>
             </div>
           )}
 
@@ -209,7 +198,8 @@ const PaymentMethodSelect = ({
           </p>
         </div>
 
-        {amount && amount > 0 && selectedNetwork && !pollingEnabled && (
+        {/* Only show standalone pay button when not in cart mode */}
+        {!hidePayButton && amount && amount > 0 && selectedNetwork && !pollingEnabled && (
           <Button
             variant="hero"
             className="w-full gap-2"
