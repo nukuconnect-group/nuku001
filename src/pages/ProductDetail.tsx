@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct } from "@/hooks/useProducts";
@@ -42,6 +44,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
@@ -514,16 +517,16 @@ const ProductDetail = () => {
                     </div>
                     <div className="flex-1 space-y-2">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">
-                        Scannez ce QR code pour suivre le parcours complet de ce produit : de la ferme à votre table. Origine, contrôle qualité, transport et certification.
+                        Scannez ce QR code pour suivre le parcours complet de ce produit.
                       </p>
                       <div className="flex gap-2 flex-wrap">
                         <Button
                           variant="hero"
                           size="sm"
                           className="gap-1.5 text-[10px] sm:text-xs h-8 sm:h-9"
-                          onClick={() => navigate(`/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`)}
+                          onClick={() => setTraceabilityOpen(true)}
                         >
-                          <ShieldCheck className="w-3.5 h-3.5" />Voir la traçabilité complète
+                          <ShieldCheck className="w-3.5 h-3.5" />Voir la traçabilité
                         </Button>
                         <Button
                           variant="outline"
@@ -538,7 +541,7 @@ const ProductDetail = () => {
                             link.click();
                           }}
                         >
-                          <Download className="w-3 h-3" />Télécharger
+                          <Download className="w-3 h-3" />QR
                         </Button>
                         <Button
                           variant="outline"
@@ -551,13 +554,89 @@ const ProductDetail = () => {
                             });
                           }}
                         >
-                          <Copy className="w-3 h-3" />Copier le lien
+                          <Copy className="w-3 h-3" />Lien
                         </Button>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Traceability Sheet */}
+              <Sheet open={traceabilityOpen} onOpenChange={setTraceabilityOpen}>
+                <SheetContent side="bottom" className="h-[80vh] sm:h-[70vh] rounded-t-2xl">
+                  <SheetHeader className="pb-3">
+                    <SheetTitle className="flex items-center gap-2 text-sm sm:text-base">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      Traçabilité complète
+                    </SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(80vh-80px)] sm:h-[calc(70vh-80px)]">
+                    <div className="space-y-4 pr-4 pb-6">
+                      {/* Product info */}
+                      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+                        <img src={images[0] || product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
+                        <div>
+                          <h3 className="font-semibold text-sm">{product.name}</h3>
+                          <p className="text-xs text-muted-foreground">{product.category}</p>
+                          <p className="text-xs text-primary font-medium">{formatPrice(product.price)}/{product.unit}</p>
+                        </div>
+                      </div>
+
+                      {/* Traceability timeline */}
+                      <div className="space-y-0">
+                        {[
+                          { step: "Production", icon: "🌱", desc: `Produit par ${product.producer.name}`, detail: product.location || "Togo", status: "done" },
+                          { step: "Contrôle qualité", icon: "🔍", desc: product.isOrganic ? "Certifié biologique" : "Contrôle standard", detail: product.producer.verified ? "Fournisseur vérifié ✓" : "En cours de vérification", status: product.producer.verified ? "done" : "pending" },
+                          { step: "Stockage", icon: "📦", desc: "Conditions de conservation respectées", detail: `${product.quantity} ${product.unit}(s) disponibles`, status: "done" },
+                          { step: "Mise en vente", icon: "🏪", desc: "Publié sur NukuConnect", detail: `Catégorie: ${product.category}`, status: "done" },
+                          { step: "Livraison", icon: "🚚", desc: "Prêt à être expédié", detail: "Retrait / Livreur / Gochap", status: "active" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                                item.status === "done" ? "bg-primary/10" : item.status === "active" ? "bg-accent/10" : "bg-muted"
+                              }`}>
+                                {item.icon}
+                              </div>
+                              {i < 4 && <div className={`w-0.5 h-8 ${item.status === "done" ? "bg-primary/30" : "bg-border"}`} />}
+                            </div>
+                            <div className="pb-4">
+                              <p className="text-sm font-semibold text-foreground">{item.step}</p>
+                              <p className="text-xs text-muted-foreground">{item.desc}</p>
+                              <p className="text-[10px] text-muted-foreground/70">{item.detail}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Certifications */}
+                      <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 space-y-2">
+                        <p className="text-xs font-semibold text-foreground">Certifications & garanties</p>
+                        <div className="flex flex-wrap gap-2">
+                          {product.isOrganic && <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px]">🌿 Biologique</Badge>}
+                          {product.producer.verified && <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">✓ Fournisseur vérifié</Badge>}
+                          <Badge variant="secondary" className="text-[10px]">📍 Origine: {product.location || "Togo"}</Badge>
+                          <Badge variant="secondary" className="text-[10px]">📦 {product.unit}</Badge>
+                        </div>
+                      </div>
+
+                      {/* Full page link */}
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 text-xs"
+                        onClick={() => {
+                          setTraceabilityOpen(false);
+                          navigate(`/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`);
+                        }}
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Voir la page traçabilité complète
+                      </Button>
+                    </div>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
 
               {/* Reviews */}
               <ReviewSection productId={product.id} />

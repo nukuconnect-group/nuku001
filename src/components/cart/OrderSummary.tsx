@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/components/cart/CartContext";
-import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2 } from "lucide-react";
+import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2, ShoppingBag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -26,6 +26,8 @@ interface OrderSummaryProps {
   onCheckout: () => void;
   onDiscountChange?: (discount: number, code: string) => void;
   isPolling?: boolean;
+  showPaymentStep?: boolean;
+  onShowPayment?: () => void;
 }
 
 const purchasePolicyContent = `Dernière mise à jour : 09 février 2025
@@ -89,7 +91,7 @@ La décision finale pourra, si nécessaire, être soumise aux juridictions comp�
 Nukuconnect SA se réserve le droit de modifier cette politique à tout moment.
 Toute modification sera publiée sur la Plateforme et applicable aux commandes passées après sa date d'entrée en vigueur.`;
 
-const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange, isPolling = false }: OrderSummaryProps) => {
+const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange, isPolling = false, showPaymentStep = false, onShowPayment }: OrderSummaryProps) => {
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const { formatPrice } = useLanguage();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -128,6 +130,17 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
     setPromoInput("");
     setPromoError("");
     onDiscountChange?.(0, "");
+  };
+
+  const handleOrderClick = () => {
+    if (!acceptedTerms) return;
+    // If payment step not yet shown, show it first
+    if (!showPaymentStep && onShowPayment) {
+      onShowPayment();
+      return;
+    }
+    // Otherwise proceed to checkout (payment already visible)
+    onCheckout();
   };
 
   return (
@@ -195,7 +208,7 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
             <div className="border border-border rounded-lg p-3 max-h-[100px] overflow-hidden cursor-pointer hover:border-primary/50 transition-colors relative">
               <p className="text-[10px] font-semibold text-foreground italic mb-1">Dernière mise à jour : 09 février 2025</p>
               <p className="text-[9px] text-muted-foreground leading-relaxed line-clamp-3">
-                Chez Nukuconnect SA, nous avons à cœur de garantir une expérience fiable et transparente à tous nos utilisateurs. La présente politique précise les conditions de remboursement et de retour applicables aux transactions effectuées via la plateforme Nukuconnect...
+                Chez Nukuconnect SA, nous avons à cœur de garantir une expérience fiable et transparente à tous nos utilisateurs...
               </p>
               <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-card to-transparent" />
             </div>
@@ -306,16 +319,33 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
           <span className="text-primary">{formatPrice(finalTotal)}</span>
         </div>
 
-        <Button
-          variant="hero"
-          className="w-full gap-2"
-          size="lg"
-          onClick={onCheckout}
-          disabled={isCheckingOut || !canCheckout || !acceptedTerms || isPolling}
-        >
-          {isCheckingOut || isPolling ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-          {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Traitement..." : "Passer la commande"}
-        </Button>
+        {/* Step 1: Commander button (shows payment options) */}
+        {!showPaymentStep && (
+          <Button
+            variant="hero"
+            className="w-full gap-2"
+            size="lg"
+            onClick={handleOrderClick}
+            disabled={!canCheckout || !acceptedTerms}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Passer la commande
+          </Button>
+        )}
+
+        {/* Step 2: Confirm payment button (after payment method selected) */}
+        {showPaymentStep && (
+          <Button
+            variant="hero"
+            className="w-full gap-2"
+            size="lg"
+            onClick={onCheckout}
+            disabled={isCheckingOut || !canCheckout || !acceptedTerms || isPolling}
+          >
+            {isCheckingOut || isPolling ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+            {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Traitement..." : `Confirmer & payer ${formatPrice(finalTotal)}`}
+          </Button>
+        )}
 
         <div className="flex items-center gap-2 justify-center">
           <ShieldCheck className="w-3.5 h-3.5 text-primary" />
