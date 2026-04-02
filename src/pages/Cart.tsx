@@ -42,6 +42,7 @@ const Cart = () => {
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("paygate");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [showPaymentStep, setShowPaymentStep] = useState(false);
 
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -269,11 +270,9 @@ const Cart = () => {
       const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
       const selectedRealDriverId = selectedDriver && !String(selectedDriver.id).startsWith("demo-") ? selectedDriver.id : null;
 
-      // Save checkout data for after payment
       const checkoutData = { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId };
       setPendingCheckoutData(checkoutData);
 
-      // Initiate Paygate payment
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
 
@@ -283,7 +282,7 @@ const Cart = () => {
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
           phone_number: mobileNumber.replace(/\s/g, ""),
-          network: "", // Will use network from PaymentMethodSelect
+          network: "",
         },
       });
 
@@ -293,7 +292,6 @@ const Cart = () => {
         window.open(data.payment_url, "_blank");
       }
 
-      // Start polling
       setPollingEnabled(true);
       toast({ title: "💳 Paiement initié", description: "Validez la transaction sur votre téléphone ou complétez le paiement dans la fenêtre ouverte." });
     } catch (error: any) {
@@ -406,15 +404,20 @@ const Cart = () => {
                 />
               )}
 
-              <PaymentMethodSelect
-                paymentMethod={paymentMethod}
-                onPaymentMethodChange={setPaymentMethod}
-                mobileNumber={mobileNumber}
-                onMobileNumberChange={setMobileNumber}
-                amount={finalTotal}
-                hidePayButton
-                isPolling={pollingEnabled}
-              />
+              {/* Payment section: only shown after clicking "Passer la commande" */}
+              {showPaymentStep && (
+                <div className="animate-fade-in">
+                  <PaymentMethodSelect
+                    paymentMethod={paymentMethod}
+                    onPaymentMethodChange={setPaymentMethod}
+                    mobileNumber={mobileNumber}
+                    onMobileNumberChange={setMobileNumber}
+                    amount={finalTotal}
+                    hidePayButton
+                    isPolling={pollingEnabled}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Right: Order Summary */}
@@ -426,6 +429,8 @@ const Cart = () => {
                 onCheckout={handleCheckout}
                 onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
                 isPolling={pollingEnabled}
+                showPaymentStep={showPaymentStep}
+                onShowPayment={() => setShowPaymentStep(true)}
               />
             </div>
           </div>
