@@ -4,6 +4,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NukuAIFloating from "@/components/home/NukuAIFloating";
 import HeroCarousel from "@/components/home/HeroCarousel";
 import PromoBannerSlider from "@/components/home/PromoBannerSlider";
+import SolutionsSection from "@/components/home/SolutionsSection";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -22,8 +23,9 @@ const Index = () => {
         </div>
         {/* PromoBannerSlider: mobile only */}
         <PromoBannerSlider />
+        {/* Solutions section: after hero, before categories */}
+        <SolutionsSection />
         <CategoriesSection />
-        {/* FeaturedProducts: shown on all devices now, scrolling */}
         <FeaturedProducts />
         <FeaturesSection />
         <HowItWorksSection />
