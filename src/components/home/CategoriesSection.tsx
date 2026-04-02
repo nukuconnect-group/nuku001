@@ -4,7 +4,6 @@ import { useProducts } from "@/hooks/useProducts";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 
-// Realistic Unsplash images for each category
 const categoryImages: Record<string, string> = {
   agriculture: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=300&fit=crop&q=80",
   céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=80",
@@ -21,9 +20,12 @@ const categoryImages: Record<string, string> = {
   aquaculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&h=300&fit=crop&q=80",
   "pêche & aquaculture": "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&h=300&fit=crop&q=80",
   agribusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
+  agrobusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
   foresterie: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=300&fit=crop&q=80",
   agroalimentaire: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
   "transformation agroalimentaire": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
+  equipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&h=300&fit=crop&q=80",
+  équipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&h=300&fit=crop&q=80",
 };
 
 const getCategoryImage = (name: string) => {
@@ -61,42 +63,45 @@ const CategoriesSection = () => {
   if (activeCategories.length === 0) return null;
 
   return (
-    <section className="py-6 sm:py-10 bg-muted/30">
+    <section className="py-6 sm:py-10 bg-background">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="mb-4 sm:mb-6">
-          <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-extrabold text-primary uppercase tracking-wide">
+          <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-extrabold text-accent uppercase tracking-wide">
             Top Catégories
           </h2>
-          <div className="w-24 h-1 bg-primary mt-1.5 rounded-full" />
+          <div className="w-20 h-[3px] bg-primary mt-1.5 rounded-full" />
         </div>
 
         {/* Horizontal scroll on all devices */}
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 -mx-3 px-3 md:mx-0 md:px-0 scrollbar-hide">
-          {activeCategories.map((cat: any) => (
-            <Link
-              key={cat.id}
-              to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-              className="flex-shrink-0 w-[46vw] max-w-[200px] md:w-[180px] lg:w-[200px] group"
-            >
-              <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow">
-                <div className="relative h-32 md:h-36 overflow-hidden">
-                  <img
-                    src={getCategoryImage(cat.name)}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+        <div className="border border-border rounded-xl p-3 sm:p-4">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {activeCategories.map((cat: any) => (
+              <Link
+                key={cat.id}
+                to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
+                className="flex-shrink-0 w-[38vw] max-w-[180px] sm:w-[160px] lg:w-[180px] group"
+              >
+                <div className="overflow-hidden rounded-lg border-l-[3px] border-l-primary bg-card hover:shadow-md transition-shadow">
+                  <div className="relative h-28 sm:h-32 lg:h-36 overflow-hidden">
+                    <img
+                      src={getCategoryImage(cat.name)}
+                      alt={cat.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-2.5 sm:p-3 text-center">
+                    <h3 className="text-[10px] sm:text-xs font-bold text-foreground uppercase tracking-wide line-clamp-1 leading-tight">
+                      {cat.name}
+                    </h3>
+                    <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
+                      {productCounts[cat.id] || 0} {(productCounts[cat.id] || 0) > 1 ? "produits" : "produit"}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3 text-center">
-                  <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide line-clamp-2 leading-tight">
-                    {cat.name}
-                  </h3>
-                  <p className="text-[10px] md:text-xs text-muted-foreground mt-1">
-                    {productCounts[cat.id] || 0} {(productCounts[cat.id] || 0) > 1 ? "produits" : "produit"}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </section>
