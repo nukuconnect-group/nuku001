@@ -44,6 +44,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
   const isUUID = id && id.length > 10;
   const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
