@@ -90,8 +90,8 @@ const CategoriesSection = () => {
                       loading="lazy"
                     />
                   </div>
-                  <div className="p-2.5 sm:p-3 text-center">
-                    <h3 className="text-[10px] sm:text-xs font-bold text-foreground uppercase tracking-wide line-clamp-1 leading-tight">
+                  <div className="p-2 sm:p-3 text-center">
+                    <h3 className="text-[9px] sm:text-xs font-bold text-foreground uppercase tracking-wide line-clamp-1 leading-tight">
                       {cat.name}
                     </h3>
                     <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">
