@@ -54,7 +54,116 @@ const locations = [
   ...locationsByCountry.flatMap(g => g.cities),
 ];
 
-const Marketplace = () => {
+const LocationSearchFilter = ({ location, onLocationChange }: { location: string; onLocationChange: (loc: string) => void }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    if (!q) return locationsByCountry;
+    return locationsByCountry
+      .map(g => ({
+        ...g,
+        cities: g.cities.filter(c => c.toLowerCase().includes(q)),
+        countryMatch: g.country.toLowerCase().includes(q),
+      }))
+      .filter(g => g.cities.length > 0 || g.countryMatch)
+      .map(g => g.countryMatch && g.cities.length === 0 ? { ...g, cities: locationsByCountry.find(og => og.country === g.country)?.cities || [] } : g);
+  }, [searchTerm]);
+
+  const handleSelect = (loc: string) => {
+    onLocationChange(loc);
+    setSearchTerm("");
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="space-y-2" ref={ref}>
+      <Label className="text-xs font-semibold flex items-center gap-1.5">
+        <MapPin className="w-3.5 h-3.5" />
+        Région / Pays
+      </Label>
+      <div className="relative">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher une ville ou pays..."
+            value={isOpen ? searchTerm : (location === "Toutes les régions" ? "" : location)}
+            onChange={(e) => { setSearchTerm(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            className="h-9 text-xs pl-8 pr-8"
+          />
+          {location && location !== "Toutes les régions" && !isOpen && (
+            <button
+              onClick={() => { onLocationChange("Toutes les régions"); setSearchTerm(""); }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {isOpen && (
+          <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+            <button
+              onClick={() => handleSelect("Toutes les régions")}
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 ${location === "Toutes les régions" ? "bg-primary/5 text-primary font-semibold" : ""}`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Toutes les régions
+            </button>
+            <div className="border-t border-border" />
+            {filtered.map((group) => (
+              <div key={group.country}>
+                <div className="px-3 py-1.5 bg-muted/30 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 sticky top-0">
+                  <span>{group.flag}</span>
+                  {group.country}
+                </div>
+                {group.cities.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => handleSelect(city)}
+                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors pl-7 ${location === city ? "bg-primary/5 text-primary font-semibold" : ""}`}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                Aucune région trouvée pour "{searchTerm}"
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {/* Quick tags */}
+      <div className="flex flex-wrap gap-1">
+        {["Lomé", "Accra", "Cotonou", "Abidjan", "Dakar"].map(loc => (
+          <button
+            key={loc}
+            onClick={() => handleSelect(loc)}
+            className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${location === loc ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"}`}
+          >
+            {loc}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
