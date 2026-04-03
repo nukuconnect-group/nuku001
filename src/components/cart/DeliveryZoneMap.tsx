@@ -71,14 +71,17 @@ function matchLocationToZone(location: string): typeof togoZones[0] | null {
   return null;
 }
 
-// Pricing tiers based on distance
+// Gozem-inspired pricing tiers (base fare + per-km rate)
 function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: string } {
-  if (distanceKm <= 10) return { price: 500, tier: "Proximité (< 10 km)" };
-  if (distanceKm <= 30) return { price: 1000, tier: "Zone urbaine (< 30 km)" };
-  if (distanceKm <= 80) return { price: 1500, tier: "Zone régionale (< 80 km)" };
-  if (distanceKm <= 200) return { price: 2500, tier: "Inter-régional (< 200 km)" };
-  if (distanceKm <= 400) return { price: 4000, tier: "Longue distance (< 400 km)" };
-  return { price: 6000, tier: "Très longue distance (> 400 km)" };
+  // Base fare: 300 FCFA + per-km charge
+  const baseFare = 300;
+  if (distanceKm <= 3) return { price: baseFare + Math.round(distanceKm * 150), tier: "Course courte (≤ 3 km)" };
+  if (distanceKm <= 7) return { price: baseFare + Math.round(distanceKm * 130), tier: "Zone proche (≤ 7 km)" };
+  if (distanceKm <= 15) return { price: baseFare + Math.round(distanceKm * 110), tier: "Zone urbaine (≤ 15 km)" };
+  if (distanceKm <= 30) return { price: baseFare + Math.round(distanceKm * 100), tier: "Périurbain (≤ 30 km)" };
+  if (distanceKm <= 80) return { price: baseFare + Math.round(distanceKm * 80), tier: "Inter-ville (≤ 80 km)" };
+  if (distanceKm <= 200) return { price: baseFare + Math.round(distanceKm * 60), tier: "Régional (≤ 200 km)" };
+  return { price: baseFare + Math.round(distanceKm * 50), tier: "Longue distance (> 200 km)" };
 }
 
 const baseDeliveryOptions = [

@@ -134,9 +134,14 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
 
   const handleOrderClick = () => {
     if (!acceptedTerms) return;
-    // If payment step not yet shown, show it first
+    // If payment step not yet shown, show it and scroll to it
     if (!showPaymentStep && onShowPayment) {
       onShowPayment();
+      // Scroll to payment section after a brief delay for render
+      setTimeout(() => {
+        const paymentEl = document.getElementById("payment-section");
+        if (paymentEl) paymentEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
       return;
     }
     // Otherwise proceed to checkout (payment already visible)

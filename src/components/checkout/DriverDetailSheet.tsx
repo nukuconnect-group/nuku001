@@ -166,7 +166,17 @@ const DriverDetailSheet = ({ driver, open, onOpenChange, distanceKm, onChat }: D
             <MessageCircle className="w-4 h-4" />
             Discuter
           </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={() => {
+              const phone = driver.profile?.phone;
+              if (phone) {
+                window.location.href = `tel:${phone.replace(/\s/g, "")}`;
+              }
+            }}
+          >
             <Phone className="w-4 h-4" />
           </Button>
         </div>

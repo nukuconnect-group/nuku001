@@ -28,20 +28,30 @@ export const useDemands = (category?: string) => {
   return useQuery({
     queryKey: ["demands", category],
     queryFn: async () => {
-      let query = supabase
-        .from("demands")
-        .select(`*, profile:profiles!demands_profile_id_fkey(id, full_name, avatar_url, user_type, location)`)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+      try {
+        let query = supabase
+          .from("demands")
+          .select(`*, profile:profiles!demands_profile_id_fkey(id, full_name, avatar_url, user_type, location)`)
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
 
-      if (category && category !== "all") {
-        query = query.eq("category", category);
+        if (category && category !== "all") {
+          query = query.eq("category", category);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+          console.warn("Demands fetch error:", error.message);
+          return [] as Demand[];
+        }
+        return (data || []) as Demand[];
+      } catch (e) {
+        console.warn("Demands fetch exception:", e);
+        return [] as Demand[];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as Demand[];
     },
+    retry: 1,
+    staleTime: 30000,
   });
 };
 
@@ -59,21 +69,22 @@ export const useCreateDemand = () => {
       location?: string;
       image_url?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Non authentifié");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Veuillez vous connecter pour publier une demande.");
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("user_id", user.id)
-        .single();
+        .eq("user_id", session.user.id)
+        .maybeSingle();
 
-      if (!profile) throw new Error("Profil non trouvé");
+      if (profileError) throw new Error("Erreur de profil: " + profileError.message);
+      if (!profile) throw new Error("Profil non trouvé. Veuillez compléter votre profil.");
 
       const { data, error } = await supabase
         .from("demands")
         .insert({
-          user_id: user.id,
+          user_id: session.user.id,
           profile_id: profile.id,
           title: demand.title,
           description: demand.description || null,
