@@ -69,6 +69,8 @@ const Marketplace = () => {
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
+  const { data: allDemands } = useDemands();
+  const demandsCount = allDemands?.length || 0;
   
   // Real DB products always first, boosted on top, mock products only as filler at the end
   const allProducts = useMemo(() => {
