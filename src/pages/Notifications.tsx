@@ -154,112 +154,131 @@ const Notifications = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
       <main>
-        <div className="container mx-auto px-3 sm:px-4 py-6">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-primary" />
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="font-heading text-lg sm:text-xl font-bold text-foreground">Notifications</h1>
-                  <p className="text-xs text-muted-foreground">{unreadCount} non lue(s)</p>
+                  <h1 className="font-heading text-base sm:text-xl font-bold text-foreground">Notifications</h1>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{unreadCount} non lue(s)</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                {unreadCount > 0 && (
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={markAllAsRead}>
-                    <Check className="w-3.5 h-3.5" />Tout lire
-                  </Button>
-                )}
-              </div>
+              {unreadCount > 0 && (
+                <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3" onClick={markAllAsRead}>
+                  <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Tout lire
+                </Button>
+              )}
             </div>
 
-            {/* Category tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-              <div className="overflow-x-auto scrollbar-hide -mx-3 px-3">
-                <TabsList className="inline-flex w-auto gap-1 bg-muted/50 p-1">
-                  {CATEGORIES.map(cat => (
-                    <TabsTrigger key={cat.key} value={cat.key} className="text-xs px-3 py-1.5 gap-1.5 whitespace-nowrap">
-                      {cat.label}
-                      {(categoryCounts[cat.key] || 0) > 0 && (
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 min-w-[16px]">
-                          {categoryCounts[cat.key] || 0}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            </Tabs>
+            {/* Category summary cards on mobile */}
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+              {CATEGORIES.filter(c => c.key !== "all").map(cat => {
+                const count = categoryCounts[cat.key] || 0;
+                const iconMap: Record<string, React.ReactNode> = {
+                  order: <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
+                  message: <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />,
+                  product: <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
+                  delivery: <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
+                  system: <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />,
+                };
+                return (
+                  <button
+                    key={cat.key}
+                    onClick={() => setActiveTab(cat.key === activeTab ? "all" : cat.key)}
+                    className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all ${
+                      activeTab === cat.key
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-card hover:bg-muted/50"
+                    }`}
+                  >
+                    {iconMap[cat.key]}
+                    <span className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight text-center">{cat.label}</span>
+                    {count > 0 && (
+                      <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 py-0 h-3.5 sm:h-4 min-w-[14px]">
+                        {count}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-            {/* Delete category button */}
-            {filteredNotifications.length > 0 && (
-              <div className="flex justify-end mb-2">
-                <Button variant="ghost" size="sm" className="text-xs text-destructive gap-1" onClick={deleteAllInCategory}>
-                  <Trash2 className="w-3 h-3" />
-                  Supprimer {activeTab === "all" ? "tout" : "cette catégorie"}
+            {/* Active filter + delete */}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                {activeTab === "all" ? "Toutes les notifications" : CATEGORIES.find(c => c.key === activeTab)?.label}
+                {" "}({filteredNotifications.length})
+              </p>
+              {filteredNotifications.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive gap-1 h-6 sm:h-7 px-2" onClick={deleteAllInCategory}>
+                  <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  Supprimer
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
 
-            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-              <div className="space-y-2 pr-2">
-                {isLoading ? (
-                  <div className="flex justify-center py-16">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  </div>
-                ) : filteredNotifications.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <Bell className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
-                      </p>
+            {/* Notifications list */}
+            <div className="space-y-1.5 sm:space-y-2">
+              {isLoading ? (
+                <div className="flex justify-center py-16">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : filteredNotifications.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 sm:p-8 text-center">
+                    <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredNotifications.map((notif) => (
+                  <Card 
+                    key={notif.id} 
+                    className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
+                    onClick={() => handleNotifClick(notif)}
+                  >
+                    <CardContent className="p-2.5 sm:p-4">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          notif.is_read ? "bg-muted" : "bg-primary/10"
+                        }`}>
+                          {getIcon(notif.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <p className={`text-xs sm:text-sm font-medium truncate ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
+                              {notif.title}
+                            </p>
+                            {!notif.is_read && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary flex-shrink-0" />}
+                          </div>
+                          {notif.description && (
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.description}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-[9px] sm:text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
+                            {getNotifLink(notif) && (
+                              <span className="text-[9px] sm:text-[10px] text-primary font-medium flex items-center gap-0.5">
+                                Voir <ArrowRight className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+                          onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
+                          <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
-                ) : (
-                  filteredNotifications.map((notif) => (
-                    <Card 
-                      key={notif.id} 
-                      className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
-                      onClick={() => handleNotifClick(notif)}
-                    >
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            notif.is_read ? "bg-muted" : "bg-primary/10"
-                          }`}>
-                            {getIcon(notif.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className={`text-sm font-medium ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
-                                {notif.title}
-                              </p>
-                              {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
-                              {getNotifLink(notif) && (
-                                <span className="text-[10px] text-primary font-medium flex items-center gap-0.5">
-                                  Voir les détails <ArrowRight className="w-2.5 h-2.5" />
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </main>
