@@ -3,8 +3,12 @@ import App from "./App.tsx";
 import "./index.css";
 import { initSecurity } from "./utils/security";
 
-// Initialize security protections
-initSecurity();
+type IdleCallback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void;
+
+type IdleWindow = Window &
+  typeof globalThis & {
+    requestIdleCallback?: (callback: IdleCallback, options?: { timeout: number }) => number;
+  };
 
 // PWA guard: disable service worker in iframes and preview hosts
 const isInIframe = (() => {
@@ -25,4 +29,23 @@ if (isPreviewHost || isInIframe) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+createRoot(rootElement).render(<App />);
+
+const scheduleSecurityInit = () => {
+  const idleWindow = window as IdleWindow;
+
+  if (typeof idleWindow.requestIdleCallback === "function") {
+    idleWindow.requestIdleCallback(() => initSecurity(), { timeout: 1200 });
+    return;
+  }
+
+  window.setTimeout(() => initSecurity(), 300);
+};
+
+scheduleSecurityInit();

@@ -221,7 +221,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   };
 
   const currentUserType = resolvedUserType;
-  const isAccountPending = !isReady || (!!user && isProfileLoading && !profile);
+  const isProfileRefreshing = Boolean(user && isProfileLoading && !profile);
+  const isAccountPending = !isReady;
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
@@ -264,9 +265,17 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-left text-sm truncate">{profile?.full_name || user.email}</SheetTitle>
-                    <SheetDescription className="text-left text-[10px]">
-                       {getUserTypeLabel(resolvedUserType)}
+                    <SheetTitle className="text-left text-sm truncate">
+                      {profile?.full_name || user.email || "Mon compte"}
+                    </SheetTitle>
+                    <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[10px]">
+                      <span>{getUserTypeLabel(resolvedUserType)}</span>
+                      {isProfileRefreshing && (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Synchronisation...
+                        </span>
+                      )}
                     </SheetDescription>
                   </div>
                 </div>
