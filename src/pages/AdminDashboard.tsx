@@ -774,40 +774,23 @@ const AdminDashboard = () => {
 
             {/* Orders Tab */}
             <TabsContent value="orders">
-              <Card>
-                <CardHeader className="p-3 sm:p-4 pb-2">
-                  <CardTitle className="text-sm">Toutes les commandes</CardTitle>
-                  <CardDescription className="text-[11px]">
-                    {stats?.total_orders || 0} commandes • {formatPrice(Number(stats?.total_revenue || 0))} de revenus
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 pt-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground">Produit</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Acheteur</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Vendeur</th>
-                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Qté</th>
-                          <th className="text-right py-2 px-2 font-medium text-muted-foreground">Montant</th>
-                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Statut</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orders.map((o: any) => (
-                          <tr key={o.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                            <td className="py-2.5 px-2 font-medium">{o.product_name || "—"}</td>
-                            <td className="py-2.5 px-2 hidden sm:table-cell text-muted-foreground">{o.buyer_name || "—"}</td>
-                            <td className="py-2.5 px-2 hidden sm:table-cell text-muted-foreground">{o.seller_name || "—"}</td>
-                            <td className="py-2.5 px-2 text-center">{o.quantity}</td>
-                            <td className="py-2.5 px-2 text-right font-bold text-primary">{formatPrice(Number(o.total_price))}</td>
-                            <td className="py-2.5 px-2 text-center">{getStatusBadge(o.status)}</td>
-                            <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
-                              {new Date(o.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                            </td>
-                          </tr>
+              <OrderManager orders={orders} stats={stats} onRefresh={refreshData} />
+            </TabsContent>
+
+            {/* Products Tab */}
+            <TabsContent value="products">
+              <ProductsManager />
+            </TabsContent>
+
+            {/* Deliveries Tab */}
+            <TabsContent value="deliveries">
+              <DeliveryManager />
+            </TabsContent>
+
+            {/* Demands Tab */}
+            <TabsContent value="demands">
+              <DemandsManager />
+            </TabsContent>
                         ))}
                       </tbody>
                     </table>
