@@ -224,12 +224,10 @@ const Header = () => {
     navigate("/");
   };
 
-  const handleSaveLocation = () => {
-    if (customLocation.trim()) {
-      setUserLocation(customLocation);
-      toast({ title: t("header.deliveryLocation"), description: customLocation });
-    }
-    setLocationDialogOpen(false);
+  const handleSaveLocation = (location: string, countryCode: string) => {
+    setUserLocation(location);
+    setUserCountry(countryCode);
+    toast({ title: t("header.deliveryLocation"), description: location });
   };
 
   const markAllAsRead = async () => {
