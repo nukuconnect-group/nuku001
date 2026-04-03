@@ -283,6 +283,30 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
               </SheetHeader>
             </div>
 
+            {/* Premium / Upgrade banner */}
+            <div className="px-4 py-2 border-b border-border">
+              {currentUserType === "producer" || currentUserType === "trainer" ? (
+                <Link to="/plans" onClick={onClose}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors">
+                  <Crown className="w-4 h-4 text-accent flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-foreground">Mon abonnement</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+                </Link>
+              ) : (
+                <Link to="/devenir-fournisseur" onClick={onClose}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
+                  <Crown className="w-4 h-4 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-primary">Devenir Premium</span>
+                    <p className="text-[9px] text-muted-foreground">Vendez vos produits sur NukuConnect</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-primary/60" />
+                </Link>
+              )}
+            </div>
+
             {/* Menu items - Alibaba style */}
             <nav className="flex-1 overflow-y-auto">
               <div className="py-1">
@@ -349,53 +373,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               <div className="h-2 bg-muted/40" />
 
-              {/* Country / Language / Currency */}
+              {/* Country */}
               <div className="py-1">
                 <div className="px-4 py-3.5 border-b border-border/30">
-                  <div className="flex items-center gap-3.5 mb-3">
+                  <div className="flex items-center gap-3.5 mb-2">
                     <Globe className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs font-medium uppercase tracking-wide">PAYS, LANGUE & DEVISE</span>
+                    <span className="text-xs font-medium uppercase tracking-wide">PAYS</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 ml-8">
-                    <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase mb-1 block">Langue</label>
-                      <select
-                        value={lang}
-                        onChange={(e) => setLang(e.target.value as LangCode)}
-                        className="w-full text-xs p-2 rounded-lg border border-border bg-background"
-                      >
-                        {[
-                          { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
-                          { code: "en" as LangCode, name: "English", flag: "🇬🇧" },
-                          { code: "ewe" as LangCode, name: "Eʋegbe", flag: "🇹🇬" },
-                          { code: "kab" as LangCode, name: "Kabɩyɛ", flag: "🇹🇬" },
-                          { code: "wo" as LangCode, name: "Wolof", flag: "🇸🇳" },
-                        ].map(l => (
-                          <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase mb-1 block">Devise</label>
-                      <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                        className="w-full text-xs p-2 rounded-lg border border-border bg-background"
-                      >
-                        {[
-                          { code: "XOF" as CurrencyCode, name: "FCFA", symbol: "FCFA" },
-                          { code: "USD" as CurrencyCode, name: "Dollar", symbol: "$" },
-                          { code: "EUR" as CurrencyCode, name: "Euro", symbol: "€" },
-                          { code: "GBP" as CurrencyCode, name: "Livre", symbol: "£" },
-                        ].map(c => (
-                          <option key={c.code} value={c.code}>{c.symbol} {c.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="ml-8">
+                    <p className="text-xs text-foreground">📍 {profile?.location || "Togo"}</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2 ml-8">
-                    📍 {profile?.location || "Togo"} • {lang === "fr" ? "Français" : lang === "en" ? "English" : lang === "ewe" ? "Eʋegbe" : lang === "kab" ? "Kabɩyɛ" : "Wolof"} • {currency}
-                  </p>
                 </div>
 
                 {/* Help & Settings */}

@@ -27,13 +27,13 @@ const plans = [
   {
     id: "pro", name: "Pro", monthlyPrice: 5000, annualPrice: 50000, maxProducts: 15, commission: 5,
     description: "Pour les fournisseurs actifs", icon: Star, color: "bg-primary", popular: true,
-    features: ["Tout le plan Gratuit", "15 annonces produits", "Badge vérifié", "Mise en avant (3/mois)", "Statistiques de ventes", "Support prioritaire", "Formations premium", "QR codes traçabilité", "Commission réduite à 5%"],
+    features: ["Tout le plan Gratuit", "15 annonces produits", "Badge vérifié", "Mise en avant (3/mois)", "Statistiques de ventes", "Support prioritaire", "Formations premium", "QR codes traçabilité", "Chat NukuConnect IA illimité", "Commission réduite à 5%"],
     limitations: [],
   },
   {
     id: "business", name: "Business", monthlyPrice: 15000, annualPrice: 150000, maxProducts: 9999, commission: 3,
     description: "Pour les entreprises agricoles", icon: Rocket, color: "bg-gradient-hero", popular: false,
-    features: ["Tout le plan Pro", "Annonces illimitées", "Mise en avant illimitée", "Dashboard analytics avancé", "API d'intégration", "Account manager dédié", "Formation sur mesure", "Certification qualité", "Commission réduite à 3%"],
+    features: ["Tout le plan Pro", "Annonces illimitées", "Mise en avant illimitée", "Dashboard analytics avancé", "API d'intégration", "Account manager dédié", "Formation sur mesure", "Certification qualité", "Chat NukuConnect IA prioritaire", "Commission réduite à 3%"],
     limitations: [],
   },
   {

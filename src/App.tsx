@@ -46,6 +46,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
+const FormationDetail = lazy(() => import("./pages/FormationDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,6 +107,7 @@ const App = () => {
                   <Route path="/producteurs/:name" element={<ProducerProfile />} />
                   <Route path="/nuku-ai" element={<NukuAI />} />
                   <Route path="/formations" element={<Formations />} />
+                  <Route path="/formations/:id" element={<FormationDetail />} />
                   <Route path="/tracabilite" element={<Traceability />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/auth" element={<Auth />} />
