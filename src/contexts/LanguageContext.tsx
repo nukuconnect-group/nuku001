@@ -659,7 +659,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "product.add": "Dugal",
     "ai.title": "NUKU AI",
     "ai.subtitle": "Ndimbal bu tool ci agrokultur 24/7",
-    "ai.poweredBy": "Nukuconnect Technologie",
+    "ai.poweredBy": "NukuConnect IA",
     "ai.placeholder": "Laajal sa laaj ci tool...",
     "ai.thinking": "NUKU AI di xalaat...",
     "ai.suggested": "Laaj yu ñu tànn",
