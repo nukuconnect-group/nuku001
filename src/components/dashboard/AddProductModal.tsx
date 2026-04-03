@@ -455,11 +455,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
             </div>
 
             <div className="space-y-2">
-              <Label>Localisation *</Label>
-              <Input
+              <Label className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary" />
+                Localisation *
+              </Label>
+              <LocationSelect
                 value={newProduct.location}
-                onChange={(e) => setNewProduct({ ...newProduct, location: e.target.value })}
-                placeholder="Ex: Lomé, Togo"
+                onChange={(v) => setNewProduct({ ...newProduct, location: v })}
               />
             </div>
 

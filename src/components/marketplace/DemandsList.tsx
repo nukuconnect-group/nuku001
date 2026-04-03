@@ -227,7 +227,6 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
                   </div>
                 </div>
               </div>
-            </div>
           </CardContent>
         </Card>
       ))}
