@@ -46,6 +46,13 @@ const BuyerDashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("orders");
+  const [searchParams] = useSearchParams();
+
+  // Set active tab from URL query
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   const { wishlist: wishlistItems } = useWishlist();
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationData, setMigrationData] = useState({
