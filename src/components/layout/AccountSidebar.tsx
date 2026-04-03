@@ -265,7 +265,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <SheetTitle className="text-left text-sm truncate">{profile?.full_name || user.email}</SheetTitle>
-                    <SheetDescription className="text-left text-xs">
+                    <SheetDescription className="text-left text-[10px]">
                        {getUserTypeLabel(resolvedUserType)}
                     </SheetDescription>
                   </div>
