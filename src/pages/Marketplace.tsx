@@ -485,6 +485,7 @@ const Marketplace = () => {
               {demandsCount > 0 && (
                 <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 ml-1">{demandsCount}</Badge>
               )}
+            </button>
           </div>
         </div>
       </div>
