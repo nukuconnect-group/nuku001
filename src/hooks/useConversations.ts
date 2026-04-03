@@ -103,6 +103,12 @@ export function useConversations() {
         const product = c.products;
         const isOnline = otherUserId ? (presenceMap.get(otherUserId) || false) : false;
 
+        // Determine conversation category
+        let category: ConversationCategory = "general";
+        if (c.product_id) {
+          category = isBuyer ? "achat" : "vente";
+        }
+
         return {
           id: c.id,
           participant: {
@@ -117,6 +123,7 @@ export function useConversations() {
           productName: product?.name,
           productImage: product?.images?.[0],
           productId: c.product_id,
+          category,
         };
       })
     );
