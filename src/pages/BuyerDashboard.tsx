@@ -65,7 +65,7 @@ const BuyerDashboard = () => {
   const [migrating, setMigrating] = useState(false);
   useEffect(() => {
     if (!isReady || profileLoading) return;
-    if (!user) { navigate("/auth", { replace: true }); return; }
+    if (!user) { navigate("/auth?returnTo=/buyer-dashboard", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
 
     let isMounted = true;

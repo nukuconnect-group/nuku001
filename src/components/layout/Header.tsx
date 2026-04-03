@@ -221,7 +221,13 @@ const Header = () => {
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
   };
 
-  const getDashboardLink = () => profile?.user_type === "producer" ? "/dashboard" : "/buyer-dashboard";
+  const getDashboardLink = () => {
+    const type = profile?.user_type;
+    if (type === "producer" || type === "trainer") return "/dashboard";
+    if (type === "driver") return "/driver-dashboard";
+    if (type === "learner") return "/learner-dashboard";
+    return "/buyer-dashboard";
+  };
 
   const currentLanguage = languages.find(l => l.code === lang);
   const currentCurrencyData = currencies.find(c => c.code === currency);

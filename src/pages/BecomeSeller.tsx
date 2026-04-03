@@ -55,7 +55,7 @@ const BecomeSeller = () => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate("/auth", { replace: true });
+      navigate("/auth?returnTo=/devenir-fournisseur", { replace: true });
     }
   }, [isLoading, user, navigate]);
 
