@@ -8,11 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
-  Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply, Maximize2, Minimize2, Phone,
+  Image as ImageIcon, Sparkles, X, CheckCheck, Check, Clock, MessageCircle,
+  Loader2, Reply, Maximize2, Minimize2, Phone, Ban, Flag, AlertTriangle,
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
