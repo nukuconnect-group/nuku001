@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
