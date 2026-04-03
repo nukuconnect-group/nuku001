@@ -183,9 +183,27 @@ const Header = () => {
     { label: "Centre d'aide", href: "/aide" },
   ];
 
-  // Profile location sync
+  // Profile location sync + auto-detect
   useEffect(() => {
-    if (profile?.location) setUserLocation(profile.location);
+    if (profile?.location) {
+      setUserLocation(profile.location);
+    } else if (!profile?.location) {
+      // Auto-detect location via geolocation API
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=fr`);
+            const data = await res.json();
+            const city = data.address?.city || data.address?.town || data.address?.village || "";
+            const cc = data.address?.country_code?.toUpperCase() || "TG";
+            if (city) {
+              setUserLocation(`${city}, ${cc}`);
+              setUserCountry(cc);
+            }
+          } catch {}
+        }, () => {}, { timeout: 8000 });
+      }
+    }
     if (user?.id) fetchNotifications(user.id);
   }, [profile, user]);
 
