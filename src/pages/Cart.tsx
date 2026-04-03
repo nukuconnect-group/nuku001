@@ -333,7 +333,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-14 lg:pb-0">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
       <Header />
 
       {/* Success banner */}
