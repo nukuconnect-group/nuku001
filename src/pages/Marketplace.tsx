@@ -456,7 +456,34 @@ const Marketplace = () => {
         </div>
       </div>
 
-      {isLoading && (
+      {/* Products / Demands Toggle */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center gap-0 py-1">
+            <button
+              onClick={() => setMarketView("products")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-colors ${
+                marketView === "products"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <Package className="w-3.5 h-3.5" />
+              Produits en vente
+            </button>
+            <button
+              onClick={() => setMarketView("demands")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-colors ${
+                marketView === "demands"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <HandCoins className="w-3.5 h-3.5" />
+              Demandes d'achat
+            </button>
+          </div>
+        </div>
+      </div>
+
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
