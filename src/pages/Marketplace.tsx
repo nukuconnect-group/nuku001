@@ -482,7 +482,9 @@ const Marketplace = () => {
               }`}>
               <HandCoins className="w-3.5 h-3.5" />
               Demandes d'achat
-            </button>
+              {demandsCount > 0 && (
+                <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 ml-1">{demandsCount}</Badge>
+              )}
           </div>
         </div>
       </div>
