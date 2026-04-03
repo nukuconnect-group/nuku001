@@ -29,6 +29,7 @@ import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight
 import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
+import { useDemands } from "@/hooks/useDemands";
 import { Product } from "@/data/marketplace";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
