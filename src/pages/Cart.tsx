@@ -403,6 +403,7 @@ const Cart = () => {
                     if (addr.city) setDeliveryCity(addr.city);
                     if (addr.street) setDeliveryAddress(addr.street);
                     if (addr.quarter) setDeliveryQuarter(addr.quarter);
+                    setAddressAutoFilled(true);
                   }}
                 />
               )}

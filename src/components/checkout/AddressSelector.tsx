@@ -41,13 +41,15 @@ const AddressSelector = ({ onSelect, selectedId }: Props) => {
       setAddresses(data || []);
       setLoading(false);
 
-      // Auto-select default
+      // Auto-select default address immediately to pre-fill delivery zone
       if (data?.length && !selectedId) {
         const def = data.find(a => a.is_default) || data[0];
-        onSelect(def);
+        // Slight delay to ensure parent state is ready
+        setTimeout(() => onSelect(def), 100);
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return null;
