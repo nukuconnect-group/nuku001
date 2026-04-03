@@ -102,11 +102,11 @@ const HeroCarousel = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:gap-8 pt-3 sm:pt-8 border-t border-primary-foreground/20">
+          <div className="flex items-center gap-6 sm:gap-10 pt-3 sm:pt-8 border-t border-primary-foreground/20">
             {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-heading text-base sm:text-2xl md:text-3xl font-bold text-accent">{stat.value}</p>
-                <p className="text-[9px] sm:text-xs text-primary-foreground/70">{stat.label}</p>
+              <div key={stat.label} className="text-center">
+                <p className="font-heading text-lg sm:text-2xl md:text-3xl font-bold text-accent leading-none">{stat.value}</p>
+                <p className="text-[9px] sm:text-xs text-primary-foreground/70 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>

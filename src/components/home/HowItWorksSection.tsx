@@ -9,14 +9,14 @@ import step4Image from "@/assets/step-4-delivery.jpg";
 const steps = [
   {
     title: "Créez votre compte",
-    description: "Inscrivez-vous en quelques clics comme producteur ou acheteur.",
+    description: "Choisissez votre type de compte : Producteur, Acheteur, Fournisseur, Livreur ou Apprenant. Inscription rapide et gratuite.",
     image: step1Image,
     link: "/auth",
     linkText: "S'inscrire"
   },
   {
-    title: "Trouvez vos produits",
-    description: "Parcourez le marketplace et trouvez les produits agricoles locaux.",
+    title: "Trouvez vos produits & offres",
+    description: "Parcourez le marketplace, découvrez les produits agricoles locaux et consultez les offres d'achat des acheteurs.",
     image: step2Image,
     link: "/marketplace",
     linkText: "Explorer"
@@ -29,8 +29,8 @@ const steps = [
     linkText: "Acheter"
   },
   {
-    title: "Recevez vos produits",
-    description: "Suivez votre commande et recevez vos produits frais chez vous.",
+    title: "Livraison à domicile",
+    description: "Sélectionnez un livreur disponible près de vous, suivez votre commande en temps réel et recevez vos produits frais.",
     image: step4Image,
     link: "/suivi-livraison",
     linkText: "Suivre commande"
