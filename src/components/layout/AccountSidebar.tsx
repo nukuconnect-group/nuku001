@@ -309,20 +309,68 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               <div className="h-2 bg-muted/40" />
 
-              {/* Bottom items */}
+              {/* Country / Language / Currency */}
               <div className="py-1">
-                {bottomItems.filter(item => item.show).map((item) => (
-                  <Link
-                    key={item.href + item.label}
-                    to={item.href}
-                    onClick={onClose}
-                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
-                  >
-                    <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-sm font-semibold uppercase">{item.label}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
-                  </Link>
-                ))}
+                <div className="px-4 py-3.5 border-b border-border/30">
+                  <div className="flex items-center gap-3.5 mb-3">
+                    <Globe className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm font-semibold uppercase">PAYS, LANGUE & DEVISE</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 ml-8">
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase mb-1 block">Langue</label>
+                      <select
+                        value={lang}
+                        onChange={(e) => setLang(e.target.value as LangCode)}
+                        className="w-full text-xs p-2 rounded-lg border border-border bg-background"
+                      >
+                        {[
+                          { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
+                          { code: "en" as LangCode, name: "English", flag: "🇬🇧" },
+                          { code: "ewe" as LangCode, name: "Eʋegbe", flag: "🇹🇬" },
+                          { code: "kab" as LangCode, name: "Kabɩyɛ", flag: "🇹🇬" },
+                          { code: "wo" as LangCode, name: "Wolof", flag: "🇸🇳" },
+                        ].map(l => (
+                          <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase mb-1 block">Devise</label>
+                      <select
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                        className="w-full text-xs p-2 rounded-lg border border-border bg-background"
+                      >
+                        {[
+                          { code: "XOF" as CurrencyCode, name: "FCFA", symbol: "FCFA" },
+                          { code: "USD" as CurrencyCode, name: "Dollar", symbol: "$" },
+                          { code: "EUR" as CurrencyCode, name: "Euro", symbol: "€" },
+                          { code: "GBP" as CurrencyCode, name: "Livre", symbol: "£" },
+                        ].map(c => (
+                          <option key={c.code} value={c.code}>{c.symbol} {c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 ml-8">
+                    📍 {profile?.location || "Togo"} • {lang === "fr" ? "Français" : lang === "en" ? "English" : lang === "ewe" ? "Eʋegbe" : lang === "kab" ? "Kabɩyɛ" : "Wolof"} • {currency}
+                  </p>
+                </div>
+
+                {/* Help & Settings */}
+                <Link to="/aide" onClick={onClose}
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
+                  <HelpCircle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 text-sm font-semibold uppercase">CENTRE D'ASSISTANCE</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                </Link>
+                <Link to="/settings" onClick={onClose}
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
+                  <Settings className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 text-sm font-semibold uppercase">PARAMÈTRES</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                </Link>
               </div>
             </nav>
 
