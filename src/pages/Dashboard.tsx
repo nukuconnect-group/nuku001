@@ -33,7 +33,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, isLoading: profileLoading, updateProfile } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
