@@ -145,11 +145,10 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   if (items.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
       {items.map((demand) => (
-        <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all">
-          <CardContent className="p-3">
-            <div className="flex items-start gap-3">
+        <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all flex flex-col">
+          <CardContent className="p-3 flex-1 flex flex-col">
               {(demand as any).image_url ? (
                 <img src={(demand as any).image_url} alt="" className="w-14 h-14 object-cover flex-shrink-0 border border-border" />
               ) : (
