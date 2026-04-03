@@ -15,7 +15,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const { user, profile: ctxProfile } = useProfile();
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
@@ -24,25 +24,10 @@ const MobileBottomNav = () => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [showBecomeSellerDialog, setShowBecomeSellerDialog] = useState(false);
 
+  // Sync profile from context
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    setProfile(ctxProfile);
+  }, [ctxProfile]);
 
   // Fetch unread messages count
   const fetchUnreadMessages = useCallback(async (profileId: string) => {
