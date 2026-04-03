@@ -106,9 +106,6 @@ const Header = () => {
               <Link key={cat.id} to={`/marketplace?category=${cat.id}`}
                 onClick={() => { setShowSearchResults(false); setSearchQuery(""); }}
                 className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm">{cat.emoji}</span>
-                </div>
                 <span className="text-xs font-medium text-foreground">{cat.name}</span>
               </Link>
             ))}
@@ -374,7 +371,6 @@ const Header = () => {
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
                             <div className="flex items-center gap-2">
-                              <span className="text-base">{cat.emoji || "📦"}</span>
                               <span className="text-sm font-semibold uppercase">{cat.name}</span>
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />

@@ -2,11 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-/**
- * Hook that properly handles Supabase auth initialization.
- * Prevents the race condition where onAuthStateChange fires before
- * the session is fully restored from storage.
- */
 export function useAuthReady() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -17,24 +12,41 @@ export function useAuthReady() {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // 1. Set up listener FIRST (before getSession) so we never miss events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        // Use synchronous state updates only — no async/await here
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setIsReady(true);
-      }
-    );
-
-    // 2. Then check existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      setSession(existingSession);
-      setUser(existingSession?.user ?? null);
+    let isMounted = true;
+    const readyTimeout = window.setTimeout(() => {
+      if (!isMounted) return;
+      setSession(null);
+      setUser(null);
       setIsReady(true);
+    }, 2200);
+
+    const applyAuthState = (nextSession: Session | null) => {
+      if (!isMounted) return;
+      window.clearTimeout(readyTimeout);
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setIsReady(true);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applyAuthState(nextSession);
     });
 
-    return () => subscription.unsubscribe();
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: existingSession } }) => {
+        applyAuthState(existingSession);
+      })
+      .catch((error) => {
+        console.warn("Auth session restore failed:", error);
+        applyAuthState(null);
+      });
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(readyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, session, isReady };
