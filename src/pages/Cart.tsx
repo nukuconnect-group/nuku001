@@ -249,7 +249,7 @@ const Cart = () => {
   const handleCheckout = async () => {
     if (!user) {
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
-      navigate("/auth");
+      navigate("/auth?returnTo=/panier");
       return;
     }
 
