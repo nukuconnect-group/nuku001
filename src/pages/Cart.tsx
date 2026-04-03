@@ -9,7 +9,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import BillingForm from "@/components/cart/BillingForm";
 import DeliveryZoneMap, { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
