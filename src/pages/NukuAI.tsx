@@ -244,13 +244,13 @@ const NukuAI = () => {
                 <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="font-heading font-bold text-sm sm:text-base text-foreground flex items-center gap-2">
+                <h1 className="font-heading font-bold text-sm sm:text-base text-foreground hidden sm:flex items-center gap-2">
                   {t("ai.title")}
                   <Badge variant="secondary" className="text-[9px] sm:text-[10px]">
                     <Sparkles className="w-2.5 h-2.5 mr-0.5" />{t("ai.poweredBy")}
                   </Badge>
                 </h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">{t("ai.subtitle")}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">{t("ai.subtitle")}</p>
               </div>
               <div className="flex gap-1.5">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen((prev) => !prev)} title="Plein écran">

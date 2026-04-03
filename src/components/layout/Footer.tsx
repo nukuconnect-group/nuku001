@@ -34,7 +34,7 @@ const Footer = () => {
     { icon: Facebook, href: "https://web.facebook.com/Nukuconnect", label: "Facebook" },
     { icon: Twitter, href: "#", label: "Twitter" },
     { icon: Instagram, href: "#", label: "Instagram" },
-    { icon: Linkedin, href: "https://www.linkedin.com/in/leader-komisenaa-3730a5189/", label: "LinkedIn" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/nukuconnect/?viewAsMember=true", label: "LinkedIn" },
   ];
 
   return (
