@@ -553,7 +553,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   wo: {
     "nav.home": "Kër",
     "nav.marketplace": "Marse",
-    "nav.producers": "Yënguway yi",
+    "nav.producers": "Réseau",
     "nav.nukuai": "NUKU AI",
     "nav.formations": "Jàng",
     "nav.traceability": "Wërusit",
