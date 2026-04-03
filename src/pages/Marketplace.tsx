@@ -571,10 +571,9 @@ const Marketplace = () => {
                 </button>
               </div>
             </div>
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-full sm:w-40 h-10 text-xs rounded-full"><MapPin className="w-3.5 h-3.5 mr-1" /><SelectValue /></SelectTrigger>
-              <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
-            </Select>
+            <div className="w-full sm:w-52">
+              <LocationSearchFilter location={location} onLocationChange={setLocation} />
+            </div>
           </div>
         </div>
       </section>

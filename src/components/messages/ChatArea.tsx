@@ -8,11 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
-  Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply, Maximize2, Minimize2, Phone,
+  Image as ImageIcon, Sparkles, X, CheckCheck, Check, Clock, MessageCircle,
+  Loader2, Reply, Maximize2, Minimize2, Phone, Ban, Flag, AlertTriangle,
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
@@ -187,10 +187,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
   const getMessageStatus = (status: string) => {
     switch (status) {
-      case "read": return <CheckCheck className="w-3 h-3 text-primary" />;
-      case "delivered": return <CheckCheck className="w-3 h-3 text-muted-foreground" />;
-      case "sent": return <Clock className="w-3 h-3 text-muted-foreground" />;
-      default: return null;
+      case "read": return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
+      case "delivered": return <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />;
+      case "sent": return <Check className="w-3 h-3 text-muted-foreground/60" />;
+      default: return <Clock className="w-3 h-3 text-muted-foreground/40" />;
     }
   };
 
@@ -288,7 +288,13 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => toast({ title: "Conversation vidée" })}>Vider la conversation</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast({ title: "Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué` })} className="text-destructive">Bloquer</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => toast({ title: "🚫 Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué. Vous ne recevrez plus de messages.` })} className="text-destructive gap-2">
+              <Ban className="w-3.5 h-3.5" />Bloquer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast({ title: "🚩 Signalement envoyé", description: `${conversation.participant.name} a été signalé à notre équipe.` })} className="text-destructive gap-2">
+              <Flag className="w-3.5 h-3.5" />Signaler
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -399,25 +405,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         <div ref={messagesEndRef} />
       </div>
 
-      {/* AI Suggestions */}
-      {(showAiSuggestions || conversation?.isDelivery) && (
-        <div className="px-3 py-2 bg-primary/5 border-t border-primary/10">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-medium text-primary flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />Réponses rapides
-            </span>
-            {!conversation?.isDelivery && <button onClick={() => setShowAiSuggestions(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>}
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-            {quickReplies.map((reply) => (
-              <button key={reply.label} onClick={() => { setMessageInput(reply.text); setShowAiSuggestions(false); }}
-                className="whitespace-nowrap px-2.5 py-1 rounded-full bg-card border border-primary/20 text-[11px] font-medium text-foreground hover:bg-primary/10 transition-colors">
-                {reply.label}
-              </button>
-            ))}
-          </div>
+      {/* Quick Reply Suggestions - always visible like WhatsApp */}
+      <div className="px-2 sm:px-3 py-1.5 bg-muted/30 border-t border-border/50">
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+          {quickReplies.map((reply) => (
+            <button key={reply.label} onClick={() => { setMessageInput(reply.text); inputRef.current?.focus(); }}
+              className="whitespace-nowrap px-2.5 py-1 rounded-full bg-card border border-border text-[10px] sm:text-[11px] font-medium text-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors flex-shrink-0">
+              {reply.label}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Image preview */}
       {imagePreview && (

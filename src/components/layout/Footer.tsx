@@ -1,32 +1,35 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import footerBg from "@/assets/footer-bg.jpg";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   const footerLinks = {
     platform: [
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Fournisseurs", href: "/producteurs" },
-      { label: "Acheteurs", href: "/buyer-dashboard" },
+      { label: t("net.suppliers"), href: "/producteurs" },
+      { label: t("net.buyers"), href: "/buyer-dashboard" },
       { label: "NUKUCONNECT IA", href: "/nuku-ai" },
     ],
     resources: [
-      { label: "Formations", href: "/formations" },
-      { label: "Traçabilité", href: "/tracabilite" },
-      { label: "Tarifs", href: "/plans" },
-      { label: "Centre d'aide", href: "/aide" },
+      { label: t("nav.formations"), href: "/formations" },
+      { label: t("nav.traceability"), href: "/tracabilite" },
+      { label: t("nav.plans"), href: "/plans" },
+      { label: t("nav.help"), href: "/aide" },
     ],
     company: [
-      { label: "À propos", href: "/a-propos" },
-      { label: "Contact", href: "/contact" },
+      { label: t("nav.about"), href: "/a-propos" },
+      { label: t("nav.contact"), href: "/contact" },
     ],
     legal: [
-      { label: "Conditions d'utilisation", href: "/terms" },
-      { label: "Politique de confidentialité", href: "/privacy" },
-      { label: "Mentions légales", href: "/legal" },
+      { label: t("footer.terms"), href: "/terms" },
+      { label: t("footer.privacy"), href: "/privacy" },
+      { label: t("footer.legal"), href: "/legal" },
     ],
   };
 
@@ -54,19 +57,19 @@ const Footer = () => {
               </div>
               <div className="text-left">
                 <h3 className="font-heading text-base sm:text-lg font-bold text-white leading-tight">
-                  Téléchargez l'application
+                  {t("footer.downloadApp")}
                 </h3>
                 <p className="text-white/70 text-[11px] sm:text-sm leading-tight">
-                  Accédez à NUKUCONNECT partout, tout le temps.
+                  {t("footer.downloadDesc")}
                 </p>
               </div>
             </div>
             <div className="flex flex-row items-center gap-3 sm:gap-4">
               <a href="#" className="flex-shrink-0 block rounded-lg overflow-hidden">
-                <img src={badgeGooglePlay} alt="Disponible sur Google Play" className="h-10 sm:h-12 w-auto object-contain mix-blend-screen" />
+                <img src={badgeGooglePlay} alt="Google Play" className="h-10 sm:h-12 w-auto object-contain mix-blend-screen" />
               </a>
               <a href="#" className="flex-shrink-0 block">
-                <img src={badgeAppStore} alt="Télécharger dans l'App Store" className="h-10 sm:h-12 w-auto object-contain" />
+                <img src={badgeAppStore} alt="App Store" className="h-10 sm:h-12 w-auto object-contain" />
               </a>
             </div>
           </div>
@@ -81,7 +84,7 @@ const Footer = () => {
               <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-20 sm:h-24 object-contain" />
             </Link>
             <p className="text-white/70 text-xs sm:text-sm mb-4 sm:mb-6">
-              La marketplace agricole intelligente qui connecte producteurs et acheteurs.
+              {t("footer.desc")}
             </p>
             <div className="flex gap-2 sm:gap-3">
               {socialLinks.map((social, index) => (
@@ -99,7 +102,7 @@ const Footer = () => {
 
           {/* Links */}
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Plateforme</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">{t("footer.platform")}</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.platform.map((link) => (
                 <li key={link.href}>
@@ -112,7 +115,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Ressources</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">{t("footer.resources")}</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
@@ -125,7 +128,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Entreprise</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">{t("footer.company")}</h4>
             <ul className="space-y-2 sm:space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
@@ -138,7 +141,7 @@ const Footer = () => {
           </div>
 
           <div className="col-span-2 sm:col-span-1">
-            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">Contact</h4>
+            <h4 className="font-heading font-semibold text-sm sm:text-base mb-3 sm:mb-4 text-white">{t("footer.contact")}</h4>
             <ul className="space-y-2 sm:space-y-3">
               <li className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
                 <Mail className="w-4 h-4 flex-shrink-0" />
@@ -163,7 +166,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs sm:text-sm text-white/50 text-center md:text-left">
-            © 2025 NUKUCONNECT. Tous droits réservés.
+            © 2025 NUKUCONNECT. {t("footer.rights")}
           </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             {footerLinks.legal.map((link) => (
