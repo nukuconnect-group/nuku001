@@ -47,6 +47,17 @@ const locationsByCountry: { country: string; flag: string; cities: string[] }[] 
   { country: "Nigeria", flag: "🇳🇬", cities: ["Lagos", "Abuja", "Kano", "Ibadan"] },
   { country: "RDC", flag: "🇨🇩", cities: ["Kinshasa", "Lubumbashi"] },
   { country: "Guinée", flag: "🇬🇳", cities: ["Conakry"] },
+  { country: "Kenya", flag: "🇰🇪", cities: ["Nairobi", "Mombasa", "Kisumu", "Nakuru"] },
+  { country: "Tanzanie", flag: "🇹🇿", cities: ["Dar es Salaam", "Dodoma", "Arusha", "Mwanza"] },
+  { country: "Rwanda", flag: "🇷🇼", cities: ["Kigali", "Butare", "Gisenyi"] },
+  { country: "Ouganda", flag: "🇺🇬", cities: ["Kampala", "Entebbe", "Jinja"] },
+  { country: "Éthiopie", flag: "🇪🇹", cities: ["Addis-Abeba", "Dire Dawa", "Bahir Dar"] },
+  { country: "Mozambique", flag: "🇲🇿", cities: ["Maputo", "Beira", "Nampula"] },
+  { country: "Madagascar", flag: "🇲🇬", cities: ["Antananarivo", "Toamasina", "Antsirabe"] },
+  { country: "Congo", flag: "🇨🇬", cities: ["Brazzaville", "Pointe-Noire"] },
+  { country: "Gabon", flag: "🇬🇦", cities: ["Libreville", "Port-Gentil"] },
+  { country: "Tchad", flag: "🇹🇩", cities: ["N'Djaména", "Moundou"] },
+  { country: "Afrique du Sud", flag: "🇿🇦", cities: ["Johannesburg", "Le Cap", "Durban", "Pretoria"] },
 ];
 
 const locations = [
