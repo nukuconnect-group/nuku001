@@ -64,6 +64,21 @@ const AdminDashboard = () => {
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const refreshData = useCallback(async () => {
+    const [statsRes, usersRes, ordersRes, subsRes, analyticsRes] = await Promise.all([
+      supabase.rpc("get_admin_stats"),
+      supabase.rpc("get_admin_users"),
+      supabase.rpc("get_admin_orders"),
+      supabase.rpc("get_admin_subscriptions"),
+      supabase.rpc("get_admin_analytics"),
+    ]);
+    setStats(statsRes.data);
+    setUsers(usersRes.data || []);
+    setOrders(ordersRes.data || []);
+    setSubscriptions(subsRes.data || []);
+    setAnalytics(analyticsRes.data);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
 
