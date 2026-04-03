@@ -199,26 +199,54 @@ const Marketplace = () => {
     }
   };
 
+  const topRatedProducts = useMemo(() => 
+    [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 5),
+    [allProducts]
+  );
+
   const FiltersContent = () => (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">{t("mp.searchProduct")}</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder={t("mp.productName")} value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9 h-9 text-xs" />
+        <Label className="text-xs font-semibold uppercase tracking-wide">Stock Status</Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={discountOnly} onChange={(e) => setDiscountOnly(e.target.checked)} className="rounded border-border" />
+            <span className="text-xs">En promotion</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="rounded border-border" />
+            <span className="text-xs">En stock</span>
+          </div>
         </div>
-        {productSearch && productOptions.length > 0 && (
-          <div className="max-h-36 overflow-y-auto border border-border rounded-lg">
-            {productOptions.map((p) => (
-              <button key={p.id} onClick={() => { setSearchQuery(p.name); setProductSearch(""); setFiltersOpen(false); }}
-                className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left text-xs">
-                <img src={p.image} alt="" className="w-7 h-7 rounded object-cover" />
-                <span className="truncate">{p.name}</span>
+      </div>
+
+      {/* Most appreciated products */}
+      {topRatedProducts.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold uppercase tracking-wide">Produits les plus appréciés</Label>
+          <div className="divide-y divide-border">
+            {topRatedProducts.map((p) => (
+              <button key={p.id} onClick={() => { navigate(`/produit/${p.id}`); setFiltersOpen(false); }}
+                className="w-full flex items-center gap-3 py-2.5 hover:bg-muted/50 transition-colors text-left">
+                <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-semibold text-foreground line-clamp-2">{p.name}</h4>
+                  <div className="flex items-center gap-0.5 my-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < Math.round(p.producer.rating) ? "text-accent fill-accent" : "text-muted-foreground/30"}`} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {p.originalPrice && <span className="text-[10px] text-muted-foreground line-through">{fmtPrice(p.originalPrice)}</span>}
+                    <span className="text-xs font-bold text-primary">{fmtPrice(p.price)}</span>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label className="text-xs font-semibold">{t("nav.categories")}</Label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -242,7 +270,6 @@ const Marketplace = () => {
           <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
         </Select>
       </div>
-      {/* Note minimum */}
       <div className="space-y-2">
         <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Note minimum</Label>
         <div className="flex gap-1">
@@ -262,14 +289,6 @@ const Marketplace = () => {
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t("mp.verifiedOnly")}</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><PackageCheck className="w-3.5 h-3.5 text-green-600" />En stock uniquement</Label>
-          <Switch checked={inStockOnly} onCheckedChange={setInStockOnly} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-destructive" />En promotion</Label>
-          <Switch checked={discountOnly} onCheckedChange={setDiscountOnly} />
         </div>
       </div>
       <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">{t("mp.reset")}</Button>
