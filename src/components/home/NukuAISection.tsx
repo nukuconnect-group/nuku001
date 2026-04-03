@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 const NukuAISection = () => {
   const [messages] = useState([
-    { role: "assistant", content: "Bonjour ! Je suis NUKU AI, votre assistant agricole. Comment puis-je vous aider aujourd'hui ?" },
+    { role: "assistant", content: "Bonjour ! Je suis NUKUCONNECT IA, votre assistant agricole. Comment puis-je vous aider aujourd'hui ?" },
     { role: "user", content: "Comment améliorer le rendement de mes tomates ?" },
     { role: "assistant", content: "Pour améliorer vos tomates :\n\n🌱 Sol riche en compost\n💧 Arrosage régulier le matin\n☀️ 6-8h de soleil direct\n\nVoulez-vous plus de détails ?" },
   ]);
@@ -57,7 +57,7 @@ const NukuAISection = () => {
 
             <Link to="/nuku-ai">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold gap-2 text-sm sm:text-base">
-                Essayer NUKU AI <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
+                Essayer NUKUCONNECT IA <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
           </div>

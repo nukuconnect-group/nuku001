@@ -38,7 +38,7 @@ const slides = [
     image: heroAI,
     title: "L'IA au service de l'agriculture",
     subtitle: "Innovation Agricole",
-    description: "Conseils personnalisés grâce à notre assistant NUKU AI.",
+    description: "Conseils personnalisés grâce à notre assistant NUKUCONNECT IA.",
   }
 ];
 

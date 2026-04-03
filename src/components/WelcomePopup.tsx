@@ -79,7 +79,7 @@ const WelcomePopup = () => {
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-2">
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-xs font-medium">NUKU AI</p>
+              <p className="text-xs font-medium">NUKUCONNECT IA</p>
             </div>
           </div>
 
