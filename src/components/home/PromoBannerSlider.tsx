@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Users, ShoppingBag, TrendingUp, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Users, TrendingUp, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
@@ -212,10 +212,10 @@ const PromoBannerSlider = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
-              <ShoppingBag className="w-4 h-4 text-primary flex-shrink-0" />
+              <User className="w-4 h-4 text-primary flex-shrink-0" />
               <div>
                 <p className="text-xs font-bold text-foreground">25K+</p>
-                <p className="text-[9px] text-muted-foreground">Achats réalisés</p>
+                <p className="text-[9px] text-muted-foreground">Acheteurs</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
