@@ -50,7 +50,7 @@ const demoProducts = [
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, isLoading: profileLoading } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady } = useProfile();
   const [driverProfile, setDriverProfile] = useState<any>(null);
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
