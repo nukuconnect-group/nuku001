@@ -403,7 +403,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "product.add": "De eme",
     "ai.title": "NUKU AI",
     "ai.subtitle": "Agble ŋutinya na ŋkeke 24/7",
-    "ai.poweredBy": "Tso Nukuconnect Technologie",
+    "ai.poweredBy": "Tso NukuConnect IA",
     "ai.placeholder": "Bia wò agble biabia...",
     "ai.thinking": "NUKU AI le susu ɖom...",
     "ai.suggested": "Biabiawo si wotia",
