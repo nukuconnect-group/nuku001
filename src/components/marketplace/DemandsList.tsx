@@ -16,7 +16,7 @@ interface DemandsListProps {
   searchQuery?: string;
 }
 
-const DemandsList = ({ category, limit }: DemandsListProps) => {
+const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: demands, isLoading } = useDemands(category);
