@@ -30,12 +30,13 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         conv.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.productName?.toLowerCase().includes(searchQuery.toLowerCase());
       if (activeCategory === "unread") return matchesSearch && conv.unread > 0;
-      if (activeCategory === "product") return matchesSearch && conv.productName && !conv.isDelivery;
-      if (activeCategory === "delivery") return matchesSearch && conv.isDelivery;
+      if (activeCategory === "achat") return matchesSearch && conv.category === "achat";
+      if (activeCategory === "vente") return matchesSearch && conv.category === "vente";
+      if (activeCategory === "delivery") return matchesSearch && (conv.isDelivery || conv.category === "livraison");
       return matchesSearch;
     })
     .sort((a, b) => {
-      if (activeCategory === "oldest") return 0; // already sorted, reverse below
+      if (activeCategory === "oldest") return 0;
       return 0;
     });
 
