@@ -281,7 +281,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     key={item.href + item.label}
                     to={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
+                    className="flex items-center gap-3 px-4 py-2 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
                   >
                     <item.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="flex-1 text-xs font-medium uppercase tracking-wide">{item.label}</span>
