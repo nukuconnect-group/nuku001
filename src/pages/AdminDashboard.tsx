@@ -791,14 +791,6 @@ const AdminDashboard = () => {
             <TabsContent value="demands">
               <DemandsManager />
             </TabsContent>
-                        ))}
-                      </tbody>
-                    </table>
-                    {orders.length === 0 && <p className="text-xs text-muted-foreground text-center py-8">Aucune commande</p>}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
             {/* Subscriptions Tab */}
             <TabsContent value="subscriptions">
