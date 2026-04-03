@@ -74,7 +74,7 @@ const NukuAI = () => {
 
   const welcomeMsg: Message = {
     id: "welcome", role: "assistant",
-    content: "Bonjour ! 👋 Je suis **NUKU AI**, votre assistant agricole intelligent. Choisissez une catégorie ci-dessous ou posez directement votre question !",
+    content: "Bonjour ! 👋 Je suis **NUKUCONNECT IA**, votre assistant agricole intelligent. Choisissez une catégorie ci-dessous ou posez directement votre question !",
     timestamp: new Date(),
   };
 
