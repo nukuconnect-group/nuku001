@@ -51,7 +51,7 @@ const slides = [
 
 const stats = [
   { value: "10K+", label: "Producteurs" },
-  { value: "25K+", label: "Achats réalisés" },
+  { value: "25K+", label: "Acheteurs" },
   { value: "50K+", label: "Transactions" },
 ];
 
