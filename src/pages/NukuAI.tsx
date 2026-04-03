@@ -199,7 +199,7 @@ const NukuAI = () => {
         }
       }
     } catch (error: any) {
-      console.error("NUKU AI error:", error);
+      console.error("NUKUCONNECT IA error:", error);
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: `Désolé, une erreur s'est produite: ${error.message}. Veuillez réessayer.`, timestamp: new Date() }]);
     } finally {
       setIsLoading(false);

@@ -5,7 +5,7 @@ import {
 
 const features = [
   { icon: ShoppingCart, title: "Marketplace Agricole", description: "Publiez et achetez des produits agricoles avec facilité.", color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: MessageSquare, title: "NUKU AI - Assistant 24/7", description: "Chatbot IA qui répond à vos questions agricoles.", color: "text-accent", bgColor: "bg-accent/10" },
+  { icon: MessageSquare, title: "NUKUCONNECT IA - Assistant 24/7", description: "Chatbot IA qui répond à vos questions agricoles.", color: "text-accent", bgColor: "bg-accent/10" },
   { icon: Brain, title: "Recommandations IA", description: "Suggestions basées sur votre localisation et préférences.", color: "text-primary", bgColor: "bg-primary/10" },
   { icon: GraduationCap, title: "Formations Agricoles", description: "Cours en ligne et certifications pour vos techniques.", color: "text-accent", bgColor: "bg-accent/10" },
   { icon: QrCode, title: "Traçabilité Complète", description: "Suivez vos produits avec QR codes et historique.", color: "text-primary", bgColor: "bg-primary/10" },
