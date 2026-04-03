@@ -31,14 +31,14 @@ interface MarketplaceFiltersProps {
 
 const locations = [
   "Toutes les régions",
-  "Lomé",
-  "Kara",
-  "Sokodé",
-  "Kpalimé",
-  "Atakpamé",
-  "Dapaong",
-  "Tsévié",
-  "Notsé",
+  "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié", "Notsé",
+  "Accra", "Kumasi", "Tamale",
+  "Cotonou", "Porto-Novo", "Parakou",
+  "Abidjan", "Bouaké", "Yamoussoukro",
+  "Ouagadougou", "Bobo-Dioulasso",
+  "Dakar", "Thiès",
+  "Bamako", "Niamey", "Douala", "Yaoundé",
+  "Lagos", "Abuja", "Kinshasa", "Brazzaville",
 ];
 
 const MarketplaceFilters = ({
