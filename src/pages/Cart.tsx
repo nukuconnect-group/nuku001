@@ -38,6 +38,7 @@ const Cart = () => {
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryQuarter, setDeliveryQuarter] = useState("");
+  const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("paygate");
