@@ -746,6 +746,7 @@ const AdminDashboard = () => {
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Commandes</th>
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Plan</th>
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden lg:table-cell">Inscrit le</th>
+                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
