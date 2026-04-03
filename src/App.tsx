@@ -107,6 +107,7 @@ const App = () => {
                   <Route path="/producteurs/:name" element={<ProducerProfile />} />
                   <Route path="/nuku-ai" element={<NukuAI />} />
                   <Route path="/formations" element={<Formations />} />
+                  <Route path="/formations/:id" element={<FormationDetail />} />
                   <Route path="/tracabilite" element={<Traceability />} />
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/auth" element={<Auth />} />

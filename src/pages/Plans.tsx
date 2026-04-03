@@ -33,7 +33,7 @@ const plans = [
   {
     id: "business", name: "Business", monthlyPrice: 15000, annualPrice: 150000, maxProducts: 9999, commission: 3,
     description: "Pour les entreprises agricoles", icon: Rocket, color: "bg-gradient-hero", popular: false,
-    features: ["Tout le plan Pro", "Annonces illimitées", "Mise en avant illimitée", "Dashboard analytics avancé", "API d'intégration", "Account manager dédié", "Formation sur mesure", "Certification qualité", "Commission réduite à 3%"],
+    features: ["Tout le plan Pro", "Annonces illimitées", "Mise en avant illimitée", "Dashboard analytics avancé", "API d'intégration", "Account manager dédié", "Formation sur mesure", "Certification qualité", "Chat NukuConnect IA prioritaire", "Commission réduite à 3%"],
     limitations: [],
   },
   {
