@@ -778,6 +778,21 @@ const AdminDashboard = () => {
                             <td className="py-2.5 px-2 hidden lg:table-cell text-muted-foreground">
                               {new Date(u.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                             </td>
+                            <td className="py-2.5 px-2 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteUser(u.user_id, u.full_name || "Sans nom")}
+                                disabled={deletingUserId === u.user_id}
+                              >
+                                {deletingUserId === u.user_id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3 h-3" />
+                                )}
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
