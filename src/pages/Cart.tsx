@@ -372,7 +372,7 @@ const Cart = () => {
 
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left: Billing + Delivery + Payment */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4 min-w-0">
               <BillingForm data={billing} onChange={setBilling} />
 
               <DeliveryZoneMap
