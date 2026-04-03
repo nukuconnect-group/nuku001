@@ -226,7 +226,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
     { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
-    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: currentUserType === "buyer" },
+    { icon: ShoppingBag, label: "Mes commandes", href: "/buyer-dashboard?tab=orders", show: currentUserType === "buyer" },
     { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
     { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
