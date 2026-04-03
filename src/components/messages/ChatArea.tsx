@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply, Maximize2, Minimize2,
+  Loader2, Reply, Maximize2, Minimize2, Phone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
