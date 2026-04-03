@@ -28,20 +28,30 @@ export const useDemands = (category?: string) => {
   return useQuery({
     queryKey: ["demands", category],
     queryFn: async () => {
-      let query = supabase
-        .from("demands")
-        .select(`*, profile:profiles!demands_profile_id_fkey(id, full_name, avatar_url, user_type, location)`)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+      try {
+        let query = supabase
+          .from("demands")
+          .select(`*, profile:profiles!demands_profile_id_fkey(id, full_name, avatar_url, user_type, location)`)
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
 
-      if (category && category !== "all") {
-        query = query.eq("category", category);
+        if (category && category !== "all") {
+          query = query.eq("category", category);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+          console.warn("Demands fetch error:", error.message);
+          return [] as Demand[];
+        }
+        return (data || []) as Demand[];
+      } catch (e) {
+        console.warn("Demands fetch exception:", e);
+        return [] as Demand[];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as Demand[];
     },
+    retry: 1,
+    staleTime: 30000,
   });
 };
 
