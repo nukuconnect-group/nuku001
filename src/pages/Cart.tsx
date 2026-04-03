@@ -395,13 +395,48 @@ const Cart = () => {
               )}
 
               {deliveryMethod !== "pickup" && (
-                <AvailableDrivers
-                  city={deliveryCity}
-                  distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
-                  cartItems={items.map(item => ({ name: item.product.name, id: item.product.id, quantity: item.quantity, price: item.product.price }))}
-                  selectedDriverId={selectedDriver?.id || null}
-                  onSelectDriver={setSelectedDriver}
-                />
+                <>
+                  {/* Seller location & distance info */}
+                  <Card className="border-muted">
+                    <CardContent className="p-3">
+                      <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                        Distance fournisseur — acheteur
+                      </h4>
+                      <div className="space-y-1.5">
+                        {items.map((item) => {
+                          const sellerLoc = item.product.location || "Non définie";
+                          const buyerLoc = deliveryCity || "Non définie";
+                          return (
+                            <div key={item.product.id} className="flex items-center justify-between text-[11px] bg-muted/50 rounded-lg p-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-medium truncate">{item.product.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0 text-muted-foreground">
+                                <MapPin className="w-2.5 h-2.5 text-primary" />
+                                <span>{sellerLoc}</span>
+                                <span>→</span>
+                                <span>{buyerLoc}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {dynamicDeliveryPrice > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          💡 Le prix de livraison ({(dynamicDeliveryPrice).toLocaleString()} FCFA) est calculé en fonction de la distance réelle entre vous et le fournisseur.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <AvailableDrivers
+                    city={deliveryCity}
+                    distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
+                    cartItems={items.map(item => ({ name: item.product.name, id: item.product.id, quantity: item.quantity, price: item.product.price }))}
+                    selectedDriverId={selectedDriver?.id || null}
+                    onSelectDriver={setSelectedDriver}
+                  />
+                </>
               )}
 
               {/* Payment section: only shown after clicking "Passer la commande" */}
