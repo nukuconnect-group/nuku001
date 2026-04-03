@@ -275,7 +275,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "product.add": "Add",
     "ai.title": "NUKU AI",
     "ai.subtitle": "Smart agricultural assistant 24/7",
-    "ai.poweredBy": "By Nukuconnect Technology",
+    "ai.poweredBy": "By NukuConnect AI",
     "ai.placeholder": "Ask your agricultural question...",
     "ai.thinking": "NUKU AI is thinking...",
     "ai.suggested": "Suggested questions",
