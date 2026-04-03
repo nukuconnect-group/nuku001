@@ -30,6 +30,7 @@ import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import { Product } from "@/data/marketplace";
+import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
 const locations = [
   "Toutes les régions",
@@ -378,6 +379,7 @@ const Marketplace = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
+      <MarketplacePromoPopup />
 
       <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
