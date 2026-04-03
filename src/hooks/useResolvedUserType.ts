@@ -82,6 +82,7 @@ export function useResolvedUserType(userId?: string | null, profileUserType?: st
 
   return useMemo(() => {
     if (hasDriverProfile) return "driver";
-    return profileUserType || "buyer";
+    // Don't default to "buyer" - return the actual profile type or null
+    return profileUserType || null;
   }, [hasDriverProfile, profileUserType]);
 }
