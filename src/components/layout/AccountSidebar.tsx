@@ -58,7 +58,7 @@ const userTypeConfig: { value: UserType; label: string; icon: any; desc: string 
 const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useProfile();
+  const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
   const { canInstall, isInstalled, install, showInstallOption } = usePWAInstall();
   const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
@@ -82,27 +82,46 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [country, setCountry] = useState("Togo");
 
   useEffect(() => {
-    if (user?.id) {
-      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-        .then(({ data }) => setIsAdmin(!!data));
+    if (!isReady) return;
+
+    if (!user?.id) {
+      setIsAdmin(false);
+      return;
     }
-  }, [user]);
+
+    let active = true;
+
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setIsAdmin(!!data);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id, isReady]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail, password: loginPassword,
+        email: loginEmail,
+        password: loginPassword,
       });
       if (error) {
         toast({
           title: "Erreur de connexion",
-          description: error.message === "Invalid login credentials" 
+          description: error.message === "Invalid login credentials"
             ? "Email ou mot de passe incorrect."
             : error.message === "Email not confirmed"
-            ? "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
-            : error.message,
+              ? "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
+              : error.message,
           variant: "destructive",
         });
         return;
@@ -146,15 +165,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
       if (error) {
         toast({
           title: "Erreur",
-          description: error.message.includes("already registered") 
-            ? "Un compte existe déjà avec cet email." : error.message,
+          description: error.message.includes("already registered")
+            ? "Un compte existe déjà avec cet email."
+            : error.message,
           variant: "destructive",
         });
         return;
       }
 
-      toast({ 
-        title: "Inscription réussie !", 
+      toast({
+        title: "Inscription réussie !",
         description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
       });
       onClose();
@@ -180,8 +200,11 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const getUserTypeLabel = (type?: string) => {
     const map: Record<string, string> = {
-      producer: "Fournisseur", buyer: "Acheteur", driver: "Livreur",
-      learner: "Apprenant", trainer: "Formateur",
+      producer: "Fournisseur",
+      buyer: "Acheteur",
+      driver: "Livreur",
+      learner: "Apprenant",
+      trainer: "Formateur",
     };
     return map[type || ""] || "Utilisateur";
   };
@@ -195,6 +218,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   };
 
   const currentUserType = resolvedUserType;
+  const isAccountPending = !isReady || (!!user && isProfileLoading && !profile);
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
@@ -215,12 +239,15 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
-  // bottomItems removed — rendered inline below
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
-        {user ? (
+        {isAccountPending ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Chargement du compte...</p>
+          </div>
+        ) : user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
             <div className="px-4 py-5 border-b border-border">
