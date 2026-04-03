@@ -149,19 +149,22 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
       {items.map((demand) => (
         <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all flex flex-col">
           <CardContent className="p-3 flex-1 flex flex-col">
+            <div className="flex items-center gap-2 mb-2">
               {(demand as any).image_url ? (
-                <img src={(demand as any).image_url} alt="" className="w-14 h-14 object-cover flex-shrink-0 border border-border" />
+                <img src={(demand as any).image_url} alt="" className="w-10 h-10 object-cover flex-shrink-0 rounded border border-border" />
               ) : (
-                <div className="w-10 h-10 bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-accent/20 rounded flex items-center justify-center flex-shrink-0">
                   {demand.profile?.avatar_url ? (
-                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full object-cover rounded" />
                   ) : (
-                    <User className="w-4 h-4 text-accent-foreground" />
+                    <User className="w-3.5 h-3.5 text-accent-foreground" />
                   )}
                 </div>
               )}
+              <span className="text-[10px] font-medium text-foreground truncate">{demand.profile?.full_name || "Utilisateur"}</span>
+            </div>
 
-              <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold">
                     ACHAT
