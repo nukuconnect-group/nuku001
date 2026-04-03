@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Star, MapPin, Clock, Users, Loader2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Truck, Star, MapPin, Clock, Users, Loader2, ChevronRight, Link2 } from "lucide-react";
 import DriverDetailSheet from "./DriverDetailSheet";
 import { toast } from "sonner";
 

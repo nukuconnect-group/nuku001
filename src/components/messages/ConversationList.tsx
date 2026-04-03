@@ -93,9 +93,19 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
                 <span className="font-medium text-sm text-foreground truncate">{conv.participant.name}</span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0">{conv.timestamp}</span>
               </div>
-              {conv.isDelivery ? (
+              {conv.isDelivery || conv.category === "livraison" ? (
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 truncate">🚚 Chat livraison</span>
+                </div>
+              ) : conv.category === "achat" ? (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
+                  <span className="text-[10px] text-primary font-medium truncate">🛒 {conv.productName}</span>
+                </div>
+              ) : conv.category === "vente" ? (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
+                  <span className="text-[10px] font-medium truncate text-green-600 dark:text-green-400">💰 {conv.productName}</span>
                 </div>
               ) : conv.productName ? (
                 <div className="flex items-center gap-1.5 mb-0.5">
