@@ -16,7 +16,7 @@ import {
 
 const LearnerDashboard = () => {
   const navigate = useNavigate();
-  const { user, profile, isLoading: profileLoading } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady } = useProfile();
   const [formations, setFormations] = useState<any[]>([]);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [certificates, setCertificates] = useState<any[]>([]);
@@ -27,7 +27,7 @@ const LearnerDashboard = () => {
   const firstName = profile?.full_name?.split(" ")[0] || "Apprenant";
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
 
     const load = async () => {

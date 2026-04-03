@@ -21,7 +21,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
+  const { user, profile: ctxProfile, isLoading, isReady, updateProfile } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
   const resolvedUserType = useResolvedUserType(user?.id, ctxProfile?.user_type);
 
@@ -42,8 +42,9 @@ const Settings = () => {
   const profile = ctxProfile;
 
   useEffect(() => {
-    if (!isLoading && !user) navigate("/auth", { replace: true });
-  }, [isLoading, user, navigate]);
+    if (!isReady || isLoading) return;
+    if (!user) navigate("/auth", { replace: true });
+  }, [isReady, isLoading, user, navigate]);
 
   useEffect(() => {
     if (profile) {

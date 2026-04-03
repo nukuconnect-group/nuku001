@@ -50,7 +50,7 @@ const demoProducts = [
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, isLoading: profileLoading } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady } = useProfile();
   const [driverProfile, setDriverProfile] = useState<any>(null);
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
@@ -113,7 +113,7 @@ const DriverDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     fetchDriverData();
     // Get driver position for map

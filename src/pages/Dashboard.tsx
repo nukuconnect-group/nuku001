@@ -33,7 +33,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile, isLoading: profileLoading, updateProfile } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +49,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
 
@@ -66,7 +66,7 @@ const Dashboard = () => {
     };
     loadData();
     return () => { isMounted = false; };
-  }, [profileLoading, user, profile, navigate]);
+  }, [isReady, profileLoading, user, profile, navigate]);
   
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
