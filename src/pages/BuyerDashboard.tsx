@@ -699,7 +699,9 @@ const BuyerDashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-xl" />}>
+                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              </Suspense>
             </TabsContent>
 
           </Tabs>
