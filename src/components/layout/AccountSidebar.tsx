@@ -248,9 +248,6 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             <p className="text-sm text-muted-foreground">Chargement du compte...</p>
           </div>
         ) : user ? (
-            <p className="text-sm text-muted-foreground">Chargement du compte...</p>
-          </div>
-        ) : user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
             <div className="px-4 py-5 border-b border-border">
