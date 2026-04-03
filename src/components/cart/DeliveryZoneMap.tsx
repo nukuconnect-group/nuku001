@@ -57,6 +57,20 @@ function findClosestZone(lat: number, lng: number) {
   return closest;
 }
 
+// Try to fuzzy-match a location string (e.g. "Lomé", "LOME-AGOE, Togo", "Kara") to a zone
+function matchLocationToZone(location: string): typeof togoZones[0] | null {
+  if (!location) return null;
+  const normalized = location.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // Exact match first
+  for (const z of togoZones) {
+    const zNorm = z.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (normalized === zNorm || normalized.startsWith(zNorm + ",") || normalized.startsWith(zNorm + " ") || normalized.includes(zNorm)) {
+      return z;
+    }
+  }
+  return null;
+}
+
 // Pricing tiers based on distance
 function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: string } {
   if (distanceKm <= 10) return { price: 500, tier: "Proximité (< 10 km)" };
