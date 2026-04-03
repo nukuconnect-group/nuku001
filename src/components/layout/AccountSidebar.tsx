@@ -129,6 +129,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         return;
       }
       toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
+      // Stay on current page - just close sidebar, auth state change will refresh data
       onClose();
     } catch {
       toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });

@@ -95,11 +95,21 @@ const Auth = () => {
     } catch { setBuyerCountry("Togo"); }
   }, []);
 
+  // Read returnTo from URL params for post-login redirect
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+
   useEffect(() => {
     let redirected = false;
     const redirectUser = async (userId: string) => {
       if (redirected) return;
       redirected = true;
+
+      // If returnTo is specified, go back there directly
+      if (returnTo) {
+        navigate(returnTo, { replace: true });
+        return;
+      }
+
       let profileData = null;
       for (let i = 0; i < 4; i++) {
         const { data } = await supabase.from("profiles").select("user_type").eq("user_id", userId).maybeSingle();
@@ -115,7 +125,7 @@ const Auth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => { if (session) redirectUser(session.user.id); });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => { if (session && !redirected) redirectUser(session.user.id); });
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

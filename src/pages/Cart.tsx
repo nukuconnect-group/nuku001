@@ -58,34 +58,41 @@ const Cart = () => {
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
 
   // Load user profile and auto-fill billing
+  const fillBillingFromUser = async (sessionUser: any) => {
+    setBilling(prev => ({ ...prev, email: sessionUser.email || "" }));
+    const { data } = await supabase.from("profiles").select("*").eq("user_id", sessionUser.id).single();
+    if (data) {
+      setProfile(data);
+      const nameParts = (data.full_name || "").split(" ");
+      const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", sessionUser.id).maybeSingle();
+      const phone = privateData?.phone || "";
+      setBilling(prev => ({
+        ...prev,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        phone,
+      }));
+      if (data.location) setDeliveryCity(data.location);
+      if (phone) setMobileNumber(phone);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setBilling(prev => ({ ...prev, email: session.user!.email || "" }));
-        const { data } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
-        if (data) {
-          setProfile(data);
-          const nameParts = (data.full_name || "").split(" ");
-          const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", session.user!.id).maybeSingle();
-          const phone = privateData?.phone || "";
-          setBilling(prev => ({
-            ...prev,
-            firstName: nameParts[0] || "",
-            lastName: nameParts.slice(1).join(" ") || "",
-            phone,
-          }));
-          if (data.location) setDeliveryCity(data.location);
-          if (phone) setMobileNumber(phone);
-        }
-      }
+      if (session?.user) await fillBillingFromUser(session.user);
     };
     init();
 
-    // Also listen for auth changes so we don't lose session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth changes - re-fill billing when user logs in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const prev = user;
       setUser(session?.user ?? null);
+      // If user just logged in (was null, now has session), auto-fill billing
+      if (session?.user && !prev) {
+        await fillBillingFromUser(session.user);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
