@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import { Loader2, MessageCircle, Bot, Sparkles } from "lucide-react";
+import { Loader2, MessageCircle, Bot, Sparkles, LogIn } from "lucide-react";
 import { useConversations, type ConversationItem } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
+import { useProfile } from "@/contexts/ProfileContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatArea from "@/components/messages/ChatArea";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 
 const WELCOME_KEY = "nuku-welcome-shown";
@@ -35,6 +37,8 @@ Nous sommes ravis de vous accueillir sur la première plateforme agricole intell
 
 const Messages = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, isReady } = useProfile();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -94,6 +98,25 @@ const Messages = () => {
   const handleLocalMessage = (msg: any) => {
     setMessages((prev) => [...prev, msg]);
   };
+
+  // Redirect if not authenticated
+  if (isReady && !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+          <MessageCircle className="w-12 h-12 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground text-center">Connectez-vous pour accéder à vos messages</p>
+          <Link to="/auth?returnTo=/messages">
+            <Button variant="hero" className="gap-2">
+              <LogIn className="w-4 h-4" />Se connecter
+            </Button>
+          </Link>
+        </div>
+        <MobileBottomNav />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
