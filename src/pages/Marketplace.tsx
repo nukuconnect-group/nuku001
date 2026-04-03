@@ -29,6 +29,7 @@ import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight
 import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
+import { useDemands } from "@/hooks/useDemands";
 import { Product } from "@/data/marketplace";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
@@ -68,6 +69,8 @@ const Marketplace = () => {
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
+  const { data: allDemands } = useDemands();
+  const demandsCount = allDemands?.length || 0;
   
   // Real DB products always first, boosted on top, mock products only as filler at the end
   const allProducts = useMemo(() => {
@@ -479,6 +482,9 @@ const Marketplace = () => {
               }`}>
               <HandCoins className="w-3.5 h-3.5" />
               Demandes d'achat
+              {demandsCount > 0 && (
+                <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 ml-1">{demandsCount}</Badge>
+              )}
             </button>
           </div>
         </div>
