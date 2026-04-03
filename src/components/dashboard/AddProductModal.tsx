@@ -18,6 +18,70 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
+import { useProfile } from "@/contexts/ProfileContext";
+
+const LocationSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const [addresses, setAddresses] = useState<{ id: string; label: string; city: string | null; quarter: string | null; country: string | null }[]>([]);
+  const [manualMode, setManualMode] = useState(false);
+  const { profile } = useProfile();
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase
+        .from("delivery_addresses")
+        .select("id, label, city, quarter, country")
+        .eq("user_id", session.user.id);
+      setAddresses(data || []);
+      if (!value && profile?.location) {
+        onChange(profile.location);
+      } else if (!value && data?.length) {
+        const addr = data[0];
+        onChange([addr.quarter, addr.city, addr.country].filter(Boolean).join(", "));
+      }
+    };
+    load();
+  }, []);
+
+  const options = [
+    ...(profile?.location ? [{ key: "profile", label: `📍 ${profile.location}`, val: profile.location }] : []),
+    ...addresses.map(a => ({
+      key: a.id,
+      label: `${a.label} — ${[a.quarter, a.city, a.country].filter(Boolean).join(", ")}`,
+      val: [a.quarter, a.city, a.country].filter(Boolean).join(", "),
+    })),
+  ];
+
+  if (options.length === 0 || manualMode) {
+    return (
+      <div className="space-y-1.5">
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Ex: Lomé, Togo" />
+        {options.length > 0 && (
+          <button type="button" onClick={() => setManualMode(false)} className="text-[10px] text-primary hover:underline">
+            ← Choisir parmi mes adresses
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Select value={value} onValueChange={(v) => { if (v === "__custom") { setManualMode(true); onChange(""); } else { onChange(v); } }}>
+        <SelectTrigger>
+          <SelectValue placeholder="Choisir une localisation" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(o => (
+            <SelectItem key={o.key} value={o.val}>{o.label}</SelectItem>
+          ))}
+          <SelectItem value="__custom">✏️ Saisir manuellement</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 
 interface AddProductModalProps {
@@ -455,11 +519,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
             </div>
 
             <div className="space-y-2">
-              <Label>Localisation *</Label>
-              <Input
+              <Label className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary" />
+                Localisation *
+              </Label>
+              <LocationSelect
                 value={newProduct.location}
-                onChange={(e) => setNewProduct({ ...newProduct, location: e.target.value })}
-                placeholder="Ex: Lomé, Togo"
+                onChange={(v) => setNewProduct({ ...newProduct, location: v })}
               />
             </div>
 

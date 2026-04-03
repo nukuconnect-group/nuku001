@@ -163,54 +163,53 @@ const Formations = () => {
               {filteredCourses.map((course) => {
                 const prog = progress[course.id] || 0;
                 return (
-                  <Card key={course.id} className="group overflow-hidden hover:shadow-elevated transition-all duration-300">
-                    <div className="flex sm:flex-col">
-                      <div className="relative w-28 h-28 sm:w-full sm:h-auto sm:aspect-video overflow-hidden flex-shrink-0">
-                        <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                          <Button variant="secondary" size="sm" className="gap-2"><Play className="w-4 h-4" />Aperçu</Button>
+                  <Card key={course.id} className="group overflow-hidden hover:shadow-elevated transition-all duration-300 flex flex-col">
+                    {/* Image always on top */}
+                    <div className="relative w-full aspect-[4/3] overflow-hidden flex-shrink-0">
+                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-foreground/60 flex items-center justify-center">
+                          <Play className="w-5 h-5 text-primary-foreground" />
                         </div>
-                        <div className="absolute inset-0 flex items-center justify-center sm:hidden">
-                          <div className="w-10 h-10 rounded-full bg-foreground/60 flex items-center justify-center">
-                            <Play className="w-5 h-5 text-primary-foreground" />
-                          </div>
-                        </div>
-                        <Badge className="absolute top-2 left-2 text-[10px]" variant={course.is_paid ? "default" : "secondary"}>
-                          {course.is_paid ? `${formatPrice(course.price)} F` : "Gratuit"}
-                        </Badge>
                       </div>
-                      <CardContent className="p-3 sm:p-4 flex-1">
-                        <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{levelLabels[course.level] || course.level}</Badge>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 hidden sm:inline-flex">{course.category}</Badge>
-                        </div>
-                        <h3 className="font-heading font-semibold text-sm sm:text-base text-foreground mb-1 line-clamp-2">{course.title}</h3>
-                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2 hidden sm:block">{course.description}</p>
-                        <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground mb-2">
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatDuration(course.duration_minutes)}</span>
-                          <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />{course.modules_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1 mb-2">
-                          <Star className="w-3 h-3 text-accent fill-accent" />
-                          <span className="text-xs font-medium">{course.rating}</span>
-                          <span className="text-[10px] text-muted-foreground truncate">• {course.instructor}</span>
-                        </div>
-                        {prog > 0 && (
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between text-[10px] mb-1">
-                              <span className="text-muted-foreground">Progression</span>
-                              <span className="font-medium text-primary">{prog}%</span>
-                            </div>
-                            <Progress value={prog} className="h-1.5" />
+                      <Badge className="absolute top-2 left-2 text-[10px]" variant={course.is_paid ? "default" : "secondary"}>
+                        {course.is_paid ? `${formatPrice(course.price)} F` : "Gratuit"}
+                      </Badge>
+                    </div>
+                    {/* Content always below */}
+                    <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Badge variant="outline" className="text-[9px] px-1 py-0">{levelLabels[course.level] || course.level}</Badge>
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 hidden sm:inline-flex">{course.category}</Badge>
+                      </div>
+                      <h3 className="font-heading font-semibold text-xs sm:text-sm text-foreground mb-1 line-clamp-2">{course.title}</h3>
+                      <p className="text-[10px] text-muted-foreground mb-1.5 line-clamp-2 hidden sm:block">{course.description}</p>
+                      <div className="flex items-center gap-2 text-[9px] sm:text-xs text-muted-foreground mb-1.5">
+                        <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{formatDuration(course.duration_minutes)}</span>
+                        <span className="flex items-center gap-0.5"><BookOpen className="w-3 h-3" />{course.modules_count}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star className="w-3 h-3 text-accent fill-accent" />
+                        <span className="text-[10px] font-medium">{course.rating}</span>
+                        <span className="text-[9px] text-muted-foreground truncate">• {course.instructor}</span>
+                      </div>
+                      {prog > 0 && (
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between text-[9px] mb-0.5">
+                            <span className="text-muted-foreground">Progression</span>
+                            <span className="font-medium text-primary">{prog}%</span>
                           </div>
-                        )}
+                          <Progress value={prog} className="h-1.5" />
+                        </div>
+                      )}
+                      <div className="mt-auto">
                         <Link to={`/formations/${course.id}`}>
-                          <Button variant="hero" size="sm" className="w-full gap-1 text-xs sm:text-sm">
+                          <Button variant="hero" size="sm" className="w-full gap-1 text-[10px] sm:text-xs">
                             {prog > 0 ? <><Play className="w-3 h-3" />Continuer</> : <><GraduationCap className="w-3 h-3" />{course.is_paid ? "S'inscrire" : "Commencer"}</>}
                           </Button>
                         </Link>
-                      </CardContent>
-                    </div>
+                      </div>
+                    </CardContent>
                   </Card>
                 );
               })}
