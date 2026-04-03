@@ -544,6 +544,18 @@ const Marketplace = () => {
                   <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
                 );
               })}
+              {/* Buyer Demands Section */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
+                    <HandCoins className="w-4 h-4 text-accent" />
+                    Demandes d'achat
+                  </h2>
+                  <CreateDemandModal />
+                </div>
+                <DemandsList limit={5} />
+              </div>
+
               <div className="mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
