@@ -221,7 +221,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     return "/buyer-dashboard";
   };
 
-  const currentUserType = resolvedUserType;
+  const currentUserType = resolvedUserType || profile?.user_type || "buyer";
   const isProfileRefreshing = Boolean(user && isProfileLoading && !profile);
   const isAccountPending = !isReady;
 
