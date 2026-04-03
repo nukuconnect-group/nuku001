@@ -198,18 +198,16 @@ const Auth = () => {
   const selectedProfile = profileTypes.find(p => p.type === userType)!;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="py-6 sm:py-10">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="max-w-md mx-auto">
-            {/* Logo */}
-            <div className="text-center mb-5 sm:mb-6">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full bg-primary flex items-center justify-center shadow-lg mb-3">
-                <img src={nukuLogo} alt="NUKUCONNECT" className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white p-1" />
-              </div>
-              <h2 className="font-heading text-lg sm:text-xl font-bold text-primary">NUKUCONNECT</h2>
-              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">La marketplace agricole intelligente</p>
+            {/* Logo - Professional centered */}
+            <div className="text-center mb-6 sm:mb-8">
+              <img src={nukuLogo} alt="NUKUCONNECT" className="w-24 h-24 sm:w-28 sm:h-28 mx-auto object-contain mb-4" />
+              <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground">NUKUCONNECT</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">La marketplace agricole intelligente</p>
             </div>
 
             <Card variant="feature">
