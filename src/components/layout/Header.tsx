@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
@@ -26,6 +25,7 @@ import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
 import QRScanner from "@/components/QRScanner";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
+import LocationPickerDialog from "@/components/layout/LocationPickerDialog";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 
@@ -60,6 +60,7 @@ const Header = () => {
   const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
+  const [userCountry, setUserCountry] = useState("TG");
   const [customLocation, setCustomLocation] = useState("");
   const [notifications, setNotifications] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -181,9 +182,27 @@ const Header = () => {
     { label: "Centre d'aide", href: "/aide" },
   ];
 
-  // Profile location sync
+  // Profile location sync + auto-detect
   useEffect(() => {
-    if (profile?.location) setUserLocation(profile.location);
+    if (profile?.location) {
+      setUserLocation(profile.location);
+    } else if (!profile?.location) {
+      // Auto-detect location via geolocation API
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=fr`);
+            const data = await res.json();
+            const city = data.address?.city || data.address?.town || data.address?.village || "";
+            const cc = data.address?.country_code?.toUpperCase() || "TG";
+            if (city) {
+              setUserLocation(`${city}, ${cc}`);
+              setUserCountry(cc);
+            }
+          } catch {}
+        }, () => {}, { timeout: 8000 });
+      }
+    }
     if (user?.id) fetchNotifications(user.id);
   }, [profile, user]);
 
@@ -204,12 +223,10 @@ const Header = () => {
     navigate("/");
   };
 
-  const handleSaveLocation = () => {
-    if (customLocation.trim()) {
-      setUserLocation(customLocation);
-      toast({ title: t("header.deliveryLocation"), description: customLocation });
-    }
-    setLocationDialogOpen(false);
+  const handleSaveLocation = (location: string, countryCode: string) => {
+    setUserLocation(location);
+    setUserCountry(countryCode);
+    toast({ title: t("header.deliveryLocation"), description: location });
   };
 
   const markAllAsRead = async () => {
@@ -668,33 +685,12 @@ const Header = () => {
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
 
-      <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-5 h-5 text-primary" />{t("header.deliveryLocation")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-              <MapPin className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-[10px] text-muted-foreground">{t("header.currentLocation")}</p>
-                <p className="text-sm font-medium">{userLocation}</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium">{t("header.enterAddress")}</label>
-              <Input placeholder="Ex: Quartier Bè, Lomé, Togo" value={customLocation}
-                onChange={(e) => setCustomLocation(e.target.value)} className="text-sm" />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 text-xs" onClick={() => setLocationDialogOpen(false)}>{t("header.cancel")}</Button>
-              <Button variant="hero" className="flex-1 text-xs" onClick={handleSaveLocation}>{t("header.save")}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <LocationPickerDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        currentLocation={userLocation}
+        onSave={handleSaveLocation}
+      />
 
       <VoiceSearchModal
         open={voiceSearchOpen}
