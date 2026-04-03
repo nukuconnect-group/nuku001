@@ -74,8 +74,9 @@ const DeliveryTrackingWidget = ({ profileId, role }: Props) => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="p-4 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <CardContent className="p-4 flex items-center gap-2">
+          <Truck className="w-4 h-4 text-primary animate-pulse" />
+          <span className="text-xs text-muted-foreground">Vérification des livraisons…</span>
         </CardContent>
       </Card>
     );
