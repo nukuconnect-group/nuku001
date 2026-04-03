@@ -293,9 +293,9 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                         }
                       }
                     }}
-                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30 w-full"
+                    className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30 w-full"
                   >
-                    <Download className="w-5 h-5 text-primary flex-shrink-0" />
+                    <Download className="w-4 h-4 text-primary flex-shrink-0" />
                     <div className="flex-1 text-left">
                       <span className="text-xs font-medium uppercase tracking-wide">INSTALLER L'APPLICATION</span>
                       <p className="text-[10px] text-muted-foreground">Accès rapide depuis votre téléphone</p>
@@ -307,8 +307,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               {isInstalled && (
                 <div className="py-1">
-                  <div className="flex items-center gap-3.5 px-4 py-3.5 text-foreground border-b border-border/30">
-                    <Smartphone className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex items-center gap-3 px-4 py-2.5 text-foreground border-b border-border/30">
+                    <Smartphone className="w-4 h-4 text-primary flex-shrink-0" />
                     <span className="text-sm text-muted-foreground">✅ Application installée</span>
                   </div>
                 </div>
@@ -320,7 +320,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
               <div className="py-1">
                 <div className="px-4 py-3.5 border-b border-border/30">
                   <div className="flex items-center gap-3.5 mb-3">
-                    <Globe className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <Globe className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="text-xs font-medium uppercase tracking-wide">PAYS, LANGUE & DEVISE</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 ml-8">
@@ -367,14 +367,14 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
                 {/* Help & Settings */}
                 <Link to="/aide" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <HelpCircle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
+                  <HelpCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 text-xs font-medium uppercase tracking-wide">CENTRE D'ASSISTANCE</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
                 </Link>
                 <Link to="/settings" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <Settings className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
+                  <Settings className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 text-xs font-medium uppercase tracking-wide">PARAMÈTRES</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
                 </Link>
