@@ -337,7 +337,7 @@ const Header = () => {
                         {navLinks.map((link) => (
                           <Link key={link.href + link.label} to={link.href} onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
-                            <span className="text-sm font-medium">{link.label}</span>
+                            <span className="text-sm font-semibold uppercase">{link.label}</span>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </Link>
                         ))}
