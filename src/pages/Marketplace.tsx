@@ -27,6 +27,8 @@ import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
 import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
+import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
+import DemandsList from "@/components/marketplace/DemandsList";
 import { Product } from "@/data/marketplace";
 
 const locations = [
