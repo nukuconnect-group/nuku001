@@ -37,6 +37,8 @@ Nous sommes ravis de vous accueillir sur la première plateforme agricole intell
 
 const Messages = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, isReady } = useProfile();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
