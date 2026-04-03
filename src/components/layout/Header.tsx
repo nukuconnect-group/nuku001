@@ -61,6 +61,7 @@ const Header = () => {
   const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [userLocation, setUserLocation] = useState("Lomé, TG");
+  const [userCountry, setUserCountry] = useState("TG");
   const [customLocation, setCustomLocation] = useState("");
   const [notifications, setNotifications] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
