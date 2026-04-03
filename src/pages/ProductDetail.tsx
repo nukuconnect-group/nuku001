@@ -80,7 +80,7 @@ const ProductDetail = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
-      navigate("/auth");
+      navigate(`/auth?returnTo=${encodeURIComponent(`/produit/${id}`)}`);
       return;
     }
     setIsSending(true);

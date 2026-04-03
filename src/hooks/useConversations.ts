@@ -31,7 +31,7 @@ export function useConversations() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, user_type")
       .eq("user_id", session.user.id)
       .single();
 
@@ -43,32 +43,21 @@ export function useConversations() {
       .select(`
         id, product_id, buyer_id, seller_id, updated_at,
         products:product_id (name, images),
-        buyer:buyer_id (id, full_name, avatar_url),
-        seller:seller_id (id, full_name, avatar_url)
+        buyer:buyer_id (id, full_name, avatar_url, user_id),
+        seller:seller_id (id, full_name, avatar_url, user_id)
       `)
       .or(`buyer_id.eq.${profile.id},seller_id.eq.${profile.id}`)
       .order("updated_at", { ascending: false });
 
     if (!convs) { setLoading(false); return; }
 
-    // Fetch presence for all participants
-    const participantProfileIds = convs.map((c: any) => c.buyer_id === profile.id ? c.seller_id : c.buyer_id);
+    // Batch fetch presence for all participants
     const participantUserIds: string[] = [];
-    const profileToUserMap = new Map<string, string>();
-    
     for (const c of convs as any[]) {
       const other = c.buyer_id === profile.id ? c.seller : c.buyer;
-      if (other?.id) {
-        // We need user_id from profiles to check presence
-        const { data: pData } = await supabase.from("profiles").select("user_id").eq("id", other.id).single();
-        if (pData) {
-          profileToUserMap.set(other.id, pData.user_id);
-          participantUserIds.push(pData.user_id);
-        }
-      }
+      if (other?.user_id) participantUserIds.push(other.user_id);
     }
 
-    // Batch fetch presence
     const presenceMap = new Map<string, boolean>();
     if (participantUserIds.length > 0) {
       const { data: presenceData } = await supabase
@@ -78,82 +67,82 @@ export function useConversations() {
       presenceData?.forEach((p: any) => presenceMap.set(p.user_id, p.is_online));
     }
 
-    const items: ConversationItem[] = await Promise.all(
-      convs.map(async (c: any) => {
-        const isBuyer = c.buyer_id === profile.id;
-        const other = isBuyer ? c.seller : c.buyer;
-        const otherUserId = profileToUserMap.get(other?.id || "");
+    // Batch fetch last messages and unread counts
+    const convIds = convs.map((c: any) => c.id);
+    
+    // Get last message for each conversation
+    const { data: allMessages } = await supabase
+      .from("messages")
+      .select("conversation_id, content, created_at, sender_id, is_read")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false });
 
-        const { data: msgs } = await supabase
-          .from("messages")
-          .select("content, created_at, sender_id, is_read")
-          .eq("conversation_id", c.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
+    // Group by conversation - take first (latest) per conversation
+    const lastMsgMap = new Map<string, any>();
+    const unreadMap = new Map<string, number>();
+    
+    for (const msg of allMessages || []) {
+      if (!lastMsgMap.has(msg.conversation_id)) {
+        lastMsgMap.set(msg.conversation_id, msg);
+      }
+      // Count unread from others
+      if (msg.sender_id !== profile.id && !msg.is_read) {
+        unreadMap.set(msg.conversation_id, (unreadMap.get(msg.conversation_id) || 0) + 1);
+      }
+    }
 
-        const lastMsg = msgs?.[0];
+    const items: ConversationItem[] = convs.map((c: any) => {
+      const isBuyer = c.buyer_id === profile.id;
+      const other = isBuyer ? c.seller : c.buyer;
+      const isOnline = other?.user_id ? (presenceMap.get(other.user_id) || false) : false;
 
-        const { count } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("conversation_id", c.id)
-          .neq("sender_id", profile.id)
-          .eq("is_read", false);
+      const lastMsg = lastMsgMap.get(c.id);
+      const unread = unreadMap.get(c.id) || 0;
+      const product = c.products;
 
-        const product = c.products;
-        const isOnline = otherUserId ? (presenceMap.get(otherUserId) || false) : false;
+      let category: ConversationCategory = "general";
+      if (c.product_id) {
+        category = isBuyer ? "achat" : "vente";
+      }
 
-        // Determine conversation category
-        let category: ConversationCategory = "general";
-        if (c.product_id) {
-          category = isBuyer ? "achat" : "vente";
-        }
-
-        return {
-          id: c.id,
-          participant: {
-            id: other?.id || "",
-            name: other?.full_name || "Utilisateur",
-            avatar: other?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(other?.full_name || "U")}&background=1c98ed&color=fff`,
-            isOnline,
-          },
-          lastMessage: lastMsg?.content || "Nouvelle conversation",
-          timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(c.updated_at),
-          unread: count || 0,
-          productName: product?.name,
-          productImage: product?.images?.[0],
-          productId: c.product_id,
-          category,
-        };
-      })
-    );
+      return {
+        id: c.id,
+        participant: {
+          id: other?.id || "",
+          name: other?.full_name || "Utilisateur",
+          avatar: other?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(other?.full_name || "U")}&background=1c98ed&color=fff`,
+          isOnline,
+        },
+        lastMessage: lastMsg?.content || "Nouvelle conversation",
+        timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(c.updated_at),
+        unread,
+        productName: product?.name,
+        productImage: product?.images?.[0],
+        productId: c.product_id,
+        category,
+      };
+    });
 
     // Fetch delivery conversations
     const deliveryItems = await fetchDeliveryConversations(session.user.id, profile.id);
 
-    setConversations([...items, ...deliveryItems].sort((a, b) => {
-      // Sort by most recent
-      return 0; // already sorted by updated_at from DB
-    }));
+    setConversations([...items, ...deliveryItems]);
     setLoading(false);
   }, []);
 
   async function fetchDeliveryConversations(currentUserId: string, currentProfileId: string): Promise<ConversationItem[]> {
-    // Get deliveries where user is buyer (via orders) or driver
     const { data: driverProfile } = await supabase
       .from("driver_profiles")
       .select("id, profile_id")
       .eq("user_id", currentUserId)
       .maybeSingle();
 
-    // Get deliveries as buyer
     const { data: buyerOrders } = await supabase
       .from("orders")
       .select("id")
       .eq("buyer_id", currentProfileId);
 
     const orderIds = buyerOrders?.map(o => o.id) || [];
-
     let deliveries: any[] = [];
 
     if (orderIds.length > 0) {
@@ -177,45 +166,59 @@ export function useConversations() {
       }
     }
 
-    const deliveryConvs: ConversationItem[] = [];
+    if (deliveries.length === 0) return [];
 
-    for (const delivery of deliveries) {
-      // Get last delivery message
-      const { data: msgs } = await supabase
-        .from("delivery_messages")
-        .select("content, created_at, sender_id, is_read")
-        .eq("delivery_id", delivery.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+    // Batch fetch delivery messages
+    const deliveryIds = deliveries.map(d => d.id);
+    const { data: allDeliveryMsgs } = await supabase
+      .from("delivery_messages")
+      .select("delivery_id, content, created_at, sender_id, is_read")
+      .in("delivery_id", deliveryIds)
+      .order("created_at", { ascending: false });
 
-      const lastMsg = msgs?.[0];
+    const lastDeliveryMsgMap = new Map<string, any>();
+    const unreadDeliveryMap = new Map<string, number>();
+    for (const msg of allDeliveryMsgs || []) {
+      if (!lastDeliveryMsgMap.has(msg.delivery_id)) {
+        lastDeliveryMsgMap.set(msg.delivery_id, msg);
+      }
+      if (msg.sender_id !== currentUserId && !msg.is_read) {
+        unreadDeliveryMap.set(msg.delivery_id, (unreadDeliveryMap.get(msg.delivery_id) || 0) + 1);
+      }
+    }
 
-      const { count } = await supabase
-        .from("delivery_messages")
-        .select("id", { count: "exact", head: true })
-        .eq("delivery_id", delivery.id)
-        .neq("sender_id", currentUserId)
-        .eq("is_read", false);
+    // Batch fetch driver/buyer names
+    const driverIds = [...new Set(deliveries.filter(d => d.driver_id).map(d => d.driver_id))];
+    const driverNameMap = new Map<string, string>();
+    if (driverIds.length > 0) {
+      const { data: dps } = await supabase
+        .from("driver_profiles")
+        .select("id, profile_id")
+        .in("id", driverIds);
+      if (dps?.length) {
+        const profileIds = dps.map(dp => dp.profile_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", profileIds);
+        const profileNameMap = new Map<string, string>();
+        profiles?.forEach(p => profileNameMap.set(p.id, p.full_name || "Livreur"));
+        dps.forEach(dp => driverNameMap.set(dp.id, profileNameMap.get(dp.profile_id) || "Livreur"));
+      }
+    }
 
-      // Get the other party name
+    const deliveryConvs: ConversationItem[] = deliveries.map((delivery) => {
+      const lastMsg = lastDeliveryMsgMap.get(delivery.id);
+      const unread = unreadDeliveryMap.get(delivery.id) || 0;
+
       let otherName = "Livreur";
       if (driverProfile && delivery.driver_id === driverProfile.id) {
-        // I'm the driver, get buyer name
-        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", delivery.order_id).single();
-        if (order) {
-          const { data: buyer } = await supabase.from("profiles").select("full_name").eq("id", order.buyer_id).single();
-          otherName = buyer?.full_name || "Client";
-        }
+        otherName = "Client";
       } else if (delivery.driver_id) {
-        // I'm the buyer, get driver name
-        const { data: dp } = await supabase.from("driver_profiles").select("profile_id").eq("id", delivery.driver_id).single();
-        if (dp) {
-          const { data: driverP } = await supabase.from("profiles").select("full_name").eq("id", dp.profile_id).single();
-          otherName = driverP?.full_name || "Livreur";
-        }
+        otherName = driverNameMap.get(delivery.driver_id) || "Livreur";
       }
 
-      deliveryConvs.push({
+      return {
         id: `delivery-${delivery.id}`,
         participant: {
           id: delivery.driver_id || "",
@@ -225,12 +228,12 @@ export function useConversations() {
         },
         lastMessage: lastMsg?.content || "Chat livraison",
         timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(delivery.updated_at),
-        unread: count || 0,
+        unread,
         isDelivery: true,
         deliveryId: delivery.id,
         category: "livraison" as ConversationCategory,
-      });
-    }
+      };
+    });
 
     return deliveryConvs;
   }
@@ -250,9 +253,6 @@ export function useConversations() {
         fetchConversations();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_presence" }, () => {
         fetchConversations();
       })
       .subscribe();
