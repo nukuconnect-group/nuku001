@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Truck, Star, MapPin, Clock, Users, Loader2, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Truck, Star, MapPin, Clock, Users, Loader2, ChevronRight, Link2 } from "lucide-react";
 import DriverDetailSheet from "./DriverDetailSheet";
 import { toast } from "sonner";
 
@@ -111,53 +112,91 @@ const AvailableDrivers = ({ city, distanceKm, cartItems = [], selectedDriverId =
         ) : (
           <div className="space-y-2">
             {drivers.map((driver) => (
-              <button
-                key={driver.id}
-                className={`w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left border ${
-                  selectedDriverId === driver.id ? "bg-primary/5 border-primary/30" : "bg-muted/50 border-transparent hover:bg-muted"
-                }`}
-                onClick={() => {
-                  onSelectDriver?.(driver);
-                  setSelectedDriver(driver);
-                }}
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  {driver.profile?.avatar_url ? (
-                    <img src={driver.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <Truck className="w-4 h-4 text-primary" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{driver.profile?.full_name || "Livreur"}</p>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-0.5">
-                      <Star className="w-2.5 h-2.5 text-accent fill-accent" />
-                      {(driver.rating || 5).toFixed(1)}
-                    </span>
-                    <span>{vehicleLabels[driver.vehicle_type] || driver.vehicle_type}</span>
-                    <span>{driver.total_deliveries || 0} courses</span>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 flex items-center gap-1">
-                  <div>
-                    {selectedDriverId === driver.id && (
-                      <p className="text-[9px] font-semibold text-primary">Choisi</p>
+              <div key={driver.id} className="flex items-center gap-2">
+                <button
+                  className={`flex-1 flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left border ${
+                    selectedDriverId === driver.id ? "bg-primary/5 border-primary/30" : "bg-muted/50 border-transparent hover:bg-muted"
+                  }`}
+                  onClick={() => {
+                    onSelectDriver?.(driver);
+                    setSelectedDriver(driver);
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    {driver.profile?.avatar_url ? (
+                      <img src={driver.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <Truck className="w-4 h-4 text-primary" />
                     )}
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                      <Clock className="w-2.5 h-2.5" />
-                      {estimateTime(distanceKm)}
-                    </p>
-                    {driver.zone && (
-                      <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                        <MapPin className="w-2.5 h-2.5" />
-                        {driver.zone}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{driver.profile?.full_name || "Livreur"}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 text-accent fill-accent" />
+                        {(driver.rating || 5).toFixed(1)}
+                      </span>
+                      <span>{vehicleLabels[driver.vehicle_type] || driver.vehicle_type}</span>
+                      <span>{driver.total_deliveries || 0} courses</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 flex items-center gap-1">
+                    <div>
+                      {selectedDriverId === driver.id && (
+                        <p className="text-[9px] font-semibold text-primary">Choisi</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                        <Clock className="w-2.5 h-2.5" />
+                        {estimateTime(distanceKm)}
                       </p>
-                    )}
+                      {driver.zone && (
+                        <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" />
+                          {driver.zone}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-              </button>
+                </button>
+                {/* Attach driver button */}
+                <Button
+                  variant={selectedDriverId === driver.id ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 text-[10px] gap-1 flex-shrink-0"
+                  onClick={async () => {
+                    onSelectDriver?.(driver);
+                    if (driver.id.startsWith("demo-")) {
+                      toast.success(`${driver.profile?.full_name} rattaché (démo)`);
+                      return;
+                    }
+                    // Notify driver via notifications table
+                    try {
+                      const { data: driverData } = await supabase
+                        .from("driver_profiles")
+                        .select("user_id")
+                        .eq("id", driver.id)
+                        .single();
+                      if (driverData) {
+                        const productNames = cartItems.map(p => p.name).join(", ");
+                        await supabase.from("notifications").insert({
+                          user_id: driverData.user_id,
+                          type: "delivery",
+                          title: "🚚 Nouvelle livraison assignée !",
+                          description: `Un client vous a sélectionné pour livrer : ${productNames}. Distance : ${distanceKm ? distanceKm.toFixed(1) + " km" : "non définie"}. Zone : ${city}`,
+                        });
+                        toast.success(`${driver.profile?.full_name} a été notifié pour la livraison`);
+                      }
+                    } catch (err) {
+                      console.error("Notification error:", err);
+                      toast.success(`${driver.profile?.full_name} rattaché à la commande`);
+                    }
+                  }}
+                >
+                  <Link2 className="w-3 h-3" />
+                  Rattacher
+                </Button>
+              </div>
             ))}
             <p className="text-[9px] text-muted-foreground text-center">
               Cliquez pour choisir un livreur, voir son profil et discuter

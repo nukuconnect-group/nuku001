@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
+
 export interface ConversationItem {
   id: string;
   participant: { id: string; name: string; avatar: string; isOnline: boolean };
@@ -12,6 +14,7 @@ export interface ConversationItem {
   productId?: string;
   isDelivery?: boolean;
   deliveryId?: string;
+  category?: ConversationCategory;
 }
 
 export function useConversations() {
@@ -100,6 +103,12 @@ export function useConversations() {
         const product = c.products;
         const isOnline = otherUserId ? (presenceMap.get(otherUserId) || false) : false;
 
+        // Determine conversation category
+        let category: ConversationCategory = "general";
+        if (c.product_id) {
+          category = isBuyer ? "achat" : "vente";
+        }
+
         return {
           id: c.id,
           participant: {
@@ -114,6 +123,7 @@ export function useConversations() {
           productName: product?.name,
           productImage: product?.images?.[0],
           productId: c.product_id,
+          category,
         };
       })
     );
@@ -218,6 +228,7 @@ export function useConversations() {
         unread: count || 0,
         isDelivery: true,
         deliveryId: delivery.id,
+        category: "livraison" as ConversationCategory,
       });
     }
 

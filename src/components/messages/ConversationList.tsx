@@ -7,7 +7,8 @@ import { type ConversationItem } from "@/hooks/useConversations";
 const SORT_OPTIONS = [
   { id: "recent", label: "Récents" },
   { id: "unread", label: "Non lus" },
-  { id: "product", label: "Produits" },
+  { id: "achat", label: "🛒 Achats" },
+  { id: "vente", label: "💰 Ventes" },
   { id: "delivery", label: "🚚 Livraison" },
   { id: "oldest", label: "Anciens" },
 ];
@@ -29,12 +30,13 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         conv.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.productName?.toLowerCase().includes(searchQuery.toLowerCase());
       if (activeCategory === "unread") return matchesSearch && conv.unread > 0;
-      if (activeCategory === "product") return matchesSearch && conv.productName && !conv.isDelivery;
-      if (activeCategory === "delivery") return matchesSearch && conv.isDelivery;
+      if (activeCategory === "achat") return matchesSearch && conv.category === "achat";
+      if (activeCategory === "vente") return matchesSearch && conv.category === "vente";
+      if (activeCategory === "delivery") return matchesSearch && (conv.isDelivery || conv.category === "livraison");
       return matchesSearch;
     })
     .sort((a, b) => {
-      if (activeCategory === "oldest") return 0; // already sorted, reverse below
+      if (activeCategory === "oldest") return 0;
       return 0;
     });
 
@@ -91,9 +93,19 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
                 <span className="font-medium text-sm text-foreground truncate">{conv.participant.name}</span>
                 <span className="text-[10px] text-muted-foreground flex-shrink-0">{conv.timestamp}</span>
               </div>
-              {conv.isDelivery ? (
+              {conv.isDelivery || conv.category === "livraison" ? (
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 truncate">🚚 Chat livraison</span>
+                </div>
+              ) : conv.category === "achat" ? (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
+                  <span className="text-[10px] text-primary font-medium truncate">🛒 {conv.productName}</span>
+                </div>
+              ) : conv.category === "vente" ? (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {conv.productImage && <img src={conv.productImage} alt="" className="w-4 h-4 rounded object-cover" />}
+                  <span className="text-[10px] font-medium truncate text-green-600 dark:text-green-400">💰 {conv.productName}</span>
                 </div>
               ) : conv.productName ? (
                 <div className="flex items-center gap-1.5 mb-0.5">

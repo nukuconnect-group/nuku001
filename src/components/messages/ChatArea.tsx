@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Clock, MessageCircle,
-  Loader2, Reply, Maximize2, Minimize2,
+  Loader2, Reply, Maximize2, Minimize2, Phone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -260,6 +260,14 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </Badge>
           </Link>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => toast({ title: "📞 Appel", description: `Appel en cours vers ${conversation.participant.name}...` })}
+        >
+          <Phone className="w-4 h-4" />
+        </Button>
         {onToggleFullscreen && (
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={onToggleFullscreen}>
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
