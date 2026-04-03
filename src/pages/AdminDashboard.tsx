@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
@@ -15,7 +15,8 @@ import {
   Users, Package, ShoppingCart, DollarSign, TrendingUp, Crown,
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
-  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet
+  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet,
+  Truck, ShoppingBag, Leaf
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -26,6 +27,11 @@ import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 import SupportChat from "@/components/admin/SupportChat";
+import OrderManager from "@/components/admin/OrderManager";
+import ProductsManager from "@/components/admin/ProductsManager";
+import DeliveryManager from "@/components/admin/DeliveryManager";
+import DemandsManager from "@/components/admin/DemandsManager";
+import FinanceManager from "@/components/admin/FinanceManager";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -57,6 +63,21 @@ const AdminDashboard = () => {
   const [newMessage, setNewMessage] = useState("");
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const refreshData = useCallback(async () => {
+    const [statsRes, usersRes, ordersRes, subsRes, analyticsRes] = await Promise.all([
+      supabase.rpc("get_admin_stats"),
+      supabase.rpc("get_admin_users"),
+      supabase.rpc("get_admin_orders"),
+      supabase.rpc("get_admin_subscriptions"),
+      supabase.rpc("get_admin_analytics"),
+    ]);
+    setStats(statsRes.data);
+    setUsers(usersRes.data || []);
+    setOrders(ordersRes.data || []);
+    setSubscriptions(subsRes.data || []);
+    setAnalytics(analyticsRes.data);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -280,6 +301,15 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="orders" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <ShoppingCart className="w-3.5 h-3.5" />Commandes
+              </TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Package className="w-3.5 h-3.5" />Produits
+              </TabsTrigger>
+              <TabsTrigger value="deliveries" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Truck className="w-3.5 h-3.5" />Livraisons
+              </TabsTrigger>
+              <TabsTrigger value="demands" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <ShoppingBag className="w-3.5 h-3.5" />Demandes
               </TabsTrigger>
               <TabsTrigger value="subscriptions" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Crown className="w-3.5 h-3.5" />Abonnements
@@ -744,47 +774,22 @@ const AdminDashboard = () => {
 
             {/* Orders Tab */}
             <TabsContent value="orders">
-              <Card>
-                <CardHeader className="p-3 sm:p-4 pb-2">
-                  <CardTitle className="text-sm">Toutes les commandes</CardTitle>
-                  <CardDescription className="text-[11px]">
-                    {stats?.total_orders || 0} commandes • {formatPrice(Number(stats?.total_revenue || 0))} de revenus
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 pt-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground">Produit</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Acheteur</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Vendeur</th>
-                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Qté</th>
-                          <th className="text-right py-2 px-2 font-medium text-muted-foreground">Montant</th>
-                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Statut</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orders.map((o: any) => (
-                          <tr key={o.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                            <td className="py-2.5 px-2 font-medium">{o.product_name || "—"}</td>
-                            <td className="py-2.5 px-2 hidden sm:table-cell text-muted-foreground">{o.buyer_name || "—"}</td>
-                            <td className="py-2.5 px-2 hidden sm:table-cell text-muted-foreground">{o.seller_name || "—"}</td>
-                            <td className="py-2.5 px-2 text-center">{o.quantity}</td>
-                            <td className="py-2.5 px-2 text-right font-bold text-primary">{formatPrice(Number(o.total_price))}</td>
-                            <td className="py-2.5 px-2 text-center">{getStatusBadge(o.status)}</td>
-                            <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
-                              {new Date(o.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {orders.length === 0 && <p className="text-xs text-muted-foreground text-center py-8">Aucune commande</p>}
-                  </div>
-                </CardContent>
-              </Card>
+              <OrderManager orders={orders} stats={stats} onRefresh={refreshData} />
+            </TabsContent>
+
+            {/* Products Tab */}
+            <TabsContent value="products">
+              <ProductsManager />
+            </TabsContent>
+
+            {/* Deliveries Tab */}
+            <TabsContent value="deliveries">
+              <DeliveryManager />
+            </TabsContent>
+
+            {/* Demands Tab */}
+            <TabsContent value="demands">
+              <DemandsManager />
             </TabsContent>
 
             {/* Subscriptions Tab */}
@@ -957,115 +962,7 @@ const AdminDashboard = () => {
 
             {/* Finances Tab */}
             <TabsContent value="finances">
-              <div className="space-y-4">
-                {/* Revenue Overview */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  {(() => {
-                    const totalRevenue = Number(stats?.total_revenue || 0);
-                    // Estimate commissions: weighted average based on subscription distribution
-                    const proSubs = Number(stats?.pro_subscriptions || 0);
-                    const freeSubs = Math.max(0, Number(stats?.total_producers || 0) - proSubs);
-                    const avgCommissionRate = proSubs + freeSubs > 0 
-                      ? (freeSubs * 8 + proSubs * 5) / (freeSubs + proSubs) 
-                      : 8;
-                    const totalCommissions = Math.round(totalRevenue * avgCommissionRate / 100);
-                    const subscriptionRevenue = (proSubs * 5000);
-                    const totalPlatformRevenue = totalCommissions + subscriptionRevenue;
-
-                    const financeCards = [
-                      { label: "Ventes totales", value: formatPrice(totalRevenue), icon: ShoppingCart, color: "bg-green-500/15 text-green-600" },
-                      { label: "Commissions gagnées", value: formatPrice(totalCommissions), icon: HandCoins, color: "bg-primary/15 text-primary", sub: `~${avgCommissionRate.toFixed(1)}% moyen` },
-                      { label: "Revenus abonnements", value: formatPrice(subscriptionRevenue), icon: Crown, color: "bg-yellow-500/15 text-yellow-600", sub: `${proSubs} abonnés Pro` },
-                      { label: "Revenus plateforme", value: formatPrice(totalPlatformRevenue), icon: DollarSign, color: "bg-accent/15 text-accent-foreground", sub: "Commissions + Abonnements" },
-                    ];
-
-                    return financeCards.map((card) => (
-                      <Card key={card.label}>
-                        <CardContent className="p-4 sm:p-5">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
-                              <card.icon className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <p className="text-[11px] sm:text-xs text-muted-foreground">{card.label}</p>
-                              <p className="font-heading font-bold text-sm sm:text-lg text-foreground">{card.value}</p>
-                              {card.sub && <p className="text-[10px] text-muted-foreground">{card.sub}</p>}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ));
-                  })()}
-                </div>
-
-                {/* Commission rates explanation */}
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <HandCoins className="w-4 h-4 text-primary" />
-                      Grille de commissions par plan
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {[
-                        { plan: "Gratuit", rate: "8%", color: "bg-muted" },
-                        { plan: "Pro", rate: "5%", color: "bg-primary/10" },
-                        { plan: "Business", rate: "3%", color: "bg-accent/10" },
-                        { plan: "Entreprise", rate: "2%", color: "bg-yellow-500/10" },
-                      ].map((item) => (
-                        <div key={item.plan} className={`${item.color} rounded-xl p-3 text-center`}>
-                          <p className="text-xs font-medium text-muted-foreground">{item.plan}</p>
-                          <p className="font-heading text-xl font-bold text-foreground">{item.rate}</p>
-                          <p className="text-[10px] text-muted-foreground">par vente</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Recent orders with commission details */}
-                <Card>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm">Dernières ventes et commissions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs sm:text-sm">
-                        <thead>
-                          <tr className="border-b border-border">
-                            <th className="text-left py-2 text-muted-foreground font-medium">Vendeur</th>
-                            <th className="text-left py-2 text-muted-foreground font-medium">Montant</th>
-                            <th className="text-left py-2 text-muted-foreground font-medium">Commission</th>
-                            <th className="text-left py-2 text-muted-foreground font-medium">Net vendeur</th>
-                            <th className="text-left py-2 text-muted-foreground font-medium">Statut</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orders.slice(0, 15).map((order: any) => {
-                            const amount = Number(order.total_price || 0);
-                            // Default to 8% commission for display
-                            const commission = Math.round(amount * 0.08);
-                            const net = amount - commission;
-                            return (
-                              <tr key={order.id} className="border-b border-border/50">
-                                <td className="py-2">{order.seller_name || "Vendeur"}</td>
-                                <td className="py-2 font-medium">{formatPrice(amount)}</td>
-                                <td className="py-2 text-primary font-medium">{formatPrice(commission)}</td>
-                                <td className="py-2">{formatPrice(net)}</td>
-                                <td className="py-2">{getStatusBadge(order.status)}</td>
-                              </tr>
-                            );
-                          })}
-                          {orders.length === 0 && (
-                            <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Aucune vente enregistrée</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <FinanceManager orders={orders} users={users} stats={stats} />
             </TabsContent>
 
             {/* Withdrawals Tab */}
