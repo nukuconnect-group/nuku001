@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Award } from "lucide-react";
+import { ArrowRight, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
@@ -78,17 +78,6 @@ const HeroCarousel = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl">
-          <div className="overflow-hidden h-7 sm:h-10 mb-2 sm:mb-6">
-            {slides.map((slide, index) => (
-              <div key={index} className={`transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30">
-                  <Sparkles className="w-3 h-3 text-accent" />
-                  <span className="text-[10px] sm:text-sm font-medium text-primary-foreground">{slide.subtitle}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
           <div className="overflow-hidden mb-2 sm:mb-6">
             {slides.map((slide, index) => (
               <h1 key={index} className={`font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-primary-foreground leading-tight transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
@@ -113,11 +102,11 @@ const HeroCarousel = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:gap-8 pt-3 sm:pt-8 border-t border-primary-foreground/20">
+          <div className="flex items-center gap-6 sm:gap-10 pt-3 sm:pt-8 border-t border-primary-foreground/20">
             {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-heading text-base sm:text-2xl md:text-3xl font-bold text-accent">{stat.value}</p>
-                <p className="text-[9px] sm:text-xs text-primary-foreground/70">{stat.label}</p>
+              <div key={stat.label} className="text-center">
+                <p className="font-heading text-lg sm:text-2xl md:text-3xl font-bold text-accent leading-none">{stat.value}</p>
+                <p className="text-[9px] sm:text-xs text-primary-foreground/70 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
