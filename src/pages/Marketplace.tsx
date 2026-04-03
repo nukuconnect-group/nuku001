@@ -103,6 +103,7 @@ const Marketplace = () => {
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [marketView, setMarketView] = useState<"products" | "demands">("products");
   const sponsoredRef = useRef<HTMLDivElement>(null);
 
   const handleCompare = (product: Product) => {
