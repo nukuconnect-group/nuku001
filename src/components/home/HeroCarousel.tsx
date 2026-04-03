@@ -7,6 +7,7 @@ import heroFarmers from "@/assets/hero-farmers-connected.jpg";
 import heroNetwork from "@/assets/hero-network-agriculture.jpg";
 import heroOrganic from "@/assets/hero-organic-farm.jpg";
 import heroAI from "@/assets/hero-ai-agriculture.jpg";
+import heroDrone from "@/assets/hero-drone-agriculture.png";
 
 const slides = [
   {
@@ -15,6 +16,12 @@ const slides = [
     subtitle: "🏆 Prix Togo Top Impact",
     description: "NukuConnect a été récompensée comme la meilleure innovation technologique de l'année 2025 lors de la cérémonie Togo Top Impact.",
     isAward: true,
+  },
+  {
+    image: heroDrone,
+    title: "L'agriculture de précision par drone",
+    subtitle: "Technologie Avancée",
+    description: "Optimisez vos rendements grâce aux drones agricoles et à la surveillance intelligente des cultures.",
   },
   {
     image: heroFarmers,
@@ -44,7 +51,7 @@ const slides = [
 
 const stats = [
   { value: "10K+", label: "Producteurs" },
-  { value: "5K+", label: "Acheteurs" },
+  { value: "500+", label: "Produits disponibles" },
   { value: "50K+", label: "Transactions" },
 ];
 
