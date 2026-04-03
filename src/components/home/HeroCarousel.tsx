@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Award } from "lucide-react";
+import { ArrowRight, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import awardImage from "@/assets/award-togo-top-impact.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
