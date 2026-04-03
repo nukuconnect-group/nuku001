@@ -36,8 +36,8 @@ const DemandsList = ({ category, limit }: DemandsListProps) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <Badge className="bg-accent/20 text-accent-foreground text-[9px] px-1.5 py-0 gap-0.5">
-                    <HandCoins className="w-2.5 h-2.5" />DEMANDE
+                  <Badge className="bg-orange-500 text-white text-[9px] px-1.5 py-0 gap-0.5 font-bold">
+                    <HandCoins className="w-2.5 h-2.5" />ACHAT
                   </Badge>
                   <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{demand.category}</Badge>
                 </div>

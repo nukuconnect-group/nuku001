@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
+
 export interface ConversationItem {
   id: string;
   participant: { id: string; name: string; avatar: string; isOnline: boolean };
@@ -12,6 +14,7 @@ export interface ConversationItem {
   productId?: string;
   isDelivery?: boolean;
   deliveryId?: string;
+  category?: ConversationCategory;
 }
 
 export function useConversations() {
