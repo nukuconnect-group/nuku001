@@ -21,7 +21,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile: ctxProfile, isLoading, updateProfile } = useProfile();
+  const { user, profile: ctxProfile, isLoading, isReady, updateProfile } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
   const resolvedUserType = useResolvedUserType(user?.id, ctxProfile?.user_type);
 
