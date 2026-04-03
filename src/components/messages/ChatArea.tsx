@@ -187,10 +187,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
   const getMessageStatus = (status: string) => {
     switch (status) {
-      case "read": return <CheckCheck className="w-3 h-3 text-primary" />;
-      case "delivered": return <CheckCheck className="w-3 h-3 text-muted-foreground" />;
-      case "sent": return <Clock className="w-3 h-3 text-muted-foreground" />;
-      default: return null;
+      case "read": return <CheckCheck className="w-3.5 h-3.5 text-blue-500" />;
+      case "delivered": return <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />;
+      case "sent": return <Check className="w-3 h-3 text-muted-foreground/60" />;
+      default: return <Clock className="w-3 h-3 text-muted-foreground/40" />;
     }
   };
 
