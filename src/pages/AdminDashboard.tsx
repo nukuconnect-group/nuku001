@@ -55,6 +55,21 @@ const AdminDashboard = () => {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Supprimer le compte de "${userName}" et toutes ses données ? Cette action est irréversible.`)) return;
+    setDeletingUserId(userId);
+    try {
+      const { error } = await supabase.rpc("admin_delete_user_data", { p_user_id: userId });
+      if (error) throw error;
+      toast({ title: "Compte supprimé", description: `Les données de "${userName}" ont été supprimées.` });
+      setUsers(prev => prev.filter((u: any) => u.user_id !== userId));
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    }
+    setDeletingUserId(null);
+  };
 
   // Admin chat state
   const [conversations, setConversations] = useState<any[]>([]);
