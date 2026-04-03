@@ -27,7 +27,7 @@ const LearnerDashboard = () => {
   const firstName = profile?.full_name?.split(" ")[0] || "Apprenant";
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
 
     const load = async () => {

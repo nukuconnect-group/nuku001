@@ -42,8 +42,9 @@ const Settings = () => {
   const profile = ctxProfile;
 
   useEffect(() => {
-    if (!isLoading && !user) navigate("/auth", { replace: true });
-  }, [isLoading, user, navigate]);
+    if (!isReady || isLoading) return;
+    if (!user) navigate("/auth", { replace: true });
+  }, [isReady, isLoading, user, navigate]);
 
   useEffect(() => {
     if (profile) {
