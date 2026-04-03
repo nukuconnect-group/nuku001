@@ -54,17 +54,12 @@ const MobileBottomNav = () => {
   }, [profile?.id, fetchUnreadMessages]);
 
   const fetchProfile = async (userId: string) => {
-    setIsLoading(true);
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      setProfile(data);
-    } finally {
-      setIsLoading(false);
-    }
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    setProfile(data);
   };
 
   const handleSellClick = async () => {
