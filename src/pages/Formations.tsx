@@ -204,9 +204,11 @@ const Formations = () => {
                             <Progress value={prog} className="h-1.5" />
                           </div>
                         )}
-                        <Button variant="hero" size="sm" className="w-full gap-1 text-xs sm:text-sm">
-                          {prog > 0 ? <><Play className="w-3 h-3" />Continuer</> : <><GraduationCap className="w-3 h-3" />{course.is_paid ? "S'inscrire" : "Commencer"}</>}
-                        </Button>
+                        <Link to={`/formations/${course.id}`}>
+                          <Button variant="hero" size="sm" className="w-full gap-1 text-xs sm:text-sm">
+                            {prog > 0 ? <><Play className="w-3 h-3" />Continuer</> : <><GraduationCap className="w-3 h-3" />{course.is_paid ? "S'inscrire" : "Commencer"}</>}
+                          </Button>
+                        </Link>
                       </CardContent>
                     </div>
                   </Card>
