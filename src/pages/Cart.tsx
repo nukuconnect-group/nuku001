@@ -214,6 +214,36 @@ const Cart = () => {
       },
     }).catch(err => console.error("Email confirmation error:", err));
 
+    // Notify admin about the new order
+    const orderSummary = items.map(i => `${i.product.name} x${i.quantity}`).join(", ");
+    supabase.from("notifications").insert({
+      user_id: user.id, // will be replaced below with admin user_ids
+      type: "order",
+      title: "🛒 Nouvelle commande confirmée",
+      description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+    }).then(() => {});
+
+    // Also notify all admins
+    supabase.from("user_roles").select("user_id").eq("role", "admin").then(({ data: admins }) => {
+      if (admins?.length) {
+        const adminNotifs = admins.map(a => ({
+          user_id: a.user_id,
+          type: "order",
+          title: "🛒 Nouvelle commande confirmée",
+          description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Livraison: ${selectedDelivery?.name || "Retrait"}. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+        }));
+        supabase.from("notifications").insert(adminNotifs).then(() => {});
+      }
+    });
+
+    // Notify buyer in their account
+    supabase.from("notifications").insert({
+      user_id: user.id,
+      type: "order",
+      title: "✅ Commande confirmée !",
+      description: `Votre commande ${invoiceNumber} de ${finalTotal.toLocaleString()} FCFA a été confirmée. Facture PDF disponible.`,
+    }).then(() => {});
+
     toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers le suivi de livraison..." });
     clearCart();
     navigate("/suivi-livraison");
