@@ -40,7 +40,7 @@ const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatPrice } = useLanguage();
-  const { user, profile, isLoading: profileLoading, updateProfile } = useProfile();
+  const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [orders, setOrders] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
