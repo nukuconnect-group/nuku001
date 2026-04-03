@@ -84,7 +84,7 @@ export const useCreateDemand = () => {
       const { data, error } = await supabase
         .from("demands")
         .insert({
-          user_id: user.id,
+          user_id: session.user.id,
           profile_id: profile.id,
           title: demand.title,
           description: demand.description || null,
