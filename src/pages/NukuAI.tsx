@@ -74,7 +74,7 @@ const NukuAI = () => {
 
   const welcomeMsg: Message = {
     id: "welcome", role: "assistant",
-    content: "Bonjour ! 👋 Je suis **NUKU AI**, votre assistant agricole intelligent. Choisissez une catégorie ci-dessous ou posez directement votre question !",
+    content: "Bonjour ! 👋 Je suis **NUKUCONNECT IA**, votre assistant agricole intelligent. Choisissez une catégorie ci-dessous ou posez directement votre question !",
     timestamp: new Date(),
   };
 
@@ -328,24 +328,33 @@ const NukuAI = () => {
                 </Card>
               </div>
             ))}
-            {isLoading && (!isStreaming || messages[messages.length - 1]?.content === "") && (
+            {/* Thinking indicator — always visible while loading */}
+            {isLoading && (
               <div className="flex gap-2">
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-hero flex items-center justify-center">
-                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" />
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground animate-pulse" />
                 </div>
                 <Card className="p-2.5 sm:p-3">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
-                    <span className="text-xs font-medium">NUKU AI réfléchit...</span>
-                  </div>
-                  {elapsedSeconds > 0 && (
-                    <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span>Temps de réponse : {elapsedSeconds}s</span>
+                  {!isStreaming || messages[messages.length - 1]?.content === "" ? (
+                    <>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        <span className="text-xs font-medium">NUKUCONNECT IA réfléchit...</span>
+                      </div>
+                      {elapsedSeconds > 0 && (
+                        <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>Temps de réponse : {elapsedSeconds}s</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                      </span>
+                      <span className="text-[10px] font-medium">NUKUCONNECT IA est en train d'écrire...</span>
                     </div>
                   )}
                 </Card>

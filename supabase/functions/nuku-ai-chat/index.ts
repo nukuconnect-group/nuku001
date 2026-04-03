@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Tu es NUKU AI, un assistant agricole intelligent spécialisé dans l'agriculture africaine, particulièrement en Afrique de l'Ouest (Togo, Bénin, Ghana, Côte d'Ivoire, Burkina Faso, etc.).
+const SYSTEM_PROMPT = `Tu es NUKUCONNECT IA, un assistant agricole intelligent spécialisé dans l'agriculture africaine, particulièrement en Afrique de l'Ouest (Togo, Bénin, Ghana, Côte d'Ivoire, Burkina Faso, etc.).
 
 Tes domaines d'expertise incluent:
 - 🌾 Conseils de culture (maïs, riz, manioc, igname, tomates, etc.)
