@@ -79,12 +79,16 @@ const About = () => {
                   <p className="text-xs sm:text-sm text-primary font-medium mb-2">{member.role}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">{member.bio}</p>
                   <div className="flex justify-center gap-2 mt-3">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Linkedin className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Mail className="w-4 h-4" />
-                    </Button>
+                    <a href={member.facebook} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Facebook className="w-4 h-4" />
+                      </Button>
+                    </a>
+                    <a href={member.linkedin} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Linkedin className="w-4 h-4" />
+                      </Button>
+                    </a>
                   </div>
                 </CardContent>
               </Card>
