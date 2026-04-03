@@ -25,7 +25,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode, HandCoins } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode, HandCoins, Package } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
@@ -103,6 +103,7 @@ const Marketplace = () => {
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [marketView, setMarketView] = useState<"products" | "demands">("products");
   const sponsoredRef = useRef<HTMLDivElement>(null);
 
   const handleCompare = (product: Product) => {
@@ -198,26 +199,54 @@ const Marketplace = () => {
     }
   };
 
+  const topRatedProducts = useMemo(() => 
+    [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 5),
+    [allProducts]
+  );
+
   const FiltersContent = () => (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label className="text-xs font-semibold">{t("mp.searchProduct")}</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder={t("mp.productName")} value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9 h-9 text-xs" />
+        <Label className="text-xs font-semibold uppercase tracking-wide">Stock Status</Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={discountOnly} onChange={(e) => setDiscountOnly(e.target.checked)} className="rounded border-border" />
+            <span className="text-xs">En promotion</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="rounded border-border" />
+            <span className="text-xs">En stock</span>
+          </div>
         </div>
-        {productSearch && productOptions.length > 0 && (
-          <div className="max-h-36 overflow-y-auto border border-border rounded-lg">
-            {productOptions.map((p) => (
-              <button key={p.id} onClick={() => { setSearchQuery(p.name); setProductSearch(""); setFiltersOpen(false); }}
-                className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left text-xs">
-                <img src={p.image} alt="" className="w-7 h-7 rounded object-cover" />
-                <span className="truncate">{p.name}</span>
+      </div>
+
+      {/* Most appreciated products */}
+      {topRatedProducts.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-xs font-semibold uppercase tracking-wide">Produits les plus appréciés</Label>
+          <div className="divide-y divide-border">
+            {topRatedProducts.map((p) => (
+              <button key={p.id} onClick={() => { navigate(`/produit/${p.id}`); setFiltersOpen(false); }}
+                className="w-full flex items-center gap-3 py-2.5 hover:bg-muted/50 transition-colors text-left">
+                <img src={p.image} alt={p.name} className="w-14 h-14 object-cover rounded flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-semibold text-foreground line-clamp-2">{p.name}</h4>
+                  <div className="flex items-center gap-0.5 my-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < Math.round(p.producer.rating) ? "text-accent fill-accent" : "text-muted-foreground/30"}`} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {p.originalPrice && <span className="text-[10px] text-muted-foreground line-through">{fmtPrice(p.originalPrice)}</span>}
+                    <span className="text-xs font-bold text-primary">{fmtPrice(p.price)}</span>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label className="text-xs font-semibold">{t("nav.categories")}</Label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -241,7 +270,6 @@ const Marketplace = () => {
           <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
         </Select>
       </div>
-      {/* Note minimum */}
       <div className="space-y-2">
         <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Note minimum</Label>
         <div className="flex gap-1">
@@ -261,14 +289,6 @@ const Marketplace = () => {
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />{t("mp.verifiedOnly")}</Label>
           <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><PackageCheck className="w-3.5 h-3.5 text-green-600" />En stock uniquement</Label>
-          <Switch checked={inStockOnly} onCheckedChange={setInStockOnly} />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium flex items-center gap-1.5"><Percent className="w-3.5 h-3.5 text-destructive" />En promotion</Label>
-          <Switch checked={discountOnly} onCheckedChange={setDiscountOnly} />
         </div>
       </div>
       <Button variant="outline" onClick={handleReset} className="w-full h-9 text-xs">{t("mp.reset")}</Button>
@@ -436,12 +456,54 @@ const Marketplace = () => {
         </div>
       </div>
 
+      {/* Products / Demands Toggle */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center gap-0 py-1">
+            <button
+              onClick={() => setMarketView("products")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-colors ${
+                marketView === "products"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <Package className="w-3.5 h-3.5" />
+              Produits en vente
+            </button>
+            <button
+              onClick={() => setMarketView("demands")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-colors ${
+                marketView === "demands"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <HandCoins className="w-3.5 h-3.5" />
+              Demandes d'achat
+            </button>
+          </div>
+        </div>
+      </div>
+
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
 
+      {marketView === "demands" ? (
+        <section className="py-3 sm:py-6 lg:py-8">
+          <div className="container mx-auto px-3 sm:px-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
+                <HandCoins className="w-4 h-4 text-accent" />
+                Toutes les demandes d'achat
+              </h2>
+              <CreateDemandModal />
+            </div>
+            <DemandsList category={selectedCategory !== "all" ? selectedCategory : undefined} />
+          </div>
+        </section>
+      ) : (
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Sponsored Products Slider */}
@@ -546,17 +608,6 @@ const Marketplace = () => {
                   <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
                 );
               })}
-              {/* Buyer Demands Section */}
-              <div className="mb-6 sm:mb-8">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
-                    <HandCoins className="w-4 h-4 text-accent" />
-                    Demandes d'achat
-                  </h2>
-                  <CreateDemandModal />
-                </div>
-                <DemandsList limit={5} />
-              </div>
 
               <div className="mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -570,6 +621,8 @@ const Marketplace = () => {
           )}
         </div>
       </section>
+      )}
+
 
       <CompareDrawer
         products={compareProducts}
