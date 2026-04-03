@@ -189,13 +189,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const handleLogout = async () => {
     try {
-      // Clear all cached data to prevent cross-account leaks
-      const { QueryClient } = await import("@tanstack/react-query");
       queryClient.clear();
       await supabase.auth.signOut();
       toast({ title: "Déconnexion réussie", description: "À bientôt sur NUKUCONNECT !" });
       onClose();
-      // Force full reload to reset all in-memory state
       window.location.replace("/");
     } catch (err) {
       console.error("Logout error:", err);
