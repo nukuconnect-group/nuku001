@@ -179,7 +179,12 @@ const DeliveryZoneMap = ({
 
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setGeoError("Géolocalisation non supportée");
+      // Fallback to Lomé as default
+      const defaultZone = togoZones[0]; // Lomé
+      onCityChange(defaultZone.name);
+      setCitySearch(defaultZone.name);
+      setMarkerPos([defaultZone.lat, defaultZone.lng]);
+      setGeoError("Géolocalisation non supportée — Lomé sélectionné par défaut");
       return;
     }
     setGeoLoading(true);
@@ -195,12 +200,19 @@ const DeliveryZoneMap = ({
         setGeoLoading(false);
       },
       () => {
-        setGeoError("Position non disponible");
+        // Fallback to Lomé when position unavailable
+        const defaultZone = togoZones[0]; // Lomé
+        if (!city) {
+          onCityChange(defaultZone.name);
+          setCitySearch(defaultZone.name);
+          setMarkerPos([defaultZone.lat, defaultZone.lng]);
+        }
+        setGeoError("Position non disponible — Lomé sélectionné par défaut");
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [onCityChange]);
+  }, [onCityChange, city]);
 
   const filteredCities = useMemo(() => {
     if (!citySearch.trim()) return togoZones;
