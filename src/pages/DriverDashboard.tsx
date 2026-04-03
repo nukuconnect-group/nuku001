@@ -113,7 +113,7 @@ const DriverDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     fetchDriverData();
     // Get driver position for map
