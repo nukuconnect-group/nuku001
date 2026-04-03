@@ -27,7 +27,7 @@ const plans = [
   {
     id: "pro", name: "Pro", monthlyPrice: 5000, annualPrice: 50000, maxProducts: 15, commission: 5,
     description: "Pour les fournisseurs actifs", icon: Star, color: "bg-primary", popular: true,
-    features: ["Tout le plan Gratuit", "15 annonces produits", "Badge vérifié", "Mise en avant (3/mois)", "Statistiques de ventes", "Support prioritaire", "Formations premium", "QR codes traçabilité", "Commission réduite à 5%"],
+    features: ["Tout le plan Gratuit", "15 annonces produits", "Badge vérifié", "Mise en avant (3/mois)", "Statistiques de ventes", "Support prioritaire", "Formations premium", "QR codes traçabilité", "Chat NukuConnect IA illimité", "Commission réduite à 5%"],
     limitations: [],
   },
   {
