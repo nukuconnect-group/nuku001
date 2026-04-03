@@ -369,7 +369,7 @@ const Header = () => {
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
                             <div className="flex items-center gap-2">
                               <span className="text-base">{cat.emoji || "📦"}</span>
-                              <span className="text-sm font-medium">{cat.name}</span>
+                              <span className="text-sm font-semibold uppercase">{cat.name}</span>
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </Link>

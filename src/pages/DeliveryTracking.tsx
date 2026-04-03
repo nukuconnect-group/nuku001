@@ -69,7 +69,20 @@ const DeliveryTracking = () => {
       if (mounted) setIsLoading(false);
     };
     load();
-    return () => { mounted = false; };
+
+    // Keep auth state in sync
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data: prof } = await supabase.from("profiles").select("id, user_type, full_name").eq("user_id", session.user.id).maybeSingle();
+        if (!mounted) return;
+        setProfile(prof);
+        if (prof) await fetchOrders(prof);
+      }
+    });
+
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
