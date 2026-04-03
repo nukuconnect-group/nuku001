@@ -23,21 +23,17 @@ const BuyerAIRecommendations = ({ userId, profileId, location }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[1, 2].map(i => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Skeleton className="w-5 h-5 rounded" />
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {[1, 2, 3].map(j => <Skeleton key={j} className="h-32 rounded-lg" />)}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-xs text-muted-foreground">Analyse IA en cours…</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {[1, 2, 3].map(j => <Skeleton key={j} className="h-24 rounded-lg" />)}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

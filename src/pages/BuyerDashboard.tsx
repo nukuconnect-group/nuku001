@@ -153,7 +153,7 @@ const BuyerDashboard = () => {
     return <Badge variant={s.variant} className="text-[10px] sm:text-xs">{s.label}</Badge>;
   };
 
-  if (isLoading || profileLoading) {
+  if (!isReady || (!profile && profileLoading)) {
     return (
       <div className="min-h-screen bg-background pb-20 lg:pb-0">
         <Header />

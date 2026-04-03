@@ -25,9 +25,10 @@ export function useAIRecommendations(role: "buyer" | "producer", userId?: string
       return data as { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
     },
     enabled: !!userId && !!profileId,
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-    retry: 1,
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
+    retry: 0,
+    placeholderData: (prev: any) => prev,
   });
 }
 
