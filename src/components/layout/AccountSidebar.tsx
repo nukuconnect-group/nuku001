@@ -256,7 +256,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
                   >
                     <item.icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-sm">{item.label}</span>
+                    <span className="flex-1 text-sm font-semibold uppercase">{item.label}</span>
                     {item.badge && (
                       <span className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
                     )}
