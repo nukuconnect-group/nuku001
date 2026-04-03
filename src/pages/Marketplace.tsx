@@ -26,7 +26,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode, HandCoins, Package } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode, HandCoins, Package, Globe } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
@@ -34,35 +34,136 @@ import { useDemands } from "@/hooks/useDemands";
 import { Product } from "@/data/marketplace";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
-const locations = [
-  "Toutes les régions",
-  // Togo
-  "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié",
-  // Bénin
-  "Cotonou", "Porto-Novo", "Parakou", "Abomey",
-  // Ghana
-  "Accra", "Kumasi", "Tamale", "Cape Coast",
-  // Côte d'Ivoire
-  "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro",
-  // Sénégal
-  "Dakar", "Saint-Louis", "Thiès", "Ziguinchor",
-  // Burkina Faso
-  "Ouagadougou", "Bobo-Dioulasso", "Koudougou",
-  // Mali
-  "Bamako", "Sikasso", "Mopti",
-  // Niger
-  "Niamey", "Zinder", "Maradi",
-  // Cameroun
-  "Douala", "Yaoundé", "Bafoussam",
-  // Nigeria
-  "Lagos", "Abuja", "Kano", "Ibadan",
-  // RDC
-  "Kinshasa", "Lubumbashi",
-  // Guinée
-  "Conakry",
+const locationsByCountry: { country: string; flag: string; cities: string[] }[] = [
+  { country: "Togo", flag: "🇹🇬", cities: ["Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"] },
+  { country: "Bénin", flag: "🇧🇯", cities: ["Cotonou", "Porto-Novo", "Parakou", "Abomey"] },
+  { country: "Ghana", flag: "🇬🇭", cities: ["Accra", "Kumasi", "Tamale", "Cape Coast"] },
+  { country: "Côte d'Ivoire", flag: "🇨🇮", cities: ["Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro"] },
+  { country: "Sénégal", flag: "🇸🇳", cities: ["Dakar", "Saint-Louis", "Thiès", "Ziguinchor"] },
+  { country: "Burkina Faso", flag: "🇧🇫", cities: ["Ouagadougou", "Bobo-Dioulasso", "Koudougou"] },
+  { country: "Mali", flag: "🇲🇱", cities: ["Bamako", "Sikasso", "Mopti"] },
+  { country: "Niger", flag: "🇳🇪", cities: ["Niamey", "Zinder", "Maradi"] },
+  { country: "Cameroun", flag: "🇨🇲", cities: ["Douala", "Yaoundé", "Bafoussam"] },
+  { country: "Nigeria", flag: "🇳🇬", cities: ["Lagos", "Abuja", "Kano", "Ibadan"] },
+  { country: "RDC", flag: "🇨🇩", cities: ["Kinshasa", "Lubumbashi"] },
+  { country: "Guinée", flag: "🇬🇳", cities: ["Conakry"] },
 ];
 
-const Marketplace = () => {
+const locations = [
+  "Toutes les régions",
+  ...locationsByCountry.flatMap(g => g.cities),
+];
+
+const LocationSearchFilter = ({ location, onLocationChange }: { location: string; onLocationChange: (loc: string) => void }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    if (!q) return locationsByCountry;
+    return locationsByCountry
+      .map(g => ({
+        ...g,
+        cities: g.cities.filter(c => c.toLowerCase().includes(q)),
+        countryMatch: g.country.toLowerCase().includes(q),
+      }))
+      .filter(g => g.cities.length > 0 || g.countryMatch)
+      .map(g => g.countryMatch && g.cities.length === 0 ? { ...g, cities: locationsByCountry.find(og => og.country === g.country)?.cities || [] } : g);
+  }, [searchTerm]);
+
+  const handleSelect = (loc: string) => {
+    onLocationChange(loc);
+    setSearchTerm("");
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="space-y-2" ref={ref}>
+      <Label className="text-xs font-semibold flex items-center gap-1.5">
+        <MapPin className="w-3.5 h-3.5" />
+        Région / Pays
+      </Label>
+      <div className="relative">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher une ville ou pays..."
+            value={isOpen ? searchTerm : (location === "Toutes les régions" ? "" : location)}
+            onChange={(e) => { setSearchTerm(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            className="h-9 text-xs pl-8 pr-8"
+          />
+          {location && location !== "Toutes les régions" && !isOpen && (
+            <button
+              onClick={() => { onLocationChange("Toutes les régions"); setSearchTerm(""); }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {isOpen && (
+          <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+            <button
+              onClick={() => handleSelect("Toutes les régions")}
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 ${location === "Toutes les régions" ? "bg-primary/5 text-primary font-semibold" : ""}`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Toutes les régions
+            </button>
+            <div className="border-t border-border" />
+            {filtered.map((group) => (
+              <div key={group.country}>
+                <div className="px-3 py-1.5 bg-muted/30 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 sticky top-0">
+                  <span>{group.flag}</span>
+                  {group.country}
+                </div>
+                {group.cities.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => handleSelect(city)}
+                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors pl-7 ${location === city ? "bg-primary/5 text-primary font-semibold" : ""}`}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                Aucune région trouvée pour "{searchTerm}"
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {/* Quick tags */}
+      <div className="flex flex-wrap gap-1">
+        {["Lomé", "Accra", "Cotonou", "Abidjan", "Dakar"].map(loc => (
+          <button
+            key={loc}
+            onClick={() => handleSelect(loc)}
+            className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${location === loc ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"}`}
+          >
+            {loc}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
@@ -267,13 +368,7 @@ const Marketplace = () => {
         <Label className="text-xs font-semibold">{t("mp.price")}: {formatPriceShort(priceRange[0])} - {formatPriceShort(priceRange[1])} FCFA</Label>
         <Slider value={priceRange} onValueChange={(v) => setPriceRange(v as [number, number])} min={0} max={500000} step={5000} className="py-2" />
       </div>
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{t("mp.location")}</Label>
-        <Select value={location} onValueChange={setLocation}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>{locations.map((loc) => (<SelectItem key={loc} value={loc} className="text-xs">{loc}</SelectItem>))}</SelectContent>
-        </Select>
-      </div>
+      <LocationSearchFilter location={location} onLocationChange={setLocation} />
       <div className="space-y-2">
         <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-accent" />Note minimum</Label>
         <div className="flex gap-1">
