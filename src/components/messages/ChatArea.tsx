@@ -260,6 +260,14 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </Badge>
           </Link>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => toast({ title: "📞 Appel", description: `Appel en cours vers ${conversation.participant.name}...` })}
+        >
+          <Phone className="w-4 h-4" />
+        </Button>
         {onToggleFullscreen && (
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={onToggleFullscreen}>
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
