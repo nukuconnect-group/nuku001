@@ -413,6 +413,18 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-3 sm:space-y-4 min-w-0">
               <BillingForm data={billing} onChange={setBilling} />
 
+              {/* Address selector first - auto-fills delivery zone */}
+              <AddressSelector
+                selectedId={selectedAddress?.id}
+                onSelect={(addr) => {
+                  setSelectedAddress(addr);
+                  if (addr.city) setDeliveryCity(addr.city);
+                  if (addr.street) setDeliveryAddress(addr.street);
+                  if (addr.quarter) setDeliveryQuarter(addr.quarter);
+                  setAddressAutoFilled(true);
+                }}
+              />
+
               <DeliveryZoneMap
                 deliveryMethod={deliveryMethod}
                 onDeliveryMethodChange={setDeliveryMethod}
@@ -424,19 +436,6 @@ const Cart = () => {
                 onQuarterChange={setDeliveryQuarter}
                 onDynamicPriceChange={setDynamicDeliveryPrice}
               />
-
-              {deliveryMethod !== "pickup" && (
-                <AddressSelector
-                  selectedId={selectedAddress?.id}
-                  onSelect={(addr) => {
-                    setSelectedAddress(addr);
-                    if (addr.city) setDeliveryCity(addr.city);
-                    if (addr.street) setDeliveryAddress(addr.street);
-                    if (addr.quarter) setDeliveryQuarter(addr.quarter);
-                    setAddressAutoFilled(true);
-                  }}
-                />
-              )}
 
               {deliveryMethod !== "pickup" && (
                 <>
