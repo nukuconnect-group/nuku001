@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -25,8 +25,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
 import ImageSearchModal from "@/components/search/ImageSearchModal";
-import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode } from "lucide-react";
+import { Grid3X3, List, Search, Leaf, SlidersHorizontal, MapPin, X, ChevronRight, ChevronLeft, Flame, Star, Sparkles, Award, Loader2, TrendingUp, Percent, PackageCheck, ShieldCheck, Mic, Camera, QrCode, HandCoins } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
+import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
+import DemandsList from "@/components/marketplace/DemandsList";
 import { Product } from "@/data/marketplace";
 
 const locations = [
@@ -542,6 +544,18 @@ const Marketplace = () => {
                   <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
                 );
               })}
+              {/* Buyer Demands Section */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
+                    <HandCoins className="w-4 h-4 text-accent" />
+                    Demandes d'achat
+                  </h2>
+                  <CreateDemandModal />
+                </div>
+                <DemandsList limit={5} />
+              </div>
+
               <div className="mt-6 sm:mt-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>

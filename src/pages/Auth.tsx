@@ -180,12 +180,22 @@ const Auth = () => {
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
+        // Check if email confirmation is needed (user has identities = email not auto-confirmed)
+        const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
+        
         await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
-        toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
+        
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
           if (newProfile) await supabase.from("driver_profiles").insert({ user_id: authData.user.id, profile_id: newProfile.id, vehicle_type: producerSector || "moto", zone: producerLocation, is_available: true });
         }
+        
+        if (needsConfirmation) {
+          toast({ title: "Vérifiez votre email 📧", description: "Un lien de confirmation a été envoyé à votre adresse email. Veuillez cliquer dessus pour activer votre compte." });
+          return;
+        }
+        
+        toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
         if (userType === "producer" || userType === "trainer") navigate("/dashboard");
         else if (userType === "driver") navigate("/driver-dashboard");
         else if (userType === "learner") navigate("/learner-dashboard");

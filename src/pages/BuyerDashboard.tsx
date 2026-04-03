@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -25,11 +25,13 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
-import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
-import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
-import FormationsSection from "@/components/dashboard/FormationsSection";
-import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
-import BuyerAIRecommendations from "@/components/dashboard/BuyerAIRecommendations";
+
+// Lazy load heavy components
+const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
+const ProfileSettingsPanel = lazy(() => import("@/components/dashboard/ProfileSettingsPanel"));
+const FormationsSection = lazy(() => import("@/components/dashboard/FormationsSection"));
+const DeliveryTrackingWidget = lazy(() => import("@/components/dashboard/DeliveryTrackingWidget"));
+const BuyerAIRecommendations = lazy(() => import("@/components/dashboard/BuyerAIRecommendations"));
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -310,28 +312,36 @@ const BuyerDashboard = () => {
           </Card>
 
           {/* AI Recommendations */}
-          {user && profile && (
-            <div className="mb-5 sm:mb-8">
-              <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
-            </div>
-          )}
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
+            {user && profile && (
+              <div className="mb-5 sm:mb-8">
+                <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
+              </div>
+            )}
+          </Suspense>
 
           {/* Delivery Tracking Widget */}
-          {profile && (
-            <div className="mb-5 sm:mb-8">
-              <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
-            </div>
-          )}
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
+            {profile && (
+              <div className="mb-5 sm:mb-8">
+                <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
+              </div>
+            )}
+          </Suspense>
 
           {/* Subscription Management */}
-          <div className="mb-5 sm:mb-8">
-            <SubscriptionCard />
-          </div>
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
+            <div className="mb-5 sm:mb-8">
+              <SubscriptionCard />
+            </div>
+          </Suspense>
 
           {/* Formations Section */}
-          <div className="mb-5 sm:mb-8">
-            <FormationsSection />
-          </div>
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
+            <div className="mb-5 sm:mb-8">
+              <FormationsSection />
+            </div>
+          </Suspense>
 
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
@@ -689,7 +699,9 @@ const BuyerDashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-xl" />}>
+                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              </Suspense>
             </TabsContent>
 
           </Tabs>
