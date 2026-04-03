@@ -7,19 +7,24 @@ export function useResolvedUserType(userId?: string | null, profileUserType?: st
   useEffect(() => {
     let mounted = true;
 
-    const checkDriverProfile = async () => {
-      if (!userId) {
-        if (mounted) setHasDriverProfile(false);
-        return;
-      }
+    setHasDriverProfile(false);
 
+    if (!userId) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const checkDriverProfile = async () => {
       const { data } = await supabase
         .from("driver_profiles")
         .select("id")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (mounted) setHasDriverProfile(!!data);
+      if (mounted) {
+        setHasDriverProfile(!!data);
+      }
     };
 
     checkDriverProfile();

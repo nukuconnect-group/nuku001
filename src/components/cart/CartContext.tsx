@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Product } from "@/data/marketplace";
+import { useProfile } from "@/contexts/ProfileContext";
 
 export interface CartItem {
   product: Product;
@@ -18,15 +19,41 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const getCartStorageKey = (userId?: string | null) =>
+  userId ? `nukuconnect-cart:${userId}` : "nukuconnect-cart:guest";
+
+const readStoredCart = (storageKey: string): CartItem[] => {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem("nukuconnect-cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user, isReady } = useProfile();
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [activeStorageKey, setActiveStorageKey] = useState<string | null>(null);
+  const cartStorageKey = useMemo(() => getCartStorageKey(user?.id), [user?.id]);
 
   useEffect(() => {
-    localStorage.setItem("nukuconnect-cart", JSON.stringify(items));
-  }, [items]);
+    if (!isReady) return;
+
+    setItems(readStoredCart(cartStorageKey));
+    setActiveStorageKey(cartStorageKey);
+  }, [isReady, cartStorageKey]);
+
+  useEffect(() => {
+    if (!isReady || !activeStorageKey) return;
+
+    try {
+      localStorage.setItem(activeStorageKey, JSON.stringify(items));
+    } catch {
+      // Ignore storage write failures silently
+    }
+  }, [items, isReady, activeStorageKey]);
 
   const addItem = (product: Product, quantity = 1) => {
     setItems((prev) => {
@@ -35,7 +62,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return prev.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
-            : item
+            : item,
         );
       }
       return [...prev, { product, quantity }];
@@ -51,19 +78,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(productId);
       return;
     }
+
     setItems((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
+        item.product.id === productId ? { ...item, quantity } : item,
+      ),
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+
+    if (!activeStorageKey) return;
+
+    try {
+      localStorage.removeItem(activeStorageKey);
+    } catch {
+      // Ignore storage write failures silently
+    }
+  };
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const total = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
 
   return (

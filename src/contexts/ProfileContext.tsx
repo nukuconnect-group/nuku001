@@ -26,50 +26,52 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user, isReady } = useAuthReady();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const fetchingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const fetchProfile = useCallback(async (userId: string, retries = 3) => {
-    if (fetchingRef.current && lastUserIdRef.current === userId) return;
-    fetchingRef.current = true;
+    const requestId = ++requestIdRef.current;
     lastUserIdRef.current = userId;
-    
+    setIsLoading(true);
+
     try {
       const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
-      
+
+      if (requestId !== requestIdRef.current) return;
+
       if (data) {
         setProfile(data);
         setIsLoading(false);
-        fetchingRef.current = false;
         return;
       }
-      
-      // Profile not found yet (trigger may still be creating it) — retry
+
       if (retries > 0) {
-        fetchingRef.current = false;
-        await new Promise(r => setTimeout(r, 800));
-        return fetchProfile(userId, retries - 1);
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        if (requestId === requestIdRef.current) {
+          return fetchProfile(userId, retries - 1);
+        }
+        return;
       }
-      
+
       setProfile(null);
       setIsLoading(false);
     } catch (e) {
+      if (requestId !== requestIdRef.current) return;
       console.error("Profile fetch error:", e);
+      setProfile(null);
       setIsLoading(false);
     }
-    fetchingRef.current = false;
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user?.id) {
-      fetchingRef.current = false;
-      await fetchProfile(user.id);
-    }
-  }, [user, fetchProfile]);
+    if (!user?.id) return;
+    await fetchProfile(user.id);
+  }, [user?.id, fetchProfile]);
 
   const updateProfile = useCallback((updates: Partial<any>) => {
     setProfile((prev: any) => {
@@ -78,19 +80,26 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  // React to auth state changes from useAuthReady
   useEffect(() => {
     if (!isReady) return;
 
-    if (user) {
-      fetchingRef.current = false;
-      fetchProfile(user.id);
-    } else {
+    const currentUserId = user?.id ?? null;
+
+    if (!currentUserId) {
+      requestIdRef.current += 1;
+      lastUserIdRef.current = null;
       setProfile(null);
       setIsLoading(false);
-      lastUserIdRef.current = null;
+      return;
     }
-  }, [user, isReady, fetchProfile]);
+
+    if (lastUserIdRef.current !== currentUserId) {
+      setProfile(null);
+      setIsLoading(true);
+    }
+
+    fetchProfile(currentUserId);
+  }, [user?.id, isReady, fetchProfile]);
 
   return (
     <ProfileContext.Provider value={{ user, profile, isLoading, isReady, refreshProfile, updateProfile }}>

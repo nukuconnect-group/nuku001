@@ -58,7 +58,7 @@ const userTypeConfig: { value: UserType; label: string; icon: any; desc: string 
 const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useProfile();
+  const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
   const { canInstall, isInstalled, install, showInstallOption } = usePWAInstall();
   const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
@@ -82,119 +82,34 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [country, setCountry] = useState("Togo");
 
   useEffect(() => {
-    if (user?.id) {
-      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-        .then(({ data }) => setIsAdmin(!!data));
-    }
-  }, [user]);
+    if (!isReady) return;
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail, password: loginPassword,
-      });
-      if (error) {
-        toast({
-          title: "Erreur de connexion",
-          description: error.message === "Invalid login credentials" 
-            ? "Email ou mot de passe incorrect."
-            : error.message === "Email not confirmed"
-            ? "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
-            : error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
-      onClose();
-    } catch {
-      toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (signupPassword.length < 6) {
-      toast({ title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères.", variant: "destructive" });
+    if (!user?.id) {
+      setIsAdmin(false);
       return;
     }
-    setIsLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      const loc = country ? `${location}, ${country}` : location;
 
-      const { error } = await supabase.auth.signUp({
-        email: signupEmail,
-        password: signupPassword,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-            user_type: userType,
-            phone,
-            location: loc,
-            company: ["producer", "trainer"].includes(userType) ? company : null,
-            sector: userType === "producer" ? sector : null,
-          },
-        },
+    let active = true;
+
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setIsAdmin(!!data);
       });
 
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: error.message.includes("already registered") 
-            ? "Un compte existe déjà avec cet email." : error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({ 
-        title: "Inscription réussie !", 
-        description: "Bienvenue sur NUKUCONNECT ! Votre compte est maintenant actif.",
-      });
-      onClose();
-    } catch {
-      toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({ title: "Déconnexion réussie", description: "À bientôt sur NUKUCONNECT !" });
-      onClose();
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Logout error:", err);
-      onClose();
-      window.location.href = "/";
-    }
-  };
-
-  const getUserTypeLabel = (type?: string) => {
-    const map: Record<string, string> = {
-      producer: "Fournisseur", buyer: "Acheteur", driver: "Livreur",
-      learner: "Apprenant", trainer: "Formateur",
+    return () => {
+      active = false;
     };
-    return map[type || ""] || "Utilisateur";
-  };
+  }, [user?.id, isReady]);
 
-  const getDashboardHref = () => {
-    const t = resolvedUserType;
-    if (t === "producer" || t === "trainer") return "/dashboard";
-    if (t === "driver") return "/driver-dashboard";
-    if (t === "learner") return "/learner-dashboard";
-    return "/buyer-dashboard";
-  };
-
+  const handleLogin = async (e: React.FormEvent) => {
+...
   const currentUserType = resolvedUserType;
+  const isAccountPending = !isReady || (!!user && isProfileLoading && !profile);
 
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
@@ -220,7 +135,12 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
-        {user ? (
+        {isAccountPending ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Chargement du compte...</p>
+          </div>
+        ) : user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
             <div className="px-4 py-5 border-b border-border">
