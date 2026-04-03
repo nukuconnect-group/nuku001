@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
@@ -15,7 +15,8 @@ import {
   Users, Package, ShoppingCart, DollarSign, TrendingUp, Crown,
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
-  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet
+  Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet,
+  Truck, ShoppingBag, Leaf
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -26,6 +27,11 @@ import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
 import SupportChat from "@/components/admin/SupportChat";
+import OrderManager from "@/components/admin/OrderManager";
+import ProductsManager from "@/components/admin/ProductsManager";
+import DeliveryManager from "@/components/admin/DeliveryManager";
+import DemandsManager from "@/components/admin/DemandsManager";
+import FinanceManager from "@/components/admin/FinanceManager";
 
 const COLORS = [
   'hsl(var(--primary))',
