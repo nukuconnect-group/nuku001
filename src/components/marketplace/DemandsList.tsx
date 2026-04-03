@@ -27,13 +27,17 @@ const DemandsList = ({ category, limit }: DemandsListProps) => {
         <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all">
           <CardContent className="p-3">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                {demand.profile?.avatar_url ? (
-                  <img src={demand.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4 text-accent-foreground" />
-                )}
-              </div>
+              {(demand as any).image_url ? (
+                <img src={(demand as any).image_url} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-border" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                  {demand.profile?.avatar_url ? (
+                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4 text-accent-foreground" />
+                  )}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <Badge className="bg-orange-500 text-white text-[9px] px-1.5 py-0 gap-0.5 font-bold">
