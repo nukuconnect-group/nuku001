@@ -49,7 +49,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
 
@@ -66,7 +66,7 @@ const Dashboard = () => {
     };
     loadData();
     return () => { isMounted = false; };
-  }, [profileLoading, user, profile, navigate]);
+  }, [isReady, profileLoading, user, profile, navigate]);
   
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);

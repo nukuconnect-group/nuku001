@@ -57,7 +57,7 @@ const BuyerDashboard = () => {
   });
   const [migrating, setMigrating] = useState(false);
   useEffect(() => {
-    if (profileLoading) return;
+    if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
 
@@ -76,7 +76,7 @@ const BuyerDashboard = () => {
     };
     loadData();
     return () => { isMounted = false; };
-  }, [profileLoading, user, profile, navigate]);
+  }, [isReady, profileLoading, user, profile, navigate]);
 
   // Compute real purchase chart data from orders
   const purchaseData = (() => {
