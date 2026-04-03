@@ -413,15 +413,15 @@ const Cart = () => {
                           const sellerLoc = item.product.location || "Non définie";
                           const buyerLoc = deliveryCity || "Non définie";
                           return (
-                            <div key={item.product.id} className="flex items-center justify-between text-[11px] bg-muted/50 rounded-lg p-2">
+                            <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] bg-muted/50 rounded-lg p-2 gap-1">
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className="font-medium truncate">{item.product.name}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0 text-muted-foreground">
+                              <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 text-muted-foreground flex-wrap">
                                 <MapPin className="w-2.5 h-2.5 text-primary" />
-                                <span>{sellerLoc}</span>
+                                <span className="truncate max-w-[80px] sm:max-w-none">{sellerLoc}</span>
                                 <span>→</span>
-                                <span>{buyerLoc}</span>
+                                <span className="truncate max-w-[80px] sm:max-w-none">{buyerLoc}</span>
                               </div>
                             </div>
                           );
