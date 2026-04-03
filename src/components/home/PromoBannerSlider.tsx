@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Users, Leaf, TrendingUp, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Users, ShoppingBag, TrendingUp, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
