@@ -425,7 +425,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   kab: {
     "nav.home": "Ɖɩsɩ",
     "nav.marketplace": "Kɩyakʊ",
-    "nav.producers": "Lʊlɩyaa",
+    "nav.producers": "Kpɛndɩnaa",
     "nav.nukuai": "NUKU AI",
     "nav.formations": "Kpɛlɩkʊ",
     "nav.traceability": "Ñɩnɩʊ",
@@ -553,7 +553,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   wo: {
     "nav.home": "Kër",
     "nav.marketplace": "Marse",
-    "nav.producers": "Yënguway yi",
+    "nav.producers": "Réseau",
     "nav.nukuai": "NUKU AI",
     "nav.formations": "Jàng",
     "nav.traceability": "Wërusit",

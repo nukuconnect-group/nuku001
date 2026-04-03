@@ -16,7 +16,7 @@ const NukuAIFloating = () => {
                 <Bot className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h4 className="font-heading font-semibold text-foreground">NUKU AI</h4>
+                <h4 className="font-heading font-semibold text-foreground">NukuConnect IA</h4>
                 <p className="text-xs text-muted-foreground">Assistant Agricole</p>
               </div>
             </div>
