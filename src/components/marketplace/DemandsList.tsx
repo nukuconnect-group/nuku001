@@ -149,9 +149,10 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
       {items.map((demand) => (
         <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all flex flex-col">
           <CardContent className="p-3 flex-1 flex flex-col">
+            {/* User info */}
             <div className="flex items-center gap-2 mb-2">
               {(demand as any).image_url ? (
-                <img src={(demand as any).image_url} alt="" className="w-10 h-10 object-cover flex-shrink-0 rounded border border-border" />
+                <img src={(demand as any).image_url} alt="" className="w-9 h-9 object-cover flex-shrink-0 rounded border border-border" />
               ) : (
                 <div className="w-8 h-8 bg-accent/20 rounded flex items-center justify-center flex-shrink-0">
                   {demand.profile?.avatar_url ? (
@@ -164,69 +165,71 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
               <span className="text-[10px] font-medium text-foreground truncate">{demand.profile?.full_name || "Utilisateur"}</span>
             </div>
 
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold">
-                    ACHAT
-                  </Badge>
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{demand.category}</Badge>
-                </div>
-
-                <h4 className="font-semibold text-xs text-foreground line-clamp-1">{demand.title}</h4>
-
-                {demand.description && (
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{demand.description}</p>
-                )}
-
-                <div className="flex items-center gap-2 mt-1 text-[9px] text-muted-foreground flex-wrap">
-                  <span className="font-medium text-foreground">{demand.profile?.full_name || "Utilisateur"}</span>
-                  {demand.quantity && <span>• {demand.quantity} {demand.unit}</span>}
-                  {demand.budget && <span>• Budget : {formatPrice(demand.budget)}</span>}
-                  {demand.location && <span className="flex items-center gap-0.5"><MapPin className="w-2 h-2" />{demand.location}</span>}
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-[10px] h-8 gap-1 flex-1"
-                      onClick={() => openDemandConversation(demand, "chat")}
-                      disabled={pendingAction === `${demand.id}-chat`}
-                    >
-                      {pendingAction === `${demand.id}-chat` ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <MessageCircle className="w-3 h-3" />
-                      )}
-                      Discuter
-                    </Button>
-
-                    <div className="flex gap-2 flex-[1.2]">
-                      <Input
-                        value={offerValues[demand.id] || ""}
-                        onChange={(event) => setOfferValues((prev) => ({ ...prev, [demand.id]: event.target.value }))}
-                        placeholder={`Qté dispo (${demand.unit || "unité"})`}
-                        className="h-8 text-[10px]"
-                        inputMode="numeric"
-                      />
-                      <Button
-                        size="sm"
-                        className="text-[10px] h-8 gap-1 whitespace-nowrap"
-                        onClick={() => openDemandConversation(demand, "offer")}
-                        disabled={pendingAction === `${demand.id}-offer`}
-                      >
-                        {pendingAction === `${demand.id}-offer` ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Package className="w-3 h-3" />
-                        )}
-                        Proposer
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+            {/* Content */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold">
+                  ACHAT
+                </Badge>
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{demand.category}</Badge>
               </div>
+
+              <h4 className="font-semibold text-xs text-foreground line-clamp-1">{demand.title}</h4>
+
+              {demand.description && (
+                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{demand.description}</p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground">
+                {demand.quantity && <span className="whitespace-nowrap">📦 {demand.quantity} {demand.unit}</span>}
+                {demand.budget && <span className="whitespace-nowrap">💰 {formatPrice(demand.budget)}</span>}
+                {demand.location && (
+                  <span className="flex items-center gap-0.5 whitespace-nowrap">
+                    <MapPin className="w-2.5 h-2.5 flex-shrink-0" />{demand.location}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-2.5 pt-2 border-t border-border/50 space-y-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-[10px] h-7 gap-1"
+                onClick={() => openDemandConversation(demand, "chat")}
+                disabled={pendingAction === `${demand.id}-chat`}
+              >
+                {pendingAction === `${demand.id}-chat` ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <MessageCircle className="w-3 h-3" />
+                )}
+                Discuter
+              </Button>
+              <div className="flex gap-1.5">
+                <Input
+                  value={offerValues[demand.id] || ""}
+                  onChange={(event) => setOfferValues((prev) => ({ ...prev, [demand.id]: event.target.value }))}
+                  placeholder={`Qté (${demand.unit || "unité"})`}
+                  className="h-7 text-[10px] flex-1 min-w-0"
+                  inputMode="numeric"
+                />
+                <Button
+                  size="sm"
+                  className="text-[10px] h-7 gap-1 px-2.5 flex-shrink-0"
+                  onClick={() => openDemandConversation(demand, "offer")}
+                  disabled={pendingAction === `${demand.id}-offer`}
+                >
+                  {pendingAction === `${demand.id}-offer` ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Package className="w-3 h-3" />
+                  )}
+                  Proposer
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ))}
