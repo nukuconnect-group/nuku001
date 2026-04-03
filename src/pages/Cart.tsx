@@ -59,30 +59,35 @@ const Cart = () => {
 
   // Load user profile and auto-fill billing
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       if (session?.user) {
-        setBilling(prev => ({ ...prev, email: session.user.email || "" }));
-
-        supabase.from("profiles").select("*").eq("user_id", session.user.id).single()
-          .then(async ({ data }) => {
-            if (data) {
-              setProfile(data);
-              const nameParts = (data.full_name || "").split(" ");
-              const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", session.user.id).maybeSingle();
-              const phone = privateData?.phone || "";
-              setBilling(prev => ({
-                ...prev,
-                firstName: nameParts[0] || "",
-                lastName: nameParts.slice(1).join(" ") || "",
-                phone,
-              }));
-              if (data.location) setDeliveryCity(data.location);
-              if (phone) setMobileNumber(phone);
-            }
-          });
+        setBilling(prev => ({ ...prev, email: session.user!.email || "" }));
+        const { data } = await supabase.from("profiles").select("*").eq("user_id", session.user.id).single();
+        if (data) {
+          setProfile(data);
+          const nameParts = (data.full_name || "").split(" ");
+          const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", session.user!.id).maybeSingle();
+          const phone = privateData?.phone || "";
+          setBilling(prev => ({
+            ...prev,
+            firstName: nameParts[0] || "",
+            lastName: nameParts.slice(1).join(" ") || "",
+            phone,
+          }));
+          if (data.location) setDeliveryCity(data.location);
+          if (phone) setMobileNumber(phone);
+        }
       }
+    };
+    init();
+
+    // Also listen for auth changes so we don't lose session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);

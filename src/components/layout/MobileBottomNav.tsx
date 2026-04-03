@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +15,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const { user, profile: ctxProfile } = useProfile();
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
@@ -23,25 +24,10 @@ const MobileBottomNav = () => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [showBecomeSellerDialog, setShowBecomeSellerDialog] = useState(false);
 
+  // Sync profile from context
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    setProfile(ctxProfile);
+  }, [ctxProfile]);
 
   // Fetch unread messages count
   const fetchUnreadMessages = useCallback(async (profileId: string) => {
@@ -68,17 +54,12 @@ const MobileBottomNav = () => {
   }, [profile?.id, fetchUnreadMessages]);
 
   const fetchProfile = async (userId: string) => {
-    setIsLoading(true);
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      setProfile(data);
-    } finally {
-      setIsLoading(false);
-    }
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    setProfile(data);
   };
 
   const handleSellClick = async () => {

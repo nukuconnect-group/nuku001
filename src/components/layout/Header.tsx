@@ -337,7 +337,7 @@ const Header = () => {
                         {navLinks.map((link) => (
                           <Link key={link.href + link.label} to={link.href} onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
-                            <span className="text-sm font-medium">{link.label}</span>
+                            <span className="text-sm font-semibold uppercase">{link.label}</span>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </Link>
                         ))}
@@ -360,7 +360,7 @@ const Header = () => {
                       <div className="p-2">
                         <Link to="/marketplace" onClick={() => setIsMenuOpen(false)}
                           className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30 text-primary font-medium">
-                          <span className="text-sm">Toutes les catégories</span>
+                          <span className="text-sm font-semibold uppercase">Toutes les catégories</span>
                           <ChevronRight className="w-4 h-4" />
                         </Link>
                         {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
@@ -369,7 +369,7 @@ const Header = () => {
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
                             <div className="flex items-center gap-2">
                               <span className="text-base">{cat.emoji || "📦"}</span>
-                              <span className="text-sm font-medium">{cat.name}</span>
+                              <span className="text-sm font-semibold uppercase">{cat.name}</span>
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </Link>
