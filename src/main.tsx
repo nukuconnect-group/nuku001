@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
 import "./index.css";
 import { initSecurity } from "./utils/security";
 
@@ -10,11 +9,48 @@ type IdleWindow = Window &
     requestIdleCallback?: (callback: IdleCallback, options?: { timeout: number }) => number;
   };
 
-// PWA guard: disable service worker in iframes and preview hosts
+const patchNavigatorLocks = () => {
+  const nav = window.navigator as Navigator & {
+    locks?: {
+      request?: (...args: any[]) => Promise<any>;
+      __nukuconnectPatched?: boolean;
+    };
+  };
+
+  if (!nav.locks?.request || nav.locks.__nukuconnectPatched) return;
+
+  const originalRequest = nav.locks.request.bind(nav.locks);
+  const patchedRequest = async (...args: any[]) => {
+    try {
+      return await originalRequest(...args);
+    } catch {
+      const callback = args[args.length - 1];
+      if (typeof callback === "function") {
+        return await callback({
+          name: typeof args[0] === "string" ? args[0] : "nukuconnect-lock",
+        });
+      }
+      throw new Error("Navigator locks unavailable");
+    }
+  };
+
+  try {
+    Object.defineProperty(nav.locks, "request", {
+      configurable: true,
+      writable: true,
+      value: patchedRequest,
+    });
+  } catch {
+    (nav.locks as any).request = patchedRequest;
+  }
+
+  nav.locks.__nukuconnectPatched = true;
+};
+
 const isInIframe = (() => {
   try {
     return window.self !== window.top;
-  } catch (e) {
+  } catch {
     return true;
   }
 })();
@@ -25,7 +61,7 @@ const isPreviewHost =
 
 if (isPreviewHost || isInIframe) {
   navigator.serviceWorker?.getRegistrations().then((registrations) => {
-    registrations.forEach((r) => r.unregister());
+    registrations.forEach((registration) => registration.unregister());
   });
 }
 
@@ -34,8 +70,6 @@ const rootElement = document.getElementById("root");
 if (!rootElement) {
   throw new Error("Root element not found");
 }
-
-createRoot(rootElement).render(<App />);
 
 const scheduleSecurityInit = () => {
   const idleWindow = window as IdleWindow;
@@ -48,4 +82,11 @@ const scheduleSecurityInit = () => {
   window.setTimeout(() => initSecurity(), 300);
 };
 
-scheduleSecurityInit();
+const bootstrap = async () => {
+  patchNavigatorLocks();
+  const { default: App } = await import("./App.tsx");
+  createRoot(rootElement).render(<App />);
+  scheduleSecurityInit();
+};
+
+void bootstrap();

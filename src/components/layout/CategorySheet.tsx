@@ -48,11 +48,8 @@ const CategorySheet = ({ open, onOpenChange }: CategorySheetProps) => {
                       <Link
                         to={`/marketplace?category=${category.name.toLowerCase()}`}
                         onClick={() => onOpenChange(false)}
-                        className="flex-1 flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-colors active:scale-[0.98]"
+                        className="flex-1 px-3 py-3 rounded-lg hover:bg-muted transition-colors active:scale-[0.98]"
                       >
-                        {category.emoji && (
-                          <span className="text-base flex-shrink-0">{category.emoji}</span>
-                        )}
                         <span className="text-sm font-medium text-foreground">{category.name}</span>
                       </Link>
                       {hasSubs && (

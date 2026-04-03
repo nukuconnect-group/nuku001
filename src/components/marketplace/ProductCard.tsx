@@ -67,6 +67,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
             <div className="absolute top-2 left-2 flex gap-1">
+              <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
               {product.discount && (
                 <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{product.discount}%</Badge>
               )}
@@ -119,8 +120,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           {/* Top badges */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {/* Vente badge for supplier products */}
-            <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
-              <ShoppingCart className="w-2.5 h-2.5" />En vente
+            <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
+              VENTE
             </Badge>
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
