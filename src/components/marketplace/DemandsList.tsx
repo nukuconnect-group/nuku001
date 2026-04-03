@@ -130,7 +130,17 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
     return <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>;
   }
 
-  const items = limit ? (demands || []).slice(0, limit) : (demands || []);
+  let items = demands || [];
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    items = items.filter((d) =>
+      d.title.toLowerCase().includes(q) ||
+      d.description?.toLowerCase().includes(q) ||
+      d.category.toLowerCase().includes(q) ||
+      d.profile?.full_name?.toLowerCase().includes(q)
+    );
+  }
+  if (limit) items = items.slice(0, limit);
 
   if (items.length === 0) return null;
 

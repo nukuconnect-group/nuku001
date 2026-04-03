@@ -499,14 +499,40 @@ const Marketplace = () => {
       {marketView === "demands" ? (
         <section className="py-3 sm:py-6 lg:py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
                 <HandCoins className="w-4 h-4 text-accent" />
                 Toutes les demandes d'achat
               </h2>
               <CreateDemandModal />
             </div>
-            <DemandsList category={selectedCategory !== "all" ? selectedCategory : undefined} />
+            {/* Search & category filter for demands */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une demande..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs"
+                />
+              </div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full sm:w-44 h-9 text-xs">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">Toutes catégories</SelectItem>
+                  {marketplaceCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name.toLowerCase()} className="text-xs">{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DemandsList
+              category={selectedCategory !== "all" ? selectedCategory : undefined}
+              searchQuery={searchQuery}
+            />
           </div>
         </section>
       ) : (
