@@ -99,6 +99,25 @@ const Messages = () => {
     setMessages((prev) => [...prev, msg]);
   };
 
+  // Redirect if not authenticated
+  if (isReady && !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+          <MessageCircle className="w-12 h-12 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground text-center">Connectez-vous pour accéder à vos messages</p>
+          <Link to="/auth?returnTo=/messages">
+            <Button variant="hero" className="gap-2">
+              <LogIn className="w-4 h-4" />Se connecter
+            </Button>
+          </Link>
+        </div>
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
