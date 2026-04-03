@@ -83,7 +83,7 @@ export const useCreateDemand = () => {
           budget: demand.budget || null,
           location: demand.location || null,
           image_url: demand.image_url || null,
-        } as any)
+        })
         .select()
         .single();
 

@@ -333,7 +333,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-14 lg:pb-0">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
       <Header />
 
       {/* Success banner */}
@@ -348,7 +348,7 @@ const Cart = () => {
       </div>
 
       <main>
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-full overflow-hidden">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm">
             <ArrowLeft className="w-4 h-4" /><span>Retour</span>
           </button>
@@ -370,9 +370,9 @@ const Cart = () => {
             </Card>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left: Billing + Delivery + Payment */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4 min-w-0">
               <BillingForm data={billing} onChange={setBilling} />
 
               <DeliveryZoneMap
@@ -413,15 +413,15 @@ const Cart = () => {
                           const sellerLoc = item.product.location || "Non définie";
                           const buyerLoc = deliveryCity || "Non définie";
                           return (
-                            <div key={item.product.id} className="flex items-center justify-between text-[11px] bg-muted/50 rounded-lg p-2">
+                            <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] bg-muted/50 rounded-lg p-2 gap-1">
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className="font-medium truncate">{item.product.name}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0 text-muted-foreground">
+                              <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0 text-muted-foreground flex-wrap">
                                 <MapPin className="w-2.5 h-2.5 text-primary" />
-                                <span>{sellerLoc}</span>
+                                <span className="truncate max-w-[80px] sm:max-w-none">{sellerLoc}</span>
                                 <span>→</span>
-                                <span>{buyerLoc}</span>
+                                <span className="truncate max-w-[80px] sm:max-w-none">{buyerLoc}</span>
                               </div>
                             </div>
                           );

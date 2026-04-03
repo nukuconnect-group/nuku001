@@ -48,9 +48,11 @@ const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
           const { lat, lng } = { lat: position.coords.latitude, lng: position.coords.longitude };
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`);
           const data = await res.json();
+          const quarter = data.address?.suburb || data.address?.neighbourhood || "";
           const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || "";
           const country = data.address?.country || "";
-          setLocation(city ? `${city}, ${country}` : country);
+          const parts = [quarter, city, country].filter(Boolean);
+          setLocation(parts.join(", "));
         } catch {
           // silent fail
         }

@@ -226,7 +226,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const menuItems = [
     { icon: Shield, label: "Administration", href: "/admin", show: isAdmin },
     { icon: LayoutDashboard, label: "Tableau de bord", href: getDashboardHref(), show: true },
-    { icon: ShoppingBag, label: "Mes commandes", href: "/suivi-livraison", show: currentUserType === "buyer" },
+    { icon: ShoppingBag, label: "Mes commandes", href: "/buyer-dashboard?tab=orders", show: currentUserType === "buyer" },
     { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
     { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
@@ -264,8 +264,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-left text-base truncate">{profile?.full_name || user.email}</SheetTitle>
-                    <SheetDescription className="text-left text-xs">
+                    <SheetTitle className="text-left text-sm truncate">{profile?.full_name || user.email}</SheetTitle>
+                    <SheetDescription className="text-left text-[10px]">
                        {getUserTypeLabel(resolvedUserType)}
                     </SheetDescription>
                   </div>
@@ -281,10 +281,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     key={item.href + item.label}
                     to={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
+                    className="flex items-center gap-3 px-4 py-2 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
                   >
-                    <item.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-xs font-medium uppercase tracking-wide">{item.label}</span>
+                    <item.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-[10px] font-medium uppercase tracking-wide">{item.label}</span>
                     {item.badge && (
                       <span className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
                     )}
