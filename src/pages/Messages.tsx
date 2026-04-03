@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import { Loader2, MessageCircle, Bot, Sparkles } from "lucide-react";
+import { Loader2, MessageCircle, Bot, Sparkles, LogIn } from "lucide-react";
 import { useConversations, type ConversationItem } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
+import { useProfile } from "@/contexts/ProfileContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatArea from "@/components/messages/ChatArea";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 
 const WELCOME_KEY = "nuku-welcome-shown";
