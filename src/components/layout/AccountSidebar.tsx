@@ -274,19 +274,30 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                       const result = await install();
                       if (result === true) {
                         toast({ title: "Application installée !", description: "NUKUCONNECT est maintenant sur votre écran d'accueil." });
-                      } else if (result === null) {
-                        // No deferred prompt - show manual instructions
-                        toast({
-                          title: "Installer NUKUCONNECT",
-                          description: "Ouvrez le menu de votre navigateur (⋮) → 'Ajouter à l'écran d'accueil' ou 'Installer l'application'.",
-                        });
+                      } else if (result === false) {
+                        toast({ title: "Installation annulée", description: "Vous pouvez réessayer à tout moment." });
+                      } else {
+                        // No deferred prompt — try to trigger via related APIs
+                        try {
+                          const relatedApps = await (navigator as any).getInstalledRelatedApps?.();
+                          if (relatedApps?.length > 0) {
+                            toast({ title: "Déjà installée", description: "NUKUCONNECT est déjà sur votre appareil." });
+                            return;
+                          }
+                        } catch {}
+                        // Force open in standalone mode via URL scheme
+                        const manifestLink = document.querySelector('link[rel="manifest"]');
+                        if (manifestLink) {
+                          window.open(window.location.origin, '_blank');
+                          toast({ title: "Installation", description: "Dans le navigateur ouvert, appuyez sur 'Installer' ou ajoutez à l'écran d'accueil." });
+                        }
                       }
                     }}
                     className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30 w-full"
                   >
                     <Download className="w-5 h-5 text-primary flex-shrink-0" />
                     <div className="flex-1 text-left">
-                      <span className="text-sm font-medium">Installer l'application</span>
+                      <span className="text-sm font-semibold uppercase">INSTALLER L'APPLICATION</span>
                       <p className="text-[10px] text-muted-foreground">Accès rapide depuis votre téléphone</p>
                     </div>
                     <Smartphone className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
