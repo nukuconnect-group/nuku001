@@ -57,6 +57,20 @@ function findClosestZone(lat: number, lng: number) {
   return closest;
 }
 
+// Try to fuzzy-match a location string (e.g. "Lomé", "LOME-AGOE, Togo", "Kara") to a zone
+function matchLocationToZone(location: string): typeof togoZones[0] | null {
+  if (!location) return null;
+  const normalized = location.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // Exact match first
+  for (const z of togoZones) {
+    const zNorm = z.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (normalized === zNorm || normalized.startsWith(zNorm + ",") || normalized.startsWith(zNorm + " ") || normalized.includes(zNorm)) {
+      return z;
+    }
+  }
+  return null;
+}
+
 // Pricing tiers based on distance
 function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: string } {
   if (distanceKm <= 10) return { price: 500, tier: "Proximité (< 10 km)" };
@@ -118,12 +132,33 @@ const DeliveryZoneMap = ({
   const hasAutoDetected = useRef(false);
   const markerRef = useRef<L.Marker>(null);
 
-  // Auto-detect location on mount
+  // Auto-detect location on mount - try matching city prop first, then GPS
   useEffect(() => {
-    if (hasAutoDetected.current || city) return;
+    if (hasAutoDetected.current) return;
     hasAutoDetected.current = true;
+    
+    // If city is already a valid zone, just sync the search field
+    const exactZone = togoZones.find(z => z.name === city);
+    if (exactZone) {
+      setCitySearch(exactZone.name);
+      setMarkerPos([exactZone.lat, exactZone.lng]);
+      return;
+    }
+    
+    // Try fuzzy-matching the city prop (e.g. "Lome, Togo" → "Lomé")
+    if (city) {
+      const matched = matchLocationToZone(city);
+      if (matched) {
+        onCityChange(matched.name);
+        setCitySearch(matched.name);
+        setMarkerPos([matched.lat, matched.lng]);
+        return;
+      }
+    }
+    
+    // Fall back to GPS detection
     detectLocation();
-  }, []);
+  }, [city]);
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -144,7 +179,12 @@ const DeliveryZoneMap = ({
 
   const detectLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setGeoError("Géolocalisation non supportée");
+      // Fallback to Lomé as default
+      const defaultZone = togoZones[0]; // Lomé
+      onCityChange(defaultZone.name);
+      setCitySearch(defaultZone.name);
+      setMarkerPos([defaultZone.lat, defaultZone.lng]);
+      setGeoError("Géolocalisation non supportée — Lomé sélectionné par défaut");
       return;
     }
     setGeoLoading(true);
@@ -160,12 +200,19 @@ const DeliveryZoneMap = ({
         setGeoLoading(false);
       },
       () => {
-        setGeoError("Position non disponible");
+        // Fallback to Lomé when position unavailable
+        const defaultZone = togoZones[0]; // Lomé
+        if (!city) {
+          onCityChange(defaultZone.name);
+          setCitySearch(defaultZone.name);
+          setMarkerPos([defaultZone.lat, defaultZone.lng]);
+        }
+        setGeoError("Position non disponible — Lomé sélectionné par défaut");
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [onCityChange]);
+  }, [onCityChange, city]);
 
   const filteredCities = useMemo(() => {
     if (!citySearch.trim()) return togoZones;
