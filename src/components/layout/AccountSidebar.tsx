@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
@@ -57,6 +58,7 @@ const userTypeConfig: { value: UserType; label: string; icon: any; desc: string 
 
 const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
@@ -187,14 +189,15 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const handleLogout = async () => {
     try {
+      queryClient.clear();
       await supabase.auth.signOut();
       toast({ title: "Déconnexion réussie", description: "À bientôt sur NUKUCONNECT !" });
       onClose();
-      window.location.href = "/";
+      window.location.replace("/");
     } catch (err) {
       console.error("Logout error:", err);
       onClose();
-      window.location.href = "/";
+      window.location.replace("/");
     }
   };
 
