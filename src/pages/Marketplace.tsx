@@ -484,11 +484,26 @@ const Marketplace = () => {
         </div>
       </div>
 
+      {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
 
+      {marketView === "demands" ? (
+        <section className="py-3 sm:py-6 lg:py-8">
+          <div className="container mx-auto px-3 sm:px-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2">
+                <HandCoins className="w-4 h-4 text-accent" />
+                Toutes les demandes d'achat
+              </h2>
+              <CreateDemandModal />
+            </div>
+            <DemandsList category={selectedCategory !== "all" ? selectedCategory : undefined} />
+          </div>
+        </section>
+      ) : (
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Sponsored Products Slider */}
