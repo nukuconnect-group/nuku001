@@ -228,6 +228,7 @@ export function useConversations() {
         unread: count || 0,
         isDelivery: true,
         deliveryId: delivery.id,
+        category: "livraison" as ConversationCategory,
       });
     }
 

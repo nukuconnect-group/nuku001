@@ -7,7 +7,8 @@ import { type ConversationItem } from "@/hooks/useConversations";
 const SORT_OPTIONS = [
   { id: "recent", label: "Récents" },
   { id: "unread", label: "Non lus" },
-  { id: "product", label: "Produits" },
+  { id: "achat", label: "🛒 Achats" },
+  { id: "vente", label: "💰 Ventes" },
   { id: "delivery", label: "🚚 Livraison" },
   { id: "oldest", label: "Anciens" },
 ];
