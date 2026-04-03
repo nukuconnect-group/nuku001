@@ -302,6 +302,15 @@ const AdminDashboard = () => {
               <TabsTrigger value="orders" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <ShoppingCart className="w-3.5 h-3.5" />Commandes
               </TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Package className="w-3.5 h-3.5" />Produits
+              </TabsTrigger>
+              <TabsTrigger value="deliveries" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Truck className="w-3.5 h-3.5" />Livraisons
+              </TabsTrigger>
+              <TabsTrigger value="demands" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <ShoppingBag className="w-3.5 h-3.5" />Demandes
+              </TabsTrigger>
               <TabsTrigger value="subscriptions" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Crown className="w-3.5 h-3.5" />Abonnements
               </TabsTrigger>
