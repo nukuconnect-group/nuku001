@@ -15,25 +15,28 @@ async function getHasDriverProfile(userId: string) {
     return activeRequest;
   }
 
-  const request = supabase
-    .from("driver_profiles")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle()
-    .then(({ data, error }) => {
+  const request = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from("driver_profiles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
       const hasDriverProfile = !error && !!data;
 
       if (!error) {
         driverProfileCache.set(userId, hasDriverProfile);
       }
 
-      driverProfileRequests.delete(userId);
       return hasDriverProfile;
-    })
-    .catch(() => {
+    } catch {
       driverProfileRequests.delete(userId);
       return false;
-    });
+    } finally {
+      driverProfileRequests.delete(userId);
+    }
+  })();
 
   driverProfileRequests.set(userId, request);
   return request;
