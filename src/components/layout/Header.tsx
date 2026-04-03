@@ -19,7 +19,6 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
 import VoiceSearchModal from "@/components/search/VoiceSearchModal";
