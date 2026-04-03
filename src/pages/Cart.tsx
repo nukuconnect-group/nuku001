@@ -363,7 +363,7 @@ const Cart = () => {
                     <p className="text-xs text-muted-foreground">Connectez-vous pour pré-remplir vos informations</p>
                   </div>
                 </div>
-                <Link to="/auth">
+                <Link to="/auth?returnTo=/panier">
                   <Button variant="hero" size="sm">Se connecter</Button>
                 </Link>
               </CardContent>
