@@ -167,7 +167,7 @@ const Producers = () => {
               Réseau de fournisseurs
             </Badge>
             <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Nos fournisseurs
+              Notre réseau de fournisseurs
             </h1>
             <p className="text-muted-foreground mb-8">
               Découvrez les fournisseurs actifs sur la plateforme et connectez-vous directement avec eux.
