@@ -1,18 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Save, Loader2, Navigation, Home, Building, ArrowLeft, Plus, Trash2, Star, Edit2 } from "lucide-react";
+import { MapPin, Save, Loader2, Navigation, Home, Building, ArrowLeft, Plus, Trash2, Star, Edit2, Search, X } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -47,6 +46,22 @@ interface DeliveryAddr {
   is_default: boolean;
 }
 
+interface AddressSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    suburb?: string;
+    road?: string;
+    neighbourhood?: string;
+    country?: string;
+    quarter?: string;
+  };
+}
+
 function LocationPicker({ position, onPositionChange }: { position: [number, number]; onPositionChange: (pos: [number, number]) => void }) {
   useMapEvents({ click(e) { onPositionChange([e.latlng.lat, e.latlng.lng]); } });
   return <Marker position={position} />;
@@ -54,7 +69,7 @@ function LocationPicker({ position, onPositionChange }: { position: [number, num
 
 function MapRecenter({ position }: { position: [number, number] }) {
   const map = useMap();
-  useEffect(() => { map.setView(position, 13); }, [position, map]);
+  useEffect(() => { map.setView(position, 15); }, [position, map]);
   return null;
 }
 
@@ -68,6 +83,7 @@ const DeliveryAddress = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [geolocating, setGeolocating] = useState(false);
 
   // Form state
   const [addressLabel, setAddressLabel] = useState("Domicile");
@@ -78,6 +94,13 @@ const DeliveryAddress = () => {
   const [quarter, setQuarter] = useState("");
   const [street, setStreet] = useState("");
   const [position, setPosition] = useState<[number, number]>([6.1725, 1.2314]);
+
+  // Address search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [detectedAddress, setDetectedAddress] = useState("");
 
   const fetchAddresses = useCallback(async () => {
     if (!user) return;
@@ -92,6 +115,106 @@ const DeliveryAddress = () => {
 
   useEffect(() => { fetchAddresses(); }, [fetchAddresses]);
 
+  // Reverse geocode a position to get address details
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=fr`
+      );
+      const data = await res.json();
+      if (data?.address) {
+        const addr = data.address;
+        const detectedCity = addr.city || addr.town || addr.village || addr.state || "";
+        const detectedCountry = addr.country || "Togo";
+        const detectedQuarter = addr.suburb || addr.neighbourhood || addr.quarter || "";
+        const detectedStreet = addr.road || "";
+
+        if (detectedCity) setCity(detectedCity);
+        if (detectedQuarter) setQuarter(detectedQuarter);
+        if (detectedStreet) setStreet(detectedStreet);
+
+        // Try to match country
+        const matchedCountry = countries.find(c => detectedCountry.toLowerCase().includes(c.toLowerCase()));
+        if (matchedCountry) setCountry(matchedCountry);
+
+        const fullAddr = data.display_name || "";
+        setDetectedAddress(fullAddr);
+        return fullAddr;
+      }
+    } catch (e) {
+      console.error("Reverse geocode error:", e);
+    }
+    return "";
+  };
+
+  // Auto-geolocate on form open
+  const autoGeolocate = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setGeolocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setPosition(newPos);
+        await reverseGeocode(newPos[0], newPos[1]);
+        setGeolocating(false);
+        toast({ title: "📍 Position détectée automatiquement" });
+      },
+      () => {
+        setGeolocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  // Search addresses with Nominatim
+  const searchAddresses = async (query: string) => {
+    if (query.length < 3) { setSuggestions([]); return; }
+    setSearchingAddress(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&accept-language=fr&countrycodes=tg,bj,gh,ci,bf,ne,ml,sn`
+      );
+      const data: AddressSuggestion[] = await res.json();
+      setSuggestions(data);
+    } catch {
+      setSuggestions([]);
+    }
+    setSearchingAddress(false);
+  };
+
+  // Debounced search
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => searchAddresses(value), 500);
+  };
+
+  // Select a suggestion
+  const selectSuggestion = (suggestion: AddressSuggestion) => {
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    setPosition([lat, lng]);
+    setSuggestions([]);
+    setSearchQuery("");
+    setDetectedAddress(suggestion.display_name);
+
+    if (suggestion.address) {
+      const addr = suggestion.address;
+      const sugCity = addr.city || addr.town || addr.village || "";
+      if (sugCity) setCity(sugCity);
+      if (addr.suburb || addr.neighbourhood || addr.quarter) setQuarter(addr.suburb || addr.neighbourhood || addr.quarter || "");
+      if (addr.road) setStreet(addr.road);
+      const matchedCountry = countries.find(c => (addr.country || "").toLowerCase().includes(c.toLowerCase()));
+      if (matchedCountry) setCountry(matchedCountry);
+    }
+  };
+
+  // When map is clicked, reverse geocode
+  const handlePositionChange = async (pos: [number, number]) => {
+    setPosition(pos);
+    await reverseGeocode(pos[0], pos[1]);
+  };
+
   const resetForm = () => {
     setAddressLabel("Domicile");
     setFullName(profile?.full_name || "");
@@ -102,11 +225,16 @@ const DeliveryAddress = () => {
     setStreet("");
     setPosition([6.1725, 1.2314]);
     setEditingId(null);
+    setDetectedAddress("");
+    setSearchQuery("");
+    setSuggestions([]);
   };
 
   const openNewForm = () => {
     resetForm();
     setShowForm(true);
+    // Auto-detect location
+    setTimeout(autoGeolocate, 300);
   };
 
   const openEditForm = (addr: DeliveryAddr) => {
@@ -120,6 +248,7 @@ const DeliveryAddress = () => {
     setStreet(addr.street || "");
     setPosition([addr.lat || 6.1725, addr.lng || 1.2314]);
     setShowForm(true);
+    setDetectedAddress("");
   };
 
   const handleLocateMe = () => {
@@ -127,9 +256,20 @@ const DeliveryAddress = () => {
       toast({ title: "Géolocalisation non disponible", variant: "destructive" });
       return;
     }
+    setGeolocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setPosition([pos.coords.latitude, pos.coords.longitude]); toast({ title: "Position mise à jour ✓" }); },
-      () => toast({ title: "Impossible d'obtenir votre position", variant: "destructive" })
+      async (pos) => {
+        const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setPosition(newPos);
+        await reverseGeocode(newPos[0], newPos[1]);
+        setGeolocating(false);
+        toast({ title: "📍 Position mise à jour" });
+      },
+      () => {
+        setGeolocating(false);
+        toast({ title: "Impossible d'obtenir votre position", variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -184,7 +324,6 @@ const DeliveryAddress = () => {
 
   const handleSetDefault = async (id: string) => {
     if (!user) return;
-    // Remove default from all
     await supabase.from("delivery_addresses").update({ is_default: false }).eq("user_id", user.id);
     await supabase.from("delivery_addresses").update({ is_default: true }).eq("id", id);
     toast({ title: "Adresse par défaut mise à jour ✓" });
@@ -286,6 +425,62 @@ const DeliveryAddress = () => {
           {/* Add/Edit form */}
           {showForm && (
             <div className="space-y-4">
+              {/* Auto-detected location banner */}
+              {geolocating && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-sm text-primary font-medium">Détection de votre position en cours...</span>
+                </div>
+              )}
+              {detectedAddress && !geolocating && (
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-primary mb-0.5">📍 Adresse détectée</p>
+                    <p className="text-xs text-foreground leading-relaxed">{detectedAddress}</p>
+                  </div>
+                  <button onClick={() => setDetectedAddress("")} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Address search bar */}
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <Label className="text-xs font-semibold mb-2 block">🔍 Rechercher une adresse</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Tapez une adresse, quartier, ville..."
+                      className="pl-10 text-sm h-10"
+                    />
+                    {searchingAddress && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  {/* Suggestions dropdown */}
+                  {suggestions.length > 0 && (
+                    <div className="mt-2 border border-border rounded-lg overflow-hidden bg-card shadow-lg">
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => selectSuggestion(s)}
+                          className="w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0"
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                            <span className="text-xs text-foreground leading-relaxed">{s.display_name}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
                   <CardTitle className="text-sm">{editingId ? "Modifier l'adresse" : "Nouvelle adresse"}</CardTitle>
@@ -316,10 +511,11 @@ const DeliveryAddress = () => {
                           <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                         </Select></div>
                       <div><Label className="text-xs font-semibold mb-1.5">Ville</Label>
-                        <Select value={city} onValueChange={setCity}>
-                          <SelectTrigger className="text-sm h-10"><SelectValue placeholder="Choisir une ville" /></SelectTrigger>
-                          <SelectContent>{cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                        </Select></div>
+                        <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex: Lomé, Kara..." className="text-sm h-10" list="city-list" />
+                        <datalist id="city-list">
+                          {cities.map(c => <option key={c} value={c} />)}
+                        </datalist>
+                      </div>
                     </div>
                     <div><Label className="text-xs font-semibold mb-1.5">Quartier</Label>
                       <Input value={quarter} onChange={(e) => setQuarter(e.target.value)} placeholder="Ex: Bè, Adidogomé, Tokoin..." className="text-sm h-10" /></div>
@@ -329,24 +525,29 @@ const DeliveryAddress = () => {
                 </CardContent>
               </Card>
 
+              {/* Map with geolocation */}
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
                   <CardTitle className="text-sm flex items-center justify-between">
-                    <span>📍 Localisation</span>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7" onClick={handleLocateMe}>
-                      <Navigation className="w-3 h-3" /> Ma position
+                    <span>📍 Localisation en temps réel</span>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7" onClick={handleLocateMe} disabled={geolocating}>
+                      {geolocating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
+                      Ma position
                     </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4 pt-0">
-                  <div className="w-full h-48 sm:h-64 rounded-xl overflow-hidden border border-border">
-                    <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+                  <div className="w-full h-52 sm:h-72 rounded-xl overflow-hidden border border-border">
+                    <MapContainer center={position} zoom={15} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
                       <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <LocationPicker position={position} onPositionChange={setPosition} />
+                      <LocationPicker position={position} onPositionChange={handlePositionChange} />
                       <MapRecenter position={position} />
                     </MapContainer>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">📌 Lat: {position[0].toFixed(4)}, Lng: {position[1].toFixed(4)}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[10px] text-muted-foreground">📌 Lat: {position[0].toFixed(5)}, Lng: {position[1].toFixed(5)}</p>
+                    <p className="text-[10px] text-primary font-medium">Cliquez sur la carte pour ajuster</p>
+                  </div>
                 </CardContent>
               </Card>
 
