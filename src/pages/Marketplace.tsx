@@ -164,7 +164,8 @@ const LocationSearchFilter = ({ location, onLocationChange }: { location: string
 };
 
 
-  const Marketplace = () => {
+const Marketplace = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { toast } = useToast();
