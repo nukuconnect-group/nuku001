@@ -297,7 +297,7 @@ const translations: Record<LangCode, Record<string, string>> = {
   ewe: {
     "nav.home": "Aƒe",
     "nav.marketplace": "Asitsaƒe",
-    "nav.producers": "Nudzralatɔwo",
+    "nav.producers": "Hã",
     "nav.nukuai": "NUKU AI",
     "nav.formations": "Kpɔɖeŋu",
     "nav.traceability": "Nudi dzadzɛ",
