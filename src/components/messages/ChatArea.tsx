@@ -288,7 +288,13 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => toast({ title: "Conversation vidée" })}>Vider la conversation</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast({ title: "Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué` })} className="text-destructive">Bloquer</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => toast({ title: "🚫 Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué. Vous ne recevrez plus de messages.` })} className="text-destructive gap-2">
+              <Ban className="w-3.5 h-3.5" />Bloquer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast({ title: "🚩 Signalement envoyé", description: `${conversation.participant.name} a été signalé à notre équipe.` })} className="text-destructive gap-2">
+              <Flag className="w-3.5 h-3.5" />Signaler
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
