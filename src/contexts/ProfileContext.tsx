@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthReady } from "@/hooks/useAuthReady";
 
 interface ProfileContextType {
   user: any;
   profile: any;
   isLoading: boolean;
+  isReady: boolean;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<any>) => void;
 }
@@ -13,6 +15,7 @@ const ProfileContext = createContext<ProfileContextType>({
   user: null,
   profile: null,
   isLoading: true,
+  isReady: false,
   refreshProfile: async () => {},
   updateProfile: () => {},
 });
@@ -20,14 +23,16 @@ const ProfileContext = createContext<ProfileContextType>({
 export const useProfile = () => useContext(ProfileContext);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const { user, isReady } = useAuthReady();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const fetchingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string, retries = 3) => {
-    if (fetchingRef.current) return;
+    if (fetchingRef.current && lastUserIdRef.current === userId) return;
     fetchingRef.current = true;
+    lastUserIdRef.current = userId;
     
     try {
       const { data } = await supabase
@@ -50,7 +55,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         return fetchProfile(userId, retries - 1);
       }
       
-      // After retries, still no profile
       setProfile(null);
       setIsLoading(false);
     } catch (e) {
@@ -74,44 +78,22 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  // React to auth state changes from useAuthReady
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setProfile(null);
-        setIsLoading(false);
-        fetchingRef.current = false;
-        return;
-      }
-      
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      if (currentUser) {
-        // Reset fetching state on new login to allow fresh fetch
-        fetchingRef.current = false;
-        fetchProfile(currentUser.id);
-      } else {
-        setProfile(null);
-        setIsLoading(false);
-      }
-    });
+    if (!isReady) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        fetchProfile(currentUser.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    if (user) {
+      fetchingRef.current = false;
+      fetchProfile(user.id);
+    } else {
+      setProfile(null);
+      setIsLoading(false);
+      lastUserIdRef.current = null;
+    }
+  }, [user, isReady, fetchProfile]);
 
   return (
-    <ProfileContext.Provider value={{ user, profile, isLoading, refreshProfile, updateProfile }}>
+    <ProfileContext.Provider value={{ user, profile, isLoading, isReady, refreshProfile, updateProfile }}>
       {children}
     </ProfileContext.Provider>
   );
