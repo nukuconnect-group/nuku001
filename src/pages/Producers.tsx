@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFollows } from "@/hooks/useFollows";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -29,14 +30,15 @@ const countries = [
 ];
 
 const sortOptions = [
-  { value: "recent", label: "Plus récents" },
-  { value: "rating", label: "Mieux notés" },
-  { value: "products", label: "Plus de produits" },
+  { value: "recent", labelKey: "net.mostRecent" },
+  { value: "rating", labelKey: "net.bestRated" },
+  { value: "products", labelKey: "net.mostProducts" },
 ];
 
 const Producers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { user, profile: myProfile } = useProfile();
   const { isFollowing, toggleFollow, isPending } = useFollows();
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +68,6 @@ const Producers = () => {
         productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
       });
 
-      // Get follower counts
       const { data: followsData } = await supabase
         .from("follows")
         .select("following_id")
@@ -80,7 +81,7 @@ const Producers = () => {
       return profiles.map((p) => ({
         id: p.id,
         user_id: p.user_id,
-        name: p.full_name || (activeTab === "suppliers" ? "Fournisseur" : "Acheteur"),
+        name: p.full_name || (activeTab === "suppliers" ? t("net.suppliers") : t("net.buyers")),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
         location: p.location || "Non spécifié",
@@ -131,13 +132,13 @@ const Producers = () => {
       await toggleFollow(profileId);
       const wasFollowing = isFollowing(profileId);
       toast({
-        title: wasFollowing ? "Désabonné" : "Abonné !",
+        title: wasFollowing ? t("net.unsubscribed") : t("net.subscribed"),
         description: wasFollowing
-          ? `Vous ne suivez plus ${profileName}.`
-          : `Vous recevrez les notifications de ${profileName}.`,
+          ? `${t("net.unsubscribeNotif")} ${profileName}.`
+          : `${t("net.subscribeNotif")} ${profileName}.`,
       });
     } catch {
-      toast({ title: "Erreur", variant: "destructive" });
+      toast({ title: t("common.error"), variant: "destructive" });
     }
   };
 
@@ -147,25 +148,33 @@ const Producers = () => {
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
 
-      {/* Hero */}
-      <section className="pt-24 pb-8 sm:pb-12 bg-gradient-earth">
-        <div className="container mx-auto px-4">
+      {/* Hero with background image */}
+      <section className="pt-24 pb-8 sm:pb-12 relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1600&q=80" 
+            alt="" 
+            className="w-full h-full object-cover" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4">
               <Users className="w-3 h-3 mr-1" />
-              Réseau NukuConnect
+              {t("net.badge")}
             </Badge>
             <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
-              Notre réseau professionnel
+              {t("net.title")}
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              Suivez les fournisseurs et acheteurs pour recevoir leurs nouvelles offres et demandes en temps réel.
+              {t("net.subtitle")}
             </p>
 
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder={`Rechercher un ${isSupplierTab ? "fournisseur" : "acheteur"}...`}
+                placeholder={isSupplierTab ? t("net.searchSupplier") : t("net.searchBuyer")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-11 text-sm"
@@ -175,7 +184,7 @@ const Producers = () => {
         </div>
       </section>
 
-      {/* Tabs: Fournisseurs / Acheteurs */}
+      {/* Tabs */}
       <section className="border-b border-border bg-card">
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSearchQuery(""); }}>
@@ -185,14 +194,14 @@ const Producers = () => {
                 className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-4 py-2.5 text-xs sm:text-sm font-semibold gap-1.5"
               >
                 <Package className="w-3.5 h-3.5" />
-                Fournisseurs
+                {t("net.suppliers")}
               </TabsTrigger>
               <TabsTrigger
                 value="buyers"
                 className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none px-4 py-2.5 text-xs sm:text-sm font-semibold gap-1.5"
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
-                Acheteurs
+                {t("net.buyers")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -204,7 +213,7 @@ const Producers = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProducers.length}</span> {isSupplierTab ? "fournisseur" : "acheteur"}{filteredProducers.length > 1 ? "s" : ""}
+              <span className="font-semibold text-foreground">{filteredProducers.length}</span> {isSupplierTab ? t("net.suppliers").toLowerCase() : t("net.buyers").toLowerCase()}
             </p>
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -214,7 +223,7 @@ const Producers = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {sortOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectItem key={opt.value} value={opt.value}>{t(opt.labelKey)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -225,7 +234,7 @@ const Producers = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map((country) => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                    <SelectItem key={country} value={country}>{country === "Tous les pays" ? t("net.allCountries") : country}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -245,9 +254,9 @@ const Producers = () => {
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-foreground mb-2">
-                Aucun {isSupplierTab ? "fournisseur" : "acheteur"} trouvé
+                {isSupplierTab ? t("net.noSupplier") : t("net.noBuyer")}
               </h3>
-              <p className="text-sm text-muted-foreground">Modifiez vos filtres de recherche.</p>
+              <p className="text-sm text-muted-foreground">{t("net.modifyFilters")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
@@ -280,7 +289,7 @@ const Producers = () => {
                         {producer.verified && (
                           <div className="absolute top-2 right-2">
                             <Badge className="bg-primary/90 text-primary-foreground text-[8px] px-1.5 py-0.5 gap-0.5">
-                              <ShieldCheck className="w-2.5 h-2.5" />Vérifié
+                              <ShieldCheck className="w-2.5 h-2.5" />{t("net.verified")}
                             </Badge>
                           </div>
                         )}
@@ -300,11 +309,11 @@ const Producers = () => {
                         <div className="flex items-center justify-between text-[9px] sm:text-[10px]">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             {isSupplierTab ? <Package className="w-3 h-3" /> : <ShoppingBag className="w-3 h-3" />}
-                            <span>{isSupplierTab ? `${producer.products} produit${producer.products > 1 ? "s" : ""}` : "Acheteur"}</span>
+                            <span>{isSupplierTab ? `${producer.products} ${producer.products > 1 ? t("net.productsPlural") : t("net.products")}` : t("net.buyer")}</span>
                           </div>
                           <div className="flex items-center gap-0.5 text-muted-foreground">
                             <Users className="w-3 h-3" />
-                            <span>{producer.followers} abonné{producer.followers > 1 ? "s" : ""}</span>
+                            <span>{producer.followers} {producer.followers > 1 ? t("net.subscribersPlural") : t("net.subscriber")}</span>
                           </div>
                         </div>
 
@@ -319,20 +328,20 @@ const Producers = () => {
                             <Button
                               variant={following ? "secondary" : "hero"}
                               size="sm"
-                              className={`flex-1 text-[9px] sm:text-[10px] h-7 gap-1 ${following ? "" : ""}`}
+                              className="flex-1 text-[9px] sm:text-[10px] h-7 gap-1"
                               onClick={(e) => handleFollow(e, producer.id, producer.name)}
                               disabled={isPending}
                             >
                               {following ? (
                                 <>
                                   <UserCheck className="w-3 h-3" />
-                                  <span className="hidden sm:inline">Abonné</span>
+                                  <span className="hidden sm:inline">{t("net.following")}</span>
                                   <Bell className="w-2.5 h-2.5 sm:hidden" />
                                 </>
                               ) : (
                                 <>
                                   <UserPlus className="w-3 h-3" />
-                                  Suivre
+                                  {t("net.follow")}
                                 </>
                               )}
                             </Button>
