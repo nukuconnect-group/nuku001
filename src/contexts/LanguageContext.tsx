@@ -31,7 +31,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     // Nav
     "nav.home": "Accueil",
     "nav.marketplace": "Marketplace",
-    "nav.producers": "Producteurs",
+    "nav.producers": "Réseaux",
     "nav.nukuai": "NUKU AI",
     "nav.formations": "Formations",
     "nav.traceability": "Traçabilité",
