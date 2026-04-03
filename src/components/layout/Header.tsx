@@ -52,6 +52,7 @@ const Header = () => {
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [menuTab, setMenuTab] = useState<"menu" | "categories">("menu");
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -291,7 +292,7 @@ const Header = () => {
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-72 p-0">
+                <SheetContent side="left" className="w-80 p-0">
                   <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
                     <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
                       <img src={nukuLogo} alt="NUKUCONNECT" className="w-8 h-8 object-contain rounded-full bg-white p-0.5" />
@@ -299,42 +300,85 @@ const Header = () => {
                     </SheetTitle>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100vh-60px)]">
-                    <div className="p-2">
-                      <button onClick={() => { setIsMenuOpen(false); setLocationDialogOpen(true); }}
-                        className="w-full flex items-center gap-2 p-3 rounded-lg bg-muted mb-2">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <div className="text-left">
-                          <p className="text-[10px] text-muted-foreground">{t("header.deliverTo")}</p>
-                          <p className="text-xs font-medium">{userLocation}</p>
-                        </div>
-                        <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground" />
-                      </button>
-                      <div className="border-t border-border my-2" />
-                      <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.navigation")}</h4>
+                    {/* Menu / Categories tabs */}
+                    <div className="border-b border-border">
+                      <div className="flex">
+                        <button
+                          onClick={() => setMenuTab("menu")}
+                          className={`flex-1 py-2.5 text-xs font-semibold uppercase text-center border-b-2 transition-colors ${
+                            menuTab === "menu" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+                          }`}
+                        >
+                          MENU
+                        </button>
+                        <button
+                          onClick={() => setMenuTab("categories")}
+                          className={`flex-1 py-2.5 text-xs font-semibold uppercase text-center border-b-2 transition-colors ${
+                            menuTab === "categories" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+                          }`}
+                        >
+                          CATÉGORIES
+                        </button>
+                      </div>
+                    </div>
+
+                    {menuTab === "menu" ? (
+                      <div className="p-2">
+                        <button onClick={() => { setIsMenuOpen(false); setLocationDialogOpen(true); }}
+                          className="w-full flex items-center gap-2 p-3 rounded-lg bg-muted mb-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <div className="text-left">
+                            <p className="text-[10px] text-muted-foreground">{t("header.deliverTo")}</p>
+                            <p className="text-xs font-medium">{userLocation}</p>
+                          </div>
+                          <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground" />
+                        </button>
+                        <div className="border-t border-border my-2" />
                         {navLinks.map((link) => (
                           <Link key={link.href + link.label} to={link.href} onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted">
-                            <span className="text-xs font-medium">{link.label}</span>
-                            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                            className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
+                            <span className="text-sm font-medium">{link.label}</span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </Link>
+                        ))}
+                        <div className="border-t border-border my-2" />
+                        <div className="mb-2">
+                          <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.langCurrency")}</h4>
+                          <div className="grid grid-cols-2 gap-2 px-3">
+                            <select value={lang} onChange={(e) => setLang(e.target.value as LangCode)}
+                              className="text-xs p-2 rounded-lg border border-border bg-background">
+                              {languages.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
+                            </select>
+                            <select value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                              className="text-xs p-2 rounded-lg border border-border bg-background">
+                              {currencies.map(c => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-2">
+                        <Link to="/marketplace" onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30 text-primary font-medium">
+                          <span className="text-sm">Toutes les catégories</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </Link>
+                        {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
+                          <Link key={cat.id} to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{cat.emoji || "📦"}</span>
+                              <span className="text-sm font-medium">{cat.name}</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </Link>
                         ))}
                       </div>
-                      <div className="border-t border-border my-2" />
-                      <div className="mb-2">
-                        <h4 className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase">{t("nav.langCurrency")}</h4>
-                        <div className="grid grid-cols-2 gap-2 px-3">
-                          <select value={lang} onChange={(e) => setLang(e.target.value as LangCode)}
-                            className="text-xs p-2 rounded-lg border border-border bg-background">
-                            {languages.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
-                          </select>
-                          <select value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-                            className="text-xs p-2 rounded-lg border border-border bg-background">
-                            {currencies.map(c => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="border-t border-border my-2" />
+                    )}
+
+                    {/* User section - always visible */}
+                    <div className="border-t border-border mt-2">
                       {user ? (
                         <div className="p-2">
                           <Link to={getDashboardLink()} onClick={() => setIsMenuOpen(false)}

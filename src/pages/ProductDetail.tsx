@@ -466,27 +466,93 @@ const ProductDetail = () => {
                 </Card>
               )}
 
+              {/* Order Protection - Alibaba inspired */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Protection de la commande NukuConnect</h3>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+                    Seules les commandes passées et payées via NukuConnect sont protégées gratuitement.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { icon: <ShieldCheck className="w-5 h-5 text-primary" />, label: "Paiements sécurisés" },
+                      { icon: <CreditCard className="w-5 h-5 text-primary" />, label: "Protection remboursement" },
+                      { icon: <Package className="w-5 h-5 text-primary" />, label: "Suivi commande" },
+                      { icon: <Truck className="w-5 h-5 text-primary" />, label: "Livraison garantie" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-col items-center text-center p-2 rounded-lg bg-card">
+                        {item.icon}
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 leading-tight">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Seller card */}
               <Card>
                 <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-foreground">Fournisseur :</span>
+                    <span className="text-xs text-primary font-medium">{product.producer.name}</span>
+                    {product.producer.verified && <ShieldCheck className="w-3.5 h-3.5 text-primary" />}
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+                  </div>
                   <div className="flex items-center gap-2.5 sm:gap-4">
                     <img src={product.producer.avatar} alt={product.producer.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-heading font-semibold text-xs sm:text-sm text-foreground truncate">{product.producer.name}</span>
-                        {product.producer.verified && <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
                         <Star className="w-3 h-3 text-accent fill-accent" />
-                        <span className="text-[10px] sm:text-xs font-medium">{product.producer.rating}</span>
+                        <span className="font-medium text-foreground">{product.producer.rating}</span>
+                        <span>•</span>
+                        <MapPin className="w-3 h-3" />
+                        <span>{product.location}</span>
                       </div>
-                      <span className="text-[9px] sm:text-[10px] text-muted-foreground">Fournisseur</span>
                     </div>
                     <Link to={`/producteurs/${product.producer.name}`}>
                       <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3">
                         <User className="w-3 h-3 sm:w-3.5 sm:h-3.5" /><span className="hidden sm:inline">{t("product.viewProfile")}</span><span className="sm:hidden">Profil</span>
                       </Button>
                     </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Characteristics - Alibaba inspired */}
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground">Caractéristiques</h3>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Catégorie</p>
+                      <p className="text-xs font-medium text-foreground capitalize">{product.category}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Unité</p>
+                      <p className="text-xs font-medium text-foreground">{product.unit}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Origine</p>
+                      <p className="text-xs font-medium text-foreground">{product.location || "Togo"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Certification</p>
+                      <p className="text-xs font-medium text-foreground">{product.isOrganic ? "Biologique" : "Standard"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Stock disponible</p>
+                      <p className="text-xs font-medium text-foreground">{product.quantity} {product.unit}(s)</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Fournisseur</p>
+                      <p className="text-xs font-medium text-foreground">{product.producer.name}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

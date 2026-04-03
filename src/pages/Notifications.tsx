@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2, ArrowRight, Star, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,11 +21,21 @@ interface Notification {
   created_at: string;
 }
 
+const CATEGORIES = [
+  { key: "all", label: "Tout" },
+  { key: "order", label: "Commandes" },
+  { key: "message", label: "Messages" },
+  { key: "product", label: "Produits" },
+  { key: "delivery", label: "Livraison" },
+  { key: "system", label: "Système" },
+];
+
 const Notifications = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -43,7 +56,6 @@ const Notifications = () => {
     };
     fetchNotifs();
 
-    // Realtime subscription
     const channel = supabase
       .channel("notifications-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
@@ -57,7 +69,23 @@ const Notifications = () => {
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
+  const filteredNotifications = useMemo(() => {
+    if (activeTab === "all") return notifications;
+    return notifications.filter(n => {
+      if (activeTab === "system") return !["order", "message", "product", "delivery", "review"].includes(n.type);
+      return n.type === activeTab;
+    });
+  }, [notifications, activeTab]);
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: notifications.length };
+    notifications.forEach(n => {
+      const cat = ["order", "message", "product", "delivery"].includes(n.type) ? n.type : "system";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [notifications]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -82,7 +110,6 @@ const Notifications = () => {
   };
 
   const handleNotifClick = async (notif: Notification) => {
-    // Mark as read
     if (!notif.is_read) {
       await supabase.from("notifications" as any).update({ is_read: true } as any).eq("id", notif.id);
       setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
@@ -113,13 +140,23 @@ const Notifications = () => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
+  const deleteAllInCategory = async () => {
+    if (!userId) return;
+    const ids = filteredNotifications.map(n => n.id);
+    if (ids.length === 0) return;
+    for (const id of ids) {
+      await supabase.from("notifications" as any).delete().eq("id", id);
+    }
+    setNotifications(prev => prev.filter(n => !ids.includes(n.id)));
+  };
+
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
       <main>
         <div className="container mx-auto px-3 sm:px-4 py-6">
           <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Bell className="w-5 h-5 text-primary" />
@@ -129,68 +166,100 @@ const Notifications = () => {
                   <p className="text-xs text-muted-foreground">{unreadCount} non lue(s)</p>
                 </div>
               </div>
-              {unreadCount > 0 && (
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={markAllAsRead}>
-                  <Check className="w-3.5 h-3.5" />Tout lire
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {unreadCount > 0 && (
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={markAllAsRead}>
+                    <Check className="w-3.5 h-3.5" />Tout lire
+                  </Button>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {isLoading ? (
-                <div className="flex justify-center py-16">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-              ) : notifications.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <Bell className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                notifications.map((notif) => (
-                  <Card 
-                    key={notif.id} 
-                    className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
-                    onClick={() => handleNotifClick(notif)}
-                  >
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          notif.is_read ? "bg-muted" : "bg-primary/10"
-                        }`}>
-                          {getIcon(notif.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className={`text-sm font-medium ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
-                              {notif.title}
-                            </p>
-                            {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
-                            {getNotifLink(notif) && (
-                              <span className="text-[10px] text-primary font-medium flex items-center gap-0.5">
-                                Voir les détails <ArrowRight className="w-2.5 h-2.5" />
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
+            {/* Category tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+              <div className="overflow-x-auto scrollbar-hide -mx-3 px-3">
+                <TabsList className="inline-flex w-auto gap-1 bg-muted/50 p-1">
+                  {CATEGORIES.map(cat => (
+                    <TabsTrigger key={cat.key} value={cat.key} className="text-xs px-3 py-1.5 gap-1.5 whitespace-nowrap">
+                      {cat.label}
+                      {(categoryCounts[cat.key] || 0) > 0 && (
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 min-w-[16px]">
+                          {categoryCounts[cat.key] || 0}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+            </Tabs>
+
+            {/* Delete category button */}
+            {filteredNotifications.length > 0 && (
+              <div className="flex justify-end mb-2">
+                <Button variant="ghost" size="sm" className="text-xs text-destructive gap-1" onClick={deleteAllInCategory}>
+                  <Trash2 className="w-3 h-3" />
+                  Supprimer {activeTab === "all" ? "tout" : "cette catégorie"}
+                </Button>
+              </div>
+            )}
+
+            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
+              <div className="space-y-2 pr-2">
+                {isLoading ? (
+                  <div className="flex justify-center py-16">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : filteredNotifications.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Bell className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
+                      </p>
                     </CardContent>
                   </Card>
-                ))
-              )}
-            </div>
+                ) : (
+                  filteredNotifications.map((notif) => (
+                    <Card 
+                      key={notif.id} 
+                      className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
+                      onClick={() => handleNotifClick(notif)}
+                    >
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            notif.is_read ? "bg-muted" : "bg-primary/10"
+                          }`}>
+                            {getIcon(notif.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm font-medium ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
+                                {notif.title}
+                              </p>
+                              {!notif.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{notif.description}</p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <p className="text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
+                              {getNotifLink(notif) && (
+                                <span className="text-[10px] text-primary font-medium flex items-center gap-0.5">
+                                  Voir les détails <ArrowRight className="w-2.5 h-2.5" />
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+                            onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </div>
         </div>
       </main>

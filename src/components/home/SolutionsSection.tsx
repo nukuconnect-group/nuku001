@@ -43,7 +43,7 @@ const solutions = [
 
 const SolutionsSection = () => {
   return (
-    <section className="py-8 sm:py-12 lg:py-16 bg-muted/20">
+    <section className="hidden md:block py-8 sm:py-12 lg:py-16 bg-muted/20">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
           <h2 className="font-heading text-sm sm:text-base font-bold text-primary uppercase tracking-widest mb-2">

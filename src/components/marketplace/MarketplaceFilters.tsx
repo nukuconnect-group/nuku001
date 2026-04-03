@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,14 +31,14 @@ interface MarketplaceFiltersProps {
 
 const locations = [
   "Toutes les régions",
-  "Lomé",
-  "Kara",
-  "Sokodé",
-  "Kpalimé",
-  "Atakpamé",
-  "Dapaong",
-  "Tsévié",
-  "Notsé",
+  "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié", "Notsé",
+  "Accra", "Kumasi", "Tamale",
+  "Cotonou", "Porto-Novo", "Parakou",
+  "Abidjan", "Bouaké", "Yamoussoukro",
+  "Ouagadougou", "Bobo-Dioulasso",
+  "Dakar", "Thiès",
+  "Bamako", "Niamey", "Douala", "Yaoundé",
+  "Lagos", "Abuja", "Kinshasa", "Brazzaville",
 ];
 
 const MarketplaceFilters = ({
@@ -85,24 +85,42 @@ const MarketplaceFilters = ({
         </div>
       </div>
 
-      {/* Location */}
+      {/* Location - searchable */}
       <div className="space-y-3">
         <Label className="text-sm font-medium flex items-center gap-2">
           <MapPin className="w-4 h-4" />
-          Localisation
+          Ville ou pays
         </Label>
-        <Select value={location} onValueChange={onLocationChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionner une région" />
-          </SelectTrigger>
-          <SelectContent>
-            {locations.map((loc) => (
-              <SelectItem key={loc} value={loc}>
-                {loc}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="relative">
+          <Input
+            placeholder="Tapez une ville ou un pays..."
+            value={location === "Toutes les régions" ? "" : location}
+            onChange={(e) => onLocationChange(e.target.value || "Toutes les régions")}
+            className="text-sm"
+          />
+          {location && location !== "Toutes les régions" && (
+            <button
+              onClick={() => onLocationChange("Toutes les régions")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        {/* Quick location suggestions */}
+        <div className="flex flex-wrap gap-1">
+          {["Lomé", "Accra", "Cotonou", "Abidjan", "Dakar"].map(loc => (
+            <Button
+              key={loc}
+              variant={location === loc ? "default" : "outline"}
+              size="sm"
+              className="text-[10px] h-6 px-2"
+              onClick={() => onLocationChange(loc)}
+            >
+              {loc}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Price Range */}
