@@ -5,28 +5,45 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ProductsManager = () => {
   const { formatPrice } = useLanguage();
+  const { toast } = useToast();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [showOnlyOrganic, setShowOnlyOrganic] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const loadProducts = async () => {
+    const { data } = await supabase
+      .from("products")
+      .select("*, profiles:producer_id(full_name, avatar_url, is_verified, location)")
+      .order("created_at", { ascending: false });
+    setProducts(data || []);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*, profiles:producer_id(full_name, avatar_url, is_verified, location)")
-        .order("created_at", { ascending: false });
-      setProducts(data || []);
-      setLoading(false);
-    };
-    load();
+    loadProducts();
   }, []);
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`Supprimer le produit "${productName}" ? Cette action est irréversible.`)) return;
+    setDeletingId(productId);
+    const { error } = await supabase.from("products").delete().eq("id", productId);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Produit supprimé", description: `"${productName}" a été supprimé.` });
+      setProducts(prev => prev.filter(p => p.id !== productId));
+    }
+    setDeletingId(null);
+  };
 
   const categories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
@@ -172,11 +189,26 @@ const ProductsManager = () => {
                       </div>
                     </td>
                     <td className="py-2 px-1.5 text-center">
-                      <Link to={`/produit/${p.id}`}>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <Eye className="w-3 h-3" />
+                      <div className="flex items-center justify-center gap-1">
+                        <Link to={`/produit/${p.id}`}>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                            <Eye className="w-3 h-3" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteProduct(p.id, p.name)}
+                          disabled={deletingId === p.id}
+                        >
+                          {deletingId === p.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3" />
+                          )}
                         </Button>
-                      </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

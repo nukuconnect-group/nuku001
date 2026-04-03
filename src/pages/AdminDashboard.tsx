@@ -16,7 +16,7 @@ import {
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
   Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet,
-  Truck, ShoppingBag, Leaf
+  Truck, ShoppingBag, Leaf, Trash2, UserX
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -55,6 +55,21 @@ const AdminDashboard = () => {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Supprimer le compte de "${userName}" et toutes ses données ? Cette action est irréversible.`)) return;
+    setDeletingUserId(userId);
+    try {
+      const { error } = await supabase.rpc("admin_delete_user_data", { p_user_id: userId });
+      if (error) throw error;
+      toast({ title: "Compte supprimé", description: `Les données de "${userName}" ont été supprimées.` });
+      setUsers(prev => prev.filter((u: any) => u.user_id !== userId));
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    }
+    setDeletingUserId(null);
+  };
 
   // Admin chat state
   const [conversations, setConversations] = useState<any[]>([]);
@@ -731,6 +746,7 @@ const AdminDashboard = () => {
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Commandes</th>
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Plan</th>
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden lg:table-cell">Inscrit le</th>
+                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -761,6 +777,21 @@ const AdminDashboard = () => {
                             </td>
                             <td className="py-2.5 px-2 hidden lg:table-cell text-muted-foreground">
                               {new Date(u.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                            </td>
+                            <td className="py-2.5 px-2 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteUser(u.user_id, u.full_name || "Sans nom")}
+                                disabled={deletingUserId === u.user_id}
+                              >
+                                {deletingUserId === u.user_id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3 h-3" />
+                                )}
+                              </Button>
                             </td>
                           </tr>
                         ))}
