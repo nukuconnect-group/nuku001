@@ -58,6 +58,7 @@ const userTypeConfig: { value: UserType; label: string; icon: any; desc: string 
 
 const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
