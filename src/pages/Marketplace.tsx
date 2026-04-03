@@ -34,32 +34,24 @@ import { useDemands } from "@/hooks/useDemands";
 import { Product } from "@/data/marketplace";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
+const locationsByCountry: { country: string; flag: string; cities: string[] }[] = [
+  { country: "Togo", flag: "🇹🇬", cities: ["Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié"] },
+  { country: "Bénin", flag: "🇧🇯", cities: ["Cotonou", "Porto-Novo", "Parakou", "Abomey"] },
+  { country: "Ghana", flag: "🇬🇭", cities: ["Accra", "Kumasi", "Tamale", "Cape Coast"] },
+  { country: "Côte d'Ivoire", flag: "🇨🇮", cities: ["Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro"] },
+  { country: "Sénégal", flag: "🇸🇳", cities: ["Dakar", "Saint-Louis", "Thiès", "Ziguinchor"] },
+  { country: "Burkina Faso", flag: "🇧🇫", cities: ["Ouagadougou", "Bobo-Dioulasso", "Koudougou"] },
+  { country: "Mali", flag: "🇲🇱", cities: ["Bamako", "Sikasso", "Mopti"] },
+  { country: "Niger", flag: "🇳🇪", cities: ["Niamey", "Zinder", "Maradi"] },
+  { country: "Cameroun", flag: "🇨🇲", cities: ["Douala", "Yaoundé", "Bafoussam"] },
+  { country: "Nigeria", flag: "🇳🇬", cities: ["Lagos", "Abuja", "Kano", "Ibadan"] },
+  { country: "RDC", flag: "🇨🇩", cities: ["Kinshasa", "Lubumbashi"] },
+  { country: "Guinée", flag: "🇬🇳", cities: ["Conakry"] },
+];
+
 const locations = [
   "Toutes les régions",
-  // Togo
-  "Lomé", "Kara", "Sokodé", "Kpalimé", "Atakpamé", "Dapaong", "Tsévié",
-  // Bénin
-  "Cotonou", "Porto-Novo", "Parakou", "Abomey",
-  // Ghana
-  "Accra", "Kumasi", "Tamale", "Cape Coast",
-  // Côte d'Ivoire
-  "Abidjan", "Bouaké", "Yamoussoukro", "San-Pédro",
-  // Sénégal
-  "Dakar", "Saint-Louis", "Thiès", "Ziguinchor",
-  // Burkina Faso
-  "Ouagadougou", "Bobo-Dioulasso", "Koudougou",
-  // Mali
-  "Bamako", "Sikasso", "Mopti",
-  // Niger
-  "Niamey", "Zinder", "Maradi",
-  // Cameroun
-  "Douala", "Yaoundé", "Bafoussam",
-  // Nigeria
-  "Lagos", "Abuja", "Kano", "Ibadan",
-  // RDC
-  "Kinshasa", "Lubumbashi",
-  // Guinée
-  "Conakry",
+  ...locationsByCountry.flatMap(g => g.cities),
 ];
 
 const Marketplace = () => {
