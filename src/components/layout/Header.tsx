@@ -375,7 +375,9 @@ const Header = () => {
                         ))}
                       </div>
                     )}
-                      <div className="border-t border-border my-2" />
+
+                    {/* User section - always visible */}
+                    <div className="border-t border-border mt-2">
                       {user ? (
                         <div className="p-2">
                           <Link to={getDashboardLink()} onClick={() => setIsMenuOpen(false)}
