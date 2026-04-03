@@ -26,7 +26,7 @@ Nous sommes ravis de vous accueillir sur la première plateforme agricole intell
 
 💬 **Messagerie** — Discutez avec les fournisseurs et livreurs en temps réel.
 
-🤖 **NUKU AI** — Posez vos questions agricoles à notre assistant IA intelligent.
+🤖 **NUKUCONNECT IA** — Posez vos questions agricoles à notre assistant IA intelligent.
 
 📚 **Formations** — Accédez à des cours pour améliorer vos compétences agricoles.
 

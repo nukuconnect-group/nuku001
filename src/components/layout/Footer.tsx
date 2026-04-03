@@ -11,7 +11,7 @@ const Footer = () => {
       { label: "Marketplace", href: "/marketplace" },
       { label: "Fournisseurs", href: "/producteurs" },
       { label: "Acheteurs", href: "/buyer-dashboard" },
-      { label: "NUKU AI", href: "/nuku-ai" },
+      { label: "NUKUCONNECT IA", href: "/nuku-ai" },
     ],
     resources: [
       { label: "Formations", href: "/formations" },
