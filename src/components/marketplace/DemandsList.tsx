@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 interface DemandsListProps {
   category?: string;
   limit?: number;
+  searchQuery?: string;
 }
 
 const DemandsList = ({ category, limit }: DemandsListProps) => {
