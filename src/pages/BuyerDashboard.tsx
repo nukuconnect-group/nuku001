@@ -312,28 +312,36 @@ const BuyerDashboard = () => {
           </Card>
 
           {/* AI Recommendations */}
-          {user && profile && (
-            <div className="mb-5 sm:mb-8">
-              <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
-            </div>
-          )}
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
+            {user && profile && (
+              <div className="mb-5 sm:mb-8">
+                <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
+              </div>
+            )}
+          </Suspense>
 
           {/* Delivery Tracking Widget */}
-          {profile && (
-            <div className="mb-5 sm:mb-8">
-              <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
-            </div>
-          )}
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
+            {profile && (
+              <div className="mb-5 sm:mb-8">
+                <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
+              </div>
+            )}
+          </Suspense>
 
           {/* Subscription Management */}
-          <div className="mb-5 sm:mb-8">
-            <SubscriptionCard />
-          </div>
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
+            <div className="mb-5 sm:mb-8">
+              <SubscriptionCard />
+            </div>
+          </Suspense>
 
           {/* Formations Section */}
-          <div className="mb-5 sm:mb-8">
-            <FormationsSection />
-          </div>
+          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
+            <div className="mb-5 sm:mb-8">
+              <FormationsSection />
+            </div>
+          </Suspense>
 
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
