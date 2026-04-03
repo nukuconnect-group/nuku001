@@ -686,33 +686,12 @@ const Header = () => {
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
 
-      <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-5 h-5 text-primary" />{t("header.deliveryLocation")}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-              <MapPin className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-[10px] text-muted-foreground">{t("header.currentLocation")}</p>
-                <p className="text-sm font-medium">{userLocation}</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium">{t("header.enterAddress")}</label>
-              <Input placeholder="Ex: Quartier Bè, Lomé, Togo" value={customLocation}
-                onChange={(e) => setCustomLocation(e.target.value)} className="text-sm" />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 text-xs" onClick={() => setLocationDialogOpen(false)}>{t("header.cancel")}</Button>
-              <Button variant="hero" className="flex-1 text-xs" onClick={handleSaveLocation}>{t("header.save")}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <LocationPickerDialog
+        open={locationDialogOpen}
+        onOpenChange={setLocationDialogOpen}
+        currentLocation={userLocation}
+        onSave={handleSaveLocation}
+      />
 
       <VoiceSearchModal
         open={voiceSearchOpen}
