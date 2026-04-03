@@ -215,11 +215,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
-  const bottomItems = [
-    { icon: Globe, label: "Pays/région, devise et langue", href: "/settings", show: true },
-    { icon: HelpCircle, label: "Centre d'assistance", href: "/aide", show: true },
-    { icon: Settings, label: "Paramètres", href: "/settings", show: true },
-  ];
+  // bottomItems removed — rendered inline below
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
