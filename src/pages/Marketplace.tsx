@@ -17,6 +17,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
@@ -567,9 +568,11 @@ const Marketplace = () => {
                   {activeFiltersCount > 0 && (<Badge variant="default" className="ml-1 px-1.5 py-0 text-[9px] h-4">{activeFiltersCount}</Badge>)}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-72 sm:w-80">
-                <SheetHeader className="pb-4"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />{t("mp.advancedFilters")}</SheetTitle></SheetHeader>
-                <FiltersContent />
+              <SheetContent side="right" className="w-72 sm:w-80 flex flex-col p-0">
+                <SheetHeader className="p-4 pb-2 flex-shrink-0"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />{t("mp.advancedFilters")}</SheetTitle></SheetHeader>
+                <ScrollArea className="flex-1 px-4 pb-4">
+                  <FiltersContent />
+                </ScrollArea>
               </SheetContent>
             </Sheet>
             <Select value={sortBy} onValueChange={setSortBy}>
