@@ -57,6 +57,7 @@ export const useCreateDemand = () => {
       unit?: string;
       budget?: number;
       location?: string;
+      image_url?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
@@ -81,7 +82,8 @@ export const useCreateDemand = () => {
           unit: demand.unit || "kg",
           budget: demand.budget || null,
           location: demand.location || null,
-        })
+          image_url: demand.image_url || null,
+        } as any)
         .select()
         .single();
 
