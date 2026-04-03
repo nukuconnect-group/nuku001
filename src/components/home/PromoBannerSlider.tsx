@@ -212,10 +212,10 @@ const PromoBannerSlider = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
-              <Leaf className="w-4 h-4 text-primary flex-shrink-0" />
+              <ShoppingBag className="w-4 h-4 text-primary flex-shrink-0" />
               <div>
-                <p className="text-xs font-bold text-foreground">2K+</p>
-                <p className="text-[9px] text-muted-foreground">Bio certifié</p>
+                <p className="text-xs font-bold text-foreground">25K+</p>
+                <p className="text-[9px] text-muted-foreground">Achats réalisés</p>
               </div>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
