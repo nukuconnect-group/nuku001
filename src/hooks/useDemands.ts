@@ -69,16 +69,17 @@ export const useCreateDemand = () => {
       location?: string;
       image_url?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Non authentifié");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Veuillez vous connecter pour publier une demande.");
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("user_id", user.id)
-        .single();
+        .eq("user_id", session.user.id)
+        .maybeSingle();
 
-      if (!profile) throw new Error("Profil non trouvé");
+      if (profileError) throw new Error("Erreur de profil: " + profileError.message);
+      if (!profile) throw new Error("Profil non trouvé. Veuillez compléter votre profil.");
 
       const { data, error } = await supabase
         .from("demands")
