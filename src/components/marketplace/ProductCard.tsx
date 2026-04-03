@@ -118,6 +118,10 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           
           {/* Top badges */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
+            {/* Vente badge for supplier products */}
+            <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
+              <ShoppingCart className="w-2.5 h-2.5" />En vente
+            </Badge>
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
                 <Rocket className="w-2.5 h-2.5" />Sponsorisé
