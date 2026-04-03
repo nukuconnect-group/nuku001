@@ -632,6 +632,8 @@ const Marketplace = () => {
           )}
         </div>
       </section>
+      )}
+
 
       <CompareDrawer
         products={compareProducts}
