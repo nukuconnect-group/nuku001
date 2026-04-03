@@ -78,17 +78,6 @@ const HeroCarousel = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl">
-          <div className="overflow-hidden h-7 sm:h-10 mb-2 sm:mb-6">
-            {slides.map((slide, index) => (
-              <div key={index} className={`transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30">
-                  <Sparkles className="w-3 h-3 text-accent" />
-                  <span className="text-[10px] sm:text-sm font-medium text-primary-foreground">{slide.subtitle}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
           <div className="overflow-hidden mb-2 sm:mb-6">
             {slides.map((slide, index) => (
               <h1 key={index} className={`font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-primary-foreground leading-tight transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
