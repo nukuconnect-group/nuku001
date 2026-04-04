@@ -629,6 +629,107 @@ const DriverDashboard = () => {
             )}
           </TabsContent>
 
+          {/* Wallet / Earnings */}
+          <TabsContent value="wallet" className="space-y-4 mt-3">
+            {/* Balance card */}
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+              <CardContent className="p-4 space-y-3">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Solde disponible</p>
+                  <p className="text-3xl font-bold text-primary">{availableBalance.toLocaleString()} FCFA</p>
+                  <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                    <span>Total gagné: {totalEarnings.toLocaleString()} F</span>
+                    <span>Retiré: {totalWithdrawn.toLocaleString()} F</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Withdrawal form */}
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ArrowDownToLine className="w-4 h-4 text-primary" />
+                  Demander un retrait
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2 space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Montant (FCFA)</Label>
+                  <Input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder={`Max: ${availableBalance.toLocaleString()}`}
+                    max={availableBalance}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Opérateur</Label>
+                  <Select value={withdrawOperator} onValueChange={setWithdrawOperator}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="flooz">Moov Money / Flooz</SelectItem>
+                      <SelectItem value="tmoney">T-Money</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Numéro de téléphone</Label>
+                  <Input
+                    type="tel"
+                    value={withdrawPhone}
+                    onChange={(e) => setWithdrawPhone(e.target.value)}
+                    placeholder="+228 XX XX XX XX"
+                  />
+                </div>
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleWithdrawal}
+                  disabled={isWithdrawing || availableBalance <= 0}
+                >
+                  {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wallet className="w-4 h-4 mr-2" />}
+                  Demander le retrait
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Withdrawal history */}
+            {withdrawals.length > 0 && (
+              <Card>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    Historique des retraits
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-2 space-y-2">
+                  {withdrawals.map((w: any) => (
+                    <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                      <div>
+                        <p className="text-sm font-medium">{w.amount.toLocaleString()} FCFA</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {w.operator === "flooz" ? "Moov" : "T-Money"} • {w.phone_number}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(w.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <Badge className={
+                        w.status === "completed" ? "bg-green-100 text-green-800" :
+                        w.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-red-100 text-red-800"
+                      }>
+                        {w.status === "completed" ? "Effectué" : w.status === "pending" ? "En attente" : "Refusé"}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
           {/* History */}
           <TabsContent value="history" className="space-y-3 mt-3">
             {completedDeliveries.length === 0 ? (
