@@ -121,8 +121,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     if (!conversation) return;
     setIsUploadingImage(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
       const ext = file.name.split('.').pop() || 'jpg';
-      const fileName = `chat/${conversation.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+      const fileName = `${user.id}/chat-${conversation.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("product-images").upload(fileName, file, { contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
