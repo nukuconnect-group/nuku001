@@ -111,7 +111,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   }
 
   return (
-    <Link to={`/produit/${product.id}`} className="block">
+    <Link to={`/produit/${product.slug || product.id}`} className="block">
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — Alibaba-style tall ratio */}
         <div className="relative aspect-square overflow-hidden bg-muted">
