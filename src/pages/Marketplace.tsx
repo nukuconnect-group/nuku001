@@ -277,7 +277,7 @@ const Marketplace = () => {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [filteredProducts?.length, allProducts?.length]);
+  });
 
   const handleCompare = (product: Product) => {
     setCompareProducts((prev) => {
