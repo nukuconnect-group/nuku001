@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -17,7 +20,7 @@ import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
   DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
-  ShoppingBag, Settings
+  ShoppingBag, Settings, Wallet, ArrowDownToLine, History
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
