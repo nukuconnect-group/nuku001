@@ -247,7 +247,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
+      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md p-0 flex flex-col h-full overflow-hidden">
         {isAccountPending ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -391,8 +391,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
           </div>
         ) : (
           // Not logged in view
-          <div className="h-full flex flex-col">
-            <div className="px-4 pt-5 pb-4 border-b border-border">
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="px-4 pt-5 pb-4 border-b border-border flex-shrink-0">
               <SheetHeader className="p-0">
                 <SheetTitle>Mon compte</SheetTitle>
                 <SheetDescription>Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>

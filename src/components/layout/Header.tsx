@@ -471,9 +471,20 @@ const Header = () => {
               </div>
 
               <div className="flex items-center gap-1 sm:gap-1.5">
+                {/* Notification bell - mobile: navigate directly, desktop: dropdown */}
+                <Button variant="ghost" size="icon"
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 lg:hidden"
+                  onClick={() => navigate("/notifications")}>
+                  <Bell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
+                    <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 hidden lg:flex">
                       <Bell className="w-4 h-4" />
                       {unreadCount > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
