@@ -28,11 +28,19 @@ const FormationDetail = () => {
   useEffect(() => {
     if (!id) return;
     const load = async () => {
-      const [formRes, modRes] = await Promise.all([
-        supabase.from("formations" as any).select("*").eq("id", id).single(),
-        supabase.from("formation_modules" as any).select("*").eq("formation_id", id).order("sort_order", { ascending: true }),
-      ]);
-      setFormation(formRes.data);
+      // Try by UUID first, then by slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const formRes = isUUID
+        ? await supabase.from("formations" as any).select("*").eq("id", id).single()
+        : await supabase.from("formations" as any).select("*").eq("slug", id).single();
+      
+      const formationData = formRes.data as any;
+      setFormation(formationData);
+      
+      if (!formationData) { setLoading(false); return; }
+      
+      const formationId = formationData.id;
+      const modRes = await supabase.from("formation_modules" as any).select("*").eq("formation_id", formationId).order("sort_order", { ascending: true });
       setModules((modRes.data as any[]) || []);
 
       const { data: { session } } = await supabase.auth.getSession();
