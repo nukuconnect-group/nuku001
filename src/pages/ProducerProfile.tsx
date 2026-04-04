@@ -167,7 +167,7 @@ const ProducerProfile = () => {
         .maybeSingle();
       return data;
     },
-    enabled: !!producer?.user_id && producer?.user_type === "driver",
+    enabled: !!producer?.user_id,
   });
 
   const { data: driverRatings = [] } = useQuery({
