@@ -21,6 +21,7 @@ import { useFollows } from "@/hooks/useFollows";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import networkHeroImg from "@/assets/network-hero.jpg";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
