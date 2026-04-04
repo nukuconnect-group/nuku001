@@ -157,18 +157,18 @@ const Producers = () => {
             alt="Réseau NukuConnect" width={1600} height={640} 
             className="w-full h-full object-cover" 
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
               <Users className="w-3 h-3 mr-1" />
               {t("net.badge")}
             </Badge>
-            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
               {t("net.title")}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-white/80 mb-6">
               {t("net.subtitle")}
             </p>
 

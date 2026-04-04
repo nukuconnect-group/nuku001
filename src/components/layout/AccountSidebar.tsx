@@ -256,7 +256,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         ) : user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
-            <div className="px-4 py-5 border-b border-border">
+            <div className="px-4 py-5 border-b border-border pr-12">
               <SheetHeader className="p-0">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -392,10 +392,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         ) : (
           // Not logged in view
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="px-4 pt-5 pb-4 border-b border-border flex-shrink-0">
+            <div className="px-4 pt-5 pb-4 border-b border-border flex-shrink-0 pr-12">
               <SheetHeader className="p-0">
-                <SheetTitle>Mon compte</SheetTitle>
-                <SheetDescription>Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>
+                <SheetTitle className="text-left">Mon compte</SheetTitle>
+                <SheetDescription className="text-left">Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>
               </SheetHeader>
             </div>
 

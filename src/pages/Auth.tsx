@@ -192,10 +192,10 @@ const Auth = () => {
       {/* Back button - mobile */}
       <button
         onClick={() => navigate(-1)}
-        className="absolute top-3 left-3 z-20 lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs font-medium hover:bg-black/60 transition-colors"
+        className="absolute top-3 left-3 z-30 lg:hidden flex items-center justify-center w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
+        aria-label="Retour"
       >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Retour
+        <ArrowLeft className="w-4 h-4" />
       </button>
       {/* Left side - Hero image */}
       <div className="relative w-full lg:w-1/2 min-h-[200px] sm:min-h-[280px] lg:min-h-screen">
