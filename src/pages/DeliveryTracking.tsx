@@ -432,6 +432,24 @@ const DeliveryTracking = () => {
                       </div>
                     )}
 
+                    {/* Rate driver after delivery */}
+                    {deliveries[selectedOrder.id]?.status === "delivered" && deliveries[selectedOrder.id]?.driver_id && (
+                      <div className="my-4 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800 text-center">
+                        <p className="text-sm font-medium mb-2">Comment s'est passée la livraison ?</p>
+                        <DriverRatingModal
+                          deliveryId={deliveries[selectedOrder.id].id}
+                          driverId={deliveries[selectedOrder.id].driver_id}
+                          driverName={deliveries[selectedOrder.id]?.driver_name || "le livreur"}
+                          trigger={
+                            <Button variant="hero" size="sm" className="gap-1.5">
+                              <Star className="w-4 h-4" />Noter le livreur
+                            </Button>
+                          }
+                          onRated={() => profile && fetchOrders(profile)}
+                        />
+                      </div>
+                    )}
+
                     <div className="flex gap-2 mt-3">
                       {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
                         <DeliveryChat
