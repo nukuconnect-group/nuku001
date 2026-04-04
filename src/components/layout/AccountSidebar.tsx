@@ -247,7 +247,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md overflow-y-auto p-0">
+      <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md p-0 flex flex-col h-full overflow-hidden">
         {isAccountPending ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
