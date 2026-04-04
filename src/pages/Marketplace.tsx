@@ -459,7 +459,7 @@ const Marketplace = () => {
           {/* Hero card - large featured, spans full width on mobile top row */}
           <Link to={`/produit/${hero.id}`} className="col-span-2 lg:col-span-5 block group">
             <div className="relative min-h-[200px] sm:min-h-[280px] lg:min-h-[340px] rounded-xl overflow-hidden bg-muted">
-              <img src={hero.image} alt={hero.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <img src={hero.image} alt={hero.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex gap-1 sm:gap-1.5">
                 <Badge className="bg-accent text-accent-foreground font-bold text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 shadow-md">✨ NOUVEAU</Badge>
