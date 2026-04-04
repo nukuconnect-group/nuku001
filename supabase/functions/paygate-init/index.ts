@@ -112,7 +112,9 @@ serve(async (req) => {
         body: v2Body.toString(),
       });
 
-      const v2Data = await v2Resp.json();
+      const v2Text = await v2Resp.text();
+      let v2Data: any;
+      try { v2Data = JSON.parse(v2Text); } catch { v2Data = {}; }
 
       if (v2Data.status === 0 && v2Data.token) {
         return new Response(JSON.stringify({
