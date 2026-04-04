@@ -400,6 +400,7 @@ const ProducerProfile = () => {
             </Card>
           )}
 
+          <div>
             <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
               Produits de {producer.full_name} ({products.length})
             </h2>
