@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
