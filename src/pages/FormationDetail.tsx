@@ -50,7 +50,7 @@ const FormationDetail = () => {
           .from("formation_progress" as any)
           .select("module_id, completed")
           .eq("user_id", session.user.id)
-          .eq("formation_id", id);
+          .eq("formation_id", formationId);
 
         const progMap: Record<string, boolean> = {};
         ((progData as any[]) || []).forEach((p: any) => {
