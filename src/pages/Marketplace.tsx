@@ -765,9 +765,16 @@ const Marketplace = () => {
                 </div>
               </div>
               {filteredProducts.length > 0 ? (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
-                </div>
+                <>
+                  <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
+                    {filteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                  </div>
+                  {visibleCount < filteredProducts.length && (
+                    <div ref={loadMoreRef} className="flex justify-center py-6">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><Search className="w-6 h-6 text-muted-foreground" /></div>
@@ -799,8 +806,13 @@ const Marketplace = () => {
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                  {allProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
                 </div>
+                {visibleCount < allProducts.length && (
+                  <div ref={loadMoreRef} className="flex justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
               </div>
             </>
           )}
