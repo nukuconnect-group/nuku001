@@ -47,6 +47,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const FormationDetail = lazy(() => import("./pages/FormationDetail"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
