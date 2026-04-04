@@ -38,7 +38,20 @@ serve(async (req) => {
         body: v2Body.toString(),
       });
 
-      const v2Data = await v2Resp.json();
+      const v2Text = await v2Resp.text();
+      let v2Data: any;
+      try {
+        v2Data = JSON.parse(v2Text);
+      } catch {
+        // v2 API returned HTML — not available, return error
+        return new Response(JSON.stringify({
+          success: false,
+          mode: "redirect",
+          error: "Le paiement par carte n'est pas disponible actuellement. Utilisez Mobile Money.",
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (v2Data.status === 0 && v2Data.token) {
         return new Response(JSON.stringify({
