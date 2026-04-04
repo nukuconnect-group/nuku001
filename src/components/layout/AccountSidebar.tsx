@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
@@ -284,28 +285,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             </div>
 
             {/* Premium / Upgrade banner */}
-            <div className="px-4 py-2 border-b border-border">
-              {currentUserType === "producer" || currentUserType === "trainer" ? (
-                <Link to="/plans" onClick={onClose}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors">
-                  <Crown className="w-4 h-4 text-accent flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-foreground">Mon abonnement</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
-                </Link>
-              ) : (
-                <Link to="/devenir-fournisseur" onClick={onClose}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
-                  <Crown className="w-4 h-4 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-primary">Devenir Premium</span>
-                    <p className="text-[9px] text-muted-foreground">Vendez vos produits sur NukuConnect</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-primary/60" />
-                </Link>
-              )}
-            </div>
+            <SubscriptionBanner userType={currentUserType} onClose={onClose} />
 
             {/* Menu items - Alibaba style */}
             <nav className="flex-1 overflow-y-auto">
@@ -554,6 +534,98 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         )}
       </SheetContent>
     </Sheet>
+  );
+};
+
+const planNames: Record<string, string> = {
+  free: "Gratuit",
+  pro: "Premium Pro",
+  business: "Premium Business",
+  enterprise: "Premium Entreprise",
+};
+
+const SubscriptionBanner = ({ userType, onClose }: { userType: string; onClose: () => void }) => {
+  const { subscription, isLoading } = useSubscription();
+  const [expanded, setExpanded] = useState(false);
+
+  if (userType !== "producer" && userType !== "trainer") {
+    return (
+      <div className="px-4 py-2 border-b border-border">
+        <Link to="/devenir-fournisseur" onClick={onClose}
+          className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
+          <Crown className="w-4 h-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-semibold text-primary">Devenir Premium</span>
+            <p className="text-[9px] text-muted-foreground">Vendez vos produits sur NukuConnect</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-primary/60" />
+        </Link>
+      </div>
+    );
+  }
+
+  const plan = subscription?.plan || "free";
+  const planLabel = planNames[plan] || plan;
+
+  return (
+    <div className="px-4 py-2 border-b border-border">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors w-full text-left"
+      >
+        <Crown className="w-4 h-4 text-accent flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <span className="text-xs font-semibold text-foreground">{planLabel}</span>
+          {subscription?.status === "active" && (
+            <span className="ml-1.5 text-[9px] text-green-600 font-medium">● Actif</span>
+          )}
+        </div>
+        <ChevronRight className={`w-4 h-4 text-muted-foreground/60 transition-transform ${expanded ? "rotate-90" : ""}`} />
+      </button>
+      {expanded && (
+        <div className="mt-1.5 p-2.5 rounded-lg bg-muted/50 space-y-1.5 text-[10px]">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-3 h-3 animate-spin" /> Chargement...
+            </div>
+          ) : subscription ? (
+            <>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Plan</span>
+                <span className="font-medium text-foreground">{planLabel}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Produits max</span>
+                <span className="font-medium text-foreground">{subscription.max_products >= 9999 ? "Illimité" : subscription.max_products}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Statut</span>
+                <span className={`font-medium ${subscription.status === "active" ? "text-green-600" : "text-destructive"}`}>
+                  {subscription.status === "active" ? "Actif" : "Inactif"}
+                </span>
+              </div>
+              {plan !== "free" && (
+                <Link to="/plans" onClick={onClose} className="block text-center text-[10px] text-primary font-medium mt-1 hover:underline">
+                  Gérer mon abonnement →
+                </Link>
+              )}
+              {plan === "free" && (
+                <Link to="/plans" onClick={onClose} className="block text-center text-[10px] text-primary font-medium mt-1 hover:underline">
+                  Passer à Premium →
+                </Link>
+              )}
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="text-muted-foreground mb-1">Aucun abonnement</p>
+              <Link to="/plans" onClick={onClose} className="text-primary font-medium hover:underline">
+                Choisir un plan →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

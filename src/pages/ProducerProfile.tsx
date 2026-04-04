@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import DriverBadges from "@/components/driver/DriverBadges";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
   Package, ShoppingBag, Truck, User
@@ -365,6 +366,7 @@ const ProducerProfile = () => {
                 <p className="text-xs text-muted-foreground">
                   {driverProfile.total_deliveries || 0} livraisons • {driverProfile.vehicle_type}
                 </p>
+                <DriverBadges rating={driverProfile.rating} totalDeliveries={driverProfile.total_deliveries} />
               </CardHeader>
               <CardContent className="space-y-3">
                 {driverRatings.length > 0 ? (
