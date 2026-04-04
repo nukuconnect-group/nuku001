@@ -58,6 +58,7 @@ const Cart = () => {
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
+  const pendingCheckoutRef = useRef<any>(null);
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
