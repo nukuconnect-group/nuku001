@@ -210,17 +210,19 @@ const MobileBottomNav = () => {
       </AlertDialog>
 
       {profile && (
-        <AddProductModal
-          open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
-          onOpenChange={(open) => {
-            if (!open) setShowAddProduct(false);
-          }}
-          profileId={profile.id}
-          onProductAdded={() => {
-            toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
-            setShowAddProduct(false);
-          }}
-        />
+        <Suspense fallback={null}>
+          <AddProductModal
+            open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => {
+              if (!open) setShowAddProduct(false);
+            }}
+            profileId={profile.id}
+            onProductAdded={() => {
+              toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
+              setShowAddProduct(false);
+            }}
+          />
+        </Suspense>
       )}
     </>
   );
