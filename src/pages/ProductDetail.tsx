@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProduct } from "@/hooks/useProducts";
+import { useProduct, useProductBySlug } from "@/hooks/useProducts";
 import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
@@ -47,9 +47,12 @@ const ProductDetail = () => {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
-  const isUUID = id && id.length > 10;
-  const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
-  const product = dbProduct || null;
+  const isUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
+  const { data: dbProductById, isLoading: loadingById } = useProduct(isUUID ? id! : "");
+  const { data: dbProductBySlug, isLoading: loadingBySlug } = useProductBySlug(!isUUID && id ? id : "");
+  
+  const product = dbProductById || dbProductBySlug || null;
+  const isLoading = isUUID ? loadingById : loadingBySlug;
 
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -155,7 +158,7 @@ const ProductDetail = () => {
     }
   };
 
-  if (isLoading && isUUID) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -185,7 +188,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO
-        url={`/produit/${id}`}
+        url={`/produit/${product.slug || id}`}
         title={product.name}
         description={product.description || `${product.name} - ${product.price} FCFA/${product.unit}. Disponible à ${product.location}.`}
         image={images[0] || undefined}
