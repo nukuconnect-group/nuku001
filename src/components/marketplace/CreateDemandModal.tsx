@@ -78,8 +78,10 @@ const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
     if (!imageFile) return null;
     setUploadingImage(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
       const ext = imageFile.name.split(".").pop() || "jpg";
-      const path = `demands/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+      const path = `${user.id}/demand-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
       const { error } = await supabase.storage.from("product-images").upload(path, imageFile, { contentType: imageFile.type });
       if (error) throw error;
       const { data } = supabase.storage.from("product-images").getPublicUrl(path);
