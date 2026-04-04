@@ -652,6 +652,7 @@ export type Database = {
           modules_count: number | null
           price: number | null
           rating: number | null
+          slug: string | null
           students_count: number | null
           title: string
           updated_at: string
@@ -670,6 +671,7 @@ export type Database = {
           modules_count?: number | null
           price?: number | null
           rating?: number | null
+          slug?: string | null
           students_count?: number | null
           title: string
           updated_at?: string
@@ -688,6 +690,7 @@ export type Database = {
           modules_count?: number | null
           price?: number | null
           rating?: number | null
+          slug?: string | null
           students_count?: number | null
           title?: string
           updated_at?: string
