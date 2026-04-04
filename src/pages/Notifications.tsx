@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,12 +86,12 @@ const Notifications = () => {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "order": return <ShoppingCart className="w-5 h-5 text-primary" />;
-      case "message": return <MessageCircle className="w-5 h-5 text-secondary" />;
-      case "product": return <Package className="w-5 h-5 text-primary" />;
-      case "delivery": return <Truck className="w-5 h-5 text-primary" />;
-      case "review": return <Star className="w-5 h-5 text-accent" />;
-      default: return <Bell className="w-5 h-5 text-muted-foreground" />;
+      case "order": return <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
+      case "message": return <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />;
+      case "product": return <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
+      case "delivery": return <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
+      case "review": return <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />;
+      default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />;
     }
   };
 
@@ -149,31 +148,31 @@ const Notifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-14 lg:pb-0">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main>
+      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="max-w-2xl mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h1 className="font-heading text-base sm:text-xl font-bold text-foreground">Notifications</h1>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">{unreadCount} non lue(s)</p>
                 </div>
               </div>
               {unreadCount > 0 && (
-                <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3" onClick={markAllAsRead}>
+                <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0" onClick={markAllAsRead}>
                   <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Tout lire
                 </Button>
               )}
             </div>
 
-            {/* Category summary cards on mobile */}
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+            {/* Category cards - scrollable on mobile */}
+            <div className="flex gap-1.5 sm:grid sm:grid-cols-5 sm:gap-2 mb-3 sm:mb-4 overflow-x-auto pb-1 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
               {CATEGORIES.filter(c => c.key !== "all").map(cat => {
                 const count = categoryCounts[cat.key] || 0;
                 const iconMap: Record<string, React.ReactNode> = {
@@ -187,14 +186,14 @@ const Notifications = () => {
                   <button
                     key={cat.key}
                     onClick={() => setActiveTab(cat.key === activeTab ? "all" : cat.key)}
-                    className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all ${
+                    className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all flex-shrink-0 min-w-[64px] sm:min-w-0 ${
                       activeTab === cat.key
                         ? "border-primary bg-primary/5 shadow-sm"
                         : "border-border bg-card hover:bg-muted/50"
                     }`}
                   >
                     {iconMap[cat.key]}
-                    <span className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight text-center">{cat.label}</span>
+                    <span className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight text-center whitespace-nowrap">{cat.label}</span>
                     {count > 0 && (
                       <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 py-0 h-3.5 sm:h-4 min-w-[14px]">
                         {count}
@@ -236,8 +235,8 @@ const Notifications = () => {
                 </Card>
               ) : (
                 filteredNotifications.map((notif) => (
-                  <Card 
-                    key={notif.id} 
+                  <Card
+                    key={notif.id}
                     className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
                     onClick={() => handleNotifClick(notif)}
                   >
@@ -280,7 +279,6 @@ const Notifications = () => {
           </div>
         </div>
       </main>
-      <Footer />
       <MobileBottomNav />
     </div>
   );
