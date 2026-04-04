@@ -262,7 +262,42 @@ const DriverDashboard = () => {
   // Stats
   const completedDeliveries = myDeliveries.filter(d => d.status === "delivered");
   const totalEarnings = completedDeliveries.reduce((sum, d) => sum + (d.driver_fee || 0), 0);
+  const totalWithdrawn = withdrawals.filter(w => w.status === "completed").reduce((sum, w) => sum + w.amount, 0);
+  const availableBalance = totalEarnings - totalWithdrawn;
   const activeDeliveries = myDeliveries.filter(d => ["accepted", "picked_up", "in_transit"].includes(d.status));
+
+  const handleWithdrawal = async () => {
+    if (!user || !profile) return;
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0 || amount > availableBalance) {
+      toast({ title: "Montant invalide", description: `Solde disponible: ${availableBalance.toLocaleString()} FCFA`, variant: "destructive" });
+      return;
+    }
+    if (!withdrawPhone.trim()) {
+      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone.", variant: "destructive" });
+      return;
+    }
+    setIsWithdrawing(true);
+    try {
+      const { data: profileData } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+      if (!profileData) throw new Error("Profil introuvable");
+      const { error } = await supabase.from("withdrawals").insert({
+        user_id: user.id,
+        profile_id: profileData.id,
+        amount,
+        phone_number: withdrawPhone,
+        operator: withdrawOperator,
+      });
+      if (error) throw error;
+      toast({ title: "✅ Demande envoyée", description: `Retrait de ${amount.toLocaleString()} FCFA en cours de traitement.` });
+      setWithdrawAmount("");
+      fetchDriverData();
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   if (profileLoading || isLoading) {
     return (
