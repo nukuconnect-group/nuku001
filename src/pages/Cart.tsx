@@ -337,20 +337,21 @@ const Cart = () => {
           identifier,
           phone_number: mobileNumber.replace(/\s/g, ""),
           network: selectedNetwork === "CARD" ? "" : selectedNetwork,
+          use_redirect: selectedNetwork === "CARD",
         },
       });
 
       if (error) throw error;
 
+      if (!data?.success) {
+        throw new Error(data?.error || "Échec de l'initialisation du paiement.");
+      }
+
       if (data?.mode === "redirect" && data?.payment_url) {
         window.open(data.payment_url, "_blank");
         toast({ title: "💳 Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
       } else if (selectedNetwork === "CARD") {
-        // For CARD, if no redirect URL, show error
-        toast({ title: "Erreur carte", description: "Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.", variant: "destructive" });
-        setIsCheckingOut(false);
-        setPendingCheckoutData(null);
-        return;
+        throw new Error("Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.");
       } else {
         toast({ title: "💳 Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
       }
