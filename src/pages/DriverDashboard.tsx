@@ -249,10 +249,15 @@ const DriverDashboard = () => {
         </div>
 
         {/* Status banner */}
-        {driverProfile?.is_available && (
+        {driverProfile?.is_available ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm text-green-700 font-medium">Vous êtes disponible pour des livraisons</span>
+          </div>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="text-sm text-red-700 font-medium">Vous êtes hors ligne — activez le switch pour recevoir des offres</span>
           </div>
         )}
 
@@ -304,7 +309,13 @@ const DriverDashboard = () => {
 
           {/* Products to deliver */}
           <TabsContent value="products" className="space-y-3 mt-3">
-            {availableProducts.length === 0 ? (
+            {!driverProfile?.is_available ? (
+              <Card className="p-6 text-center">
+                <XCircle className="w-10 h-10 mx-auto text-red-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Mode hors ligne</p>
+                <p className="text-xs text-muted-foreground">Passez en ligne pour voir les produits disponibles à livrer.</p>
+              </Card>
+            ) : availableProducts.length === 0 ? (
               <Card className="p-6 text-center">
                 <ShoppingBag className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Aucun produit disponible</p>
@@ -369,7 +380,17 @@ const DriverDashboard = () => {
 
           {/* Available Deliveries */}
           <TabsContent value="available" className="space-y-3 mt-3">
-            {availableDeliveries.length === 0 ? (
+            {!driverProfile?.is_available ? (
+              <Card className="p-6 text-center">
+                <XCircle className="w-10 h-10 mx-auto text-red-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Vous êtes hors ligne</p>
+                <p className="text-xs text-muted-foreground mb-3">Activez votre disponibilité pour voir les livraisons disponibles.</p>
+                <Button variant="hero" size="sm" onClick={toggleAvailability} disabled={isToggling}>
+                  {isToggling ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                  Passer en ligne
+                </Button>
+              </Card>
+            ) : availableDeliveries.length === 0 ? (
               <Card className="p-6 text-center">
                 <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Aucune livraison disponible pour le moment</p>

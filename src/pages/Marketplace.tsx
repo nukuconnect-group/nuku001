@@ -642,10 +642,10 @@ const Marketplace = () => {
       {marketView === "demands" ? (
         <section className="py-3 sm:py-6 lg:py-8">
           <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-2 whitespace-nowrap">
-                <HandCoins className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="truncate">Toutes les demandes d'achat</span>
+            <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+              <h2 className="font-heading text-xs sm:text-base lg:text-lg font-bold text-foreground flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <HandCoins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent flex-shrink-0" />
+                <span className="truncate text-[13px] sm:text-base">Toutes les demandes d'achat</span>
               </h2>
               <CreateDemandModal />
             </div>

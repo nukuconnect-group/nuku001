@@ -72,16 +72,23 @@ function matchLocationToZone(location: string): typeof togoZones[0] | null {
 }
 
 // Gozem-inspired pricing tiers (base fare + per-km rate)
-function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: string } {
-  // Base fare: 300 FCFA + per-km charge
+// Minimum delivery price: 1000 FCFA
+const MIN_DELIVERY_PRICE = 1000;
+
+function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: string; rawKm: number } {
   const baseFare = 300;
-  if (distanceKm <= 3) return { price: baseFare + Math.round(distanceKm * 150), tier: "Course courte (≤ 3 km)" };
-  if (distanceKm <= 7) return { price: baseFare + Math.round(distanceKm * 130), tier: "Zone proche (≤ 7 km)" };
-  if (distanceKm <= 15) return { price: baseFare + Math.round(distanceKm * 110), tier: "Zone urbaine (≤ 15 km)" };
-  if (distanceKm <= 30) return { price: baseFare + Math.round(distanceKm * 100), tier: "Périurbain (≤ 30 km)" };
-  if (distanceKm <= 80) return { price: baseFare + Math.round(distanceKm * 80), tier: "Inter-ville (≤ 80 km)" };
-  if (distanceKm <= 200) return { price: baseFare + Math.round(distanceKm * 60), tier: "Régional (≤ 200 km)" };
-  return { price: baseFare + Math.round(distanceKm * 50), tier: "Longue distance (> 200 km)" };
+  let rawPrice: number;
+  let tier: string;
+  if (distanceKm <= 3) { rawPrice = baseFare + Math.round(distanceKm * 150); tier = "Course courte (≤ 3 km)"; }
+  else if (distanceKm <= 7) { rawPrice = baseFare + Math.round(distanceKm * 130); tier = "Zone proche (≤ 7 km)"; }
+  else if (distanceKm <= 15) { rawPrice = baseFare + Math.round(distanceKm * 110); tier = "Zone urbaine (≤ 15 km)"; }
+  else if (distanceKm <= 30) { rawPrice = baseFare + Math.round(distanceKm * 100); tier = "Périurbain (≤ 30 km)"; }
+  else if (distanceKm <= 80) { rawPrice = baseFare + Math.round(distanceKm * 80); tier = "Inter-ville (≤ 80 km)"; }
+  else if (distanceKm <= 200) { rawPrice = baseFare + Math.round(distanceKm * 60); tier = "Régional (≤ 200 km)"; }
+  else { rawPrice = baseFare + Math.round(distanceKm * 50); tier = "Longue distance (> 200 km)"; }
+  // Enforce minimum
+  const price = Math.max(rawPrice, MIN_DELIVERY_PRICE);
+  return { price, tier, rawKm: distanceKm };
 }
 
 const baseDeliveryOptions = [
@@ -539,18 +546,18 @@ const DeliveryZoneMap = ({
 
             {/* Pricing scale */}
             <div className="text-[10px] text-muted-foreground space-y-1 pt-1">
-              <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire :</p>
+              <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire (min. {formatPrice(MIN_DELIVERY_PRICE)}) :</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
                 {[
-                  { label: "< 10 km", price: 500 },
-                  { label: "< 30 km", price: 1000 },
-                  { label: "< 80 km", price: 1500 },
-                  { label: "< 200 km", price: 2500 },
-                  { label: "< 400 km", price: 4000 },
-                  { label: "> 400 km", price: 6000 },
+                  { label: "≤ 3 km", price: 1000 },
+                  { label: "≤ 7 km", price: 1200 },
+                  { label: "≤ 15 km", price: 1500 },
+                  { label: "≤ 30 km", price: 2500 },
+                  { label: "≤ 80 km", price: 4000 },
+                  { label: "> 80 km", price: 6000 },
                 ].map(t => (
                   <div key={t.label} className={`rounded px-2 py-1 ${
-                    distanceInfo && getDeliveryPriceByDistance(distanceInfo.maxDistance).price === t.price
+                    currentPrice === t.price
                       ? "bg-primary/10 text-primary font-semibold"
                       : "bg-muted"
                   }`}>
