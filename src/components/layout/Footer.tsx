@@ -44,7 +44,7 @@ const Footer = () => {
     <footer className="text-white relative overflow-hidden">
       {/* Background image with blur overlay */}
       <div className="absolute inset-0 z-0">
-        <img src={footerBg} alt="" className="w-full h-full object-cover" />
+        <img src={footerBg} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
         <div className="absolute inset-0 backdrop-blur-[3px]" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.82) 0%, rgba(0, 107, 0, 0.85) 100%)" }} />
       </div>
       {/* App Download Section */}

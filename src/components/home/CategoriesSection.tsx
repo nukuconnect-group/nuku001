@@ -53,8 +53,21 @@ const CategoriesSection = () => {
   if (isLoading) {
     return (
       <section className="py-6 sm:py-10 bg-background">
-        <div className="container mx-auto px-3 sm:px-4 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="h-6 w-40 bg-muted rounded mb-4" />
+          <div className="border border-border rounded-xl p-3 sm:p-4">
+            <div className="flex gap-3 sm:gap-4 overflow-hidden">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-[38vw] max-w-[180px] sm:w-[160px] lg:w-[180px]">
+                  <div className="rounded-lg bg-muted h-28 sm:h-32 lg:h-36" />
+                  <div className="p-2 space-y-1">
+                    <div className="h-3 bg-muted rounded w-3/4 mx-auto" />
+                    <div className="h-2 bg-muted rounded w-1/2 mx-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     );
