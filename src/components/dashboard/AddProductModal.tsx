@@ -217,7 +217,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         imageUrls = [...imageUrls, ...uploaded];
       }
 
-      const productData = {
+      const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
@@ -226,6 +226,8 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         quantity_available: parseFloat(newProduct.quantity_available),
         location: newProduct.location,
         is_organic: newProduct.is_organic,
+        is_negotiable: newProduct.negotiable,
+        stock_status: parseFloat(newProduct.quantity_available) > 0 ? 'in_stock' : 'out_of_stock',
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
