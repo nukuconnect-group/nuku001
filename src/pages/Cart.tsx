@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -58,6 +58,7 @@ const Cart = () => {
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
+  const pendingCheckoutRef = useRef<any>(null);
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
@@ -250,21 +251,27 @@ const Cart = () => {
     navigate("/suivi-livraison");
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
 
-  // Paygate polling callbacks
+  // Paygate polling callbacks — use ref to avoid stale closure
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
-    if (pendingCheckoutData) {
-      finalizeOrder(pendingCheckoutData).catch((err) => {
+    const checkoutData = pendingCheckoutRef.current;
+    if (checkoutData) {
+      finalizeOrder(checkoutData).catch((err) => {
+        console.error("Finalize order error:", err);
         toast({ title: "Erreur", description: err.message, variant: "destructive" });
       });
+    } else {
+      console.error("Payment completed but no checkout data found");
+      toast({ title: "Erreur", description: "Données de commande introuvables. Contactez le support.", variant: "destructive" });
     }
-  }, [pendingCheckoutData, finalizeOrder, toast]);
+  }, [finalizeOrder, toast]);
 
   const handlePaymentFailed = useCallback(() => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
     setPendingCheckoutData(null);
+    pendingCheckoutRef.current = null;
     toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Réessayez.", variant: "destructive" });
   }, [toast]);
 
@@ -272,6 +279,7 @@ const Cart = () => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
     setPendingCheckoutData(null);
+    pendingCheckoutRef.current = null;
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé dans le délai imparti.", variant: "destructive" });
   }, [toast]);
 
@@ -326,6 +334,7 @@ const Cart = () => {
 
       const checkoutData = { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId };
       setPendingCheckoutData(checkoutData);
+      pendingCheckoutRef.current = checkoutData;
 
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
@@ -361,6 +370,7 @@ const Cart = () => {
       console.error("Checkout error:", error);
       setIsCheckingOut(false);
       setPendingCheckoutData(null);
+      pendingCheckoutRef.current = null;
       toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };

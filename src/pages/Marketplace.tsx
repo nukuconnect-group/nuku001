@@ -32,6 +32,7 @@ import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import { useDemands } from "@/hooks/useDemands";
 import { Product } from "@/data/marketplace";
+import { ProductGridSkeleton } from "@/components/marketplace/ProductCardSkeleton";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
 
 const locationsByCountry: { country: string; flag: string; cities: string[] }[] = [
@@ -654,9 +655,11 @@ const Marketplace = () => {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <section className="py-3 sm:py-6 lg:py-8">
+          <div className="container mx-auto px-3 sm:px-4">
+            <ProductGridSkeleton count={10} />
+          </div>
+        </section>
       )}
 
       {marketView === "demands" ? (

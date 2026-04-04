@@ -21,6 +21,7 @@ import { useFollows } from "@/hooks/useFollows";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import networkHeroImg from "@/assets/network-hero.jpg";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -152,8 +153,8 @@ const Producers = () => {
       <section className="pt-24 pb-8 sm:pb-12 relative overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1600&q=80" 
-            alt="" 
+            src={networkHeroImg} 
+            alt="Réseau NukuConnect" width={1600} height={640} 
             className="w-full h-full object-cover" 
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background" />

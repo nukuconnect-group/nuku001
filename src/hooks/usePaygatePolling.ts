@@ -28,9 +28,27 @@ export function usePaygatePolling({
   const [attempts, setAttempts] = useState(0);
   const [paymentData, setPaymentData] = useState<any>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stoppedRef = useRef(false);
 
-  const checkStatus = useCallback(async () => {
-    if (!identifier && !tx_reference) return;
+  // Use refs for callbacks to avoid stale closures
+  const onCompletedRef = useRef(onCompleted);
+  const onFailedRef = useRef(onFailed);
+  const onExpiredRef = useRef(onExpired);
+  onCompletedRef.current = onCompleted;
+  onFailedRef.current = onFailed;
+  onExpiredRef.current = onExpired;
+
+  const stopPolling = useCallback(() => {
+    stoppedRef.current = true;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const checkStatus = useCallback(async (): Promise<boolean> => {
+    if (!identifier && !tx_reference) return false;
+    if (stoppedRef.current) return true;
 
     try {
       const { data, error } = await supabase.functions.invoke("paygate-status", {
@@ -39,30 +57,36 @@ export function usePaygatePolling({
 
       if (error) {
         console.error("Paygate status check error:", error);
-        return;
+        return false;
       }
 
       setPaymentData(data);
       const newStatus = data?.status as PaymentStatus || "unknown";
       setStatus(newStatus);
 
+      console.log(`[Paygate] Status check: ${newStatus}`, data);
+
       if (newStatus === "completed") {
-        onCompleted?.(data);
-        return true; // Stop polling
+        stopPolling();
+        onCompletedRef.current?.(data);
+        return true;
       }
       if (newStatus === "failed") {
-        onFailed?.(data);
+        stopPolling();
+        onFailedRef.current?.(data);
         return true;
       }
       if (newStatus === "expired") {
-        onExpired?.();
+        stopPolling();
+        onExpiredRef.current?.();
         return true;
       }
       return false;
-    } catch {
+    } catch (e) {
+      console.error("Paygate polling error:", e);
       return false;
     }
-  }, [identifier, tx_reference, onCompleted, onFailed, onExpired]);
+  }, [identifier, tx_reference, stopPolling]);
 
   useEffect(() => {
     if (!enabled || (!identifier && !tx_reference)) {
@@ -70,47 +94,46 @@ export function usePaygatePolling({
       return;
     }
 
+    stoppedRef.current = false;
     setStatus("pending");
     setAttempts(0);
     let count = 0;
 
     const poll = async () => {
+      if (stoppedRef.current) return;
       count++;
       setAttempts(count);
       const shouldStop = await checkStatus();
       if (shouldStop || count >= maxAttempts) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+        stopPolling();
         if (count >= maxAttempts && !shouldStop) {
           setStatus("expired");
-          onExpired?.();
+          onExpiredRef.current?.();
         }
       }
     };
 
-    // Initial check
-    poll();
-
-    intervalRef.current = setInterval(poll, intervalMs);
+    // First check after 3s (give mobile money time to process)
+    const initialTimeout = setTimeout(() => {
+      poll();
+      // Then continue polling at regular interval
+      if (!stoppedRef.current) {
+        intervalRef.current = setInterval(poll, intervalMs);
+      }
+    }, 3000);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      clearTimeout(initialTimeout);
+      stopPolling();
     };
-  }, [enabled, identifier, tx_reference, intervalMs, maxAttempts, checkStatus, onExpired]);
+  }, [enabled, identifier, tx_reference, intervalMs, maxAttempts, checkStatus, stopPolling]);
 
   const reset = () => {
     setStatus("idle");
     setAttempts(0);
     setPaymentData(null);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    stopPolling();
+    stoppedRef.current = false;
   };
 
   return { status, attempts, paymentData, reset };
