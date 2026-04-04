@@ -120,20 +120,13 @@ export async function activateMembership({
     if (error) throw error;
   }
 
-  const { error: subscriptionError } = await supabase.from("subscriptions").upsert(
-    {
-      user_id: userId,
-      plan: planId,
-      billing_period: billing,
-      max_products: maxProducts,
-      status: "active",
-      started_at: new Date().toISOString(),
-      expires_at: billing === "monthly" ? addDays(30) : addDays(365),
-    },
-    { onConflict: "user_id" }
+  const { data: subData, error: subscriptionError } = await supabase.functions.invoke(
+    "update-subscription",
+    { body: { plan: planId, billing_period: billing } }
   );
 
   if (subscriptionError) throw subscriptionError;
+  if (subData?.error) throw new Error(subData.error);
 
   const celebration = buildCelebration(planId, maxProducts);
 
