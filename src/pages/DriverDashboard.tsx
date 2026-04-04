@@ -249,10 +249,15 @@ const DriverDashboard = () => {
         </div>
 
         {/* Status banner */}
-        {driverProfile?.is_available && (
+        {driverProfile?.is_available ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm text-green-700 font-medium">Vous êtes disponible pour des livraisons</span>
+          </div>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="text-sm text-red-700 font-medium">Vous êtes hors ligne — activez le switch pour recevoir des offres</span>
           </div>
         )}
 
