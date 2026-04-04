@@ -13,8 +13,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Disable source maps in production to prevent code inspection
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-recharts': ['recharts'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
+          'vendor-pdf': ['jspdf'],
+          'vendor-motion': ['framer-motion'],
+        },
+      },
+    },
   },
   plugins: [
     react(),
