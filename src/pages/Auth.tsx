@@ -189,7 +189,15 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
-      {/* Left side - Hero image (hidden on mobile when form showing) */}
+      {/* Back button - mobile */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-3 left-3 z-20 lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs font-medium hover:bg-black/60 transition-colors"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Retour
+      </button>
+      {/* Left side - Hero image */}
       <div className="relative w-full lg:w-1/2 min-h-[200px] sm:min-h-[280px] lg:min-h-screen">
         <img
           src={authMode === "login" ? authLoginImg : authSignupImg}
