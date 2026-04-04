@@ -85,6 +85,7 @@ const App = () => {
   };
 
   return (
+    <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <ProfileProvider>
