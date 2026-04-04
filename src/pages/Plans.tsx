@@ -68,19 +68,12 @@ const Plans = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { error } = await supabase.from("subscriptions" as any).upsert({
-      user_id: session.user.id,
-      plan: planId,
-      billing_period: billing,
-      max_products: plan.maxProducts,
-      status: "active",
-      started_at: new Date().toISOString(),
-      expires_at: billing === "monthly"
-        ? new Date(Date.now() + 30 * 86400000).toISOString()
-        : new Date(Date.now() + 365 * 86400000).toISOString(),
-    } as any, { onConflict: "user_id" });
+    const { data, error } = await supabase.functions.invoke("update-subscription", {
+      body: { plan: planId, billing_period: billing },
+    });
 
     if (error) throw error;
+    if (data?.error) throw new Error(data.error);
 
     // Send welcome notification
     await supabase.from("notifications").insert({
