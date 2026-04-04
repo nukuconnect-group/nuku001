@@ -309,7 +309,13 @@ const DriverDashboard = () => {
 
           {/* Products to deliver */}
           <TabsContent value="products" className="space-y-3 mt-3">
-            {availableProducts.length === 0 ? (
+            {!driverProfile?.is_available ? (
+              <Card className="p-6 text-center">
+                <XCircle className="w-10 h-10 mx-auto text-red-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Mode hors ligne</p>
+                <p className="text-xs text-muted-foreground">Passez en ligne pour voir les produits disponibles à livrer.</p>
+              </Card>
+            ) : availableProducts.length === 0 ? (
               <Card className="p-6 text-center">
                 <ShoppingBag className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Aucun produit disponible</p>
