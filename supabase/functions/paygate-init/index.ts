@@ -90,8 +90,13 @@ serve(async (req) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
     });
-
-    const data = await resp.json();
+    const respText = await resp.text();
+    let data: any;
+    try {
+      data = JSON.parse(respText);
+    } catch {
+      data = { status: -1 };
+    }
 
     // If v1 fails, fallback to v2 redirect
     if (data.status !== 0) {
