@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, ShoppingCart, MessageCircle, Package, Check, Trash2, Loader2, ArrowRight, Star, Truck } from "lucide-react";
+import {
+  Bell, ShoppingCart, MessageCircle, Package, Check, Trash2,
+  Loader2, ArrowRight, Star, Truck, CreditCard, Heart, ChevronRight
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Notification {
@@ -19,12 +21,13 @@ interface Notification {
 }
 
 const CATEGORIES = [
-  { key: "all", label: "Tout" },
-  { key: "order", label: "Commandes" },
-  { key: "message", label: "Messages" },
-  { key: "product", label: "Produits" },
-  { key: "delivery", label: "Livraison" },
-  { key: "system", label: "Système" },
+  { key: "all", label: "Tout", icon: Bell },
+  { key: "order", label: "Commandes", icon: ShoppingCart },
+  { key: "message", label: "Messages", icon: MessageCircle },
+  { key: "product", label: "Produits", icon: Package },
+  { key: "delivery", label: "Livraison", icon: Truck },
+  { key: "withdrawal", label: "Retraits", icon: CreditCard },
+  { key: "demand", label: "Demandes", icon: Heart },
 ];
 
 const Notifications = () => {
@@ -44,7 +47,7 @@ const Notifications = () => {
     if (!userId) { setIsLoading(false); return; }
     const fetchNotifs = async () => {
       const { data } = await supabase
-        .from("notifications" as any)
+        .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
@@ -55,11 +58,8 @@ const Notifications = () => {
 
     const channel = supabase
       .channel("notifications-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
-        const newNotif = payload.new as any;
-        if (newNotif.user_id === userId) {
-          setNotifications((prev) => [newNotif as Notification, ...prev]);
-        }
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` }, (payload) => {
+        setNotifications((prev) => [payload.new as Notification, ...prev]);
       })
       .subscribe();
 
@@ -68,30 +68,44 @@ const Notifications = () => {
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === "all") return notifications;
-    return notifications.filter(n => {
-      if (activeTab === "system") return !["order", "message", "product", "delivery", "review"].includes(n.type);
-      return n.type === activeTab;
-    });
+    return notifications.filter(n => n.type === activeTab);
   }, [notifications, activeTab]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { all: notifications.length };
     notifications.forEach(n => {
-      const cat = ["order", "message", "product", "delivery"].includes(n.type) ? n.type : "system";
-      counts[cat] = (counts[cat] || 0) + 1;
+      counts[n.type] = (counts[n.type] || 0) + 1;
     });
     return counts;
   }, [notifications]);
 
   const getIcon = (type: string) => {
+    const cls = "w-4 h-4";
     switch (type) {
-      case "order": return <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
-      case "message": return <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />;
-      case "product": return <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
-      case "delivery": return <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />;
-      case "review": return <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />;
-      default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />;
+      case "order": return <ShoppingCart className={`${cls} text-primary`} />;
+      case "message": return <MessageCircle className={`${cls} text-blue-500`} />;
+      case "product": return <Package className={`${cls} text-emerald-500`} />;
+      case "delivery": return <Truck className={`${cls} text-orange-500`} />;
+      case "subscription": return <CreditCard className={`${cls} text-violet-500`} />;
+      case "withdrawal": return <CreditCard className={`${cls} text-amber-500`} />;
+      case "demand": return <Heart className={`${cls} text-rose-500`} />;
+      case "review": return <Star className={`${cls} text-yellow-500`} />;
+      default: return <Bell className={`${cls} text-muted-foreground`} />;
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "order": return "bg-primary/10 border-primary/20";
+      case "message": return "bg-blue-500/10 border-blue-500/20";
+      case "delivery": return "bg-orange-500/10 border-orange-500/20";
+      case "product": return "bg-emerald-500/10 border-emerald-500/20";
+      case "subscription": return "bg-violet-500/10 border-violet-500/20";
+      case "withdrawal": return "bg-amber-500/10 border-amber-500/20";
+      case "demand": return "bg-rose-500/10 border-rose-500/20";
+      default: return "bg-muted border-border";
     }
   };
 
@@ -108,7 +122,7 @@ const Notifications = () => {
 
   const handleNotifClick = async (notif: Notification) => {
     if (!notif.is_read) {
-      await supabase.from("notifications" as any).update({ is_read: true } as any).eq("id", notif.id);
+      await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
       setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
     }
     const link = getNotifLink(notif);
@@ -119,21 +133,21 @@ const Notifications = () => {
     const diff = Date.now() - new Date(date).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "À l'instant";
-    if (mins < 60) return `Il y a ${mins} min`;
+    if (mins < 60) return `${mins}min`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `Il y a ${hrs}h`;
+    if (hrs < 24) return `${hrs}h`;
     const days = Math.floor(hrs / 24);
-    return `Il y a ${days}j`;
+    return `${days}j`;
   };
 
   const markAllAsRead = async () => {
     if (!userId) return;
-    await supabase.from("notifications" as any).update({ is_read: true } as any).eq("user_id", userId).eq("is_read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
   };
 
   const deleteNotification = async (id: string) => {
-    await supabase.from("notifications" as any).delete().eq("id", id);
+    await supabase.from("notifications").delete().eq("id", id);
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
@@ -142,7 +156,7 @@ const Notifications = () => {
     const ids = filteredNotifications.map(n => n.id);
     if (ids.length === 0) return;
     for (const id of ids) {
-      await supabase.from("notifications" as any).delete().eq("id", id);
+      await supabase.from("notifications").delete().eq("id", id);
     }
     setNotifications(prev => prev.filter(n => !ids.includes(n.id)));
   };
@@ -150,129 +164,138 @@ const Notifications = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+      <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <div className="max-w-2xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Bell className="w-[18px] h-[18px] text-primary" />
                 </div>
-                <div className="min-w-0">
-                  <h1 className="font-heading text-base sm:text-xl font-bold text-foreground">Notifications</h1>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">{unreadCount} non lue(s)</p>
+                <div>
+                  <h1 className="text-[15px] sm:text-xl font-semibold tracking-tight text-foreground">Notifications</h1>
+                  {unreadCount > 0 && (
+                    <p className="text-[11px] sm:text-xs text-muted-foreground">{unreadCount} non lue{unreadCount > 1 ? "s" : ""}</p>
+                  )}
                 </div>
               </div>
               {unreadCount > 0 && (
-                <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0" onClick={markAllAsRead}>
-                  <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Tout lire
+                <Button variant="ghost" size="sm" className="text-[11px] h-7 px-2 text-primary hover:text-primary gap-1" onClick={markAllAsRead}>
+                  <Check className="w-3 h-3" />Tout lire
                 </Button>
               )}
             </div>
 
-            {/* Category cards - scrollable on mobile */}
-            <div className="flex gap-1.5 sm:grid sm:grid-cols-5 sm:gap-2 mb-3 sm:mb-4 overflow-x-auto pb-1 sm:pb-0 -mx-3 px-3 sm:mx-0 sm:px-0">
-              {CATEGORIES.filter(c => c.key !== "all").map(cat => {
+            {/* Category filter pills */}
+            <div className="flex gap-1.5 overflow-x-auto pb-2 mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-none">
+              {CATEGORIES.map(cat => {
                 const count = categoryCounts[cat.key] || 0;
-                const iconMap: Record<string, React.ReactNode> = {
-                  order: <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
-                  message: <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />,
-                  product: <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
-                  delivery: <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />,
-                  system: <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />,
-                };
+                const isActive = activeTab === cat.key;
                 return (
                   <button
                     key={cat.key}
-                    onClick={() => setActiveTab(cat.key === activeTab ? "all" : cat.key)}
-                    className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all flex-shrink-0 min-w-[64px] sm:min-w-0 ${
-                      activeTab === cat.key
-                        ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border bg-card hover:bg-muted/50"
+                    onClick={() => setActiveTab(cat.key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all border flex-shrink-0 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground"
                     }`}
                   >
-                    {iconMap[cat.key]}
-                    <span className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight text-center whitespace-nowrap">{cat.label}</span>
+                    {cat.label}
                     {count > 0 && (
-                      <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 py-0 h-3.5 sm:h-4 min-w-[14px]">
+                      <span className={`text-[9px] px-1 py-0 rounded-full min-w-[16px] text-center ${
+                        isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                      }`}>
                         {count}
-                      </Badge>
+                      </span>
                     )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Active filter + delete */}
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] sm:text-xs text-muted-foreground">
-                {activeTab === "all" ? "Toutes les notifications" : CATEGORIES.find(c => c.key === activeTab)?.label}
-                {" "}({filteredNotifications.length})
-              </p>
-              {filteredNotifications.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive gap-1 h-6 sm:h-7 px-2" onClick={deleteAllInCategory}>
-                  <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  Supprimer
+            {/* Active filter info + delete */}
+            {activeTab !== "all" && filteredNotifications.length > 0 && (
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] text-muted-foreground">
+                  {CATEGORIES.find(c => c.key === activeTab)?.label} ({filteredNotifications.length})
+                </p>
+                <Button variant="ghost" size="sm" className="text-[10px] text-destructive gap-1 h-6 px-2" onClick={deleteAllInCategory}>
+                  <Trash2 className="w-2.5 h-2.5" />Supprimer tout
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Notifications list */}
-            <div className="space-y-1.5 sm:space-y-2">
+            <div className="space-y-1">
               {isLoading ? (
                 <div className="flex justify-center py-16">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <Loader2 className="w-7 h-7 animate-spin text-primary" />
                 </div>
               ) : filteredNotifications.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6 sm:p-8 text-center">
-                    <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Bell className="w-5 h-5 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {userId ? "Aucune notification" : "Connectez-vous pour voir vos notifications"}
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">Vos alertes apparaîtront ici</p>
+                </div>
               ) : (
                 filteredNotifications.map((notif) => (
-                  <Card
+                  <div
                     key={notif.id}
-                    className={`transition-all cursor-pointer hover:shadow-md ${!notif.is_read ? "border-primary/20 bg-primary/5" : "hover:bg-muted/30"}`}
                     onClick={() => handleNotifClick(notif)}
+                    className={`flex items-start gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all border ${
+                      !notif.is_read
+                        ? "bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.06]"
+                        : "bg-card border-border/50 hover:bg-muted/40"
+                    }`}
                   >
-                    <CardContent className="p-2.5 sm:p-4">
-                      <div className="flex items-start gap-2 sm:gap-3">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          notif.is_read ? "bg-muted" : "bg-primary/10"
+                    {/* Icon */}
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border ${getTypeColor(notif.type)}`}>
+                      {getIcon(notif.type)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-[12px] leading-snug line-clamp-1 ${
+                          notif.is_read ? "text-muted-foreground font-normal" : "text-foreground font-semibold"
                         }`}>
-                          {getIcon(notif.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <p className={`text-xs sm:text-sm font-medium truncate ${notif.is_read ? "text-muted-foreground" : "text-foreground"}`}>
-                              {notif.title}
-                            </p>
-                            {!notif.is_read && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary flex-shrink-0" />}
-                          </div>
-                          {notif.description && (
-                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.description}</p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <p className="text-[9px] sm:text-[10px] text-muted-foreground">{timeAgo(notif.created_at)}</p>
-                            {getNotifLink(notif) && (
-                              <span className="text-[9px] sm:text-[10px] text-primary font-medium flex items-center gap-0.5">
-                                Voir <ArrowRight className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                          onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}>
-                          <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        </Button>
+                          {notif.title}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground/70 flex-shrink-0 mt-0.5">
+                          {timeAgo(notif.created_at)}
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      {notif.description && (
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mt-0.5">
+                          {notif.description}
+                        </p>
+                      )}
+                      {getNotifLink(notif) && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] text-primary font-medium mt-1">
+                          Voir <ChevronRight className="w-2.5 h-2.5" />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Unread dot + delete */}
+                    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                      {!notif.is_read && (
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1" />
+                      )}
+                      <button
+                        className="p-1 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
