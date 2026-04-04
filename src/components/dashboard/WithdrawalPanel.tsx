@@ -99,8 +99,8 @@ const WithdrawalPanel = () => {
 
     const fnError = error || (result?.error ? { message: result.error } : null);
 
-    if (error) {
-      toast({ title: "Erreur lors de la demande", description: error.message, variant: "destructive" });
+    if (fnError) {
+      toast({ title: "Erreur lors de la demande", description: fnError.message, variant: "destructive" });
     } else {
       toast({ title: "Demande envoyée ✅", description: "Votre demande de retrait sera traitée sous 24-48h" });
       setAmount("");
