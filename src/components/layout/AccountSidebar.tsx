@@ -258,20 +258,20 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             {/* Header with avatar */}
             <div className="px-4 py-5 border-b border-border pr-12">
               <SheetHeader className="p-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-6 h-6 text-muted-foreground" />
+                      <User className="w-7 h-7 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-left text-sm truncate">
+                    <SheetTitle className="text-left text-[15px] font-bold tracking-tight truncate">
                       {profile?.full_name || user.email || "Mon compte"}
                     </SheetTitle>
-                    <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[10px]">
-                      <span>{getUserTypeLabel(resolvedUserType)}</span>
+                    <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[12px] mt-0.5">
+                      <span className="font-medium">{getUserTypeLabel(resolvedUserType)}</span>
                       {isProfileRefreshing && (
                         <span className="inline-flex items-center gap-1 text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -295,14 +295,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     key={item.href + item.label}
                     to={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-4 py-2 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30"
+                    className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20"
                   >
-                    <item.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-[10px] font-medium uppercase tracking-wide">{item.label}</span>
+                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                      <item.icon className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <span className="flex-1 text-[13px] font-medium tracking-tight text-foreground">{item.label}</span>
                     {item.badge && (
-                      <span className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
                     )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                   </Link>
                 ))}
               </div>
@@ -355,28 +357,34 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               {/* Country */}
               <div className="py-1">
-                <div className="px-4 py-3.5 border-b border-border/30">
+                <div className="px-4 py-3.5 border-b border-border/20">
                   <div className="flex items-center gap-3.5 mb-2">
-                    <Globe className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs font-medium uppercase tracking-wide">PAYS</span>
+                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <span className="text-[13px] font-medium tracking-tight">Pays</span>
                   </div>
-                  <div className="ml-8">
-                    <p className="text-xs text-foreground">📍 {profile?.location || "Togo"}</p>
+                  <div className="ml-12">
+                    <p className="text-[12px] text-muted-foreground">📍 {profile?.location || "Togo"}</p>
                   </div>
                 </div>
 
                 {/* Help & Settings */}
                 <Link to="/aide" onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <HelpCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-xs font-medium uppercase tracking-wide">CENTRE D'ASSISTANCE</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="flex-1 text-[13px] font-medium tracking-tight">Centre d'assistance</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
                 <Link to="/settings" onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <Settings className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-xs font-medium uppercase tracking-wide">PARAMÈTRES</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="flex-1 text-[13px] font-medium tracking-tight">Paramètres</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
               </div>
             </nav>

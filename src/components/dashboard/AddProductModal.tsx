@@ -225,7 +225,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         price: parseFloat(newProduct.price),
         category: newProduct.category,
         unit: newProduct.unit,
-        quantity_available: parseFloat(newProduct.quantity_available),
+        quantity_available: parseFloat(newProduct.quantity_available) || 0,
         location: newProduct.location,
         is_organic: newProduct.is_organic,
         is_negotiable: newProduct.negotiable,
@@ -484,16 +484,47 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               )}
             </div>
 
+            {/* Stock Status - BEFORE quantity */}
             <div className="space-y-2">
-              <Label>Quantité disponible *</Label>
+              <Label className="flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-primary" />
+                Statut du stock *
+              </Label>
+              <Select
+                value={newProduct.stockStatus}
+                onValueChange={(v) => {
+                  const updates: any = { stockStatus: v };
+                  if (v === "restocking" || v === "out_of_stock") {
+                    updates.quantity_available = "0";
+                  }
+                  setNewProduct({ ...newProduct, ...updates });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="En stock" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in_stock">✅ En stock</SelectItem>
+                  <SelectItem value="low_stock">⚠️ Stock faible</SelectItem>
+                  <SelectItem value="restocking">🔄 En réapprovisionnement</SelectItem>
+                  <SelectItem value="out_of_stock">❌ Rupture de stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                Quantité disponible {newProduct.stockStatus !== "restocking" && newProduct.stockStatus !== "out_of_stock" ? "*" : "(optionnel)"}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   type="number"
                   value={newProduct.quantity_available}
                   onChange={(e) => setNewProduct({ ...newProduct, quantity_available: e.target.value })}
-                  placeholder="Ex: 100"
+                  placeholder={newProduct.stockStatus === "restocking" || newProduct.stockStatus === "out_of_stock" ? "0" : "Ex: 100"}
                   className="flex-1"
-                  required
+                  required={newProduct.stockStatus !== "restocking" && newProduct.stockStatus !== "out_of_stock"}
+                  disabled={newProduct.stockStatus === "out_of_stock"}
                 />
                 <Select
                   value={newProduct.unit}
@@ -514,6 +545,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                   </SelectContent>
                 </Select>
               </div>
+              {(newProduct.stockStatus === "restocking" || newProduct.stockStatus === "out_of_stock") && (
+                <p className="text-[10px] text-muted-foreground">
+                  La quantité n'est pas obligatoire pour les produits en réapprovisionnement ou en rupture.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -624,23 +660,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 onCheckedChange={(v) => setNewProduct({ ...newProduct, deliveryAvailable: v })}
               />
             </div>
-            <div className="p-3 sm:p-4 bg-muted rounded-xl space-y-2">
-              <Label className="text-sm sm:text-base">Statut du stock</Label>
-              <Select
-                value={newProduct.stockStatus}
-                onValueChange={(v) => setNewProduct({ ...newProduct, stockStatus: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="En stock" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_stock">✅ En stock</SelectItem>
-                  <SelectItem value="low_stock">⚠️ Stock faible</SelectItem>
-                  <SelectItem value="restocking">🔄 En réapprovisionnement</SelectItem>
-                  <SelectItem value="out_of_stock">❌ Rupture de stock</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Stock status is now in the grid above */}
           </div>
 
           {/* Live Product Preview */}
