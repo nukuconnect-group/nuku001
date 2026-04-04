@@ -47,11 +47,14 @@ const DeliveryTracking = () => {
     if (data && data.length > 0) {
       const orderIds = data.map((o: any) => o.id);
       const { data: dels } = await supabase
-        .from("deliveries" as any)
-        .select("*")
+        .from("deliveries")
+        .select("*, driver_profiles(profile_id, profiles:profile_id(full_name))")
         .in("order_id", orderIds);
       const delMap: Record<string, any> = {};
-      ((dels as any[]) || []).forEach((d: any) => { delMap[d.order_id] = d; });
+      ((dels as any[]) || []).forEach((d: any) => {
+        const driverName = d.driver_profiles?.profiles?.full_name;
+        delMap[d.order_id] = { ...d, driver_name: driverName || null };
+      });
       setDeliveries(delMap);
     }
   };
