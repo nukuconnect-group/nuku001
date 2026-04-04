@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import CartIcon from "@/components/cart/CartIcon";
 import CartSidebar from "@/components/cart/CartSidebar";
-import VoiceSearchModal from "@/components/search/VoiceSearchModal";
-import ImageSearchModal from "@/components/search/ImageSearchModal";
-import QRScanner from "@/components/QRScanner";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
-import LocationPickerDialog from "@/components/layout/LocationPickerDialog";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
+
+// Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
+const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
+const ImageSearchModal = lazy(() => import("@/components/search/ImageSearchModal"));
+const QRScanner = lazy(() => import("@/components/QRScanner"));
+const LocationPickerDialog = lazy(() => import("@/components/layout/LocationPickerDialog"));
 
 const languages = [
   { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
