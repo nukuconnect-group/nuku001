@@ -266,6 +266,13 @@ export type Database = {
             referencedRelation: "driver_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_profiles_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       delivery_addresses: {
@@ -500,6 +507,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "driver_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_ratings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "driver_profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1264,7 +1278,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      driver_profiles_public: {
+        Row: {
+          id: string | null
+          is_available: boolean | null
+          profile_id: string | null
+          rating: number | null
+          total_deliveries: number | null
+          user_id: string | null
+          vehicle_type: string | null
+          zone: string | null
+        }
+        Insert: {
+          id?: string | null
+          is_available?: boolean | null
+          profile_id?: string | null
+          rating?: number | null
+          total_deliveries?: number | null
+          user_id?: string | null
+          vehicle_type?: string | null
+          zone?: string | null
+        }
+        Update: {
+          id?: string | null
+          is_available?: boolean | null
+          profile_id?: string | null
+          rating?: number | null
+          total_deliveries?: number | null
+          user_id?: string | null
+          vehicle_type?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_delete_user_data: {
