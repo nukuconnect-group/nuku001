@@ -660,23 +660,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 onCheckedChange={(v) => setNewProduct({ ...newProduct, deliveryAvailable: v })}
               />
             </div>
-            <div className="p-3 sm:p-4 bg-muted rounded-xl space-y-2">
-              <Label className="text-sm sm:text-base">Statut du stock</Label>
-              <Select
-                value={newProduct.stockStatus}
-                onValueChange={(v) => setNewProduct({ ...newProduct, stockStatus: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="En stock" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_stock">✅ En stock</SelectItem>
-                  <SelectItem value="low_stock">⚠️ Stock faible</SelectItem>
-                  <SelectItem value="restocking">🔄 En réapprovisionnement</SelectItem>
-                  <SelectItem value="out_of_stock">❌ Rupture de stock</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Stock status is now in the grid above */}
           </div>
 
           {/* Live Product Preview */}
