@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, 
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
@@ -46,11 +47,14 @@ const DeliveryTracking = () => {
     if (data && data.length > 0) {
       const orderIds = data.map((o: any) => o.id);
       const { data: dels } = await supabase
-        .from("deliveries" as any)
-        .select("*")
+        .from("deliveries")
+        .select("*, driver_profiles(profile_id, profiles:profile_id(full_name))")
         .in("order_id", orderIds);
       const delMap: Record<string, any> = {};
-      ((dels as any[]) || []).forEach((d: any) => { delMap[d.order_id] = d; });
+      ((dels as any[]) || []).forEach((d: any) => {
+        const driverName = d.driver_profiles?.profiles?.full_name;
+        delMap[d.order_id] = { ...d, driver_name: driverName || null };
+      });
       setDeliveries(delMap);
     }
   };
@@ -401,6 +405,16 @@ const DeliveryTracking = () => {
                         </div>
                       ))}
                     </div>
+
+                    {/* Live driver tracking map */}
+                    {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) && (
+                      <div className="my-4">
+                        <DriverLiveMap
+                          delivery={deliveries[selectedOrder.id]}
+                          driverName={deliveries[selectedOrder.id]?.driver_name}
+                        />
+                      </div>
+                    )}
 
                     <div className="flex gap-2 mt-3">
                       {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
