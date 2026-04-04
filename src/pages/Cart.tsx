@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -11,13 +11,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import BillingForm from "@/components/cart/BillingForm";
-import DeliveryZoneMap, { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
-import PaymentMethodSelect, { paymentMethods } from "@/components/cart/PaymentMethodSelect";
-import AvailableDrivers from "@/components/checkout/AvailableDrivers";
-import AddressSelector from "@/components/checkout/AddressSelector";
-import OrderSummary from "@/components/cart/OrderSummary";
+import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
+import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+
+const BillingForm = lazy(() => import("@/components/cart/BillingForm"));
+const DeliveryZoneMap = lazy(() => import("@/components/cart/DeliveryZoneMap"));
+const PaymentMethodSelect = lazy(() => import("@/components/cart/PaymentMethodSelect"));
+const AvailableDrivers = lazy(() => import("@/components/checkout/AvailableDrivers"));
+const AddressSelector = lazy(() => import("@/components/checkout/AddressSelector"));
+const OrderSummary = lazy(() => import("@/components/cart/OrderSummary"));
 
 const Cart = () => {
   const { items, clearCart, total, itemCount } = useCart();
