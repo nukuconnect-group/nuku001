@@ -285,28 +285,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             </div>
 
             {/* Premium / Upgrade banner */}
-            <div className="px-4 py-2 border-b border-border">
-              {currentUserType === "producer" || currentUserType === "trainer" ? (
-                <Link to="/plans" onClick={onClose}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors">
-                  <Crown className="w-4 h-4 text-accent flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-foreground">Mon abonnement</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
-                </Link>
-              ) : (
-                <Link to="/devenir-fournisseur" onClick={onClose}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors">
-                  <Crown className="w-4 h-4 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs font-semibold text-primary">Devenir Premium</span>
-                    <p className="text-[9px] text-muted-foreground">Vendez vos produits sur NukuConnect</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-primary/60" />
-                </Link>
-              )}
-            </div>
+            <SubscriptionBanner userType={currentUserType} onClose={onClose} />
 
             {/* Menu items - Alibaba style */}
             <nav className="flex-1 overflow-y-auto">

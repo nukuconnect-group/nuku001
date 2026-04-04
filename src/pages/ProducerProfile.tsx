@@ -366,6 +366,7 @@ const ProducerProfile = () => {
                 <p className="text-xs text-muted-foreground">
                   {driverProfile.total_deliveries || 0} livraisons • {driverProfile.vehicle_type}
                 </p>
+                <DriverBadges rating={driverProfile.rating} totalDeliveries={driverProfile.total_deliveries} />
               </CardHeader>
               <CardContent className="space-y-3">
                 {driverRatings.length > 0 ? (
