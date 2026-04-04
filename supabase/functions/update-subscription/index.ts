@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,11 @@ const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number }>
   business: { maxProducts: 9999, monthlyPrice: 15000 },
   enterprise: { maxProducts: 9999, monthlyPrice: 50000 },
 };
+
+const BodySchema = z.object({
+  plan: z.enum(["free", "pro", "business", "enterprise"]),
+  billing_period: z.enum(["monthly", "annual"]),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,7 +37,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify user
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -45,43 +50,23 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const body = await req.json();
-    const { plan, billing_period } = body;
-
-    // Validate plan
-    if (!plan || !VALID_PLANS[plan]) {
-      return new Response(JSON.stringify({ error: "Plan invalide" }), {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { plan, billing_period } = parsed.data;
 
-    // Validate billing period
-    const validBillingPeriods = ["monthly", "annual"];
-    if (!billing_period || !validBillingPeriods.includes(billing_period)) {
-      return new Response(JSON.stringify({ error: "Période de facturation invalide" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-
-    // Get current subscription
-    const { data: currentSub } = await adminClient
-      .from("subscriptions")
-      .select("plan, status")
-      .eq("user_id", userId)
-      .single();
-
-    // For paid plans, in a real app we'd verify payment here.
-    // For now, we enforce that only valid transitions are allowed
-    // and the server controls the max_products value (not the client).
     const planConfig = VALID_PLANS[plan];
     const now = new Date();
     const expiresAt = billing_period === "monthly"
       ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const { error: upsertError } = await adminClient
       .from("subscriptions")

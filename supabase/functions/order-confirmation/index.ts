@@ -1,34 +1,40 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface OrderEmailData {
-  buyerEmail: string;
-  buyerName: string;
-  orderItems: Array<{
-    name: string;
-    quantity: number;
-    unitPrice: number;
-    unit: string;
-    sellerName: string;
-  }>;
-  subtotal: number;
-  deliveryPrice: number;
-  total: number;
-  deliveryMethod: string;
-  paymentMethod: string;
-  deliveryCity?: string;
-  deliveryAddress?: string;
-  invoiceNumber: string;
-  orderDate: string;
-}
+const OrderItemSchema = z.object({
+  name: z.string().min(1).max(255),
+  quantity: z.number().positive(),
+  unitPrice: z.number().nonnegative(),
+  unit: z.string().min(1).max(50),
+  sellerName: z.string().min(1).max(255),
+});
+
+const BodySchema = z.object({
+  buyerEmail: z.string().email().max(255),
+  buyerName: z.string().min(1).max(255),
+  orderItems: z.array(OrderItemSchema).min(1).max(100),
+  subtotal: z.number().nonnegative(),
+  deliveryPrice: z.number().nonnegative(),
+  total: z.number().nonnegative(),
+  deliveryMethod: z.string().min(1).max(100),
+  paymentMethod: z.string().min(1).max(100),
+  deliveryCity: z.string().max(255).optional(),
+  deliveryAddress: z.string().max(500).optional(),
+  invoiceNumber: z.string().min(1).max(100),
+  orderDate: z.string().min(1).max(50),
+});
 
 const formatCFA = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
 
-const generateEmailHTML = (data: OrderEmailData) => `
+const escapeHtml = (str: string) =>
+  str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const generateEmailHTML = (data: z.infer<typeof BodySchema>) => `
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -44,9 +50,9 @@ const generateEmailHTML = (data: OrderEmailData) => `
         </tr>
         <tr>
           <td style="padding:32px;">
-            <h2 style="color:#166534;margin:0 0 8px;font-size:20px;">Merci ${data.buyerName} ! 🎉</h2>
+            <h2 style="color:#166534;margin:0 0 8px;font-size:20px;">Merci ${escapeHtml(data.buyerName)} ! 🎉</h2>
             <p style="color:#71717a;margin:0 0 24px;font-size:14px;line-height:1.6;">
-              Votre commande <strong style="color:#166534;">${data.invoiceNumber}</strong> a été enregistrée avec succès le ${data.orderDate}.
+              Votre commande <strong style="color:#166534;">${escapeHtml(data.invoiceNumber)}</strong> a été enregistrée avec succès le ${escapeHtml(data.orderDate)}.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;margin-bottom:24px;">
               <tr style="background:#f4f4f5;">
@@ -57,11 +63,11 @@ const generateEmailHTML = (data: OrderEmailData) => `
               ${data.orderItems.map(item => `
               <tr>
                 <td style="padding:12px 16px;font-size:13px;color:#18181b;border-top:1px solid #e4e4e7;">
-                  <strong>${item.name}</strong><br/>
-                  <span style="color:#a1a1aa;font-size:11px;">Fournisseur: ${item.sellerName}</span>
+                  <strong>${escapeHtml(item.name)}</strong><br/>
+                  <span style="color:#a1a1aa;font-size:11px;">Fournisseur: ${escapeHtml(item.sellerName)}</span>
                 </td>
                 <td style="padding:12px 16px;font-size:13px;color:#71717a;text-align:center;border-top:1px solid #e4e4e7;">
-                  ${item.quantity} ${item.unit}
+                  ${item.quantity} ${escapeHtml(item.unit)}
                 </td>
                 <td style="padding:12px 16px;font-size:13px;color:#18181b;text-align:right;font-weight:bold;border-top:1px solid #e4e4e7;">
                   ${formatCFA(item.unitPrice * item.quantity)}
@@ -75,7 +81,7 @@ const generateEmailHTML = (data: OrderEmailData) => `
                 <td style="padding:6px 0;font-size:13px;color:#18181b;text-align:right;">${formatCFA(data.subtotal)}</td>
               </tr>
               <tr>
-                <td style="padding:6px 0;font-size:13px;color:#71717a;">Livraison (${data.deliveryMethod})</td>
+                <td style="padding:6px 0;font-size:13px;color:#71717a;">Livraison (${escapeHtml(data.deliveryMethod)})</td>
                 <td style="padding:6px 0;font-size:13px;color:#18181b;text-align:right;">${data.deliveryPrice === 0 ? "Gratuit" : formatCFA(data.deliveryPrice)}</td>
               </tr>
               <tr><td colspan="2" style="border-top:2px solid #166534;padding-top:12px;"></td></tr>
@@ -87,14 +93,14 @@ const generateEmailHTML = (data: OrderEmailData) => `
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-radius:8px;padding:16px;margin-bottom:24px;">
               <tr>
                 <td style="padding:12px 16px;">
-                  <p style="margin:0 0 8px;font-size:13px;"><strong>🚚 Livraison:</strong> ${data.deliveryMethod}</p>
-                  ${data.deliveryCity ? `<p style="margin:0 0 8px;font-size:13px;">📍 ${data.deliveryCity}${data.deliveryAddress ? `, ${data.deliveryAddress}` : ""}</p>` : ""}
-                  <p style="margin:0;font-size:13px;"><strong>💳 Paiement:</strong> ${data.paymentMethod}</p>
+                  <p style="margin:0 0 8px;font-size:13px;"><strong>🚚 Livraison:</strong> ${escapeHtml(data.deliveryMethod)}</p>
+                  ${data.deliveryCity ? `<p style="margin:0 0 8px;font-size:13px;">📍 ${escapeHtml(data.deliveryCity)}${data.deliveryAddress ? `, ${escapeHtml(data.deliveryAddress)}` : ""}</p>` : ""}
+                  <p style="margin:0;font-size:13px;"><strong>💳 Paiement:</strong> ${escapeHtml(data.paymentMethod)}</p>
                 </td>
               </tr>
             </table>
             <p style="color:#71717a;font-size:12px;line-height:1.6;margin:0;">
-              Une facture PDF a été générée automatiquement. Vous pouvez la re-télécharger depuis votre tableau de bord → Paiements.
+              Une facture PDF a été générée automatiquement. Vous pouvez la re-télécharger depuis votre tableau de bord.
             </p>
           </td>
         </tr>
@@ -121,10 +127,16 @@ serve(async (req) => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    const data: OrderEmailData = await req.json();
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ success: false, error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const data = parsed.data;
     const emailHTML = generateEmailHTML(data);
-
-    console.log(`Sending order confirmation email to ${data.buyerEmail}`);
 
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -144,10 +156,8 @@ serve(async (req) => {
 
     if (!resendResponse.ok) {
       console.error('Resend API error:', JSON.stringify(resendData));
-      throw new Error(`Resend API error [${resendResponse.status}]: ${JSON.stringify(resendData)}`);
+      throw new Error(`Email sending failed`);
     }
-
-    console.log(`Email sent successfully! ID: ${resendData.id}`);
 
     return new Response(
       JSON.stringify({ 
@@ -157,10 +167,10 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending confirmation email:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: "Erreur interne" }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -99,19 +99,11 @@ const NotificationBell = () => {
     return `${days}j`;
   };
 
-  // On mobile, redirect to /notifications directly
-  const handleBellClick = () => {
-    if (isMobile) {
-      navigate("/notifications");
-    }
-  };
-
   const bellButton = (
     <Button
       variant="ghost"
       size="icon"
       className="relative"
-      onClick={isMobile ? handleBellClick : undefined}
     >
       <Bell className="w-5 h-5" />
       {unreadCount > 0 && (
@@ -121,11 +113,6 @@ const NotificationBell = () => {
       )}
     </Button>
   );
-
-  // On mobile, just render the button (no popover)
-  if (isMobile) {
-    return bellButton;
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

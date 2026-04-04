@@ -1,10 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const BodySchema = z.object({
+  amount: z.number().positive().min(500, "Min: 500 FCFA").max(5_000_000, "Max: 5 000 000 FCFA"),
+  operator: z.enum(["flooz", "tmoney", "wave"]),
+  phone_number: z.string().regex(/^\d{8,15}$/, "Numéro de téléphone invalide (8-15 chiffres)"),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,7 +19,6 @@ serve(async (req) => {
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
@@ -25,7 +31,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify user
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -39,41 +44,18 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    // Parse and validate input
-    const body = await req.json();
-    const { amount, operator, phone_number } = body;
-
-    // Validate amount
-    const numAmount = Number(amount);
-    if (!numAmount || !Number.isFinite(numAmount) || numAmount < 500 || numAmount > 5000000) {
-      return new Response(JSON.stringify({ error: "Montant invalide. Min: 500 FCFA, Max: 5 000 000 FCFA" }), {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { amount, operator, phone_number } = parsed.data;
 
-    // Validate operator
-    const validOperators = ["flooz", "tmoney", "wave"];
-    if (!operator || !validOperators.includes(operator)) {
-      return new Response(JSON.stringify({ error: "Opérateur invalide" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Validate phone number (8-15 digits)
-    const phoneClean = String(phone_number || "").replace(/\s+/g, "");
-    if (!/^\d{8,15}$/.test(phoneClean)) {
-      return new Response(JSON.stringify({ error: "Numéro de téléphone invalide (8-15 chiffres)" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Use service role for balance checks and insertion
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get user profile
     const { data: profile, error: profileError } = await adminClient
       .from("profiles")
       .select("id")
@@ -87,7 +69,6 @@ serve(async (req) => {
       });
     }
 
-    // Calculate available balance
     const { data: orderData } = await adminClient
       .from("orders")
       .select("total_price, status")
@@ -108,14 +89,13 @@ serve(async (req) => {
 
     const availableBalance = totalEarnings - totalWithdrawn;
 
-    if (numAmount > availableBalance) {
+    if (amount > availableBalance) {
       return new Response(JSON.stringify({ error: "Solde insuffisant. Disponible: " + availableBalance + " FCFA" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Rate limit: max 3 pending withdrawals
     const pendingCount = (wData || []).filter((w: any) => w.status === "pending").length;
     if (pendingCount >= 3) {
       return new Response(JSON.stringify({ error: "Vous avez déjà 3 demandes en attente. Patientez leur traitement." }), {
@@ -124,21 +104,20 @@ serve(async (req) => {
       });
     }
 
-    // Insert withdrawal via service role
     const { data: withdrawal, error: insertError } = await adminClient
       .from("withdrawals")
       .insert({
         user_id: userId,
         profile_id: profile.id,
-        amount: numAmount,
+        amount,
         operator,
-        phone_number: phoneClean,
+        phone_number,
       })
       .select()
       .single();
 
     if (insertError) {
-      return new Response(JSON.stringify({ error: "Erreur lors de la création: " + insertError.message }), {
+      return new Response(JSON.stringify({ error: "Erreur lors de la création" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

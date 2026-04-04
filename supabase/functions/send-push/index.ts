@@ -1,10 +1,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const BodySchema = z.object({
+  user_id: z.string().uuid(),
+  title: z.string().min(1).max(255),
+  body: z.string().max(1000).optional().default(""),
+  url: z.string().max(500).optional().default("/"),
+});
 
 const VAPID_PUBLIC_KEY = 'BIt17IcmE0C1A6eODRf2JSrZtbImKfTzAOIGyAUg93G4NWmOg9SjSRp_dp6K5nGtL3PSawd5jCA48StW5w9YpeQ'
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
@@ -22,16 +30,16 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    const { user_id, title, body, url } = await req.json()
-
-    if (!user_id || !title) {
-      return new Response(JSON.stringify({ error: 'user_id and title required' }), {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      });
     }
+    const { user_id, title, body, url } = parsed.data;
 
-    // Get all push subscriptions for this user
     const { data: subscriptions, error } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -45,7 +53,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const payload = JSON.stringify({ title, body: body || '', url: url || '/' })
+    const payload = JSON.stringify({ title, body, url })
     let sent = 0
     const failed: string[] = []
 
@@ -74,7 +82,7 @@ Deno.serve(async (req) => {
     })
   } catch (err: any) {
     console.error('send-push error:', err)
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

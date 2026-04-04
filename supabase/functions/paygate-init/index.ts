@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PAYGATE_API_KEY = Deno.env.get("PAYGATE_API_KEY") || "";
+const BodySchema = z.object({
+  amount: z.number().positive().max(50_000_000),
+  description: z.string().max(500).optional().default("Paiement NUKUCONNECT"),
+  identifier: z.string().min(1).max(255),
+  phone_number: z.string().regex(/^\d{8,15}$/).optional(),
+  network: z.enum(["FLOOZ", "TMONEY", "CARD"]).optional(),
+  use_redirect: z.boolean().optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,23 +21,25 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, description, identifier, phone_number, network, use_redirect } = await req.json();
+    const PAYGATE_API_KEY = Deno.env.get("PAYGATE_API_KEY") || "";
 
-    if (!amount || !identifier) {
-      return new Response(JSON.stringify({ error: "amount and identifier required" }), {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { amount, description, identifier, phone_number, network, use_redirect } = parsed.data;
 
     const isCard = use_redirect || !network || network === "CARD";
 
-    // For CARD payments, use v2 hosted page directly (redirect mode)
     if (isCard) {
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
       v2Body.append("amount", String(amount));
-      v2Body.append("description", description || "Paiement NUKUCONNECT");
+      v2Body.append("description", description);
       v2Body.append("identifier", identifier);
 
       const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
@@ -43,7 +53,6 @@ serve(async (req) => {
       try {
         v2Data = JSON.parse(v2Text);
       } catch {
-        // v2 API returned HTML — not available, return error
         return new Response(JSON.stringify({
           success: false,
           mode: "redirect",
@@ -65,25 +74,23 @@ serve(async (req) => {
         });
       }
 
-      // v2 failed
       return new Response(JSON.stringify({
         success: false,
         mode: "redirect",
         error: "Impossible d'initialiser le paiement par carte. Réessayez.",
-        ...v2Data,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // For Mobile Money (FLOOZ, TMONEY), use v1 direct API
+    // Mobile Money
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
     body.append("phone_number", phone_number || "");
     body.append("amount", String(amount));
-    body.append("description", description || "Paiement NUKUCONNECT");
+    body.append("description", description);
     body.append("identifier", identifier);
-    body.append("network", network);
+    body.append("network", network!);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/pay", {
       method: "POST",
@@ -98,12 +105,11 @@ serve(async (req) => {
       data = { status: -1 };
     }
 
-    // If v1 fails, fallback to v2 redirect
     if (data.status !== 0) {
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
       v2Body.append("amount", String(amount));
-      v2Body.append("description", description || "Paiement NUKUCONNECT");
+      v2Body.append("description", description);
       v2Body.append("identifier", identifier);
 
       const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
@@ -133,12 +139,11 @@ serve(async (req) => {
       success: data.status === 0,
       mode: "direct",
       tx_reference: data.tx_reference,
-      ...data,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

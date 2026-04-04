@@ -1,11 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PAYGATE_API_KEY = "5dc35b39-431a-4f14-b61e-f28190174385";
+const BodySchema = z.object({
+  identifier: z.string().min(1).max(255).optional(),
+  tx_reference: z.string().min(1).max(255).optional(),
+}).refine(data => data.identifier || data.tx_reference, {
+  message: "identifier ou tx_reference requis",
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,21 +19,22 @@ serve(async (req) => {
   }
 
   try {
-    const { identifier, tx_reference } = await req.json();
+    const PAYGATE_API_KEY = Deno.env.get("PAYGATE_API_KEY") || "";
 
-    if (!identifier && !tx_reference) {
-      return new Response(JSON.stringify({ error: "identifier or tx_reference required" }), {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { identifier, tx_reference } = parsed.data;
 
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
     if (tx_reference) body.append("tx_reference", tx_reference);
     if (identifier) body.append("identifier", identifier);
-
-    console.log(`[paygate-status] Checking: identifier=${identifier}, tx_reference=${tx_reference}`);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/status", {
       method: "POST",
@@ -44,18 +51,13 @@ serve(async (req) => {
       data = { status: -1 };
     }
 
-    console.log(`[paygate-status] PayGate raw response:`, JSON.stringify(data));
-
-    // PayGate status codes: 0 = success/completed, 2 = pending, 4 = expired, 6 = failed
-    let status = "unknown";
     const rawStatus = typeof data.status === "number" ? data.status : parseInt(data.status, 10);
     
+    let status = "unknown";
     if (rawStatus === 0) status = "completed";
     else if (rawStatus === 2) status = "pending";
     else if (rawStatus === 4) status = "expired";
     else if (rawStatus === 6) status = "failed";
-
-    console.log(`[paygate-status] Mapped status: ${status} (raw: ${rawStatus})`);
 
     return new Response(JSON.stringify({
       status,
@@ -68,9 +70,9 @@ serve(async (req) => {
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[paygate-status] Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
