@@ -251,6 +251,13 @@ const ProducerProfile = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO
+        url={`/producteurs/${profileId}`}
+        title={producer.full_name || "Profil Fournisseur"}
+        description={producer.bio || `Découvrez le profil de ${producer.full_name || "ce fournisseur"} sur NUKUCONNECT.`}
+        image={producer.avatar_url || undefined}
+        type="profile"
+      />
       <Header />
       <main>
         <div className="relative w-full h-32 sm:h-48 lg:h-56 bg-gradient-hero overflow-hidden">
