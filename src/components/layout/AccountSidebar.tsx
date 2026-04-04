@@ -256,7 +256,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         ) : user ? (
           <div className="h-full flex flex-col">
             {/* Header with avatar */}
-            <div className="px-4 py-5 border-b border-border">
+            <div className="px-4 py-5 border-b border-border pr-12">
               <SheetHeader className="p-0">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
