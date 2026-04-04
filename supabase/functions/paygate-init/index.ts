@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, description, identifier, phone_number, network } = await req.json();
+    const { amount, description, identifier, phone_number, network, use_redirect } = await req.json();
 
     if (!amount || !identifier) {
       return new Response(JSON.stringify({ error: "amount and identifier required" }), {
@@ -22,14 +22,55 @@ serve(async (req) => {
       });
     }
 
-    // PayGate Global API v1 - initiate transaction
+    const isCard = use_redirect || !network || network === "CARD";
+
+    // For CARD payments, use v2 hosted page directly (redirect mode)
+    if (isCard) {
+      const v2Body = new URLSearchParams();
+      v2Body.append("auth_token", PAYGATE_API_KEY);
+      v2Body.append("amount", String(amount));
+      v2Body.append("description", description || "Paiement NUKUCONNECT");
+      v2Body.append("identifier", identifier);
+
+      const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: v2Body.toString(),
+      });
+
+      const v2Data = await v2Resp.json();
+
+      if (v2Data.status === 0 && v2Data.token) {
+        return new Response(JSON.stringify({
+          success: true,
+          mode: "redirect",
+          payment_url: `https://paygateglobal.com/v2/page/${v2Data.token}`,
+          token: v2Data.token,
+          tx_reference: v2Data.tx_reference,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // v2 failed
+      return new Response(JSON.stringify({
+        success: false,
+        mode: "redirect",
+        error: "Impossible d'initialiser le paiement par carte. Réessayez.",
+        ...v2Data,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // For Mobile Money (FLOOZ, TMONEY), use v1 direct API
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
     body.append("phone_number", phone_number || "");
     body.append("amount", String(amount));
     body.append("description", description || "Paiement NUKUCONNECT");
     body.append("identifier", identifier);
-    body.append("network", network || "");
+    body.append("network", network);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/pay", {
       method: "POST",
@@ -39,7 +80,7 @@ serve(async (req) => {
 
     const data = await resp.json();
 
-    // Also try v2 hosted page as fallback
+    // If v1 fails, fallback to v2 redirect
     if (data.status !== 0) {
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
@@ -54,7 +95,7 @@ serve(async (req) => {
       });
 
       const v2Data = await v2Resp.json();
-      
+
       if (v2Data.status === 0 && v2Data.token) {
         return new Response(JSON.stringify({
           success: true,
