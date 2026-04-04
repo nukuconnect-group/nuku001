@@ -421,6 +421,7 @@ export type Database = {
           current_lat: number | null
           current_lng: number | null
           id: string
+          is_approved: boolean
           is_available: boolean
           license_plate: string | null
           profile_id: string
@@ -437,6 +438,7 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           id?: string
+          is_approved?: boolean
           is_available?: boolean
           license_plate?: string | null
           profile_id: string
@@ -453,6 +455,7 @@ export type Database = {
           current_lat?: number | null
           current_lng?: number | null
           id?: string
+          is_approved?: boolean
           is_available?: boolean
           license_plate?: string | null
           profile_id?: string
