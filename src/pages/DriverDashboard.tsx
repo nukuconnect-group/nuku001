@@ -125,6 +125,43 @@ const DriverDashboard = () => {
     }
   }, [user, profileLoading, fetchDriverData, navigate]);
 
+  // Auto-update GPS position every 30 seconds when driver is available
+  useEffect(() => {
+    if (!driverProfile?.is_available || !driverProfile?.id) return;
+
+    const updateGPS = () => {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setDriverPosition([lat, lng]);
+
+          // Update driver_profiles with current position
+          await supabase
+            .from("driver_profiles")
+            .update({ current_lat: lat, current_lng: lng })
+            .eq("id", driverProfile.id);
+
+          // Also update all active deliveries assigned to this driver
+          await supabase
+            .from("deliveries")
+            .update({ driver_current_lat: lat, driver_current_lng: lng })
+            .eq("driver_id", driverProfile.id)
+            .in("status", ["accepted", "picked_up", "in_transit"]);
+        },
+        (err) => console.warn("GPS error:", err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+      );
+    };
+
+    // Initial update
+    updateGPS();
+    // Then every 30 seconds
+    const interval = setInterval(updateGPS, 30000);
+    return () => clearInterval(interval);
+  }, [driverProfile?.is_available, driverProfile?.id]);
+
   // Realtime subscription for new deliveries
   useEffect(() => {
     const channel = supabase
