@@ -225,7 +225,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         price: parseFloat(newProduct.price),
         category: newProduct.category,
         unit: newProduct.unit,
-        quantity_available: parseFloat(newProduct.quantity_available),
+        quantity_available: parseFloat(newProduct.quantity_available) || 0,
         location: newProduct.location,
         is_organic: newProduct.is_organic,
         is_negotiable: newProduct.negotiable,
