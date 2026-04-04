@@ -191,13 +191,14 @@ const Auth = () => {
       {/* Left side - Hero image (hidden on mobile when form showing) */}
       <div className="relative w-full lg:w-1/2 min-h-[200px] sm:min-h-[280px] lg:min-h-screen">
         <img
-          src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&q=80"
+          src={authHeroImg}
           alt="Agriculture africaine"
           className="absolute inset-0 w-full h-full object-cover"
+          width={1200}
+          height={1600}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/40 lg:to-transparent" />
         <div className="relative z-10 flex flex-col justify-end lg:justify-center h-full p-6 sm:p-8 lg:p-12">
-          <img src={nukuLogo} alt="NUKUCONNECT" className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain mb-3 lg:mb-6" />
           <h1 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 lg:mb-3">NUKUCONNECT</h1>
           <p className="text-xs sm:text-sm lg:text-lg text-white/80 max-w-md leading-relaxed hidden sm:block">
             La marketplace agricole intelligente d'Afrique. Connectez-vous avec des milliers de producteurs et acheteurs.

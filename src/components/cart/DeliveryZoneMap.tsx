@@ -546,18 +546,18 @@ const DeliveryZoneMap = ({
 
             {/* Pricing scale */}
             <div className="text-[10px] text-muted-foreground space-y-1 pt-1">
-              <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire :</p>
+              <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire (min. {formatPrice(MIN_DELIVERY_PRICE)}) :</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
                 {[
-                  { label: "< 10 km", price: 500 },
-                  { label: "< 30 km", price: 1000 },
-                  { label: "< 80 km", price: 1500 },
-                  { label: "< 200 km", price: 2500 },
-                  { label: "< 400 km", price: 4000 },
-                  { label: "> 400 km", price: 6000 },
+                  { label: "≤ 3 km", price: 1000 },
+                  { label: "≤ 7 km", price: 1200 },
+                  { label: "≤ 15 km", price: 1500 },
+                  { label: "≤ 30 km", price: 2500 },
+                  { label: "≤ 80 km", price: 4000 },
+                  { label: "> 80 km", price: 6000 },
                 ].map(t => (
                   <div key={t.label} className={`rounded px-2 py-1 ${
-                    distanceInfo && getDeliveryPriceByDistance(distanceInfo.maxDistance).price === t.price
+                    currentPrice === t.price
                       ? "bg-primary/10 text-primary font-semibold"
                       : "bg-muted"
                   }`}>
