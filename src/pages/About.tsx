@@ -25,6 +25,11 @@ const values = [
 const About = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO
+        url="/a-propos"
+        title="À Propos de NUKUCONNECT"
+        description="Découvrez la mission, la vision et l'équipe derrière NUKUCONNECT, la marketplace agricole intelligente d'Afrique."
+      />
       <Header />
 
       {/* Hero */}

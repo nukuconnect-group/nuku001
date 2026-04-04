@@ -78,6 +78,11 @@ const Formations = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <SEO
+        url="/formations"
+        title="Formations Agricoles"
+        description="Accédez à des formations agricoles gratuites et certifiantes. Apprenez les techniques modernes de culture, d'élevage et de gestion agricole."
+      />
       <Header />
 
       {/* Hero */}

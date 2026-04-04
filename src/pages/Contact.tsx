@@ -153,6 +153,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO
+        url="/contact"
+        title="Contactez-nous"
+        description="Contactez l'équipe NUKUCONNECT pour toute question, suggestion ou demande de partenariat. Nous sommes à votre écoute."
+      />
       <Header />
       <main>
         <div className="bg-primary/5 border-b border-border py-8 sm:py-12">
