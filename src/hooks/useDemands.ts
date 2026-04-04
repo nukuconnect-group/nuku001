@@ -99,6 +99,10 @@ export const useCreateDemand = () => {
         .single();
 
       if (error) throw error;
+      // Trigger async AI moderation (non-blocking)
+      if (data?.id) {
+        supabase.functions.invoke("moderate-content", { body: { type: "demand", id: data.id } }).catch(err => console.warn("Demand moderation:", err));
+      }
       return data;
     },
     onSuccess: () => {
