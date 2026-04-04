@@ -103,6 +103,7 @@ export const useCreateDemand = () => {
       if (data?.id) {
         supabase.functions.invoke("moderate-content", { body: { type: "demand", id: data.id } }).catch(err => console.warn("Demand moderation:", err));
       }
+      // Note: user will receive notifications about verification status
       return data;
     },
     onSuccess: () => {
