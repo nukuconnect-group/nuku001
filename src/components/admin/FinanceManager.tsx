@@ -17,7 +17,7 @@ import {
 const COLORS = ['hsl(var(--primary))', 'hsl(142 76% 36%)', 'hsl(217 91% 60%)', 'hsl(45 93% 47%)'];
 
 const COMMISSION_RATES: Record<string, number> = {
-  free: 8, pro: 5, business: 3, enterprise: 2,
+  free: 8, pro: 5, business: 2,
 };
 
 interface Props {
