@@ -136,6 +136,18 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             {isNew && (
               <Badge className="bg-accent text-accent-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">NOUVEAU</Badge>
             )}
+            {(product as any).is_negotiable && (
+              <Badge className="bg-amber-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">NÉGOCIABLE</Badge>
+            )}
+            {(product as any).stock_status === "out_of_stock" && (
+              <Badge className="bg-red-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">RUPTURE</Badge>
+            )}
+            {(product as any).stock_status === "low_stock" && (
+              <Badge className="bg-orange-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">STOCK FAIBLE</Badge>
+            )}
+            {(product as any).stock_status === "restocking" && (
+              <Badge className="bg-blue-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">RÉAPPRO.</Badge>
+            )}
           </div>
 
           {/* Action buttons — top right */}

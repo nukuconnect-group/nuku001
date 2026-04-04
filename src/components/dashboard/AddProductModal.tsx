@@ -127,6 +127,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     saleMode: "retail",
     negotiable: false,
     deliveryAvailable: true,
+    stockStatus: "in_stock",
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
