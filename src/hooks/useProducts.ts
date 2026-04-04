@@ -147,3 +147,26 @@ export const useProduct = (id: string) => {
     enabled: !!id,
   });
 };
+
+export const useProductBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ["product-slug", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          producer:profiles!products_producer_id_fkey(
+            id, full_name, avatar_url, is_verified, location, bio
+          )
+        `)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error("Product not found");
+      return mapDbToProduct(data as any);
+    },
+    enabled: !!slug,
+  });
+};
