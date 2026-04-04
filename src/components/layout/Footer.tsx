@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
-import footerBg from "@/assets/footer-bg.jpg";
+import footerBg from "@/assets/footer-bg.webp";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
 
