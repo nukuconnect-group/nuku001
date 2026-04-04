@@ -145,6 +145,7 @@ const App = () => {
         </ProfileProvider>
       </LanguageProvider>
     </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 
