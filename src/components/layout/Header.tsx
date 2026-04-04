@@ -698,28 +698,42 @@ const Header = () => {
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
 
-      <LocationPickerDialog
-        open={locationDialogOpen}
-        onOpenChange={setLocationDialogOpen}
-        currentLocation={userLocation}
-        onSave={handleSaveLocation}
-      />
+      <Suspense fallback={null}>
+        <LocationPickerDialog
+          open={locationDialogOpen}
+          onOpenChange={setLocationDialogOpen}
+          currentLocation={userLocation}
+          onSave={handleSaveLocation}
+        />
+      </Suspense>
 
-      <VoiceSearchModal
-        open={voiceSearchOpen}
-        onClose={() => setVoiceSearchOpen(false)}
-        onResult={(text) => { setSearchQuery(text); setShowSearchResults(true); navigate(`/marketplace?search=${text}`); }}
-      />
-      <ImageSearchModal
-        open={imageSearchOpen}
-        onClose={() => setImageSearchOpen(false)}
-        onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
-      />
-      <QRScanner
-        isOpen={qrScannerOpen}
-        onClose={() => setQrScannerOpen(false)}
-        onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
-      />
+      {voiceSearchOpen && (
+        <Suspense fallback={null}>
+          <VoiceSearchModal
+            open={voiceSearchOpen}
+            onClose={() => setVoiceSearchOpen(false)}
+            onResult={(text) => { setSearchQuery(text); setShowSearchResults(true); navigate(`/marketplace?search=${text}`); }}
+          />
+        </Suspense>
+      )}
+      {imageSearchOpen && (
+        <Suspense fallback={null}>
+          <ImageSearchModal
+            open={imageSearchOpen}
+            onClose={() => setImageSearchOpen(false)}
+            onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
+          />
+        </Suspense>
+      )}
+      {qrScannerOpen && (
+        <Suspense fallback={null}>
+          <QRScanner
+            isOpen={qrScannerOpen}
+            onClose={() => setQrScannerOpen(false)}
+            onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
+          />
+        </Suspense>
+      )}
     </>
   );
 };
