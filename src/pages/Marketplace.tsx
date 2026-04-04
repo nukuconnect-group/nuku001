@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -254,6 +254,30 @@ const Marketplace = () => {
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [marketView, setMarketView] = useState<"products" | "demands">("products");
   const sponsoredRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const ITEMS_PER_PAGE = 20;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [searchQuery, selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, priceRange]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
 
   const handleCompare = (product: Product) => {
     setCompareProducts((prev) => {
@@ -459,7 +483,7 @@ const Marketplace = () => {
           {/* Hero card - large featured, spans full width on mobile top row */}
           <Link to={`/produit/${hero.id}`} className="col-span-2 lg:col-span-5 block group">
             <div className="relative min-h-[200px] sm:min-h-[280px] lg:min-h-[340px] rounded-xl overflow-hidden bg-muted">
-              <img src={hero.image} alt={hero.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <img src={hero.image} alt={hero.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
               <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex gap-1 sm:gap-1.5">
                 <Badge className="bg-accent text-accent-foreground font-bold text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 shadow-md">✨ NOUVEAU</Badge>
@@ -496,7 +520,7 @@ const Marketplace = () => {
             {rest.map((product) => (
               <Link to={`/produit/${product.id}`} key={product.id} className="block group">
                 <div className="relative rounded-xl overflow-hidden bg-muted h-full min-h-[140px] sm:min-h-[160px] lg:min-h-[165px]">
-                  <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={product.image} alt={product.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
                   <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
                     <Badge className="bg-accent/90 text-accent-foreground font-bold text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5 shadow-sm">NEW</Badge>
@@ -741,9 +765,16 @@ const Marketplace = () => {
                 </div>
               </div>
               {filteredProducts.length > 0 ? (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                  {filteredProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
-                </div>
+                <>
+                  <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
+                    {filteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                  </div>
+                  {visibleCount < filteredProducts.length && (
+                    <div ref={loadMoreRef} className="flex justify-center py-6">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><Search className="w-6 h-6 text-muted-foreground" /></div>
@@ -775,8 +806,13 @@ const Marketplace = () => {
                   <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                  {allProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
                 </div>
+                {visibleCount < allProducts.length && (
+                  <div ref={loadMoreRef} className="flex justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
               </div>
             </>
           )}
