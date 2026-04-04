@@ -165,10 +165,10 @@ const Producers = () => {
               <Users className="w-3 h-3 mr-1" />
               {t("net.badge")}
             </Badge>
-            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
               {t("net.title")}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-white/80 mb-6">
               {t("net.subtitle")}
             </p>
 
