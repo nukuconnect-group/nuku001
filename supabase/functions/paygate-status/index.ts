@@ -24,12 +24,10 @@ serve(async (req) => {
 
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
-    if (tx_reference) {
-      body.append("tx_reference", tx_reference);
-    }
-    if (identifier) {
-      body.append("identifier", identifier);
-    }
+    if (tx_reference) body.append("tx_reference", tx_reference);
+    if (identifier) body.append("identifier", identifier);
+
+    console.log(`[paygate-status] Checking: identifier=${identifier}, tx_reference=${tx_reference}`);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/status", {
       method: "POST",
@@ -37,18 +35,31 @@ serve(async (req) => {
       body: body.toString(),
     });
 
-    const data = await resp.json();
+    const rawText = await resp.text();
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error("[paygate-status] Non-JSON response:", rawText);
+      data = { status: -1 };
+    }
+
+    console.log(`[paygate-status] PayGate raw response:`, JSON.stringify(data));
 
     // PayGate status codes: 0 = success/completed, 2 = pending, 4 = expired, 6 = failed
     let status = "unknown";
-    if (data.status === 0) status = "completed";
-    else if (data.status === 2) status = "pending";
-    else if (data.status === 4) status = "expired";
-    else if (data.status === 6) status = "failed";
+    const rawStatus = typeof data.status === "number" ? data.status : parseInt(data.status, 10);
+    
+    if (rawStatus === 0) status = "completed";
+    else if (rawStatus === 2) status = "pending";
+    else if (rawStatus === 4) status = "expired";
+    else if (rawStatus === 6) status = "failed";
+
+    console.log(`[paygate-status] Mapped status: ${status} (raw: ${rawStatus})`);
 
     return new Response(JSON.stringify({
       status,
-      raw_status: data.status,
+      raw_status: rawStatus,
       tx_reference: data.tx_reference,
       amount: data.amount,
       payment_reference: data.payment_reference,
@@ -58,6 +69,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("[paygate-status] Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
