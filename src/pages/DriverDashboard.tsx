@@ -111,8 +111,15 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        // Use demo products if none exist
         setAvailableProducts(products && products.length > 0 ? products : demoProducts);
+
+        // Fetch withdrawals
+        const { data: wds } = await supabase
+          .from("withdrawals")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+        setWithdrawals(wds || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
