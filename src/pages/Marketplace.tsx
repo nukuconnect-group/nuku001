@@ -663,6 +663,21 @@ const Marketplace = () => {
       {isLoading && (
         <section className="py-3 sm:py-6 lg:py-8">
           <div className="container mx-auto px-3 sm:px-4">
+            {/* Reserve space for sponsored section */}
+            <div className="mb-6 sm:mb-8">
+              <div className="h-5 w-40 bg-muted rounded mb-3" />
+              <div className="flex gap-3 overflow-hidden">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[140px] sm:w-[180px]">
+                    <div className="aspect-square bg-muted rounded-xl" />
+                    <div className="p-2 space-y-1">
+                      <div className="h-4 bg-muted rounded w-20" />
+                      <div className="h-3 bg-muted rounded w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             <ProductGridSkeleton count={10} />
           </div>
         </section>
@@ -698,8 +713,8 @@ const Marketplace = () => {
       ) : (
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
-          {/* Sponsored Products Slider */}
-          <div className="mb-6 sm:mb-8">
+          {/* Sponsored Products Slider — fixed min-height to prevent CLS */}
+          <div className="mb-6 sm:mb-8 min-h-[220px] sm:min-h-[280px]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                 <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
