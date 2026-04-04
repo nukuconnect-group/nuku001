@@ -910,6 +910,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          slug: string | null
           stock_status: string
           unit: string
           updated_at: string
@@ -928,6 +929,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available?: number
+          slug?: string | null
           stock_status?: string
           unit?: string
           updated_at?: string
@@ -946,6 +948,7 @@ export type Database = {
           price?: number
           producer_id?: string
           quantity_available?: number
+          slug?: string | null
           stock_status?: string
           unit?: string
           updated_at?: string
@@ -1346,6 +1349,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      unaccent: { Args: { "": string }; Returns: string }
       update_user_subscription: {
         Args: {
           p_billing_period: string
