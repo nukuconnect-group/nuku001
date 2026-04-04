@@ -14,7 +14,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Truck, GraduationCap, BookOpen, ArrowLeft, Check } from "lucide-react";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
-import authHeroImg from "@/assets/auth-hero-agriculture.jpg";
+import authLoginImg from "@/assets/auth-login-hero.jpg";
+import authSignupImg from "@/assets/auth-signup-hero.jpg";
 
 const sectors = [
   "Céréales & Légumineuses", "Maraîchage", "Fruits", "Tubercules",
@@ -191,11 +192,12 @@ const Auth = () => {
       {/* Left side - Hero image (hidden on mobile when form showing) */}
       <div className="relative w-full lg:w-1/2 min-h-[200px] sm:min-h-[280px] lg:min-h-screen">
         <img
-          src={authHeroImg}
-          alt="Agriculture africaine"
-          className="absolute inset-0 w-full h-full object-cover"
-          width={1200}
-          height={1600}
+          src={authMode === "login" ? authLoginImg : authSignupImg}
+          alt={authMode === "login" ? "Agriculteurs africains collaborant" : "Marketplace agricole connectée"}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+          width={1080}
+          height={1920}
+          key={authMode}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/40 lg:to-transparent" />
         <div className="relative z-10 flex flex-col justify-end lg:justify-center h-full p-6 sm:p-8 lg:p-12">
