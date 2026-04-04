@@ -44,6 +44,7 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("paygate");
   const [mobileNumber, setMobileNumber] = useState("");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState("");
 
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);

@@ -26,6 +26,7 @@ interface PaymentMethodSelectProps {
   onPaymentSuccess?: (transactionId: string) => void;
   hidePayButton?: boolean;
   isPolling?: boolean;
+  onNetworkChange?: (network: string) => void;
 }
 
 const PaymentMethodSelect = ({
