@@ -271,6 +271,7 @@ const Cart = () => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
     setPendingCheckoutData(null);
+    pendingCheckoutRef.current = null;
     toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Réessayez.", variant: "destructive" });
   }, [toast]);
 
@@ -278,6 +279,7 @@ const Cart = () => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
     setPendingCheckoutData(null);
+    pendingCheckoutRef.current = null;
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé dans le délai imparti.", variant: "destructive" });
   }, [toast]);
 
