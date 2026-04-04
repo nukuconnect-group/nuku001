@@ -134,20 +134,16 @@ const LocationSearchFilter = ({ location, onLocationChange }: { location: string
   };
 
   return (
-    <div className="space-y-2" ref={ref}>
-      <Label className="text-xs font-semibold flex items-center gap-1.5">
-        <MapPin className="w-3.5 h-3.5" />
-        Région / Pays
-      </Label>
+    <div className="space-y-1.5" ref={ref}>
       <div className="relative">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
-            placeholder="Rechercher une ville ou pays..."
+            placeholder="Ville ou pays..."
             value={isOpen ? searchTerm : (location === "Toutes les régions" ? "" : location)}
             onChange={(e) => { setSearchTerm(e.target.value); setIsOpen(true); }}
             onFocus={() => setIsOpen(true)}
-            className="h-9 text-xs pl-8 pr-8"
+            className="h-10 text-xs pl-8 pr-8 rounded-full bg-card border-border w-full"
           />
           {location && location !== "Toutes les régions" && !isOpen && (
             <button
