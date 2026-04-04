@@ -418,7 +418,7 @@ const BuyerDashboard = () => {
                   ) : (
                     <div className="space-y-2.5 sm:space-y-4">
                       {orders.map((order) => (
-                        <Link key={order.id} to="/suivi-livraison" className="block">
+                        <Link key={order.id} to={`/commande/${order.id}`} className="block">
                           <div className="flex items-center justify-between p-2.5 sm:p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
                             <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
                               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
