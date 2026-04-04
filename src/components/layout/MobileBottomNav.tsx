@@ -176,7 +176,9 @@ const MobileBottomNav = () => {
         </div>
       </nav>
       
-      <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
+      <Suspense fallback={null}>
+        <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
+      </Suspense>
 
       {/* Become Seller Dialog */}
       <AlertDialog open={showBecomeSellerDialog} onOpenChange={setShowBecomeSellerDialog}>
