@@ -334,6 +334,7 @@ const Cart = () => {
 
       const checkoutData = { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId };
       setPendingCheckoutData(checkoutData);
+      pendingCheckoutRef.current = checkoutData;
 
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
@@ -369,6 +370,7 @@ const Cart = () => {
       console.error("Checkout error:", error);
       setIsCheckingOut(false);
       setPendingCheckoutData(null);
+      pendingCheckoutRef.current = null;
       toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };
