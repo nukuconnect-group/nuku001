@@ -29,6 +29,7 @@ export interface DbProduct {
 
 const mapDbToProduct = (p: DbProduct): Product => ({
   id: p.id,
+  slug: (p as any).slug || undefined,
   name: p.name,
   category: p.category,
   price: p.price,
