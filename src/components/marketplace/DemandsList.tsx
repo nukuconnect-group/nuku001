@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, MessageCircle, Loader2, User, Package } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,6 +24,7 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   const { formatPrice } = useLanguage();
   const [offerValues, setOfferValues] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
 
   const openDemandConversation = async (demand: Demand, mode: "chat" | "offer") => {
     const offerQuantity = offerValues[demand.id]?.trim();
@@ -51,16 +53,10 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
         .eq("user_id", session.user.id)
         .single();
 
-      if (myProfileError || !myProfile) {
-        throw new Error("Profil introuvable");
-      }
+      if (myProfileError || !myProfile) throw new Error("Profil introuvable");
 
       if (myProfile.id === demand.profile_id) {
-        toast({
-          title: "Action impossible",
-          description: "Vous ne pouvez pas répondre à votre propre demande.",
-          variant: "destructive",
-        });
+        toast({ title: "Action impossible", description: "Vous ne pouvez pas répondre à votre propre demande.", variant: "destructive" });
         return;
       }
 
@@ -76,14 +72,9 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
       if (!conversationId) {
         const { data: newConversation, error: conversationError } = await supabase
           .from("conversations")
-          .insert({
-            buyer_id: demand.profile_id,
-            seller_id: myProfile.id,
-            product_id: null,
-          })
+          .insert({ buyer_id: demand.profile_id, seller_id: myProfile.id, product_id: null })
           .select("id")
           .single();
-
         if (conversationError) throw conversationError;
         conversationId = newConversation.id;
       }
@@ -95,32 +86,23 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
           : `Bonjour, je vous contacte au sujet de votre demande d'achat.`,
         demand.description ? `Détail du besoin : ${demand.description}` : null,
         demand.location ? `Zone demandée : ${demand.location}` : null,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      ].filter(Boolean).join("\n");
 
       const { error: messageError } = await supabase.from("messages").insert({
         conversation_id: conversationId,
         sender_id: myProfile.id,
         content: introMessage,
       });
-
       if (messageError) throw messageError;
 
       toast({
         title: mode === "offer" ? "Proposition envoyée" : "Discussion ouverte",
-        description: mode === "offer"
-          ? "Votre quantité disponible a été envoyée au demandeur."
-          : "Vous pouvez maintenant discuter avec le demandeur.",
+        description: mode === "offer" ? "Votre quantité disponible a été envoyée au demandeur." : "Vous pouvez maintenant discuter avec le demandeur.",
       });
-
+      setSelectedDemand(null);
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error?.message || "Impossible d'ouvrir la discussion pour le moment.",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: error?.message || "Impossible d'ouvrir la discussion pour le moment.", variant: "destructive" });
     } finally {
       setPendingAction(null);
     }
@@ -144,43 +126,60 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
 
   if (items.length === 0) return null;
 
+  const timeAgo = (date: string) => {
+    const diff = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "À l'instant";
+    if (mins < 60) return `Il y a ${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Il y a ${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    return `Il y a ${days}j`;
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-      {items.map((demand) => (
-        <Card key={demand.id} className="overflow-hidden hover:shadow-md transition-all flex flex-col">
-          <CardContent className="p-3 flex-1 flex flex-col">
-            {/* User info */}
-            <div className="flex items-center gap-2 mb-2">
-              {(demand as any).image_url ? (
-                <img src={(demand as any).image_url} alt="" className="w-9 h-9 object-cover flex-shrink-0 rounded border border-border" />
-              ) : (
-                <div className="w-8 h-8 bg-accent/20 rounded flex items-center justify-center flex-shrink-0">
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        {items.map((demand) => (
+          <Card
+            key={demand.id}
+            className="overflow-hidden hover:shadow-md transition-all flex flex-col cursor-pointer"
+            onClick={() => setSelectedDemand(demand)}
+          >
+            {/* Image */}
+            {(demand as any).image_url ? (
+              <div className="relative w-full aspect-[4/3] bg-muted">
+                <img src={(demand as any).image_url} alt={demand.title} className="absolute inset-0 w-full h-full object-cover" />
+                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
+              </div>
+            ) : (
+              <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/5 flex items-center justify-center">
+                <Package className="w-10 h-10 text-accent/40" />
+                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
+              </div>
+            )}
+
+            <CardContent className="p-3 flex-1 flex flex-col">
+              {/* User */}
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {demand.profile?.avatar_url ? (
-                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full object-cover rounded" />
+                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-3.5 h-3.5 text-accent-foreground" />
+                    <User className="w-3 h-3 text-accent-foreground" />
                   )}
                 </div>
-              )}
-              <span className="text-[10px] font-medium text-foreground truncate">{demand.profile?.full_name || "Utilisateur"}</span>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold">
-                  ACHAT
-                </Badge>
-                <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{demand.category}</Badge>
+                <span className="text-[10px] font-medium text-foreground truncate">{demand.profile?.full_name || "Utilisateur"}</span>
+                <span className="text-[9px] text-muted-foreground ml-auto flex-shrink-0">{timeAgo(demand.created_at)}</span>
               </div>
 
-              <h4 className="font-semibold text-xs text-foreground line-clamp-1">{demand.title}</h4>
+              <h4 className="font-semibold text-xs text-foreground line-clamp-2 mb-1">{demand.title}</h4>
 
               {demand.description && (
-                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{demand.description}</p>
+                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed mb-1.5">{demand.description}</p>
               )}
 
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground mt-auto">
                 {demand.quantity && <span className="whitespace-nowrap">📦 {demand.quantity} {demand.unit}</span>}
                 {demand.budget && <span className="whitespace-nowrap">💰 {formatPrice(demand.budget)}</span>}
                 {demand.location && (
@@ -189,51 +188,114 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
                   </span>
                 )}
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-            {/* Actions */}
-            <div className="mt-2.5 pt-2 border-t border-border/50 space-y-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-[10px] h-7 gap-1"
-                onClick={() => openDemandConversation(demand, "chat")}
-                disabled={pendingAction === `${demand.id}-chat`}
-              >
-                {pendingAction === `${demand.id}-chat` ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <MessageCircle className="w-3 h-3" />
-                )}
-                Discuter
-              </Button>
-              <div className="flex gap-1.5">
-                <Input
-                  value={offerValues[demand.id] || ""}
-                  onChange={(event) => setOfferValues((prev) => ({ ...prev, [demand.id]: event.target.value }))}
-                  placeholder={`Qté (${demand.unit || "unité"})`}
-                  className="h-7 text-[10px] flex-1 min-w-0"
-                  inputMode="numeric"
-                />
-                <Button
-                  size="sm"
-                  className="text-[10px] h-7 gap-1 px-2.5 flex-shrink-0"
-                  onClick={() => openDemandConversation(demand, "offer")}
-                  disabled={pendingAction === `${demand.id}-offer`}
-                >
-                  {pendingAction === `${demand.id}-offer` ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+      {/* Demand Detail Sheet */}
+      <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && setSelectedDemand(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          {selectedDemand && (
+            <>
+              <SheetHeader className="pb-3">
+                <SheetTitle className="text-left text-base flex items-center gap-2">
+                  <Package className="w-5 h-5 text-accent" />
+                  Détails de la demande
+                </SheetTitle>
+              </SheetHeader>
+
+              {/* Image */}
+              {(selectedDemand as any).image_url && (
+                <div className="w-full aspect-video rounded-xl overflow-hidden mb-4 bg-muted">
+                  <img src={(selectedDemand as any).image_url} alt={selectedDemand.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              {/* Requester */}
+              <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/50 border border-border">
+                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {selectedDemand.profile?.avatar_url ? (
+                    <img src={selectedDemand.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <Package className="w-3 h-3" />
+                    <User className="w-5 h-5 text-accent-foreground" />
                   )}
-                  Proposer
-                </Button>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{selectedDemand.profile?.full_name || "Utilisateur"}</p>
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    {selectedDemand.profile?.location && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{selectedDemand.profile.location}</span>}
+                    <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{timeAgo(selectedDemand.created_at)}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+
+              {/* Title & Description */}
+              <h3 className="font-heading text-lg font-bold text-foreground mb-2">{selectedDemand.title}</h3>
+              {selectedDemand.description && (
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{selectedDemand.description}</p>
+              )}
+
+              {/* Details */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {selectedDemand.quantity && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Quantité</p>
+                    <p className="text-sm font-bold text-foreground">{selectedDemand.quantity} {selectedDemand.unit}</p>
+                  </div>
+                )}
+                {selectedDemand.budget && (
+                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Budget</p>
+                    <p className="text-sm font-bold text-foreground">{formatPrice(selectedDemand.budget)}</p>
+                  </div>
+                )}
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-[10px] text-muted-foreground mb-0.5">Catégorie</p>
+                  <p className="text-sm font-medium text-foreground">{selectedDemand.category}</p>
+                </div>
+                {selectedDemand.location && (
+                  <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Localisation</p>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedDemand.location}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3 pb-4">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => openDemandConversation(selectedDemand, "chat")}
+                  disabled={pendingAction === `${selectedDemand.id}-chat`}
+                >
+                  {pendingAction === `${selectedDemand.id}-chat` ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageCircle className="w-4 h-4" />}
+                  Discuter avec le demandeur
+                </Button>
+                <div className="flex gap-2">
+                  <Input
+                    value={offerValues[selectedDemand.id] || ""}
+                    onChange={(e) => setOfferValues((prev) => ({ ...prev, [selectedDemand.id]: e.target.value }))}
+                    placeholder={`Qté disponible (${selectedDemand.unit || "unité"})`}
+                    className="flex-1"
+                    inputMode="numeric"
+                  />
+                  <Button
+                    className="gap-2 flex-shrink-0"
+                    onClick={() => openDemandConversation(selectedDemand, "offer")}
+                    disabled={pendingAction === `${selectedDemand.id}-offer`}
+                  >
+                    {pendingAction === `${selectedDemand.id}-offer` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
+                    Proposer
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
