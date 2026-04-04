@@ -885,6 +885,7 @@ export type Database = {
           description: string | null
           id: string
           images: string[] | null
+          is_negotiable: boolean
           is_organic: boolean
           location: string | null
           min_order: number | null
@@ -892,6 +893,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          stock_status: string
           unit: string
           updated_at: string
         }
@@ -901,6 +903,7 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_negotiable?: boolean
           is_organic?: boolean
           location?: string | null
           min_order?: number | null
@@ -908,6 +911,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available?: number
+          stock_status?: string
           unit?: string
           updated_at?: string
         }
@@ -917,6 +921,7 @@ export type Database = {
           description?: string | null
           id?: string
           images?: string[] | null
+          is_negotiable?: boolean
           is_organic?: boolean
           location?: string | null
           min_order?: number | null
@@ -924,6 +929,7 @@ export type Database = {
           price?: number
           producer_id?: string
           quantity_available?: number
+          stock_status?: string
           unit?: string
           updated_at?: string
         }
