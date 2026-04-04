@@ -161,7 +161,13 @@ const MobileBottomNav = () => {
             <span className="text-[9px] font-medium">Messages</span>
           </Link>
 
-          <button onClick={() => setShowAccount(true)}
+          <button onClick={() => {
+              if (!user) {
+                navigate("/auth");
+              } else {
+                setShowAccount(true);
+              }
+            }}
             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] text-muted-foreground hover:text-foreground`}>
             <UserCircle className="w-5 h-5" />
             <span className="text-[9px] font-medium">Compte</span>

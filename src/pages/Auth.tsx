@@ -200,15 +200,15 @@ const Auth = () => {
           key={authMode}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/40 lg:to-transparent" />
-        <div className="relative z-10 flex flex-col justify-end lg:justify-center h-full p-6 sm:p-8 lg:p-12">
-          <h1 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 lg:mb-3">NUKUCONNECT</h1>
-          <p className="text-xs sm:text-sm lg:text-lg text-white/80 max-w-md leading-relaxed hidden sm:block">
+        <div className="relative z-10 flex flex-col justify-end lg:justify-center h-full p-5 sm:p-8 lg:p-12">
+          <h1 className="font-heading text-lg sm:text-2xl lg:text-4xl font-bold text-white mb-0.5 lg:mb-3">NUKUCONNECT</h1>
+          <p className="text-[11px] sm:text-sm lg:text-lg text-white/85 max-w-md leading-snug lg:leading-relaxed">
             La marketplace agricole intelligente d'Afrique. Connectez-vous avec des milliers de producteurs et acheteurs.
           </p>
-          <div className="hidden lg:flex flex-col gap-2 mt-6">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 lg:mt-6 lg:flex-col lg:gap-2">
             {["10K+ Producteurs vérifiés", "Livraison intégrée", "Assistant IA agricole"].map(text => (
-              <div key={text} className="flex items-center gap-2 text-white/90 text-sm">
-                <Check className="w-4 h-4 text-primary flex-shrink-0" />
+              <div key={text} className="flex items-center gap-1.5 lg:gap-2 text-white/90 text-[10px] lg:text-sm">
+                <Check className="w-3 h-3 lg:w-4 lg:h-4 text-primary flex-shrink-0" />
                 <span>{text}</span>
               </div>
             ))}
