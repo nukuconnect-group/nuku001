@@ -258,20 +258,20 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             {/* Header with avatar */}
             <div className="px-4 py-5 border-b border-border pr-12">
               <SheetHeader className="p-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-6 h-6 text-muted-foreground" />
+                      <User className="w-7 h-7 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-left text-sm truncate">
+                    <SheetTitle className="text-left text-[15px] font-bold tracking-tight truncate">
                       {profile?.full_name || user.email || "Mon compte"}
                     </SheetTitle>
-                    <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[10px]">
-                      <span>{getUserTypeLabel(resolvedUserType)}</span>
+                    <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[12px] mt-0.5">
+                      <span className="font-medium">{getUserTypeLabel(resolvedUserType)}</span>
                       {isProfileRefreshing && (
                         <span className="inline-flex items-center gap-1 text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
