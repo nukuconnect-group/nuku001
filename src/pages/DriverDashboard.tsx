@@ -421,6 +421,12 @@ const DriverDashboard = () => {
                 <p className="text-sm font-medium text-foreground mb-1">Mode hors ligne</p>
                 <p className="text-xs text-muted-foreground">Passez en ligne pour voir les produits disponibles à livrer.</p>
               </Card>
+            ) : hasActiveDelivery ? (
+              <Card className="p-6 text-center">
+                <Truck className="w-10 h-10 mx-auto text-orange-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Livraison en cours</p>
+                <p className="text-xs text-muted-foreground">Terminez votre livraison actuelle pour voir de nouveaux produits.</p>
+              </Card>
             ) : availableProducts.length === 0 ? (
               <Card className="p-6 text-center">
                 <ShoppingBag className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
@@ -428,61 +434,122 @@ const DriverDashboard = () => {
               </Card>
             ) : (
               <>
-                {/* Map showing product locations */}
                 <Card className="overflow-hidden">
                   <div className="h-48 rounded-lg overflow-hidden">
-                    <MapContainer
-                      center={driverPosition}
-                      zoom={12}
-                      style={{ height: "100%", width: "100%" }}
-                      zoomControl={false}
-                      attributionControl={false}
-                    >
+                    <MapContainer center={driverPosition} zoom={12} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker position={driverPosition}>
-                        <Popup>📍 Votre position</Popup>
-                      </Marker>
+                      <Marker position={driverPosition}><Popup>📍 Votre position</Popup></Marker>
                     </MapContainer>
                   </div>
                 </Card>
                 <p className="text-xs text-muted-foreground">{availableProducts.length} produits disponibles à livrer</p>
-                {availableProducts.map((product: any) => (
-                  <Card key={product.id} className="overflow-hidden">
-                    <CardContent className="p-3 flex gap-3 items-center">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        {product.images?.[0] ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{product.name}</p>
-                        <p className="text-xs text-primary font-semibold">{product.price?.toLocaleString()} F / {product.unit}</p>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{product.location || product.profiles?.location || "Non spécifié"}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          {product.profiles?.avatar_url ? (
-                            <img src={product.profiles.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                {availableProducts.map((product: any) => {
+                  const prodLat = product.lat || 6.17;
+                  const prodLng = product.lng || 1.23;
+                  const dist = haversineKm(driverPosition[0], driverPosition[1], prodLat, prodLng);
+                  return (
+                    <Card key={product.id} className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedProduct(product)}>
+                      <CardContent className="p-3 flex gap-3 items-center">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          {product.images?.[0] ? (
+                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                           ) : (
-                            <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <span className="text-[8px] text-primary font-bold">{(product.profiles?.full_name || "?")[0]}</span>
-                            </div>
+                            <div className="w-full h-full flex items-center justify-center"><Package className="w-6 h-6 text-muted-foreground" /></div>
                           )}
-                          <span className="text-[10px] text-muted-foreground truncate">{product.profiles?.full_name || "Inconnu"}</span>
                         </div>
-                      </div>
-                      <Badge className="text-[10px] whitespace-nowrap flex-shrink-0">{product.quantity_available} {product.unit}</Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{product.name}</p>
+                          <p className="text-xs text-primary font-semibold">{product.price?.toLocaleString()} F / {product.unit}</p>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{product.location || product.profiles?.location || "Non spécifié"}</span>
+                            <span className="text-primary font-medium ml-auto flex-shrink-0">~{dist.toFixed(1)} km</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {product.profiles?.avatar_url ? (
+                              <img src={product.profiles.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <span className="text-[8px] text-primary font-bold">{(product.profiles?.full_name || "?")[0]}</span>
+                              </div>
+                            )}
+                            <span className="text-[10px] text-muted-foreground truncate">{product.profiles?.full_name || "Inconnu"}</span>
+                          </div>
+                        </div>
+                        <Badge className="text-[10px] whitespace-nowrap flex-shrink-0">{product.quantity_available} {product.unit}</Badge>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </>
             )}
           </TabsContent>
+
+          {/* Product Detail Dialog */}
+          <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+            <DialogContent className="max-w-md">
+              {selectedProduct && (() => {
+                const prodLat = selectedProduct.lat || 6.17;
+                const prodLng = selectedProduct.lng || 1.23;
+                const distToSeller = haversineKm(driverPosition[0], driverPosition[1], prodLat, prodLng);
+                return (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-base">{selectedProduct.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {selectedProduct.images?.[0] && (
+                        <img src={selectedProduct.images[0]} alt={selectedProduct.name} className="w-full h-48 object-cover rounded-lg" />
+                      )}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-muted/50 rounded-lg p-2.5">
+                          <p className="text-[10px] text-muted-foreground">Prix</p>
+                          <p className="font-bold text-primary">{selectedProduct.price?.toLocaleString()} F/{selectedProduct.unit}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-2.5">
+                          <p className="text-[10px] text-muted-foreground">Stock</p>
+                          <p className="font-bold">{selectedProduct.quantity_available} {selectedProduct.unit}</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-2.5">
+                          <p className="text-[10px] text-muted-foreground">Distance fournisseur</p>
+                          <p className="font-bold text-orange-600">{distToSeller.toFixed(1)} km</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-2.5">
+                          <p className="text-[10px] text-muted-foreground">Localité</p>
+                          <p className="font-bold">{selectedProduct.location || selectedProduct.profiles?.location || "—"}</p>
+                        </div>
+                      </div>
+                      {selectedProduct.description && (
+                        <p className="text-xs text-muted-foreground">{selectedProduct.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 bg-muted/30 rounded-lg p-2.5">
+                        {selectedProduct.profiles?.avatar_url ? (
+                          <img src={selectedProduct.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-xs text-primary font-bold">{(selectedProduct.profiles?.full_name || "?")[0]}</span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium">{selectedProduct.profiles?.full_name || "Fournisseur"}</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedProduct.profiles?.location || ""}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="hero" className="flex-1" onClick={() => {
+                          navigate(`/produit/${selectedProduct.id}`);
+                          setSelectedProduct(null);
+                        }}>
+                          <Package className="w-4 h-4 mr-1" /> Voir le produit
+                        </Button>
+                        <Button variant="outline" onClick={() => setSelectedProduct(null)}>Fermer</Button>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </DialogContent>
+          </Dialog>
 
           {/* Available Deliveries */}
           <TabsContent value="available" className="space-y-3 mt-3">
@@ -494,6 +561,18 @@ const DriverDashboard = () => {
                 <Button variant="hero" size="sm" onClick={toggleAvailability} disabled={isToggling}>
                   {isToggling ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
                   Passer en ligne
+                </Button>
+              </Card>
+            ) : hasActiveDelivery ? (
+              <Card className="p-6 text-center">
+                <Truck className="w-10 h-10 mx-auto text-orange-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Livraison en cours</p>
+                <p className="text-xs text-muted-foreground">Vous avez une livraison active. Terminez-la avant d'en accepter une nouvelle.</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => {
+                  const tabEl = document.querySelector('[data-state="inactive"][value="active"]') as HTMLElement;
+                  tabEl?.click();
+                }}>
+                  <Truck className="w-4 h-4 mr-1" /> Voir ma livraison
                 </Button>
               </Card>
             ) : availableDeliveries.length === 0 ? (
