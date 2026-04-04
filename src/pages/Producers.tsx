@@ -157,7 +157,7 @@ const Producers = () => {
             alt="Réseau NukuConnect" width={1600} height={640} 
             className="w-full h-full object-cover" 
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
