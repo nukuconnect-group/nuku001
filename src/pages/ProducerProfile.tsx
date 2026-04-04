@@ -156,6 +156,42 @@ const ProducerProfile = () => {
     enabled: !!producer?.id,
   });
 
+  // Fetch driver profile & ratings if this profile is a driver
+  const { data: driverProfile } = useQuery({
+    queryKey: ["driver-profile", producer?.user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("driver_profiles")
+        .select("*")
+        .eq("user_id", producer!.user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!producer?.user_id && producer?.user_type === "driver",
+  });
+
+  const { data: driverRatings = [] } = useQuery({
+    queryKey: ["driver-ratings", driverProfile?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("driver_ratings")
+        .select("*")
+        .eq("driver_id", driverProfile!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (!data) return [];
+      // Fetch reviewer names
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
+      return data.map(r => ({ ...r, reviewer: profileMap[r.user_id] || null }));
+    },
+    enabled: !!driverProfile?.id,
+  });
+
   const mappedProducts: Product[] = products.map(p => ({
     id: p.id,
     name: p.name,
