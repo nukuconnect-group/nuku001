@@ -1,10 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const BodySchema = z.object({
+  user_id: z.string().uuid(),
+  role: z.enum(["buyer", "producer"]),
+  profile_id: z.string().uuid(),
+  location: z.string().max(200).optional().nullable(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,7 +20,16 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, role, profile_id, location } = await req.json();
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { user_id, role, profile_id, location } = parsed.data;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -21,7 +38,6 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Gather context data based on role
     let contextData: any = {};
 
     if (role === "buyer") {
@@ -58,7 +74,6 @@ serve(async (req) => {
       };
     }
 
-    // Build prompt for AI
     const systemPrompt = role === "buyer"
       ? `Tu es un moteur de recommandation intelligent pour une marketplace agricole africaine. Analyse les données utilisateur et retourne des recommandations personnalisées au format JSON strict.`
       : `Tu es un conseiller IA pour les fournisseurs d'une marketplace agricole africaine. Analyse les données du fournisseur et du marché pour générer des recommandations business au format JSON strict.`;
@@ -129,7 +144,6 @@ Maximum 5 éléments par catégorie.`;
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content || "{}";
     
-    // Extract JSON from response (handle markdown code blocks)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1];
@@ -148,7 +162,7 @@ Maximum 5 éléments par catégorie.`;
     });
   } catch (e) {
     console.error("ai-recommendations error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const BodySchema = z.object({
+  imageBase64: z.string().min(1, "Image requise").max(10_000_000, "Image trop volumineuse"),
+  mimeType: z.string().regex(/^image\/(jpeg|png|gif|webp|bmp)$/, "Type MIME invalide").optional().default("image/jpeg"),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,15 +17,19 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, mimeType } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Données invalides", details: parsed.error.flatten().fieldErrors }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { imageBase64, mimeType } = parsed.data;
 
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    if (!imageBase64) {
-      throw new Error("No image provided");
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -65,7 +75,7 @@ Si tu ne détectes pas de produit agricole, réponds:
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}`
+                  url: `data:${mimeType};base64,${imageBase64}`
                 }
               },
               {
@@ -102,7 +112,6 @@ Si tu ne détectes pas de produit agricole, réponds:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Extract JSON from response (may be wrapped in markdown code block)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1].trim();
@@ -126,7 +135,7 @@ Si tu ne détectes pas de produit agricole, réponds:
     }
   } catch (e) {
     console.error("image-search error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
