@@ -254,6 +254,30 @@ const Marketplace = () => {
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [marketView, setMarketView] = useState<"products" | "demands">("products");
   const sponsoredRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const ITEMS_PER_PAGE = 20;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [searchQuery, selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, priceRange]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filteredProducts?.length, allProducts?.length]);
 
   const handleCompare = (product: Product) => {
     setCompareProducts((prev) => {
