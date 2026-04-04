@@ -361,9 +361,10 @@ const DriverDashboard = () => {
           <Card className="p-3">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="text-xs text-muted-foreground">Revenus</span>
+              <span className="text-xs text-muted-foreground">Solde</span>
             </div>
-            <p className="text-lg font-bold">{totalEarnings.toLocaleString()} F</p>
+            <p className="text-lg font-bold">{availableBalance.toLocaleString()} F</p>
+            <p className="text-[9px] text-muted-foreground">Total: {totalEarnings.toLocaleString()} F</p>
           </Card>
           <Card className="p-3">
             <div className="flex items-center gap-2 mb-1">
