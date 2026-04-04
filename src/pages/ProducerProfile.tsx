@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
-  Package, ShoppingBag
+  Package, ShoppingBag, Truck, User
 } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
