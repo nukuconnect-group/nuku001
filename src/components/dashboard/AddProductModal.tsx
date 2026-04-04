@@ -149,8 +149,9 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         min_order: String(editProduct.min_order || "1"),
         deliveryDelay: "immediate",
         saleMode: "retail",
-        negotiable: false,
+        negotiable: editProduct.is_negotiable || false,
         deliveryAvailable: true,
+        stockStatus: editProduct.stock_status || "in_stock",
       });
       if (editProduct.images?.length) {
         setImagePreviews(editProduct.images);
