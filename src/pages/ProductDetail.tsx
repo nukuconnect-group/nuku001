@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -183,6 +184,30 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <SEO
+        url={`/produit/${id}`}
+        title={product.name}
+        description={product.description || `${product.name} - ${product.price} FCFA/${product.unit}. Disponible à ${product.location}.`}
+        image={images[0] || undefined}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "description": product.description || product.name,
+          "image": images[0] || "",
+          "offers": {
+            "@type": "Offer",
+            "price": product.price,
+            "priceCurrency": "XOF",
+            "availability": product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": {
+              "@type": "Organization",
+              "name": product.producer?.name || "NUKUCONNECT"
+            }
+          }
+        }}
+      />
       <Header />
       <main>
         {/* Back button */}

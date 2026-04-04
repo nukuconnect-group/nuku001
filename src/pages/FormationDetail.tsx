@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -120,6 +121,13 @@ const FormationDetail = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO
+        url={`/formations/${id}`}
+        title={formation.title}
+        description={formation.description || `Formation agricole : ${formation.title}. Niveau ${formation.level}.`}
+        image={formation.image_url || undefined}
+        type="article"
+      />
       <Header />
 
       {/* Hero */}

@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -147,6 +148,11 @@ const Producers = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <SEO
+        url="/producteurs"
+        title="Producteurs et Fournisseurs Vérifiés"
+        description="Découvrez les producteurs et fournisseurs agricoles vérifiés d'Afrique. Suivez-les et achetez directement auprès d'eux."
+      />
       <Header />
 
       {/* Hero with background image */}

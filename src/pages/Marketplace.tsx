@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -566,6 +567,11 @@ const Marketplace = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO
+        url="/marketplace"
+        title="Marketplace - Produits Agricoles d'Afrique"
+        description="Explorez des milliers de produits agricoles frais et certifiés. Achetez directement aux producteurs vérifiés d'Afrique."
+      />
       <Header />
       <MarketplacePromoPopup />
 

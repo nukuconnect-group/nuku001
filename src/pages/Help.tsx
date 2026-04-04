@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -151,6 +152,7 @@ const Help = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO url="/aide" title="Centre d'Aide et FAQ" description="Trouvez des réponses à toutes vos questions sur NUKUCONNECT. FAQ, guides d'utilisation et support client." />
       <Header />
       <main>
         <div className="bg-primary/5 border-b border-border py-8 sm:py-12">

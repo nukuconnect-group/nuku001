@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -118,6 +119,7 @@ const BecomeSeller = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
+      <SEO url="/devenir-fournisseur" title="Devenir Fournisseur" description="Rejoignez NUKUCONNECT et vendez vos produits agricoles à des milliers d'acheteurs. Inscription gratuite et rapide." />
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-5xl">
         <div className="mb-6">
