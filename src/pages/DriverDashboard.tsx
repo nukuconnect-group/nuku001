@@ -58,9 +58,15 @@ const DriverDashboard = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
   const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
+  // Withdrawal form
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawPhone, setWithdrawPhone] = useState("");
+  const [withdrawOperator, setWithdrawOperator] = useState("flooz");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
