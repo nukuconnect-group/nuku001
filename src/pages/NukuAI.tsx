@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
