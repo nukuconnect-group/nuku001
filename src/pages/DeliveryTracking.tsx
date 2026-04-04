@@ -48,13 +48,28 @@ const DeliveryTracking = () => {
       const orderIds = data.map((o: any) => o.id);
       const { data: dels } = await supabase
         .from("deliveries")
-        .select("*, driver_profiles(profile_id, profiles:profile_id(full_name))")
+        .select("*")
         .in("order_id", orderIds);
       const delMap: Record<string, any> = {};
-      ((dels as any[]) || []).forEach((d: any) => {
-        const driverName = d.driver_profiles?.profiles?.full_name;
-        delMap[d.order_id] = { ...d, driver_name: driverName || null };
-      });
+      for (const d of ((dels as any[]) || [])) {
+        let driverName: string | null = null;
+        if (d.driver_id) {
+          const { data: dp } = await supabase
+            .from("driver_profiles")
+            .select("profile_id")
+            .eq("id", d.driver_id)
+            .maybeSingle();
+          if (dp?.profile_id) {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", dp.profile_id)
+              .maybeSingle();
+            driverName = prof?.full_name || null;
+          }
+        }
+        delMap[d.order_id] = { ...d, driver_name: driverName };
+      }
       setDeliveries(delMap);
     }
   };
