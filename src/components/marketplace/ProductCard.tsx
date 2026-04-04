@@ -115,7 +115,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — Alibaba-style tall ratio */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+          <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
           
           {/* Top badges */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
