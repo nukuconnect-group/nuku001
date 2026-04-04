@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PAYGATE_API_KEY = "5dc35b39-431a-4f14-b61e-f28190174385";
+const PAYGATE_API_KEY = Deno.env.get("PAYGATE_API_KEY") || "";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
