@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import DriverBadges from "@/components/driver/DriverBadges";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
   Package, ShoppingBag, Truck, User
