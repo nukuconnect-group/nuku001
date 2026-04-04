@@ -278,6 +278,7 @@ const DriverDashboard = () => {
   const totalWithdrawn = withdrawals.filter(w => w.status === "completed").reduce((sum, w) => sum + w.amount, 0);
   const availableBalance = totalEarnings - totalWithdrawn;
   const activeDeliveries = myDeliveries.filter(d => ["accepted", "picked_up", "in_transit"].includes(d.status));
+  const hasActiveDelivery = activeDeliveries.length > 0;
 
   const handleWithdrawal = async () => {
     if (!user || !profile) return;
