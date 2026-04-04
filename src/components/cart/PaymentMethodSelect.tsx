@@ -38,6 +38,7 @@ const PaymentMethodSelect = ({
   onPaymentSuccess,
   hidePayButton = false,
   isPolling = false,
+  onNetworkChange,
 }: PaymentMethodSelectProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<string>("");
