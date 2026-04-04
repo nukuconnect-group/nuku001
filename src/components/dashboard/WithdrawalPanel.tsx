@@ -89,16 +89,18 @@ const WithdrawalPanel = () => {
     if (!user || !profile) return;
 
     setIsSubmitting(true);
-    const { error } = await supabase.from("withdrawals").insert({
-      user_id: user.id,
-      profile_id: profile.id,
-      amount: numAmount,
-      operator,
-      phone_number: phoneNumber,
+    const { data: result, error } = await supabase.functions.invoke("create-withdrawal", {
+      body: {
+        amount: numAmount,
+        operator,
+        phone_number: phoneNumber,
+      },
     });
 
-    if (error) {
-      toast({ title: "Erreur lors de la demande", description: error.message, variant: "destructive" });
+    const fnError = error || (result?.error ? { message: result.error } : null);
+
+    if (fnError) {
+      toast({ title: "Erreur lors de la demande", description: fnError.message, variant: "destructive" });
     } else {
       toast({ title: "Demande envoyée ✅", description: "Votre demande de retrait sera traitée sous 24-48h" });
       setAmount("");
