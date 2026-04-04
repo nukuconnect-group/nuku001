@@ -486,7 +486,7 @@ const Cart = () => {
               {/* Payment section: only shown after clicking "Passer la commande" */}
               {showPaymentStep && (
                 <div className="animate-fade-in" id="payment-section">
-                  <PaymentMethodSelect
+                <PaymentMethodSelect
                     paymentMethod={paymentMethod}
                     onPaymentMethodChange={setPaymentMethod}
                     mobileNumber={mobileNumber}
@@ -494,6 +494,7 @@ const Cart = () => {
                     amount={finalTotal}
                     hidePayButton
                     isPolling={pollingEnabled}
+                    onNetworkChange={setSelectedNetwork}
                   />
                 </div>
               )}
