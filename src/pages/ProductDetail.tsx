@@ -158,7 +158,7 @@ const ProductDetail = () => {
     }
   };
 
-  if (isLoading && isUUID) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
