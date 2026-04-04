@@ -357,28 +357,34 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               {/* Country */}
               <div className="py-1">
-                <div className="px-4 py-3.5 border-b border-border/30">
+                <div className="px-4 py-3.5 border-b border-border/20">
                   <div className="flex items-center gap-3.5 mb-2">
-                    <Globe className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs font-medium uppercase tracking-wide">PAYS</span>
+                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <span className="text-[13px] font-medium tracking-tight">Pays</span>
                   </div>
-                  <div className="ml-8">
-                    <p className="text-xs text-foreground">📍 {profile?.location || "Togo"}</p>
+                  <div className="ml-12">
+                    <p className="text-[12px] text-muted-foreground">📍 {profile?.location || "Togo"}</p>
                   </div>
                 </div>
 
                 {/* Help & Settings */}
                 <Link to="/aide" onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <HelpCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-xs font-medium uppercase tracking-wide">CENTRE D'ASSISTANCE</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="flex-1 text-[13px] font-medium tracking-tight">Centre d'assistance</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
                 <Link to="/settings" onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/30">
-                  <Settings className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-xs font-medium uppercase tracking-wide">PARAMÈTRES</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/60 flex-shrink-0" />
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="flex-1 text-[13px] font-medium tracking-tight">Paramètres</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
               </div>
             </nav>
