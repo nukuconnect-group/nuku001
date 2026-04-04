@@ -376,6 +376,7 @@ const DriverDashboard = () => {
                 ))}
               </>
             )}
+            )}
           </TabsContent>
 
           {/* Available Deliveries */}
