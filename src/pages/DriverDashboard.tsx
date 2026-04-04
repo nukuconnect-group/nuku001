@@ -79,15 +79,7 @@ const DriverDashboard = () => {
   const [withdrawPhone, setWithdrawPhone] = useState("");
   const [withdrawOperator, setWithdrawOperator] = useState("flooz");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
-  const firstName = profile?.full_name?.split(" ")[0] || "Livreur";
-
-  const fetchDriverData = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
       // Fetch driver profile
       const { data: dp } = await supabase
         .from("driver_profiles" as any)
