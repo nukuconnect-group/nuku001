@@ -1323,6 +1323,10 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }
+      get_driver_for_delivery: {
+        Args: { p_delivery_id: string }
+        Returns: Json
+      }
       get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
       get_user_subscription: {
         Args: { p_user_id: string }

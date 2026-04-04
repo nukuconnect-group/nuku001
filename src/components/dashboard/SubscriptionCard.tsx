@@ -34,23 +34,18 @@ const SubscriptionCard = () => {
   const plan = subscription ? planDetails[subscription.plan] || planDetails.free : null;
   const PlanIcon = plan?.icon || Zap;
 
-  const handleQuickUpgrade = async (planId: string, maxProducts: number) => {
+  const handleQuickUpgrade = async (planId: string, _maxProducts: number) => {
     setUpgrading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Non connecté");
 
-      const { error } = await supabase.from("subscriptions" as any).upsert({
-        user_id: session.user.id,
-        plan: planId,
-        billing_period: "monthly",
-        max_products: maxProducts,
-        status: "active",
-        started_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      } as any, { onConflict: "user_id" });
+      const { data, error } = await supabase.functions.invoke("update-subscription", {
+        body: { plan: planId, billing_period: "monthly" },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       await refreshSubscription();
       toast({ title: "Plan mis à jour !", description: `Vous êtes maintenant sur le plan ${planDetails[planId]?.name || planId}.` });
     } catch (error: any) {
