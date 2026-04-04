@@ -47,6 +47,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const FormationDetail = lazy(() => import("./pages/FormationDetail"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,6 +116,7 @@ const App = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                   <Route path="/panier" element={<Cart />} />
+                  <Route path="/commande/:id" element={<OrderDetail />} />
                   <Route path="/driver-dashboard" element={<DriverDashboard />} />
                   <Route path="/learner-dashboard" element={<LearnerDashboard />} />
                   <Route path="/plans" element={<Plans />} />
