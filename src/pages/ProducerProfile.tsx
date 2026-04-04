@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
-  Package, ShoppingBag
+  Package, ShoppingBag, Truck, User
 } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -154,6 +154,42 @@ const ProducerProfile = () => {
       return count || 0;
     },
     enabled: !!producer?.id,
+  });
+
+  // Fetch driver profile & ratings if this profile is a driver
+  const { data: driverProfile } = useQuery({
+    queryKey: ["driver-profile", producer?.user_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("driver_profiles")
+        .select("*")
+        .eq("user_id", producer!.user_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!producer?.user_id && producer?.user_type === "driver",
+  });
+
+  const { data: driverRatings = [] } = useQuery({
+    queryKey: ["driver-ratings", driverProfile?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("driver_ratings")
+        .select("*")
+        .eq("driver_id", driverProfile!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (!data) return [];
+      // Fetch reviewer names
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
+      return data.map(r => ({ ...r, reviewer: profileMap[r.user_id] || null }));
+    },
+    enabled: !!driverProfile?.id,
   });
 
   const mappedProducts: Product[] = products.map(p => ({
@@ -308,6 +344,58 @@ const ProducerProfile = () => {
                     </Marker>
                   </MapContainer>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Driver Ratings History */}
+          {driverProfile && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Truck className="w-5 h-5 text-primary" />
+                  Évaluations livreur
+                  {driverProfile.rating && (
+                    <Badge variant="secondary" className="ml-auto gap-1">
+                      <Star className="w-3 h-3 fill-accent text-accent" />
+                      {Number(driverProfile.rating).toFixed(1)}/5
+                    </Badge>
+                  )}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {driverProfile.total_deliveries || 0} livraisons • {driverProfile.vehicle_type}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {driverRatings.length > 0 ? (
+                  driverRatings.map((r: any) => (
+                    <div key={r.id} className="flex gap-3 p-3 rounded-lg border border-border">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {r.reviewer?.avatar_url ? (
+                          <img src={r.reviewer.avatar_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-medium">{r.reviewer?.full_name || "Client"}</span>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((s: number) => (
+                              <Star key={s} className={`w-3 h-3 ${s <= r.rating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        {r.comment && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{r.comment}</p>}
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {new Date(r.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">Aucune évaluation pour le moment</p>
+                )}
               </CardContent>
             </Card>
           )}
