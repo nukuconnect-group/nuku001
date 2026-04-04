@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -17,7 +20,7 @@ import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
   DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
-  ShoppingBag, Settings
+  ShoppingBag, Settings, Wallet, ArrowDownToLine, History
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
@@ -55,9 +58,15 @@ const DriverDashboard = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
   const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
+  // Withdrawal form
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawPhone, setWithdrawPhone] = useState("");
+  const [withdrawOperator, setWithdrawOperator] = useState("flooz");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
@@ -102,8 +111,15 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        // Use demo products if none exist
         setAvailableProducts(products && products.length > 0 ? products : demoProducts);
+
+        // Fetch withdrawals
+        const { data: wds } = await supabase
+          .from("withdrawals")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+        setWithdrawals(wds || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
@@ -246,7 +262,42 @@ const DriverDashboard = () => {
   // Stats
   const completedDeliveries = myDeliveries.filter(d => d.status === "delivered");
   const totalEarnings = completedDeliveries.reduce((sum, d) => sum + (d.driver_fee || 0), 0);
+  const totalWithdrawn = withdrawals.filter(w => w.status === "completed").reduce((sum, w) => sum + w.amount, 0);
+  const availableBalance = totalEarnings - totalWithdrawn;
   const activeDeliveries = myDeliveries.filter(d => ["accepted", "picked_up", "in_transit"].includes(d.status));
+
+  const handleWithdrawal = async () => {
+    if (!user || !profile) return;
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0 || amount > availableBalance) {
+      toast({ title: "Montant invalide", description: `Solde disponible: ${availableBalance.toLocaleString()} FCFA`, variant: "destructive" });
+      return;
+    }
+    if (!withdrawPhone.trim()) {
+      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone.", variant: "destructive" });
+      return;
+    }
+    setIsWithdrawing(true);
+    try {
+      const { data: profileData } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+      if (!profileData) throw new Error("Profil introuvable");
+      const { error } = await supabase.from("withdrawals").insert({
+        user_id: user.id,
+        profile_id: profileData.id,
+        amount,
+        phone_number: withdrawPhone,
+        operator: withdrawOperator,
+      });
+      if (error) throw error;
+      toast({ title: "✅ Demande envoyée", description: `Retrait de ${amount.toLocaleString()} FCFA en cours de traitement.` });
+      setWithdrawAmount("");
+      fetchDriverData();
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
 
   if (profileLoading || isLoading) {
     return (
@@ -310,9 +361,10 @@ const DriverDashboard = () => {
           <Card className="p-3">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="text-xs text-muted-foreground">Revenus</span>
+              <span className="text-xs text-muted-foreground">Solde</span>
             </div>
-            <p className="text-lg font-bold">{totalEarnings.toLocaleString()} F</p>
+            <p className="text-lg font-bold">{availableBalance.toLocaleString()} F</p>
+            <p className="text-[9px] text-muted-foreground">Total: {totalEarnings.toLocaleString()} F</p>
           </Card>
           <Card className="p-3">
             <div className="flex items-center gap-2 mb-1">
@@ -331,7 +383,7 @@ const DriverDashboard = () => {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="products" className="text-xs">
               Produits
             </TabsTrigger>
@@ -340,6 +392,9 @@ const DriverDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="active" className="text-xs">
               En cours {activeDeliveries.length > 0 && `(${activeDeliveries.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="wallet" className="text-xs">
+              <Wallet className="w-3 h-3 mr-0.5" />Gains
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">Histo</TabsTrigger>
           </TabsList>
@@ -571,6 +626,107 @@ const DriverDashboard = () => {
                   </Card>
                 );
               })
+            )}
+          </TabsContent>
+
+          {/* Wallet / Earnings */}
+          <TabsContent value="wallet" className="space-y-4 mt-3">
+            {/* Balance card */}
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+              <CardContent className="p-4 space-y-3">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Solde disponible</p>
+                  <p className="text-3xl font-bold text-primary">{availableBalance.toLocaleString()} FCFA</p>
+                  <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                    <span>Total gagné: {totalEarnings.toLocaleString()} F</span>
+                    <span>Retiré: {totalWithdrawn.toLocaleString()} F</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Withdrawal form */}
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ArrowDownToLine className="w-4 h-4 text-primary" />
+                  Demander un retrait
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-2 space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Montant (FCFA)</Label>
+                  <Input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder={`Max: ${availableBalance.toLocaleString()}`}
+                    max={availableBalance}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Opérateur</Label>
+                  <Select value={withdrawOperator} onValueChange={setWithdrawOperator}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="flooz">Moov Money / Flooz</SelectItem>
+                      <SelectItem value="tmoney">T-Money</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Numéro de téléphone</Label>
+                  <Input
+                    type="tel"
+                    value={withdrawPhone}
+                    onChange={(e) => setWithdrawPhone(e.target.value)}
+                    placeholder="+228 XX XX XX XX"
+                  />
+                </div>
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={handleWithdrawal}
+                  disabled={isWithdrawing || availableBalance <= 0}
+                >
+                  {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wallet className="w-4 h-4 mr-2" />}
+                  Demander le retrait
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Withdrawal history */}
+            {withdrawals.length > 0 && (
+              <Card>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    Historique des retraits
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-2 space-y-2">
+                  {withdrawals.map((w: any) => (
+                    <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                      <div>
+                        <p className="text-sm font-medium">{w.amount.toLocaleString()} FCFA</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {w.operator === "flooz" ? "Moov" : "T-Money"} • {w.phone_number}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(w.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <Badge className={
+                        w.status === "completed" ? "bg-green-100 text-green-800" :
+                        w.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-red-100 text-red-800"
+                      }>
+                        {w.status === "completed" ? "Effectué" : w.status === "pending" ? "En attente" : "Refusé"}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 

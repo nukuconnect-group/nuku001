@@ -127,6 +127,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     saleMode: "retail",
     negotiable: false,
     deliveryAvailable: true,
+    stockStatus: "in_stock",
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
@@ -149,8 +150,9 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         min_order: String(editProduct.min_order || "1"),
         deliveryDelay: "immediate",
         saleMode: "retail",
-        negotiable: false,
+        negotiable: editProduct.is_negotiable || false,
         deliveryAvailable: true,
+        stockStatus: editProduct.stock_status || "in_stock",
       });
       if (editProduct.images?.length) {
         setImagePreviews(editProduct.images);
@@ -217,7 +219,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         imageUrls = [...imageUrls, ...uploaded];
       }
 
-      const productData = {
+      const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
@@ -226,6 +228,8 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         quantity_available: parseFloat(newProduct.quantity_available),
         location: newProduct.location,
         is_organic: newProduct.is_organic,
+        is_negotiable: newProduct.negotiable,
+        stock_status: newProduct.stockStatus || (parseFloat(newProduct.quantity_available) > 0 ? 'in_stock' : 'out_of_stock'),
         min_order: parseFloat(newProduct.min_order) || 1,
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
@@ -619,6 +623,23 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 checked={newProduct.deliveryAvailable}
                 onCheckedChange={(v) => setNewProduct({ ...newProduct, deliveryAvailable: v })}
               />
+            </div>
+            <div className="p-3 sm:p-4 bg-muted rounded-xl space-y-2">
+              <Label className="text-sm sm:text-base">Statut du stock</Label>
+              <Select
+                value={newProduct.stockStatus}
+                onValueChange={(v) => setNewProduct({ ...newProduct, stockStatus: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="En stock" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="in_stock">✅ En stock</SelectItem>
+                  <SelectItem value="low_stock">⚠️ Stock faible</SelectItem>
+                  <SelectItem value="restocking">🔄 En réapprovisionnement</SelectItem>
+                  <SelectItem value="out_of_stock">❌ Rupture de stock</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
