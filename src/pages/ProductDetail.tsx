@@ -47,9 +47,12 @@ const ProductDetail = () => {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
-  const isUUID = id && id.length > 10;
-  const { data: dbProduct, isLoading } = useProduct(isUUID ? id! : "");
-  const product = dbProduct || null;
+  const isUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
+  const { data: dbProductById, isLoading: loadingById } = useProduct(isUUID ? id! : "");
+  const { data: dbProductBySlug, isLoading: loadingBySlug } = useProductBySlug(!isUUID && id ? id : "");
+  
+  const product = dbProductById || dbProductBySlug || null;
+  const isLoading = isUUID ? loadingById : loadingBySlug;
 
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
