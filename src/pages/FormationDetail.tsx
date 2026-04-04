@@ -130,7 +130,7 @@ const FormationDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <SEO
-        url={`/formations/${id}`}
+        url={`/formations/${formation.slug || id}`}
         title={formation.title}
         description={formation.description || `Formation agricole : ${formation.title}. Niveau ${formation.level}.`}
         image={formation.image_url || undefined}
