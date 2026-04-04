@@ -161,7 +161,7 @@ const Producers = () => {
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
               <Users className="w-3 h-3 mr-1" />
               {t("net.badge")}
             </Badge>
