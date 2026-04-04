@@ -391,8 +391,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
           </div>
         ) : (
           // Not logged in view
-          <div className="h-full flex flex-col">
-            <div className="px-4 pt-5 pb-4 border-b border-border">
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="px-4 pt-5 pb-4 border-b border-border flex-shrink-0">
               <SheetHeader className="p-0">
                 <SheetTitle>Mon compte</SheetTitle>
                 <SheetDescription>Connectez-vous ou créez un compte NUKUCONNECT</SheetDescription>
