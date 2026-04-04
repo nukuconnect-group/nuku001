@@ -209,7 +209,7 @@ const Formations = () => {
                         </div>
                       )}
                       <div className="mt-auto">
-                        <Link to={`/formations/${course.id}`}>
+                        <Link to={`/formations/${course.slug || course.id}`}>
                           <Button variant="hero" size="sm" className="w-full gap-1 text-[10px] sm:text-xs">
                             {prog > 0 ? <><Play className="w-3 h-3" />Continuer</> : <><GraduationCap className="w-3 h-3" />{course.is_paid ? "S'inscrire" : "Commencer"}</>}
                           </Button>

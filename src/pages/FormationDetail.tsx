@@ -28,11 +28,19 @@ const FormationDetail = () => {
   useEffect(() => {
     if (!id) return;
     const load = async () => {
-      const [formRes, modRes] = await Promise.all([
-        supabase.from("formations" as any).select("*").eq("id", id).single(),
-        supabase.from("formation_modules" as any).select("*").eq("formation_id", id).order("sort_order", { ascending: true }),
-      ]);
-      setFormation(formRes.data);
+      // Try by UUID first, then by slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const formRes = isUUID
+        ? await supabase.from("formations" as any).select("*").eq("id", id).single()
+        : await supabase.from("formations" as any).select("*").eq("slug", id).single();
+      
+      const formationData = formRes.data as any;
+      setFormation(formationData);
+      
+      if (!formationData) { setLoading(false); return; }
+      
+      const formationId = formationData.id;
+      const modRes = await supabase.from("formation_modules" as any).select("*").eq("formation_id", formationId).order("sort_order", { ascending: true });
       setModules((modRes.data as any[]) || []);
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,7 +50,7 @@ const FormationDetail = () => {
           .from("formation_progress" as any)
           .select("module_id, completed")
           .eq("user_id", session.user.id)
-          .eq("formation_id", id);
+          .eq("formation_id", formationId);
 
         const progMap: Record<string, boolean> = {};
         ((progData as any[]) || []).forEach((p: any) => {
@@ -60,12 +68,13 @@ const FormationDetail = () => {
   }, [id]);
 
   const toggleModuleComplete = async (moduleId: string) => {
-    if (!userId || !id) return;
+    if (!userId || !formation) return;
+    const formationId = formation.id;
     const isCompleted = !progress[moduleId];
 
     const { error } = await supabase.from("formation_progress" as any).upsert({
       user_id: userId,
-      formation_id: id,
+      formation_id: formationId,
       module_id: moduleId,
       completed: isCompleted,
       progress_percent: 0,
@@ -81,7 +90,7 @@ const FormationDetail = () => {
       // Update overall progress
       await supabase.from("formation_progress" as any).upsert({
         user_id: userId,
-        formation_id: id,
+        formation_id: formationId,
         module_id: null,
         completed: pct === 100,
         progress_percent: pct,
@@ -122,7 +131,7 @@ const FormationDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <SEO
-        url={`/formations/${id}`}
+        url={`/formations/${formation.slug || id}`}
         title={formation.title}
         description={formation.description || `Formation agricole : ${formation.title}. Niveau ${formation.level}.`}
         image={formation.image_url || undefined}
