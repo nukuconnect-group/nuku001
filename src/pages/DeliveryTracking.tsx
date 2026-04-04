@@ -403,7 +403,17 @@ const DeliveryTracking = () => {
                       ))}
                     </div>
 
-                    <div className="flex gap-2 mt-3">
+                    {/* Live driver tracking map */}
+                    {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) && (
+                      <div className="my-4">
+                        <DriverLiveMap
+                          delivery={deliveries[selectedOrder.id]}
+                          driverName={deliveries[selectedOrder.id]?.driver_name}
+                        />
+                      </div>
+                    )}
+
+
                       {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
                         <DeliveryChat
                           deliveryId={deliveries[selectedOrder.id].id}
