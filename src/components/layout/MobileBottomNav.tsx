@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
-import AddProductModal from "@/components/dashboard/AddProductModal";
-import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const AddProductModal = lazy(() => import("@/components/dashboard/AddProductModal"));
+const AccountSidebar = lazy(() => import("./AccountSidebar"));
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -175,7 +176,9 @@ const MobileBottomNav = () => {
         </div>
       </nav>
       
-      <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
+      <Suspense fallback={null}>
+        <AccountSidebar isOpen={showAccount} onClose={() => setShowAccount(false)} />
+      </Suspense>
 
       {/* Become Seller Dialog */}
       <AlertDialog open={showBecomeSellerDialog} onOpenChange={setShowBecomeSellerDialog}>
@@ -207,17 +210,19 @@ const MobileBottomNav = () => {
       </AlertDialog>
 
       {profile && (
-        <AddProductModal
-          open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
-          onOpenChange={(open) => {
-            if (!open) setShowAddProduct(false);
-          }}
-          profileId={profile.id}
-          onProductAdded={() => {
-            toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
-            setShowAddProduct(false);
-          }}
-        />
+        <Suspense fallback={null}>
+          <AddProductModal
+            open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => {
+              if (!open) setShowAddProduct(false);
+            }}
+            profileId={profile.id}
+            onProductAdded={() => {
+              toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
+              setShowAddProduct(false);
+            }}
+          />
+        </Suspense>
       )}
     </>
   );
