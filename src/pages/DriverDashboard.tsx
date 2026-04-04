@@ -383,7 +383,7 @@ const DriverDashboard = () => {
         </div>
 
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="products" className="text-xs">
               Produits
             </TabsTrigger>
@@ -392,6 +392,9 @@ const DriverDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="active" className="text-xs">
               En cours {activeDeliveries.length > 0 && `(${activeDeliveries.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="wallet" className="text-xs">
+              <Wallet className="w-3 h-3 mr-0.5" />Gains
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">Histo</TabsTrigger>
           </TabsList>
