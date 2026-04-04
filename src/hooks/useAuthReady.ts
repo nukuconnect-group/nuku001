@@ -13,12 +13,23 @@ export function useAuthReady() {
     initializedRef.current = true;
 
     let isMounted = true;
+    // Longer timeout for PWA/installed apps on slow connections
+    const timeoutMs = window.matchMedia?.('(display-mode: standalone)')?.matches ? 5000 : 3000;
     const readyTimeout = window.setTimeout(() => {
       if (!isMounted) return;
-      setSession(null);
-      setUser(null);
-      setIsReady(true);
-    }, 2200);
+      // Instead of clearing session, try one more getSession before giving up
+      supabase.auth.getSession().then(({ data: { session: lastChance } }) => {
+        if (!isMounted) return;
+        setSession(lastChance);
+        setUser(lastChance?.user ?? null);
+        setIsReady(true);
+      }).catch(() => {
+        if (!isMounted) return;
+        setSession(null);
+        setUser(null);
+        setIsReady(true);
+      });
+    }, timeoutMs);
 
     const applyAuthState = (nextSession: Session | null) => {
       if (!isMounted) return;
