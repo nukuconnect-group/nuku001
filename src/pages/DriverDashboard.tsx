@@ -374,7 +374,17 @@ const DriverDashboard = () => {
 
           {/* Available Deliveries */}
           <TabsContent value="available" className="space-y-3 mt-3">
-            {availableDeliveries.length === 0 ? (
+            {!driverProfile?.is_available ? (
+              <Card className="p-6 text-center">
+                <XCircle className="w-10 h-10 mx-auto text-red-400 mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Vous êtes hors ligne</p>
+                <p className="text-xs text-muted-foreground mb-3">Activez votre disponibilité pour voir les livraisons disponibles.</p>
+                <Button variant="hero" size="sm" onClick={toggleAvailability} disabled={isToggling}>
+                  {isToggling ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                  Passer en ligne
+                </Button>
+              </Card>
+            ) : availableDeliveries.length === 0 ? (
               <Card className="p-6 text-center">
                 <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">Aucune livraison disponible pour le moment</p>
