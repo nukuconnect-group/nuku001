@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Truck, GraduationCap, BookOpen, ArrowLeft, Check } from "lucide-react";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
+import authHeroImg from "@/assets/auth-hero-agriculture.jpg";
 
 const sectors = [
   "Céréales & Légumineuses", "Maraîchage", "Fruits", "Tubercules",
