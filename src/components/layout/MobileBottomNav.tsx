@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
-import AddProductModal from "@/components/dashboard/AddProductModal";
-import AccountSidebar from "./AccountSidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const AddProductModal = lazy(() => import("@/components/dashboard/AddProductModal"));
+const AccountSidebar = lazy(() => import("./AccountSidebar"));
 
 const MobileBottomNav = () => {
   const location = useLocation();
