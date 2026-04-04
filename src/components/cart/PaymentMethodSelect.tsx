@@ -26,6 +26,7 @@ interface PaymentMethodSelectProps {
   onPaymentSuccess?: (transactionId: string) => void;
   hidePayButton?: boolean;
   isPolling?: boolean;
+  onNetworkChange?: (network: string) => void;
 }
 
 const PaymentMethodSelect = ({
@@ -37,6 +38,7 @@ const PaymentMethodSelect = ({
   onPaymentSuccess,
   hidePayButton = false,
   isPolling = false,
+  onNetworkChange,
 }: PaymentMethodSelectProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<string>("");
@@ -147,7 +149,12 @@ const PaymentMethodSelect = ({
               <button
                 key={n.id}
                 type="button"
-                onClick={() => !isDisabled && setSelectedNetwork(n.id)}
+                onClick={() => {
+                  if (!isDisabled) {
+                    setSelectedNetwork(n.id);
+                    onNetworkChange?.(n.id);
+                  }
+                }}
                 className={`rounded-xl bg-background border-2 p-2 text-center transition-all ${
                   selectedNetwork === n.id
                     ? "border-primary shadow-sm ring-1 ring-primary/30"

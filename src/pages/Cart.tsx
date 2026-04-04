@@ -44,6 +44,7 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("paygate");
   const [mobileNumber, setMobileNumber] = useState("");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState("");
 
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -301,6 +302,16 @@ const Cart = () => {
       return;
     }
 
+    if (!selectedNetwork) {
+      toast({ title: "Mode de paiement requis", description: "Veuillez sélectionner un mode de paiement (Moov, T-Money ou Carte bancaire).", variant: "destructive" });
+      return;
+    }
+
+    if (selectedNetwork !== "CARD" && !mobileNumber.trim()) {
+      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
+      return;
+    }
+
     setIsCheckingOut(true);
     try {
       const { data: buyerProfile } = await supabase
@@ -325,7 +336,7 @@ const Cart = () => {
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
           phone_number: mobileNumber.replace(/\s/g, ""),
-          network: "",
+          network: selectedNetwork === "CARD" ? "" : selectedNetwork,
         },
       });
 
@@ -333,10 +344,18 @@ const Cart = () => {
 
       if (data?.mode === "redirect" && data?.payment_url) {
         window.open(data.payment_url, "_blank");
+        toast({ title: "💳 Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
+      } else if (selectedNetwork === "CARD") {
+        // For CARD, if no redirect URL, show error
+        toast({ title: "Erreur carte", description: "Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.", variant: "destructive" });
+        setIsCheckingOut(false);
+        setPendingCheckoutData(null);
+        return;
+      } else {
+        toast({ title: "💳 Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
       }
 
       setPollingEnabled(true);
-      toast({ title: "💳 Paiement initié", description: "Validez la transaction sur votre téléphone ou complétez le paiement dans la fenêtre ouverte." });
     } catch (error: any) {
       console.error("Checkout error:", error);
       setIsCheckingOut(false);
@@ -485,7 +504,7 @@ const Cart = () => {
               {/* Payment section: only shown after clicking "Passer la commande" */}
               {showPaymentStep && (
                 <div className="animate-fade-in" id="payment-section">
-                  <PaymentMethodSelect
+                <PaymentMethodSelect
                     paymentMethod={paymentMethod}
                     onPaymentMethodChange={setPaymentMethod}
                     mobileNumber={mobileNumber}
@@ -493,6 +512,7 @@ const Cart = () => {
                     amount={finalTotal}
                     hidePayButton
                     isPolling={pollingEnabled}
+                    onNetworkChange={setSelectedNetwork}
                   />
                 </div>
               )}
