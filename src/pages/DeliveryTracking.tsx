@@ -12,8 +12,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import DriverLiveMap from "@/components/delivery/DriverLiveMap";
+import DriverRatingModal from "@/components/delivery/DriverRatingModal";
 import { 
-  Truck, Package, Clock, CheckCircle2, MessageCircle, 
+  Truck, Package, Clock, CheckCircle2, MessageCircle, Star,
   AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
 } from "lucide-react";
 
