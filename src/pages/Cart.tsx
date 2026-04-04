@@ -251,16 +251,21 @@ const Cart = () => {
     navigate("/suivi-livraison");
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
 
-  // Paygate polling callbacks
+  // Paygate polling callbacks — use ref to avoid stale closure
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
-    if (pendingCheckoutData) {
-      finalizeOrder(pendingCheckoutData).catch((err) => {
+    const checkoutData = pendingCheckoutRef.current;
+    if (checkoutData) {
+      finalizeOrder(checkoutData).catch((err) => {
+        console.error("Finalize order error:", err);
         toast({ title: "Erreur", description: err.message, variant: "destructive" });
       });
+    } else {
+      console.error("Payment completed but no checkout data found");
+      toast({ title: "Erreur", description: "Données de commande introuvables. Contactez le support.", variant: "destructive" });
     }
-  }, [pendingCheckoutData, finalizeOrder, toast]);
+  }, [finalizeOrder, toast]);
 
   const handlePaymentFailed = useCallback(() => {
     setPollingEnabled(false);
