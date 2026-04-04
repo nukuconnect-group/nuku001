@@ -188,7 +188,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO
-        url={`/produit/${id}`}
+        url={`/produit/${product.slug || id}`}
         title={product.name}
         description={product.description || `${product.name} - ${product.price} FCFA/${product.unit}. Disponible à ${product.location}.`}
         image={images[0] || undefined}
