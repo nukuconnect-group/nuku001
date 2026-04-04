@@ -19,11 +19,11 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { type, id } = await req.json();
-    // type: "product" | "demand"
 
     let content: any = null;
     let userId: string = "";
     let imageUrl: string | null = null;
+    let itemName: string = "";
 
     if (type === "product") {
       const { data } = await supabase.from("products").select("*, profiles!products_producer_id_fkey(user_id, full_name)").eq("id", id).single();
@@ -31,14 +31,26 @@ serve(async (req) => {
       content = data;
       userId = data.profiles?.user_id || "";
       imageUrl = data.images?.[0] || null;
+      itemName = data.name;
     } else if (type === "demand") {
       const { data } = await supabase.from("demands").select("*").eq("id", id).single();
       if (!data) throw new Error("Demand not found");
       content = data;
       userId = data.user_id;
       imageUrl = data.image_url || null;
+      itemName = data.title;
     } else {
       throw new Error("Invalid type. Must be 'product' or 'demand'.");
+    }
+
+    // Step 1: Notify user that verification is in progress
+    if (userId) {
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "system",
+        title: "🔍 Vérification en cours",
+        description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" est en cours de vérification automatique. Cela prend quelques instants...`,
+      });
     }
 
     // Build moderation prompt
@@ -85,7 +97,15 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI moderation error:", aiResponse.status, errText);
-      // On AI failure, approve by default (don't block users)
+      // On AI failure, approve by default and notify user
+      if (userId) {
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type: "system",
+          title: "✅ Publication approuvée",
+          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été approuvé(e) et est maintenant visible sur la marketplace.`,
+        });
+      }
       return new Response(JSON.stringify({ approved: true, reason: "Modération automatique indisponible" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -94,7 +114,7 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "";
     
-    // Parse AI response - strip markdown code blocks if present
+    // Parse AI response
     let modResult: any;
     try {
       const cleaned = rawContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
@@ -106,15 +126,26 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
 
     const isApproved = modResult.approved !== false;
 
-    // If rejected, notify the user and admins
-    if (!isApproved && userId) {
-      // Notify the user
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        type: "system",
-        title: "❌ Publication refusée",
-        description: `Votre ${type === "product" ? "produit" : "demande"} "${type === "product" ? content.name : content.title}" ne respecte pas les normes : ${modResult.reason || "Contenu non conforme"}`,
-      });
+    if (isApproved) {
+      // Step 2a: Notify user of approval
+      if (userId) {
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type: "system",
+          title: "✅ Publication approuvée !",
+          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et approuvé(e) par notre IA. Elle est maintenant visible sur la marketplace !`,
+        });
+      }
+    } else {
+      // Step 2b: Notify user of rejection
+      if (userId) {
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          type: "system",
+          title: "❌ Publication refusée",
+          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" ne respecte pas les normes : ${modResult.reason || "Contenu non conforme"}. Elle a été retirée de la marketplace.`,
+        });
+      }
 
       // Notify admins
       const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
@@ -124,12 +155,12 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
             user_id: a.user_id,
             type: "system",
             title: "⚠️ Publication signalée par l'IA",
-            description: `${type === "product" ? "Produit" : "Demande"} "${type === "product" ? content.name : content.title}" refusé. Raison: ${modResult.reason || "Non conforme"}`,
+            description: `${type === "product" ? "Produit" : "Demande"} "${itemName}" refusé. Raison: ${modResult.reason || "Non conforme"}`,
           }))
         );
       }
 
-      // Soft-delete: for products, remove it; for demands, set status to rejected
+      // Soft-delete
       if (type === "product") {
         await supabase.from("products").delete().eq("id", id);
       } else {

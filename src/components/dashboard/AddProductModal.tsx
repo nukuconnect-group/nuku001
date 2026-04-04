@@ -238,7 +238,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       } else {
         const { data: insertedProduct, error } = await supabase.from("products").insert(productData).select("id").single();
         if (error) throw error;
-        toast({ title: "Produit publié !", description: "Votre produit est en cours de vérification automatique." });
+        toast({ title: "📤 Produit publié !", description: "Votre produit est en cours de vérification par notre IA. Vous serez notifié dans quelques instants." });
         // Trigger async AI moderation (non-blocking)
         if (insertedProduct?.id) {
           supabase.functions.invoke("moderate-content", { body: { type: "product", id: insertedProduct.id } }).catch(err => console.warn("Moderation check:", err));
