@@ -68,12 +68,13 @@ const FormationDetail = () => {
   }, [id]);
 
   const toggleModuleComplete = async (moduleId: string) => {
-    if (!userId || !id) return;
+    if (!userId || !formation) return;
+    const formationId = formation.id;
     const isCompleted = !progress[moduleId];
 
     const { error } = await supabase.from("formation_progress" as any).upsert({
       user_id: userId,
-      formation_id: id,
+      formation_id: formationId,
       module_id: moduleId,
       completed: isCompleted,
       progress_percent: 0,
@@ -89,7 +90,7 @@ const FormationDetail = () => {
       // Update overall progress
       await supabase.from("formation_progress" as any).upsert({
         user_id: userId,
-        formation_id: id,
+        formation_id: formationId,
         module_id: null,
         completed: pct === 100,
         progress_percent: pct,
