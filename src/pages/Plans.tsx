@@ -63,14 +63,19 @@ const Plans = () => {
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
 
-  const activateSubscription = useCallback(async (planId: string) => {
+  const activateSubscription = useCallback(async (planId: string, paymentProof?: { identifier?: string; tx_reference?: string }) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
     const { data, error } = await supabase.functions.invoke("update-subscription", {
-      body: { plan: planId, billing_period: billing },
+      body: {
+        plan: planId,
+        billing_period: billing,
+        payment_identifier: paymentProof?.identifier,
+        payment_tx_reference: paymentProof?.tx_reference,
+      },
     });
 
     if (error) throw error;
@@ -94,9 +99,12 @@ const Plans = () => {
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     if (paymentStep) {
-      activateSubscription(paymentStep);
+      activateSubscription(paymentStep, {
+        identifier: paymentIdentifier,
+        tx_reference: data?.tx_reference,
+      });
     }
-  }, [paymentStep, activateSubscription]);
+  }, [paymentIdentifier, paymentStep, activateSubscription]);
 
   const handlePaymentFailed = useCallback(() => {
     setPollingEnabled(false);
@@ -154,6 +162,12 @@ const Plans = () => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
     const price = billing === "monthly" ? plan.monthlyPrice : plan.annualPrice;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Connexion requise", description: "Connectez-vous pour poursuivre le paiement.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
 
     if (selectedNetwork !== "CARD" && !phoneNumber) {
       toast({ title: "Numéro requis", description: "Entrez votre numéro Mobile Money.", variant: "destructive" });
@@ -162,7 +176,7 @@ const Plans = () => {
 
     setSubscribing(planId);
     try {
-      const identifier = `NUKU-SUB-${planId}-${Date.now()}`;
+      const identifier = `NUKU-SUB-${session.user.id}-${planId}-${billing}-${Date.now()}`;
       setPaymentIdentifier(identifier);
 
       const { data, error } = await supabase.functions.invoke("paygate-init", {

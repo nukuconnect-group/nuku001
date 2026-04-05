@@ -87,6 +87,10 @@ interface ActivateMembershipParams {
   location?: string;
   bio?: string;
   phone?: string;
+  paymentProof?: {
+    identifier?: string;
+    tx_reference?: string;
+  };
 }
 
 export async function activateMembership({
@@ -100,7 +104,12 @@ export async function activateMembership({
   location,
   bio,
   phone,
+  paymentProof,
 }: ActivateMembershipParams) {
+  if (planId !== "free" && !paymentProof?.identifier && !paymentProof?.tx_reference) {
+    throw new Error("Le paiement doit être confirmé depuis la page Tarifs pour activer un pack payant.");
+  }
+
   const profileUpdates: Record<string, string> = {};
 
   if (typeof fullName === "string") profileUpdates.full_name = fullName;
@@ -122,7 +131,14 @@ export async function activateMembership({
 
   const { data: subData, error: subscriptionError } = await supabase.functions.invoke(
     "update-subscription",
-    { body: { plan: planId, billing_period: billing } }
+    {
+      body: {
+        plan: planId,
+        billing_period: billing,
+        payment_identifier: paymentProof?.identifier,
+        payment_tx_reference: paymentProof?.tx_reference,
+      },
+    }
   );
 
   if (subscriptionError) throw subscriptionError;

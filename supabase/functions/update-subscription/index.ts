@@ -7,16 +7,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number }> = {
-  free: { maxProducts: 3, monthlyPrice: 0 },
-  pro: { maxProducts: 15, monthlyPrice: 5000 },
-  business: { maxProducts: 9999, monthlyPrice: 15000 },
-  enterprise: { maxProducts: 9999, monthlyPrice: 50000 },
+const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number; annualPrice: number }> = {
+  free: { maxProducts: 3, monthlyPrice: 0, annualPrice: 0 },
+  pro: { maxProducts: 15, monthlyPrice: 5000, annualPrice: 50000 },
+  business: { maxProducts: 9999, monthlyPrice: 15000, annualPrice: 150000 },
+  enterprise: { maxProducts: 9999, monthlyPrice: 50000, annualPrice: 500000 },
 };
+
+const PAYMENT_VALIDITY_WINDOW_MS = 30 * 60 * 1000;
 
 const BodySchema = z.object({
   plan: z.enum(["free", "pro", "business", "enterprise"]),
   billing_period: z.enum(["monthly", "annual"]),
+  payment_identifier: z.string().min(1).max(255).optional(),
+  payment_tx_reference: z.string().min(1).max(255).optional(),
 });
 
 serve(async (req) => {
@@ -58,15 +62,101 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { plan, billing_period } = parsed.data;
+    const { plan, billing_period, payment_identifier, payment_tx_reference } = parsed.data;
 
     const planConfig = VALID_PLANS[plan];
+    const expectedAmount = billing_period === "monthly" ? planConfig.monthlyPrice : planConfig.annualPrice;
     const now = new Date();
     const expiresAt = billing_period === "monthly"
       ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: existingSubscription } = await adminClient
+      .from("subscriptions")
+      .select("plan, status, expires_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (
+      plan !== "free" &&
+      existingSubscription?.plan === plan &&
+      existingSubscription.status === "active" &&
+      existingSubscription.expires_at &&
+      new Date(existingSubscription.expires_at).getTime() > now.getTime()
+    ) {
+      return new Response(JSON.stringify({ error: "Ce plan est déjà actif." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (plan !== "free") {
+      if (!payment_identifier && !payment_tx_reference) {
+        return new Response(JSON.stringify({ error: "Paiement requis pour ce plan." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const paygateApiKey = Deno.env.get("PAYGATE_API_KEY") || "";
+      if (!paygateApiKey) {
+        return new Response(JSON.stringify({ error: "Configuration de paiement indisponible." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const statusBody = new URLSearchParams();
+      statusBody.append("auth_token", paygateApiKey);
+      if (payment_identifier) statusBody.append("identifier", payment_identifier);
+      if (payment_tx_reference) statusBody.append("tx_reference", payment_tx_reference);
+
+      const statusResponse = await fetch("https://paygateglobal.com/api/v1/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: statusBody.toString(),
+      });
+
+      const rawStatusPayload = await statusResponse.text();
+      let paymentStatus: any;
+      try {
+        paymentStatus = JSON.parse(rawStatusPayload);
+      } catch {
+        return new Response(JSON.stringify({ error: "Impossible de vérifier le paiement." }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const rawStatus = typeof paymentStatus.status === "number"
+        ? paymentStatus.status
+        : Number.parseInt(String(paymentStatus.status ?? "-1"), 10);
+
+      if (rawStatus !== 0) {
+        return new Response(JSON.stringify({ error: "Paiement non confirmé." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const paidAmount = Number(paymentStatus.amount);
+      if (!Number.isFinite(paidAmount) || paidAmount !== expectedAmount) {
+        return new Response(JSON.stringify({ error: "Le montant du paiement ne correspond pas au plan choisi." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const paymentDate = paymentStatus.datetime ? new Date(paymentStatus.datetime) : null;
+      if (!paymentDate || Number.isNaN(paymentDate.getTime()) || now.getTime() - paymentDate.getTime() > PAYMENT_VALIDITY_WINDOW_MS) {
+        return new Response(JSON.stringify({ error: "La confirmation du paiement a expiré. Veuillez réessayer." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const { error: upsertError } = await adminClient
       .from("subscriptions")
