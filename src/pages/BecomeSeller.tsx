@@ -83,6 +83,15 @@ const BecomeSeller = () => {
       return;
     }
 
+    if (selectedPlan !== "free") {
+      toast({
+        title: "Paiement requis",
+        description: "Les packs payants s'activent désormais depuis la page Tarifs après confirmation du paiement.",
+      });
+      navigate("/plans");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await activateMembership({
