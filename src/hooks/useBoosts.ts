@@ -14,25 +14,20 @@ export interface ProductBoost {
   created_at: string;
 }
 
+/** Returns only product IDs that are currently boosted (no financial data exposed) */
 export const useActiveBoosts = () => {
   return useQuery({
     queryKey: ["active-boosts"],
     queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("product_boosts")
-        .select("*")
-        .eq("is_active", true)
-        .gte("expires_at", now)
-        .order("price", { ascending: false });
-
+      const { data, error } = await supabase.rpc("get_boosted_product_ids" as any);
       if (error) throw error;
-      return (data || []) as ProductBoost[];
+      return (data || []) as { product_id: string }[];
     },
     staleTime: 1000 * 60 * 2,
   });
 };
 
+/** Returns full boost data for the current user's own product */
 export const useProductBoosts = (productId?: string) => {
   return useQuery({
     queryKey: ["product-boosts", productId],
@@ -50,9 +45,8 @@ export const useProductBoosts = (productId?: string) => {
   });
 };
 
-export const isProductBoosted = (boosts: ProductBoost[], productId: string): boolean => {
-  const now = new Date();
-  return boosts.some(b => b.product_id === productId && b.is_active && new Date(b.expires_at) > now);
+export const isProductBoosted = (boosts: { product_id: string }[], productId: string): boolean => {
+  return boosts.some(b => b.product_id === productId);
 };
 
 export const getBoostPlan = (boosts: ProductBoost[], productId: string): string | null => {
