@@ -1287,6 +1287,29 @@ export type Database = {
       }
     }
     Views: {
+      active_boosts_public: {
+        Row: {
+          is_active: boolean | null
+          product_id: string | null
+        }
+        Insert: {
+          is_active?: boolean | null
+          product_id?: string | null
+        }
+        Update: {
+          is_active?: boolean | null
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_boosts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_profiles_public: {
         Row: {
           id: string | null
