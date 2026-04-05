@@ -1327,6 +1327,10 @@ export type Database = {
         Returns: undefined
       }
       count_user_products: { Args: { p_user_id: string }; Returns: number }
+      enroll_paid_formation: {
+        Args: { p_formation_id: string; p_user_id: string }
+        Returns: string
+      }
       get_admin_analytics: { Args: never; Returns: Json }
       get_admin_orders: { Args: never; Returns: Json[] }
       get_admin_stats: { Args: never; Returns: Json }
