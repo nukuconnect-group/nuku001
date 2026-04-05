@@ -1332,6 +1332,12 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }
+      get_boosted_product_ids: {
+        Args: never
+        Returns: {
+          product_id: string
+        }[]
+      }
       get_driver_for_delivery: {
         Args: { p_delivery_id: string }
         Returns: Json
