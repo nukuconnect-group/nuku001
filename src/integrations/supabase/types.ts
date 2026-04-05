@@ -1287,29 +1287,6 @@ export type Database = {
       }
     }
     Views: {
-      active_boosts_public: {
-        Row: {
-          is_active: boolean | null
-          product_id: string | null
-        }
-        Insert: {
-          is_active?: boolean | null
-          product_id?: string | null
-        }
-        Update: {
-          is_active?: boolean | null
-          product_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_boosts_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       driver_profiles_public: {
         Row: {
           id: string | null
@@ -1355,6 +1332,12 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }
+      get_boosted_product_ids: {
+        Args: never
+        Returns: {
+          product_id: string
+        }[]
+      }
       get_driver_for_delivery: {
         Args: { p_delivery_id: string }
         Returns: Json
