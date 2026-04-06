@@ -11,10 +11,17 @@ const BodySchema = z.object({
   amount: z.number().positive().max(50_000_000),
   description: z.string().max(500).optional().default("Paiement NUKUCONNECT"),
   identifier: z.string().min(1).max(255),
-  phone_number: z.string().regex(/^\d{8,15}$/).optional(),
+  phone_number: z.string().max(20).optional(),
   network: z.enum(["FLOOZ", "TMONEY", "CARD"]).optional(),
   use_redirect: z.boolean().optional(),
 });
+
+// Strip phone to digits only, remove leading 228 country code
+const cleanPhoneNumber = (phone?: string): string => {
+  if (!phone) return "";
+  const digits = phone.replace(/[^\d]/g, "");
+  return digits.startsWith("228") && digits.length > 8 ? digits.slice(3) : digits;
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -54,7 +61,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { amount, description, identifier, phone_number, network, use_redirect } = parsed.data;
+    const { amount, description, identifier, phone_number: rawPhone, network, use_redirect } = parsed.data;
+    const phone_number = cleanPhoneNumber(rawPhone);
 
     const isCard = use_redirect || !network || network === "CARD";
 
