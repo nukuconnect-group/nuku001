@@ -61,7 +61,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { amount, description, identifier, phone_number, network, use_redirect } = parsed.data;
+    const { amount, description, identifier, phone_number: rawPhone, network, use_redirect } = parsed.data;
+    const phone_number = cleanPhoneNumber(rawPhone);
 
     const isCard = use_redirect || !network || network === "CARD";
 
