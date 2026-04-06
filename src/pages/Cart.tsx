@@ -367,13 +367,14 @@ const Cart = () => {
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
 
+      const phoneDigits = cleanPhone(mobileNumber);
       const { data, error } = await supabase.functions.invoke("paygate-init", {
         body: {
           amount: finalTotal,
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
-          phone_number: mobileNumber.replace(/\s/g, ""),
-          network: selectedNetwork === "CARD" ? "" : selectedNetwork,
+          ...(selectedNetwork !== "CARD" && phoneDigits ? { phone_number: phoneDigits } : {}),
+          ...(selectedNetwork && selectedNetwork !== "CARD" ? { network: selectedNetwork } : {}),
           use_redirect: selectedNetwork === "CARD",
         },
       });
