@@ -108,150 +108,175 @@ const Cart = () => {
   const deliveryPrice = dynamicDeliveryPrice || selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice - promoDiscount;
 
+  // Strip phone to digits only for Paygate API
+  const cleanPhone = (phone: string) => phone.replace(/[^\d]/g, "").replace(/^228/, "");
+
   // Finalize order after payment success
   const finalizeOrder = useCallback(async (checkoutData: any) => {
-    const { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId } = checkoutData;
-    const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-    const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
+    try {
+      const { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId } = checkoutData;
+      const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+      const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
 
-    if (!hasRealProducts) {
-      generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
-      toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
-      clearCart();
-      navigate("/suivi-livraison");
-      return;
-    }
+      if (!hasRealProducts) {
+        generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
+        toast({ title: t("cart.orderSent"), description: t("cart.orderSentDesc") });
+        clearCart();
+        navigate("/suivi-livraison");
+        return;
+      }
 
-    const orderIds: string[] = [];
-    for (const item of items) {
-      const sellerId = item.product.producer.id;
-      const productId = item.product.id;
-      if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
+      const orderIds: string[] = [];
+      for (const item of items) {
+        const sellerId = item.product.producer.id;
+        const productId = item.product.id;
+        if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
 
-      const { data: orderData, error } = await supabase.from("orders").insert({
-        buyer_id: buyerProfile.id,
-        seller_id: sellerId,
-        product_id: productId,
-        quantity: item.quantity,
-        total_price: item.product.price * item.quantity,
-        status: "confirmed",
-        notes: [
-          `Client: ${buyerFullName} | ${billing.phone}`,
-          deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
-          `Paiement: ${selectedPayment?.name} ✅`,
-          selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "Livreur: attribution automatique",
-          mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
-        ].filter(Boolean).join(" | "),
-      }).select("id").single();
-
-      if (error) throw error;
-      if (orderData) orderIds.push(orderData.id);
-    }
-
-    // Create delivery records
-    if (deliveryMethod !== "pickup" && orderIds.length > 0) {
-      const driverFee = Math.round(deliveryPrice * 0.8);
-      const platformFee = deliveryPrice - driverFee;
-
-      for (const orderId of orderIds) {
-        const deliveryInsert = await supabase.from("deliveries" as any).insert({
-          order_id: orderId,
-          driver_id: selectedRealDriverId,
-          dropoff_address: `${deliveryCity}, ${fullAddress}`,
-          delivery_fee: deliveryPrice,
-          driver_fee: driverFee,
-          platform_fee: platformFee,
-          distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null,
-          estimated_minutes: dynamicDeliveryPrice > 0 ? Math.round((dynamicDeliveryPrice / 100) * 5) : null,
-          status: selectedRealDriverId ? "accepted" : "pending",
-          accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
+        const { data: orderData, error } = await supabase.from("orders").insert({
+          buyer_id: buyerProfile.id,
+          seller_id: sellerId,
+          product_id: productId,
+          quantity: item.quantity,
+          total_price: item.product.price * item.quantity,
+          status: "confirmed",
+          notes: [
+            `Client: ${buyerFullName} | ${billing.phone}`,
+            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
+            `Paiement: ${selectedPayment?.name} ✅`,
+            selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "Livreur: attribution automatique",
+            mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
+          ].filter(Boolean).join(" | "),
         }).select("id").single();
 
-        const deliveryData = deliveryInsert.data as unknown as { id: string } | null;
+        if (error) {
+          console.error("Order insert error:", error);
+          throw new Error("Erreur lors de la création de la commande. Contactez le support.");
+        }
+        if (orderData) orderIds.push(orderData.id);
+      }
 
-        if (deliveryData?.id) {
-          const orderItemsSummary = items
-            .map((cartItem) => `• ${cartItem.product.name} — ${cartItem.quantity} × ${cartItem.product.price.toLocaleString()} FCFA`)
-            .join("\n");
+      // Create delivery records
+      if (deliveryMethod !== "pickup" && orderIds.length > 0) {
+        const driverFee = Math.round(deliveryPrice * 0.8);
+        const platformFee = deliveryPrice - driverFee;
 
-          await supabase.from("delivery_messages").insert({
-            delivery_id: deliveryData.id,
-            sender_id: user.id,
-            sender_role: "buyer",
-            content: [
-              `Bonjour 👋, voici les détails de ma commande :`,
-              orderItemsSummary,
-              `Adresse : ${deliveryCity}, ${fullAddress}`,
-              `Mode de livraison : ${selectedDelivery?.name}`,
-              `Livreur demandé : ${selectedDriver?.profile?.full_name || "Attribution automatique"}`,
-            ].join("\n"),
-          } as any);
+        for (const orderId of orderIds) {
+          try {
+            const deliveryInsert = await supabase.from("deliveries").insert({
+              order_id: orderId,
+              driver_id: selectedRealDriverId || null,
+              dropoff_address: `${deliveryCity}, ${fullAddress}`,
+              delivery_fee: deliveryPrice,
+              driver_fee: driverFee,
+              platform_fee: platformFee,
+              distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null,
+              estimated_minutes: dynamicDeliveryPrice > 0 ? Math.round((dynamicDeliveryPrice / 100) * 5) : null,
+              status: selectedRealDriverId ? "accepted" : "pending",
+              accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
+            }).select("id").single();
+
+            const deliveryData = deliveryInsert.data as unknown as { id: string } | null;
+
+            if (deliveryData?.id) {
+              const orderItemsSummary = items
+                .map((cartItem) => `• ${cartItem.product.name} — ${cartItem.quantity} × ${cartItem.product.price.toLocaleString()} FCFA`)
+                .join("\n");
+
+              await supabase.from("delivery_messages").insert({
+                delivery_id: deliveryData.id,
+                sender_id: user.id,
+                sender_role: "buyer",
+                content: [
+                  `Bonjour 👋, voici les détails de ma commande :`,
+                  orderItemsSummary,
+                  `Adresse : ${deliveryCity}, ${fullAddress}`,
+                  `Mode de livraison : ${selectedDelivery?.name}`,
+                  `Livreur demandé : ${selectedDriver?.profile?.full_name || "Attribution automatique"}`,
+                ].join("\n"),
+              } as any);
+            }
+          } catch (deliveryErr) {
+            console.error("Delivery creation error (non-blocking):", deliveryErr);
+            // Don't fail the whole order for delivery creation issues
+          }
         }
       }
-    }
 
-    // Generate invoice PDF
-    generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
-
-    // Send confirmation email
-    const now = new Date();
-    const invoiceNumber = `NK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
-    supabase.functions.invoke("order-confirmation", {
-      body: {
-        buyerEmail: billing.email,
-        buyerName: buyerFullName,
-        orderItems: items.map(item => ({
-          name: item.product.name,
-          quantity: item.quantity,
-          unitPrice: item.product.price,
-          unit: item.product.unit,
-          sellerName: item.product.producer.name,
-        })),
-        subtotal: total,
-        deliveryPrice,
-        total: finalTotal,
-        deliveryMethod: selectedDelivery?.name || "Retrait",
-        paymentMethod: selectedPayment?.name || "Mobile Money",
-        deliveryCity,
-        deliveryAddress: fullAddress,
-        invoiceNumber,
-        orderDate: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
-      },
-    }).catch(err => console.error("Email confirmation error:", err));
-
-    // Notify admin about the new order
-    const orderSummary = items.map(i => `${i.product.name} x${i.quantity}`).join(", ");
-    supabase.from("notifications").insert({
-      user_id: user.id, // will be replaced below with admin user_ids
-      type: "order",
-      title: "🛒 Nouvelle commande confirmée",
-      description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
-    }).then(() => {});
-
-    // Also notify all admins
-    supabase.from("user_roles").select("user_id").eq("role", "admin").then(({ data: admins }) => {
-      if (admins?.length) {
-        const adminNotifs = admins.map(a => ({
-          user_id: a.user_id,
-          type: "order",
-          title: "🛒 Nouvelle commande confirmée",
-          description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Livraison: ${selectedDelivery?.name || "Retrait"}. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
-        }));
-        supabase.from("notifications").insert(adminNotifs).then(() => {});
+      // Generate invoice PDF
+      try {
+        generateOrderInvoice(items, total, deliveryPrice, finalTotal, selectedDelivery?.name || "", selectedPayment?.name || "", buyerFullName, billing.phone, deliveryCity, fullAddress, mobileNumber);
+      } catch (pdfErr) {
+        console.error("PDF generation error (non-blocking):", pdfErr);
       }
-    });
 
-    // Notify buyer in their account
-    supabase.from("notifications").insert({
-      user_id: user.id,
-      type: "order",
-      title: "✅ Commande confirmée !",
-      description: `Votre commande ${invoiceNumber} de ${finalTotal.toLocaleString()} FCFA a été confirmée. Facture PDF disponible.`,
-    }).then(() => {});
+      // Send confirmation email (non-blocking)
+      const now = new Date();
+      const invoiceNumber = `NK-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+      supabase.functions.invoke("order-confirmation", {
+        body: {
+          buyerEmail: billing.email,
+          buyerName: buyerFullName,
+          orderItems: items.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            unitPrice: item.product.price,
+            unit: item.product.unit,
+            sellerName: item.product.producer.name,
+          })),
+          subtotal: total,
+          deliveryPrice,
+          total: finalTotal,
+          deliveryMethod: selectedDelivery?.name || "Retrait",
+          paymentMethod: selectedPayment?.name || "Mobile Money",
+          deliveryCity,
+          deliveryAddress: fullAddress,
+          invoiceNumber,
+          orderDate: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+        },
+      }).catch(err => console.error("Email confirmation error:", err));
 
-    toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers le suivi de livraison..." });
-    clearCart();
-    navigate("/suivi-livraison");
+      // Notify admin about the new order (non-blocking)
+      const orderSummary = items.map(i => `${i.product.name} x${i.quantity}`).join(", ");
+      supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "order",
+        title: "🛒 Nouvelle commande confirmée",
+        description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+      }).then(() => {});
+
+      supabase.from("user_roles").select("user_id").eq("role", "admin").then(({ data: admins }) => {
+        if (admins?.length) {
+          const adminNotifs = admins.map(a => ({
+            user_id: a.user_id,
+            type: "order",
+            title: "🛒 Nouvelle commande confirmée",
+            description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString()} FCFA. Livraison: ${selectedDelivery?.name || "Retrait"}. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+          }));
+          supabase.from("notifications").insert(adminNotifs).then(() => {});
+        }
+      });
+
+      // Notify buyer
+      supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "order",
+        title: "✅ Commande confirmée !",
+        description: `Votre commande ${invoiceNumber} de ${finalTotal.toLocaleString()} FCFA a été confirmée. Facture PDF disponible.`,
+      }).then(() => {});
+
+      toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers vos commandes..." });
+      clearCart();
+
+      // Navigate to order detail if we have a single order, otherwise to delivery tracking
+      if (orderIds.length === 1) {
+        navigate(`/commande/${orderIds[0]}`);
+      } else {
+        navigate("/suivi-livraison");
+      }
+    } catch (err: any) {
+      console.error("Finalize order error:", err);
+      toast({ title: "Erreur lors de la finalisation", description: err.message || "Une erreur est survenue. Contactez le support.", variant: "destructive" });
+    }
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
 
   // Paygate polling callbacks — use ref to avoid stale closure
