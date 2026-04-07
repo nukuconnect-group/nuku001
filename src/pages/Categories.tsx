@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { ArrowRight, Package, Loader2, Search, X, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
