@@ -751,13 +751,13 @@ const Marketplace = () => {
           </div>
         </section>
       ) : (
-      <section className="py-3 sm:py-6 lg:py-8">
+      <section className="pt-1 pb-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Sponsored Products & Demands Slider — mobile only */}
-          <div className="mb-6 sm:mb-8 lg:hidden">
+          <div className="mb-3 sm:mb-4 lg:hidden">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-heading text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5 text-accent" />Publications récentes
+                <Award className="w-3.5 h-3.5 text-accent" />Produits sponsorisés
               </h2>
               <div className="flex gap-1">
                 <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3 h-3" /></Button>
@@ -765,14 +765,14 @@ const Marketplace = () => {
               </div>
             </div>
             <div ref={sponsoredRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
-              {/* Sponsored products - compact cards */}
+              {/* Sponsored products - same size cards with "Vente" badge */}
               {sponsoredProducts.map((product) => (
-                <Link to={`/produit/${product.id}`} key={`sp-${product.id}`} className="flex-shrink-0 w-[110px] sm:w-[130px] snap-start group">
+                <Link to={`/produit/${product.id}`} key={`sp-${product.id}`} className="flex-shrink-0 w-[130px] snap-start group">
                   <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
                     <div className="relative aspect-square">
                       <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <Badge className="absolute top-1 left-1 bg-accent/90 text-accent-foreground text-[7px] px-1 py-0 h-3.5">
-                        <Flame className="w-2 h-2 mr-0.5" />Sponsorisé
+                      <Badge className="absolute top-1 left-1 bg-primary/90 text-primary-foreground text-[7px] px-1 py-0 h-3.5">
+                        <Package className="w-2 h-2 mr-0.5" />Vente
                       </Badge>
                     </div>
                     <div className="p-1.5">
@@ -782,9 +782,9 @@ const Marketplace = () => {
                   </div>
                 </Link>
               ))}
-              {/* Demands in the same slider */}
+              {/* Demands in the same slider - same width */}
               {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-                <div key={`dm-${demand.id}`} className="flex-shrink-0 w-[110px] sm:w-[130px] snap-start">
+                <div key={`dm-${demand.id}`} className="flex-shrink-0 w-[130px] snap-start">
                   <div className="rounded-lg overflow-hidden border border-accent/30 bg-accent/5 shadow-sm h-full flex flex-col">
                     <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
                       {demand.image_url ? (
