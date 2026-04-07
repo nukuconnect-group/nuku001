@@ -675,28 +675,78 @@ const DriverDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Map preview for active delivery */}
-                      {delivery.dropoff_lat && delivery.dropoff_lng && (
-                        <div className="h-32 rounded-lg overflow-hidden">
+                      {/* Map preview for active delivery with driver position */}
+                      {(delivery.dropoff_lat && delivery.dropoff_lng) && (
+                        <div className="h-40 rounded-lg overflow-hidden">
                           <MapContainer
-                            center={[delivery.dropoff_lat, delivery.dropoff_lng]}
+                            center={[
+                              delivery.status === "accepted" && delivery.pickup_lat ? delivery.pickup_lat : delivery.dropoff_lat,
+                              delivery.status === "accepted" && delivery.pickup_lng ? delivery.pickup_lng : delivery.dropoff_lng
+                            ]}
                             zoom={13}
                             style={{ height: "100%", width: "100%" }}
                             zoomControl={false}
                             attributionControl={false}
                           >
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                            {delivery.pickup_lat && (
+                            {/* Driver position */}
+                            <Marker position={driverPosition}>
+                              <Popup>📍 Votre position</Popup>
+                            </Marker>
+                            {/* Pickup point */}
+                            {delivery.pickup_lat && delivery.pickup_lng && (
                               <Marker position={[delivery.pickup_lat, delivery.pickup_lng]}>
-                                <Popup>Récupération</Popup>
+                                <Popup>🟢 Récupération: {delivery.pickup_address || "Point de collecte"}</Popup>
                               </Marker>
                             )}
+                            {/* Dropoff point */}
                             <Marker position={[delivery.dropoff_lat, delivery.dropoff_lng]}>
-                              <Popup>Livraison</Popup>
+                              <Popup>🔴 Livraison: {delivery.dropoff_address || "Point de livraison"}</Popup>
                             </Marker>
                           </MapContainer>
                         </div>
                       )}
+
+                      {/* Distance & ETA info */}
+                      <div className="flex items-center gap-3 text-xs bg-muted/50 rounded-lg p-2">
+                        {delivery.distance_km && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-primary" />
+                            {delivery.distance_km.toFixed(1)} km
+                          </span>
+                        )}
+                        {delivery.estimated_minutes && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-orange-500" />
+                            ~{delivery.estimated_minutes} min
+                          </span>
+                        )}
+                        <span className="ml-auto font-bold text-green-600">
+                          {delivery.driver_fee?.toLocaleString() || 0} FCFA
+                        </span>
+                      </div>
+
+                      {/* GPS Navigation buttons */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {delivery.status === "accepted" && delivery.pickup_lat && delivery.pickup_lng && (
+                          <Button variant="outline" size="sm" className="text-xs gap-1"
+                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&destination=${delivery.pickup_lat},${delivery.pickup_lng}&travelmode=driving`, "_blank")}>
+                            <Navigation className="w-3.5 h-3.5" /> Itinéraire fournisseur
+                          </Button>
+                        )}
+                        {(delivery.status === "picked_up" || delivery.status === "in_transit") && delivery.dropoff_lat && delivery.dropoff_lng && (
+                          <Button variant="outline" size="sm" className="text-xs gap-1"
+                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&destination=${delivery.dropoff_lat},${delivery.dropoff_lng}&travelmode=driving`, "_blank")}>
+                            <Navigation className="w-3.5 h-3.5" /> Itinéraire acheteur
+                          </Button>
+                        )}
+                        {delivery.pickup_lat && delivery.pickup_lng && delivery.dropoff_lat && delivery.dropoff_lng && (
+                          <Button variant="outline" size="sm" className="text-xs gap-1"
+                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&waypoints=${delivery.pickup_lat},${delivery.pickup_lng}&destination=${delivery.dropoff_lat},${delivery.dropoff_lng}&travelmode=driving`, "_blank")}>
+                            <MapPin className="w-3.5 h-3.5" /> Itinéraire complet
+                          </Button>
+                        )}
+                      </div>
 
                       {/* Action buttons based on status */}
                       <div className="flex gap-2">
@@ -716,12 +766,6 @@ const DriverDashboard = () => {
                           <Button variant="hero" size="sm" className="flex-1"
                             onClick={() => updateDeliveryStatus(delivery.id, "delivered")}>
                             <CheckCircle2 className="w-4 h-4 mr-1" /> Livré
-                          </Button>
-                        )}
-                        {delivery.dropoff_lat && delivery.dropoff_lng && (
-                          <Button variant="outline" size="sm"
-                            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${delivery.dropoff_lat},${delivery.dropoff_lng}`, "_blank")}>
-                            <Navigation className="w-4 h-4" />
                           </Button>
                         )}
                         <DeliveryChat
