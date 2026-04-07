@@ -32,6 +32,7 @@ import ProductsManager from "@/components/admin/ProductsManager";
 import DeliveryManager from "@/components/admin/DeliveryManager";
 import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
+import EmailStatsManager from "@/components/admin/EmailStatsManager";
 
 const COLORS = [
   'hsl(var(--primary))',
