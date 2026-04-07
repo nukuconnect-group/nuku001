@@ -613,11 +613,10 @@ const Marketplace = () => {
                 <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
               </div>
             ))}
-            {/* Demands in desktop sponsored bar - same size as products */}
             {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-              <div key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[180px] snap-start">
-                <div className="rounded-xl overflow-hidden border border-accent/30 bg-accent/5 h-full">
-                  <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
+              <Link to="/marketplace" onClick={() => setMarketView("demands")} key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[180px] snap-start">
+                <div className="rounded-xl overflow-hidden border border-border bg-card h-full flex flex-col">
+                  <div className="relative aspect-square bg-accent/10 flex items-center justify-center overflow-hidden">
                     {demand.image_url ? (
                       <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
                     ) : (
@@ -633,7 +632,7 @@ const Marketplace = () => {
                     <p className="text-[9px] text-muted-foreground mt-0.5">{demand.category}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -784,9 +783,9 @@ const Marketplace = () => {
               ))}
               {/* Demands in the same slider - same width */}
               {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-                <div key={`dm-${demand.id}`} className="flex-shrink-0 w-[130px] snap-start">
-                  <div className="rounded-lg overflow-hidden border border-accent/30 bg-accent/5 shadow-sm h-full flex flex-col">
-                    <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
+                <Link to="/marketplace" onClick={() => setMarketView("demands")} key={`dm-${demand.id}`} className="flex-shrink-0 w-[130px] snap-start">
+                  <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm h-full flex flex-col">
+                    <div className="relative aspect-square bg-accent/10 flex items-center justify-center overflow-hidden">
                       {demand.image_url ? (
                         <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
                       ) : (
@@ -798,10 +797,10 @@ const Marketplace = () => {
                     </div>
                     <div className="p-1.5 flex-1">
                       <h4 className="text-[10px] font-semibold text-foreground line-clamp-1">{demand.title}</h4>
-                      {demand.budget && <p className="text-[10px] font-bold text-accent mt-0.5">{fmtPrice(demand.budget)}</p>}
+                      {demand.budget && <p className="text-[10px] font-bold text-accent mt-0.5">{fmtPrice(demand.budget)}<span className="text-[8px] text-muted-foreground font-normal"> FCFA</span></p>}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
