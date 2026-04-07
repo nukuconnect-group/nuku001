@@ -67,11 +67,15 @@ serve(async (req) => {
     const isCard = use_redirect || !network || network === "CARD";
 
     if (isCard) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const callbackUrl = `${supabaseUrl}/functions/v1/paygate-webhook`;
+
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
       v2Body.append("amount", String(amount));
       v2Body.append("description", description);
       v2Body.append("identifier", identifier);
+      v2Body.append("callback_url", callbackUrl);
 
       const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
         method: "POST",
