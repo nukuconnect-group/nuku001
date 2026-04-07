@@ -200,7 +200,7 @@ const Affiliation = () => {
                 </Card>
                 <Card>
                   <CardContent className="p-3 sm:p-4 text-center">
-                    <CheckCircle className="w-5 h-5 mx-auto text-green-600 mb-1" />
+                    <CheckCircle className="w-5 h-5 mx-auto text-primary mb-1" />
                     <p className="text-lg sm:text-xl font-bold">{activeReferrals}</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Actifs</p>
                   </CardContent>
