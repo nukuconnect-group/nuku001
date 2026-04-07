@@ -985,6 +985,75 @@ export type Database = {
           },
         ]
       }
+      product_traceability: {
+        Row: {
+          batch_number: string | null
+          certifications: string[] | null
+          created_at: string
+          current_stage: number | null
+          harvest_date: string | null
+          humidity: string | null
+          id: string
+          is_organic: boolean | null
+          origin: string | null
+          producer_id: string
+          product_id: string
+          status: string | null
+          temperature: string | null
+          updated_at: string
+          weight: string | null
+        }
+        Insert: {
+          batch_number?: string | null
+          certifications?: string[] | null
+          created_at?: string
+          current_stage?: number | null
+          harvest_date?: string | null
+          humidity?: string | null
+          id?: string
+          is_organic?: boolean | null
+          origin?: string | null
+          producer_id: string
+          product_id: string
+          status?: string | null
+          temperature?: string | null
+          updated_at?: string
+          weight?: string | null
+        }
+        Update: {
+          batch_number?: string | null
+          certifications?: string[] | null
+          created_at?: string
+          current_stage?: number | null
+          harvest_date?: string | null
+          humidity?: string | null
+          id?: string
+          is_organic?: boolean | null
+          origin?: string | null
+          producer_id?: string
+          product_id?: string
+          status?: string | null
+          temperature?: string | null
+          updated_at?: string
+          weight?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_traceability_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_traceability_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
@@ -1362,6 +1431,47 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      traceability_events: {
+        Row: {
+          created_at: string
+          event_date: string
+          event_description: string
+          id: string
+          location: string | null
+          stage_index: number
+          stage_label: string
+          traceability_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string
+          event_description: string
+          id?: string
+          location?: string | null
+          stage_index?: number
+          stage_label: string
+          traceability_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          event_description?: string
+          id?: string
+          location?: string | null
+          stage_index?: number
+          stage_label?: string
+          traceability_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traceability_events_traceability_id_fkey"
+            columns: ["traceability_id"]
+            isOneToOne: false
+            referencedRelation: "product_traceability"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_presence: {
         Row: {
