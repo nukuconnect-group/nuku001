@@ -729,21 +729,54 @@ const Marketplace = () => {
       ) : (
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
-          {/* Sponsored Products Slider — mobile only (desktop shows above) */}
-          <div className="mb-6 sm:mb-8 min-h-[220px] sm:min-h-[280px] lg:hidden">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
+          {/* Sponsored Products & Demands Slider — mobile only */}
+          <div className="mb-6 sm:mb-8 lg:hidden">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-heading text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-accent" />Publications récentes
               </h2>
               <div className="flex gap-1">
-                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3.5 h-3.5" /></Button>
-                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("right")}><ChevronRight className="w-3.5 h-3.5" /></Button>
+                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3 h-3" /></Button>
+                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => scrollSponsored("right")}><ChevronRight className="w-3 h-3" /></Button>
               </div>
             </div>
-            <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+            <div ref={sponsoredRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+              {/* Sponsored products - compact cards */}
               {sponsoredProducts.map((product) => (
-                <div key={product.id} className="flex-shrink-0 w-[140px] sm:w-[180px] snap-start">
-                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
+                <Link to={`/produit/${product.id}`} key={`sp-${product.id}`} className="flex-shrink-0 w-[110px] sm:w-[130px] snap-start group">
+                  <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
+                    <div className="relative aspect-square">
+                      <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <Badge className="absolute top-1 left-1 bg-accent/90 text-accent-foreground text-[7px] px-1 py-0 h-3.5">
+                        <Flame className="w-2 h-2 mr-0.5" />Sponsorisé
+                      </Badge>
+                    </div>
+                    <div className="p-1.5">
+                      <h4 className="text-[10px] font-semibold text-foreground line-clamp-1">{product.name}</h4>
+                      <p className="text-[10px] font-bold text-primary mt-0.5">{fmtPrice(product.price)}<span className="text-[8px] text-muted-foreground font-normal">/{product.unit}</span></p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              {/* Demands in the same slider */}
+              {allDemands && allDemands.slice(0, 4).map((demand: any) => (
+                <div key={`dm-${demand.id}`} className="flex-shrink-0 w-[110px] sm:w-[130px] snap-start">
+                  <div className="rounded-lg overflow-hidden border border-accent/30 bg-accent/5 shadow-sm h-full flex flex-col">
+                    <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
+                      {demand.image_url ? (
+                        <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
+                      ) : (
+                        <HandCoins className="w-8 h-8 text-accent/40" />
+                      )}
+                      <Badge className="absolute top-1 left-1 bg-accent text-accent-foreground text-[7px] px-1 py-0 h-3.5">
+                        <HandCoins className="w-2 h-2 mr-0.5" />Demande
+                      </Badge>
+                    </div>
+                    <div className="p-1.5 flex-1">
+                      <h4 className="text-[10px] font-semibold text-foreground line-clamp-1">{demand.title}</h4>
+                      {demand.budget && <p className="text-[10px] font-bold text-accent mt-0.5">{fmtPrice(demand.budget)}</p>}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
