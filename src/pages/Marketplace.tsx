@@ -386,6 +386,20 @@ const Marketplace = () => {
 
   const FiltersContent = () => (
     <div className="space-y-5">
+      {/* Search in filters */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold flex items-center gap-1.5"><Search className="w-3.5 h-3.5" />Rechercher</Label>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Nom du produit..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 text-xs pl-8"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label className="text-xs font-semibold uppercase tracking-wide">Stock Status</Label>
         <div className="space-y-2">
