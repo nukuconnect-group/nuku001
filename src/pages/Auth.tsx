@@ -161,7 +161,7 @@ const Auth = () => {
       const location = (userType === "buyer" || userType === "learner") ? `${buyerLocation}, ${buyerCountry}` : producerLocation;
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail, password: signupPassword,
-        options: { emailRedirectTo: `${window.location.origin}/`, data: { full_name: fullName, user_type: userType, phone, location, company: userType === "producer" ? producerCompany : null, sector: userType === "producer" ? producerSector : null } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, company: userType === "producer" ? producerCompany : null, sector: userType === "producer" ? producerSector : null } },
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
@@ -182,7 +182,13 @@ const Auth = () => {
         }).catch(() => {});
 
         if (needsConfirmation) {
-          toast({ title: "Vérifiez votre email 📧", description: "Un lien de confirmation a été envoyé à votre adresse email." });
+          // Redirect to login tab with verification message
+          setAuthMode("login");
+          setSignupStep("select");
+          toast({ 
+            title: "Inscription réussie ! 🎉", 
+            description: "Un email de vérification a été envoyé. Vérifiez votre boîte de réception puis connectez-vous ici.",
+          });
           return;
         }
         toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
