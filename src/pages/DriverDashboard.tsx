@@ -329,6 +329,7 @@ const DriverDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
+      <SEO url="/driver-dashboard" title="Tableau de bord Livreur" description="Gérez vos livraisons, suivez vos gains et naviguez avec GPS vers les points de collecte et de livraison." noIndex />
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
         {/* Header with greeting and availability toggle */}
