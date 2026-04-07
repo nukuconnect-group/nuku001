@@ -141,6 +141,7 @@ const App = () => {
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />
                   <Route path="/unsubscribe" element={<Unsubscribe />} />
                   <Route path="/categories" element={<Categories />} />
+                  <Route path="/affiliation" element={<Affiliation />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
