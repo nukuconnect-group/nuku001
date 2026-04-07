@@ -25,6 +25,7 @@ export const useProfile = () => useContext(ProfileContext);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user, isReady } = useAuthReady();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const lastUserIdRef = useRef<string | null>(null);
