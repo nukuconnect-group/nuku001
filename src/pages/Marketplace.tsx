@@ -401,7 +401,7 @@ const Marketplace = () => {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-semibold uppercase tracking-wide">Stock Status</Label>
+        <Label className="text-xs font-semibold uppercase tracking-wide">Disponibilité</Label>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <input type="checkbox" checked={discountOnly} onChange={(e) => setDiscountOnly(e.target.checked)} className="rounded border-border" />
