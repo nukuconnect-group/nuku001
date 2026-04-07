@@ -28,7 +28,7 @@ import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -285,6 +285,9 @@ const Dashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
                 <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Paramètres
+              </TabsTrigger>
+              <TabsTrigger value="affiliation" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1" onClick={() => window.location.href = '/affiliation'}>
+                <Gift className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Affiliation
               </TabsTrigger>
             </TabsList>
 
