@@ -181,6 +181,23 @@ const Cart = () => {
                   `Livreur demandé : ${selectedDriver?.profile?.full_name || "Attribution automatique"}`,
                 ].join("\n"),
               } as any);
+
+              // Send push notification to available drivers for pending deliveries
+              if (!selectedRealDriverId) {
+                try {
+                  await supabase.functions.invoke("notify-drivers", {
+                    body: {
+                      delivery_id: deliveryData.id,
+                      pickup_address: items[0]?.product?.location || "Collecte",
+                      dropoff_address: `${deliveryCity}, ${fullAddress}`,
+                      distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : undefined,
+                      driver_fee: driverFee,
+                    },
+                  });
+                } catch (pushErr) {
+                  console.error("Driver push notification error (non-blocking):", pushErr);
+                }
+              }
             }
           } catch (deliveryErr) {
             console.error("Delivery creation error (non-blocking):", deliveryErr);
