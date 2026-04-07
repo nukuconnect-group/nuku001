@@ -581,32 +581,24 @@ const Marketplace = () => {
       <Header />
       <MarketplacePromoPopup />
 
-      <section className="hidden sm:block bg-muted/30 border-b border-border py-3 sm:py-4">
-        <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-row items-start gap-3 max-w-3xl mx-auto">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input type="text" placeholder={t("header.search")}
-                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-20 sm:pr-28 h-10 text-sm bg-card border-border rounded-full w-full" />
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                <button type="button" onClick={() => setQrScannerOpen(true)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
-                  <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
-                <button type="button" onClick={() => setVoiceSearchOpen(true)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
-                  <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
-                <button type="button" onClick={() => setImageSearchOpen(true)}
-                  className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
-                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+      {/* Sponsored Products - Top banner (desktop only) */}
+      <section className="hidden lg:block bg-muted/30 border-b border-border py-3">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-heading text-sm font-bold text-foreground flex items-center gap-2">
+              <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
+            </h2>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3.5 h-3.5" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("right")}><ChevronRight className="w-3.5 h-3.5" /></Button>
+            </div>
+          </div>
+          <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+            {sponsoredProducts.map((product) => (
+              <div key={product.id} className="flex-shrink-0 w-[160px] snap-start">
+                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
               </div>
-            </div>
-            <div className="w-56 flex-shrink-0">
-              <LocationSearchFilter location={location} onLocationChange={setLocation} />
-            </div>
+            ))}
           </div>
         </div>
       </section>
