@@ -263,9 +263,9 @@ const Affiliation = () => {
                             <p className="text-xs font-medium">
                               {e.source_type === "subscription" ? "📋 Abonnement" : "🛒 Achat"}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {new Date(e.created_at).toLocaleDateString("fr-FR")} · {(e.commission_rate * 100).toFixed(0)}% de {formatPrice(e.source_amount)}
-                            </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(e.created_at).toLocaleDateString("fr-FR")} · {(e.commission_rate * 100).toFixed(0)}% de {formatPrice(e.source_amount)}
+                    </p>
                           </div>
                           <span className="text-sm font-bold text-green-600">+{formatPrice(e.amount)}</span>
                         </div>
