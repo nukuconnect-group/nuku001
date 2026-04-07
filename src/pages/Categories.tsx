@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { ArrowRight, Package, Loader2, Search, X, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ const Categories = () => {
   const { data: products = [] } = useProducts();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const activeCategories = categories.filter((c: any) => c.is_active);
 
@@ -125,30 +127,37 @@ const Categories = () => {
 
             {allSubcategories.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <Filter className="w-3.5 h-3.5" /> Filtrer par sous-catégorie
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <Button
-                    variant={selectedSubcategory === null ? "default" : "outline"}
-                    size="sm"
-                    className="text-[10px] h-7 px-3"
-                    onClick={() => setSelectedSubcategory(null)}
-                  >
-                    Toutes
-                  </Button>
-                  {allSubcategories.map((sub) => (
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  Filtrer par sous-catégorie
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+                </button>
+                {showFilters && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
                     <Button
-                      key={sub}
-                      variant={selectedSubcategory === sub ? "default" : "outline"}
+                      variant={selectedSubcategory === null ? "default" : "outline"}
                       size="sm"
                       className="text-[10px] h-7 px-3"
-                      onClick={() => setSelectedSubcategory(selectedSubcategory === sub ? null : sub)}
+                      onClick={() => setSelectedSubcategory(null)}
                     >
-                      {sub}
+                      Toutes
                     </Button>
-                  ))}
-                </div>
+                    {allSubcategories.map((sub) => (
+                      <Button
+                        key={sub}
+                        variant={selectedSubcategory === sub ? "default" : "outline"}
+                        size="sm"
+                        className="text-[10px] h-7 px-3"
+                        onClick={() => setSelectedSubcategory(selectedSubcategory === sub ? null : sub)}
+                      >
+                        {sub}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
