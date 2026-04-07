@@ -119,6 +119,9 @@ serve(async (req) => {
     }
 
     // Mobile Money
+    const supabaseUrlMm = Deno.env.get("SUPABASE_URL")!;
+    const callbackUrlMm = `${supabaseUrlMm}/functions/v1/paygate-webhook`;
+
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
     body.append("phone_number", phone_number || "");
@@ -126,6 +129,7 @@ serve(async (req) => {
     body.append("description", description);
     body.append("identifier", identifier);
     body.append("network", network!);
+    body.append("callback_url", callbackUrlMm);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/pay", {
       method: "POST",
