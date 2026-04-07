@@ -472,9 +472,9 @@ const DriverDashboard = () => {
               </Card>
             ) : (
               <>
-                <Card className="overflow-hidden">
-                  <div className="h-48 rounded-lg overflow-hidden">
-                    <MapContainer center={driverPosition} zoom={12} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
+                <Card className="overflow-hidden relative z-0">
+                  <div className="h-40 rounded-lg overflow-hidden relative z-0">
+                    <MapContainer center={driverPosition} zoom={12} style={{ height: "100%", width: "100%", zIndex: 0 }} zoomControl={false} attributionControl={false}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       <Marker position={driverPosition}><Popup>📍 Votre position</Popup></Marker>
                     </MapContainer>
