@@ -193,12 +193,12 @@ const LocationSearchFilter = ({ location, onLocationChange }: { location: string
         )}
       </div>
       {/* Quick tags */}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 overflow-x-auto scrollbar-hide">
         {["Lomé", "Accra", "Cotonou", "Abidjan", "Dakar"].map(loc => (
           <button
             key={loc}
             onClick={() => handleSelect(loc)}
-            className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${location === loc ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"}`}
+            className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap flex-shrink-0 ${location === loc ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"}`}
           >
             {loc}
           </button>
