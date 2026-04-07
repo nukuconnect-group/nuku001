@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,6 +133,7 @@ const Settings = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+      <SEO url="/settings" title="Paramètres du Profil" description="Gérez vos informations personnelles et les paramètres de votre compte." noIndex />
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );

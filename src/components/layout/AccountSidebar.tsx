@@ -147,10 +147,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     }
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/auth`;
       const loc = country ? `${location}, ${country}` : location;
 
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
         options: {
@@ -174,6 +174,19 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             : error.message,
           variant: "destructive",
         });
+        return;
+      }
+
+      const needsConfirmation = authData?.user?.identities && authData.user.identities.length > 0 && !authData.session;
+
+      if (needsConfirmation) {
+        toast({
+          title: "Inscription réussie ! 🎉",
+          description: "Vérifiez votre email pour confirmer votre compte, puis connectez-vous.",
+        });
+        onClose();
+        // Redirect to auth page for login
+        window.location.href = "/auth";
         return;
       }
 

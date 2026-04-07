@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -103,6 +104,7 @@ const Messages = () => {
   if (isReady && !user) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
+      <SEO url="/messages" title="Messagerie" description="Communiquez directement avec les producteurs et acheteurs sur NUKUCONNECT." noIndex />
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
           <MessageCircle className="w-12 h-12 text-muted-foreground/30" />

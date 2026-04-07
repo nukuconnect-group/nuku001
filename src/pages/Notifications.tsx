@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -163,6 +164,7 @@ const Notifications = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO url="/notifications" title="Notifications" description="Restez informé de vos commandes, messages et activités sur NUKUCONNECT." noIndex />
       <Header />
       <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
