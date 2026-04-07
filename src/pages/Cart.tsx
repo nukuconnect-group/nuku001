@@ -236,6 +236,33 @@ const Cart = () => {
         },
       }).catch(err => console.error("Email confirmation error:", err));
 
+      // Also send via transactional email system (non-blocking)
+      supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "order-confirmation",
+          recipientEmail: billing.email,
+          idempotencyKey: `order-confirm-${invoiceNumber}`,
+          templateData: {
+            buyerName: buyerFullName,
+            invoiceNumber,
+            orderDate: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+            orderItems: items.map(item => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.product.price,
+              unit: item.product.unit,
+              sellerName: item.product.producer.name,
+            })),
+            subtotal: total,
+            deliveryPrice,
+            total: finalTotal,
+            deliveryMethod: selectedDelivery?.name || "Retrait",
+            paymentMethod: selectedPayment?.name || "Mobile Money",
+            deliveryCity,
+          },
+        },
+      }).catch(err => console.error("Transactional email error:", err));
+
       // Notify admin about the new order (non-blocking)
       const orderSummary = items.map(i => `${i.product.name} x${i.quantity}`).join(", ");
       supabase.from("notifications").insert({
