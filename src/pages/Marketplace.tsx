@@ -595,12 +595,12 @@ const Marketplace = () => {
       <Header />
       <MarketplacePromoPopup />
 
-      {/* Sponsored Products - Top banner (desktop only) */}
+      {/* Sponsored Products & Demands - Top banner (desktop only) */}
       <section className="hidden lg:block bg-muted/30 border-b border-border py-3">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-heading text-sm font-bold text-foreground flex items-center gap-2">
-              <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
+              <Award className="w-4 h-4 text-accent" />Publications récentes
             </h2>
             <div className="flex gap-1">
               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3.5 h-3.5" /></Button>
@@ -611,6 +611,28 @@ const Marketplace = () => {
             {sponsoredProducts.map((product) => (
               <div key={product.id} className="flex-shrink-0 w-[160px] snap-start">
                 <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
+              </div>
+            ))}
+            {/* Demands in desktop sponsored bar */}
+            {allDemands && allDemands.slice(0, 4).map((demand: any) => (
+              <div key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[160px] snap-start">
+                <div className="rounded-xl overflow-hidden border border-accent/30 bg-accent/5 h-full">
+                  <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
+                    {demand.image_url ? (
+                      <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
+                    ) : (
+                      <HandCoins className="w-10 h-10 text-accent/40" />
+                    )}
+                    <Badge className="absolute top-1.5 left-1.5 bg-accent text-accent-foreground text-[8px] px-1.5 py-0.5">
+                      <HandCoins className="w-2.5 h-2.5 mr-0.5" />Demande
+                    </Badge>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs font-semibold text-foreground line-clamp-2">{demand.title}</h4>
+                    {demand.budget && <p className="text-xs font-bold text-accent mt-1">{fmtPrice(demand.budget)}</p>}
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{demand.category}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
