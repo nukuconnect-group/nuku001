@@ -600,7 +600,7 @@ const Marketplace = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-heading text-sm font-bold text-foreground flex items-center gap-2">
-              <Award className="w-4 h-4 text-accent" />Publications récentes
+              <Award className="w-4 h-4 text-accent" />Produits sponsorisés
             </h2>
             <div className="flex gap-1">
               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => scrollSponsored("left")}><ChevronLeft className="w-3.5 h-3.5" /></Button>
@@ -609,13 +609,13 @@ const Marketplace = () => {
           </div>
           <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
             {sponsoredProducts.map((product) => (
-              <div key={product.id} className="flex-shrink-0 w-[160px] snap-start">
-                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
+              <div key={product.id} className="flex-shrink-0 w-[180px] snap-start">
+                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} badgeLabel="Vente" />
               </div>
             ))}
-            {/* Demands in desktop sponsored bar */}
+            {/* Demands in desktop sponsored bar - same size as products */}
             {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-              <div key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[160px] snap-start">
+              <div key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[180px] snap-start">
                 <div className="rounded-xl overflow-hidden border border-accent/30 bg-accent/5 h-full">
                   <div className="relative aspect-square bg-accent/10 flex items-center justify-center">
                     {demand.image_url ? (
