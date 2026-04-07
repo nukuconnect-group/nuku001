@@ -43,6 +43,7 @@ const Categories = () => {
   const { data: products = [] } = useProducts();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const activeCategories = categories.filter((c: any) => c.is_active);
 
