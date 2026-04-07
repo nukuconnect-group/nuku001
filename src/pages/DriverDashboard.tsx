@@ -285,11 +285,20 @@ const DriverDashboard = () => {
       if (newStatus === "picked_up") updates.picked_up_at = new Date().toISOString();
       if (newStatus === "delivered") updates.delivered_at = new Date().toISOString();
 
-      await supabase.from("deliveries").update(updates).eq("id", deliveryId);
-      
+      const { error } = await supabase.from("deliveries").update(updates).eq("id", deliveryId);
+      if (error) throw error;
+
+      // Update the associated order status to reflect delivery progress
+      const delivery = myDeliveries.find(d => d.id === deliveryId);
+      if (delivery?.order_id) {
+        const orderStatus = newStatus === "delivered" ? "completed" : 
+                           newStatus === "in_transit" ? "shipped" : 
+                           newStatus === "picked_up" ? "confirmed" : "pending";
+        await supabase.from("orders").update({ status: orderStatus }).eq("id", delivery.order_id);
+      }
+
       // If delivered, increment driver total_deliveries and total_earnings
       if (newStatus === "delivered" && driverProfile) {
-        const delivery = myDeliveries.find(d => d.id === deliveryId);
         const fee = delivery?.driver_fee || 0;
         await supabase.from("driver_profiles").update({
           total_deliveries: (driverProfile.total_deliveries || 0) + 1,
@@ -300,7 +309,7 @@ const DriverDashboard = () => {
       toast({ title: "Statut mis à jour", description: `Livraison ${statusLabels[newStatus]?.label || newStatus}` });
       
       if (newStatus === "delivered") {
-        toast({ title: "💰 Gains crédités !", description: "Vos gains de livraison ont été ajoutés à votre solde." });
+        toast({ title: "💰 Gains crédités !", description: `+${(delivery?.driver_fee || 0).toLocaleString()} FCFA ajoutés à votre solde.` });
       }
       
       fetchDriverData();
@@ -472,9 +481,9 @@ const DriverDashboard = () => {
               </Card>
             ) : (
               <>
-                <Card className="overflow-hidden">
-                  <div className="h-48 rounded-lg overflow-hidden">
-                    <MapContainer center={driverPosition} zoom={12} style={{ height: "100%", width: "100%" }} zoomControl={false} attributionControl={false}>
+                <Card className="overflow-hidden relative z-0">
+                  <div className="h-40 rounded-lg overflow-hidden relative z-0">
+                    <MapContainer center={driverPosition} zoom={12} style={{ height: "100%", width: "100%", zIndex: 0 }} zoomControl={false} attributionControl={false}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       <Marker position={driverPosition}><Popup>📍 Votre position</Popup></Marker>
                     </MapContainer>
@@ -709,29 +718,26 @@ const DriverDashboard = () => {
 
                       {/* Map preview for active delivery with driver position */}
                       {(delivery.dropoff_lat && delivery.dropoff_lng) && (
-                        <div className="h-40 rounded-lg overflow-hidden">
+                        <div className="h-36 rounded-lg overflow-hidden relative z-0">
                           <MapContainer
                             center={[
                               delivery.status === "accepted" && delivery.pickup_lat ? delivery.pickup_lat : delivery.dropoff_lat,
                               delivery.status === "accepted" && delivery.pickup_lng ? delivery.pickup_lng : delivery.dropoff_lng
                             ]}
                             zoom={13}
-                            style={{ height: "100%", width: "100%" }}
+                            style={{ height: "100%", width: "100%", zIndex: 0 }}
                             zoomControl={false}
                             attributionControl={false}
                           >
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                            {/* Driver position */}
                             <Marker position={driverPosition}>
                               <Popup>📍 Votre position</Popup>
                             </Marker>
-                            {/* Pickup point */}
                             {delivery.pickup_lat && delivery.pickup_lng && (
                               <Marker position={[delivery.pickup_lat, delivery.pickup_lng]}>
                                 <Popup>🟢 Récupération: {delivery.pickup_address || "Point de collecte"}</Popup>
                               </Marker>
                             )}
-                            {/* Dropoff point */}
                             <Marker position={[delivery.dropoff_lat, delivery.dropoff_lng]}>
                               <Popup>🔴 Livraison: {delivery.dropoff_address || "Point de livraison"}</Popup>
                             </Marker>
@@ -780,24 +786,41 @@ const DriverDashboard = () => {
                         )}
                       </div>
 
+                      {/* Earnings details */}
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5 space-y-1">
+                        <p className="text-[10px] font-semibold text-green-800 dark:text-green-300">💰 Détails des gains</p>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Frais de livraison total</span>
+                          <span className="font-medium">{delivery.delivery_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Commission plateforme</span>
+                          <span className="font-medium text-red-600">-{delivery.platform_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold border-t border-green-200 dark:border-green-800 pt-1">
+                          <span className="text-green-700 dark:text-green-400">Votre gain</span>
+                          <span className="text-green-700 dark:text-green-400">{delivery.driver_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                      </div>
+
                       {/* Action buttons based on status */}
                       <div className="flex gap-2">
                         {delivery.status === "accepted" && (
                           <Button variant="hero" size="sm" className="flex-1"
                             onClick={() => updateDeliveryStatus(delivery.id, "picked_up")}>
-                            <Package className="w-4 h-4 mr-1" /> Récupéré
+                            <Package className="w-4 h-4 mr-1" /> J'ai récupéré la commande
                           </Button>
                         )}
                         {delivery.status === "picked_up" && (
                           <Button variant="hero" size="sm" className="flex-1"
                             onClick={() => updateDeliveryStatus(delivery.id, "in_transit")}>
-                            <Navigation className="w-4 h-4 mr-1" /> En route
+                            <Navigation className="w-4 h-4 mr-1" /> Je suis en route
                           </Button>
                         )}
                         {delivery.status === "in_transit" && (
-                          <Button variant="hero" size="sm" className="flex-1"
+                          <Button variant="hero" size="sm" className="flex-1 bg-green-600 hover:bg-green-700"
                             onClick={() => updateDeliveryStatus(delivery.id, "delivered")}>
-                            <CheckCircle2 className="w-4 h-4 mr-1" /> Livré
+                            <CheckCircle2 className="w-4 h-4 mr-1" /> ✅ Marquer comme livré
                           </Button>
                         )}
                         <DeliveryChat

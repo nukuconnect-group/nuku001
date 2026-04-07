@@ -197,3 +197,25 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Fix Leaflet map z-index overlapping UI elements */
+.leaflet-container {
+  z-index: 0 !important;
+}
+.leaflet-pane,
+.leaflet-control-container {
+  z-index: 0 !important;
+}
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
+
+/* Image fallback - prevent broken image icons */
+img {
+  min-height: 0;
+}
+img[src=""],
+img:not([src]) {
+  visibility: hidden;
+}
