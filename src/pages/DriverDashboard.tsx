@@ -709,29 +709,26 @@ const DriverDashboard = () => {
 
                       {/* Map preview for active delivery with driver position */}
                       {(delivery.dropoff_lat && delivery.dropoff_lng) && (
-                        <div className="h-40 rounded-lg overflow-hidden">
+                        <div className="h-36 rounded-lg overflow-hidden relative z-0">
                           <MapContainer
                             center={[
                               delivery.status === "accepted" && delivery.pickup_lat ? delivery.pickup_lat : delivery.dropoff_lat,
                               delivery.status === "accepted" && delivery.pickup_lng ? delivery.pickup_lng : delivery.dropoff_lng
                             ]}
                             zoom={13}
-                            style={{ height: "100%", width: "100%" }}
+                            style={{ height: "100%", width: "100%", zIndex: 0 }}
                             zoomControl={false}
                             attributionControl={false}
                           >
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                            {/* Driver position */}
                             <Marker position={driverPosition}>
                               <Popup>📍 Votre position</Popup>
                             </Marker>
-                            {/* Pickup point */}
                             {delivery.pickup_lat && delivery.pickup_lng && (
                               <Marker position={[delivery.pickup_lat, delivery.pickup_lng]}>
                                 <Popup>🟢 Récupération: {delivery.pickup_address || "Point de collecte"}</Popup>
                               </Marker>
                             )}
-                            {/* Dropoff point */}
                             <Marker position={[delivery.dropoff_lat, delivery.dropoff_lng]}>
                               <Popup>🔴 Livraison: {delivery.dropoff_address || "Point de livraison"}</Popup>
                             </Marker>
