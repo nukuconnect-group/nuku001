@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -24,6 +25,7 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO url="/favoris" title="Mes Favoris" description="Retrouvez tous vos produits favoris sauvegardés sur NUKUCONNECT." noIndex />
       <Header />
       <main>
         <div className="container mx-auto px-3 sm:px-4 py-6">

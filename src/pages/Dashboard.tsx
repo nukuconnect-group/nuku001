@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +95,7 @@ const Dashboard = () => {
   if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <SEO url="/dashboard" title="Tableau de bord Fournisseur" description="Gérez vos produits, suivez vos ventes et développez votre activité." noIndex />
         <Header />
         <main className="py-3 sm:py-6">
           <div className="container mx-auto px-3 sm:px-4 space-y-4">

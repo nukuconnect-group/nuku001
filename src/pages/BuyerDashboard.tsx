@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,6 +157,7 @@ const BuyerDashboard = () => {
   if (!isReady || (!profile && profileLoading)) {
     return (
       <div className="min-h-screen bg-background pb-20 lg:pb-0">
+      <SEO url="/buyer-dashboard" title="Tableau de bord Acheteur" description="Gérez vos commandes, suivez vos livraisons et découvrez des recommandations personnalisées." noIndex />
         <Header />
         <main className="py-3 sm:py-6">
           <div className="container mx-auto px-3 sm:px-4 space-y-4">

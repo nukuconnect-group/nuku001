@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,7 @@ const LearnerDashboard = () => {
   if (profileLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+      <SEO url="/learner-dashboard" title="Espace Apprenant" description="Suivez vos formations agricoles et obtenez vos certificats." noIndex />
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );

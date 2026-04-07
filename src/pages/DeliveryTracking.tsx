@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,6 +231,7 @@ const DeliveryTracking = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+      <SEO url="/suivi-livraison" title="Suivi de Livraison" description="Suivez vos livraisons en temps réel avec le GPS intégré." noIndex />
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
