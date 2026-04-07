@@ -285,8 +285,24 @@ const DriverDashboard = () => {
       if (newStatus === "picked_up") updates.picked_up_at = new Date().toISOString();
       if (newStatus === "delivered") updates.delivered_at = new Date().toISOString();
 
-      await supabase.from("deliveries" as any).update(updates).eq("id", deliveryId);
+      await supabase.from("deliveries").update(updates).eq("id", deliveryId);
+      
+      // If delivered, increment driver total_deliveries and total_earnings
+      if (newStatus === "delivered" && driverProfile) {
+        const delivery = myDeliveries.find(d => d.id === deliveryId);
+        const fee = delivery?.driver_fee || 0;
+        await supabase.from("driver_profiles").update({
+          total_deliveries: (driverProfile.total_deliveries || 0) + 1,
+          total_earnings: (driverProfile.total_earnings || 0) + fee,
+        }).eq("id", driverProfile.id);
+      }
+
       toast({ title: "Statut mis à jour", description: `Livraison ${statusLabels[newStatus]?.label || newStatus}` });
+      
+      if (newStatus === "delivered") {
+        toast({ title: "💰 Gains crédités !", description: "Vos gains de livraison ont été ajoutés à votre solde." });
+      }
+      
       fetchDriverData();
     } catch {
       toast({ title: "Erreur", description: "Impossible de mettre à jour.", variant: "destructive" });
