@@ -32,6 +32,7 @@ import ProductsManager from "@/components/admin/ProductsManager";
 import DeliveryManager from "@/components/admin/DeliveryManager";
 import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
+import EmailStatsManager from "@/components/admin/EmailStatsManager";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -346,6 +347,9 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="support" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <MessageCircle className="w-3.5 h-3.5" />Support
+              </TabsTrigger>
+              <TabsTrigger value="emails" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Send className="w-3.5 h-3.5" />Emails
               </TabsTrigger>
             </TabsList>
 
@@ -1009,6 +1013,11 @@ const AdminDashboard = () => {
             {/* Support Chat Tab */}
             <TabsContent value="support">
               <SupportChat adminProfileId={adminProfile?.id} />
+            </TabsContent>
+
+            {/* Emails Tab */}
+            <TabsContent value="emails">
+              <EmailStatsManager />
             </TabsContent>
           </Tabs>
         </div>
