@@ -627,7 +627,7 @@ const Marketplace = () => {
         </div>
       </div>
 
-      {/* Products / Demands Toggle */}
+      {/* Products / Demands Toggle + Region filter */}
       <div className="bg-card border-b border-border">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center gap-0 py-1">
@@ -654,6 +654,10 @@ const Marketplace = () => {
                 <Badge className="bg-accent text-accent-foreground text-[9px] px-1.5 py-0 ml-1">{demandsCount}</Badge>
               )}
             </button>
+            {/* Region filter on same line - desktop */}
+            <div className="hidden lg:block ml-auto w-52">
+              <LocationSearchFilter location={location} onLocationChange={setLocation} />
+            </div>
           </div>
         </div>
       </div>
