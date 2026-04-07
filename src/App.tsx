@@ -51,6 +51,7 @@ const FormationDetail = lazy(() => import("./pages/FormationDetail"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Categories = lazy(() => import("./pages/Categories"));
+const Affiliation = lazy(() => import("./pages/Affiliation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
