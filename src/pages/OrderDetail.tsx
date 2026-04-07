@@ -16,6 +16,7 @@ import {
   ShoppingBag, Receipt
 } from "lucide-react";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import DeliveryLiveMap from "@/components/delivery/DeliveryLiveMap";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string; bgColor: string }> = {
   pending: { label: "En attente", icon: Clock, color: "text-yellow-700", bgColor: "bg-yellow-100" },
