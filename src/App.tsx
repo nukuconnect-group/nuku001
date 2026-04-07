@@ -51,6 +51,7 @@ const FormationDetail = lazy(() => import("./pages/FormationDetail"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Categories = lazy(() => import("./pages/Categories"));
+const Affiliation = lazy(() => import("./pages/Affiliation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -140,6 +141,7 @@ const App = () => {
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />
                   <Route path="/unsubscribe" element={<Unsubscribe />} />
                   <Route path="/categories" element={<Categories />} />
+                  <Route path="/affiliation" element={<Affiliation />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

@@ -1149,6 +1149,83 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_earnings: {
+        Row: {
+          amount: number
+          commission_rate: number
+          created_at: string
+          description: string | null
+          id: string
+          referral_id: string
+          referrer_id: string
+          source_amount: number
+          source_type: string
+        }
+        Insert: {
+          amount?: number
+          commission_rate: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          referral_id: string
+          referrer_id: string
+          source_amount?: number
+          source_type?: string
+        }
+        Update: {
+          amount?: number
+          commission_rate?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          referral_id?: string
+          referrer_id?: string
+          source_amount?: number
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_earnings_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_user_id: string | null
+          referrer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null

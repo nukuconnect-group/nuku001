@@ -25,6 +25,7 @@ const Footer = () => {
     company: [
       { label: t("nav.about"), href: "/a-propos" },
       { label: t("nav.contact"), href: "/contact" },
+      { label: "Affiliation", href: "/affiliation" },
     ],
     legal: [
       { label: t("footer.terms"), href: "/terms" },

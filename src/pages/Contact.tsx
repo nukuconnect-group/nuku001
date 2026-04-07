@@ -157,6 +157,7 @@ const Contact = () => {
         url="/contact"
         title="Contactez-nous"
         description="Contactez l'équipe NUKUCONNECT pour toute question, suggestion ou demande de partenariat. Nous sommes à votre écoute."
+        image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=630&fit=crop&q=80"
       />
       <Header />
       <main>
