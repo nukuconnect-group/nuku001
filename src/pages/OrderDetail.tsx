@@ -253,13 +253,26 @@ const OrderDetail = () => {
               ))}
             </div>
 
-            {/* Link to live tracking or no-driver info */}
+            {/* Live tracking map or no-driver info */}
             {delivery && delivery.status !== "delivered" ? (
-              <Link to="/suivi-livraison">
-                <Button variant="hero" size="sm" className="w-full mt-2 gap-2 text-xs">
-                  <MapPin className="w-3.5 h-3.5" /> Suivre le livreur en temps réel
-                </Button>
-              </Link>
+              <div className="mt-3 space-y-2">
+                <DeliveryLiveMap
+                  deliveryId={delivery.id}
+                  pickupLat={delivery.pickup_lat}
+                  pickupLng={delivery.pickup_lng}
+                  dropoffLat={delivery.dropoff_lat}
+                  dropoffLng={delivery.dropoff_lng}
+                  pickupAddress={delivery.pickup_address}
+                  dropoffAddress={delivery.dropoff_address}
+                  driverCurrentLat={delivery.driver_current_lat}
+                  driverCurrentLng={delivery.driver_current_lng}
+                />
+                {delivery.estimated_minutes && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    ⏱ Temps estimé : ~{delivery.estimated_minutes} min
+                  </p>
+                )}
+              </div>
             ) : !delivery ? (
               <div className="mt-3 p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
