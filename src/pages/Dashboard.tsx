@@ -28,7 +28,7 @@ import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift
 } from "lucide-react";
 
 const Dashboard = () => {
