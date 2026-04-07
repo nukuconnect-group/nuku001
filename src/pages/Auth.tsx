@@ -92,6 +92,14 @@ const Auth = () => {
 
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
 
+  // Capture referral code from URL and persist it
+  useEffect(() => {
+    const refCode = new URLSearchParams(window.location.search).get("ref");
+    if (refCode) {
+      localStorage.setItem("nukuconnect-ref", refCode);
+    }
+  }, []);
+
   useEffect(() => {
     let redirected = false;
     const redirectUser = async (userId: string) => {
