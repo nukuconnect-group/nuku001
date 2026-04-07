@@ -184,8 +184,7 @@ const Auth = () => {
             .update({ referred_user_id: authData.user.id, status: "active", activated_at: new Date().toISOString() })
             .eq("referral_code", savedRef)
             .is("referred_user_id", null)
-            .then(() => localStorage.removeItem("nukuconnect-ref"))
-            .catch(() => {});
+            .then(() => { localStorage.removeItem("nukuconnect-ref"); });
         }
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
