@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useMemo } from "react";
@@ -77,11 +78,20 @@ const CategoriesSection = () => {
   return (
     <section className="py-6 sm:py-10 bg-background">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="mb-4 sm:mb-6">
-          <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-extrabold text-accent uppercase tracking-wide">
-            Top Catégories
-          </h2>
-          <div className="w-20 h-[3px] bg-primary mt-1.5 rounded-full" />
+        <div className="mb-4 sm:mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-extrabold text-accent uppercase tracking-wide">
+              Top Catégories
+            </h2>
+            <div className="w-20 h-[3px] bg-primary mt-1.5 rounded-full" />
+          </div>
+          <Link
+            to="/categories"
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Voir tout
+            <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </Link>
         </div>
 
         {/* Horizontal scroll on all devices */}
