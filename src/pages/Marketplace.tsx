@@ -715,8 +715,8 @@ const Marketplace = () => {
       ) : (
       <section className="py-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
-          {/* Sponsored Products Slider — fixed min-height to prevent CLS */}
-          <div className="mb-6 sm:mb-8 min-h-[220px] sm:min-h-[280px]">
+          {/* Sponsored Products Slider — mobile only (desktop shows above) */}
+          <div className="mb-6 sm:mb-8 min-h-[220px] sm:min-h-[280px] lg:hidden">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                 <Award className="w-4 h-4 text-accent" />{t("mp.sponsored")}
