@@ -135,6 +135,10 @@ const OrderDetail = () => {
       { label: "En cours de livraison", date: null, done: delivery.status === "in_transit" || delivery.status === "delivered" },
       { label: "Livrée", date: delivery.delivered_at, done: delivery.status === "delivered" },
     );
+  } else {
+    timeline.push(
+      { label: "Sans livreur — Retrait sur place", date: null, done: order.status === "completed" },
+    );
   }
   if (order.status === "completed") {
     timeline.push({ label: "Terminée", date: order.updated_at, done: true });
