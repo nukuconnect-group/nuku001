@@ -114,7 +114,7 @@ const Cart = () => {
   // Finalize order after payment success
   const finalizeOrder = useCallback(async (checkoutData: any) => {
     try {
-      const { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId } = checkoutData;
+      const { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId, orderIds = [] } = checkoutData;
       const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
       const hasRealProducts = items.some(item => isValidUUID(item.product.id) && isValidUUID(item.product.producer.id));
 
@@ -126,34 +126,20 @@ const Cart = () => {
         return;
       }
 
-      const orderIds: string[] = [];
-      for (const item of items) {
-        const sellerId = item.product.producer.id;
-        const productId = item.product.id;
-        if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
-
-        const { data: orderData, error } = await supabase.from("orders").insert({
-          buyer_id: buyerProfile.id,
-          seller_id: sellerId,
-          product_id: productId,
-          quantity: item.quantity,
-          total_price: item.product.price * item.quantity,
-          status: "confirmed",
-          notes: [
-            `Client: ${buyerFullName} | ${billing.phone}`,
-            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
-            `Paiement: ${selectedPayment?.name} ✅`,
-            selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "Livreur: attribution automatique",
-            mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
-            paymentIdentifier ? `tx_ref: ${paymentIdentifier}` : "",
-          ].filter(Boolean).join(" | "),
-        }).select("id").single();
-
+      // Orders are already created with "pending" status before payment
+      // Now update them to "confirmed" after successful payment
+      for (const orderId of orderIds) {
+        const { error } = await supabase.from("orders")
+          .update({ 
+            status: "confirmed",
+            notes: `Paiement confirmé via polling | ${paymentIdentifier}`,
+          })
+          .eq("id", orderId)
+          .eq("status", "pending"); // Only update if still pending (webhook may have already confirmed)
+        
         if (error) {
-          console.error("Order insert error:", error);
-          throw new Error("Erreur lors de la création de la commande. Contactez le support.");
+          console.error("Order update error:", error);
         }
-        if (orderData) orderIds.push(orderData.id);
       }
 
       // Create delivery records
@@ -388,12 +374,44 @@ const Cart = () => {
       const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
       const selectedRealDriverId = selectedDriver && !String(selectedDriver.id).startsWith("demo-") ? selectedDriver.id : null;
 
-      const checkoutData = { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId };
-      setPendingCheckoutData(checkoutData);
-      pendingCheckoutRef.current = checkoutData;
-
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
+
+      // Create orders BEFORE payment so the webhook can find them by tx_reference
+      const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+      const orderIds: string[] = [];
+      for (const item of items) {
+        const sellerId = item.product.producer.id;
+        const productId = item.product.id;
+        if (!isValidUUID(productId) || !isValidUUID(sellerId)) continue;
+
+        const { data: orderData, error: orderErr } = await supabase.from("orders").insert({
+          buyer_id: buyerProfile.id,
+          seller_id: sellerId,
+          product_id: productId,
+          quantity: item.quantity,
+          total_price: item.product.price * item.quantity,
+          status: "pending",
+          notes: [
+            `Client: ${buyerFullName} | ${billing.phone}`,
+            deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
+            `Paiement: ${selectedPayment?.name}`,
+            selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "",
+            mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
+            `tx_ref: ${identifier}`,
+          ].filter(Boolean).join(" | "),
+        }).select("id").single();
+
+        if (orderErr) {
+          console.error("Order insert error:", orderErr);
+          throw new Error("Erreur lors de la création de la commande.");
+        }
+        if (orderData) orderIds.push(orderData.id);
+      }
+
+      const checkoutData = { buyerProfile, selectedPayment, fullAddress, buyerFullName, selectedRealDriverId, orderIds };
+      setPendingCheckoutData(checkoutData);
+      pendingCheckoutRef.current = checkoutData;
 
       const phoneDigits = cleanPhone(mobileNumber);
       const { data, error } = await supabase.functions.invoke("paygate-init", {

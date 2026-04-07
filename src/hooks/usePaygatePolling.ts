@@ -30,7 +30,6 @@ export function usePaygatePolling({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stoppedRef = useRef(false);
 
-  // Use refs for callbacks to avoid stale closures
   const onCompletedRef = useRef(onCompleted);
   const onFailedRef = useRef(onFailed);
   const onExpiredRef = useRef(onExpired);
@@ -46,7 +45,23 @@ export function usePaygatePolling({
     }
   }, []);
 
-  const checkStatus = useCallback(async (): Promise<boolean> => {
+  // Check if the order was already confirmed by webhook (fallback)
+  const checkOrderConfirmedByWebhook = useCallback(async (): Promise<boolean> => {
+    if (!identifier) return false;
+    try {
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id, status")
+        .or(`notes.ilike.%${identifier}%`)
+        .eq("status", "confirmed")
+        .limit(1);
+      return !!(orders && orders.length > 0);
+    } catch {
+      return false;
+    }
+  }, [identifier]);
+
+  const checkStatus = useCallback(async (attemptCount: number): Promise<boolean> => {
     if (!identifier && !tx_reference) return false;
     if (stoppedRef.current) return true;
 
@@ -57,6 +72,16 @@ export function usePaygatePolling({
 
       if (error) {
         console.error("Paygate status check error:", error);
+        // On error, try webhook fallback after a few attempts
+        if (attemptCount >= 3) {
+          const confirmedByWebhook = await checkOrderConfirmedByWebhook();
+          if (confirmedByWebhook) {
+            console.log("[Paygate] Order confirmed by webhook fallback");
+            stopPolling();
+            onCompletedRef.current?.({ status: "completed", source: "webhook_fallback" });
+            return true;
+          }
+        }
         return false;
       }
 
@@ -64,7 +89,7 @@ export function usePaygatePolling({
       const newStatus = data?.status as PaymentStatus || "unknown";
       setStatus(newStatus);
 
-      console.log(`[Paygate] Status check: ${newStatus}`, data);
+      console.log(`[Paygate] Status check #${attemptCount}: ${newStatus}`, data);
 
       if (newStatus === "completed") {
         stopPolling();
@@ -81,12 +106,26 @@ export function usePaygatePolling({
         onExpiredRef.current?.();
         return true;
       }
+
+      // For "pending" or "unknown" status, check if webhook already confirmed the order
+      // This handles the case where mobile money debits but Paygate API doesn't update
+      if (attemptCount >= 4 && attemptCount % 3 === 0) {
+        const confirmedByWebhook = await checkOrderConfirmedByWebhook();
+        if (confirmedByWebhook) {
+          console.log("[Paygate] Order confirmed by webhook while polling showed:", newStatus);
+          setStatus("completed");
+          stopPolling();
+          onCompletedRef.current?.({ ...data, status: "completed", source: "webhook_confirmed" });
+          return true;
+        }
+      }
+
       return false;
     } catch (e) {
       console.error("Paygate polling error:", e);
       return false;
     }
-  }, [identifier, tx_reference, stopPolling]);
+  }, [identifier, tx_reference, stopPolling, checkOrderConfirmedByWebhook]);
 
   useEffect(() => {
     if (!enabled || (!identifier && !tx_reference)) {
@@ -103,20 +142,26 @@ export function usePaygatePolling({
       if (stoppedRef.current) return;
       count++;
       setAttempts(count);
-      const shouldStop = await checkStatus();
+      const shouldStop = await checkStatus(count);
       if (shouldStop || count >= maxAttempts) {
         stopPolling();
         if (count >= maxAttempts && !shouldStop) {
-          setStatus("expired");
-          onExpiredRef.current?.();
+          // Last chance: check webhook confirmation before declaring expired
+          const confirmedByWebhook = await checkOrderConfirmedByWebhook();
+          if (confirmedByWebhook) {
+            setStatus("completed");
+            onCompletedRef.current?.({ status: "completed", source: "webhook_final_check" });
+          } else {
+            setStatus("expired");
+            onExpiredRef.current?.();
+          }
         }
       }
     };
 
-    // First check after 3s (give mobile money time to process)
+    // First check after 3s
     const initialTimeout = setTimeout(() => {
       poll();
-      // Then continue polling at regular interval
       if (!stoppedRef.current) {
         intervalRef.current = setInterval(poll, intervalMs);
       }
@@ -126,7 +171,7 @@ export function usePaygatePolling({
       clearTimeout(initialTimeout);
       stopPolling();
     };
-  }, [enabled, identifier, tx_reference, intervalMs, maxAttempts, checkStatus, stopPolling]);
+  }, [enabled, identifier, tx_reference, intervalMs, maxAttempts, checkStatus, stopPolling, checkOrderConfirmedByWebhook]);
 
   const reset = () => {
     setStatus("idle");
