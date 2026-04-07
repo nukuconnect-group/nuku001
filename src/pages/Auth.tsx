@@ -175,6 +175,18 @@ const Auth = () => {
       if (authData.user) {
         const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
         await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
+
+        // Link referral if present
+        const savedRef = localStorage.getItem("nukuconnect-ref");
+        if (savedRef) {
+          supabase
+            .from("referrals")
+            .update({ referred_user_id: authData.user.id, status: "active", activated_at: new Date().toISOString() })
+            .eq("referral_code", savedRef)
+            .is("referred_user_id", null)
+            .then(() => localStorage.removeItem("nukuconnect-ref"))
+            .catch(() => {});
+        }
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
           if (newProfile) await supabase.from("driver_profiles").insert({ user_id: authData.user.id, profile_id: newProfile.id, vehicle_type: producerSector || "moto", zone: producerLocation, is_available: true });

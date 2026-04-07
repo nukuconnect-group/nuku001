@@ -89,6 +89,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
     if (!currentUserId) {
       requestIdRef.current += 1;
+      // Clear all cached data when user logs out to prevent data mixing
+      if (lastUserIdRef.current !== null) {
+        queryClient.clear();
+      }
       lastUserIdRef.current = null;
       setProfile(null);
       setIsLoading(false);

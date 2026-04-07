@@ -102,7 +102,7 @@ const Legal = () => {
               <h2 className="font-heading text-lg sm:text-xl font-bold text-foreground border-b border-border pb-2">9. Crédits</h2>
               <ul className="mt-3 space-y-2 text-muted-foreground">
                 <li><strong className="text-foreground">Conception et développement :</strong> Nukuconnect SA</li>
-                <li><strong className="text-foreground">Technologie :</strong> React, TypeScript, Lovable Cloud</li>
+                <li><strong className="text-foreground">Technologie :</strong> React, TypeScript, Cloud Infrastructure</li>
                 <li><strong className="text-foreground">Illustrations :</strong> Nukuconnect SA / Licences libres</li>
               </ul>
             </section>
