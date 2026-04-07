@@ -24,6 +24,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')
+    if (!VAPID_PRIVATE_KEY) {
+      return new Response(JSON.stringify({ error: "VAPID_PRIVATE_KEY not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
