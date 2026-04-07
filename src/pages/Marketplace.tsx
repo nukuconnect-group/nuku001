@@ -340,7 +340,12 @@ const Marketplace = () => {
   const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
   const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
   const newArrivals = useMemo(() => [...allProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6), [allProducts]);
-  const sponsoredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8), [allProducts]);
+  const sponsoredProducts = useMemo(() => {
+    const boostedIds = new Set(activeBoosts.map(b => b.product_id));
+    const boosted = allProducts.filter(p => boostedIds.has(p.id));
+    // If no boosted products, show top-rated as fallback
+    return boosted.length > 0 ? boosted.slice(0, 8) : [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8);
+  }, [allProducts, activeBoosts]);
 
   const productsByCategory = useMemo(() => {
     const grouped: { [key: string]: typeof allProducts } = {};
