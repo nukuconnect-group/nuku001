@@ -236,7 +236,7 @@ const DriverDashboard = () => {
       }
 
       await supabase
-        .from("driver_profiles" as any)
+        .from("driver_profiles")
         .update(updates)
         .eq("id", driverProfile.id);
       
@@ -256,7 +256,7 @@ const DriverDashboard = () => {
     if (!driverProfile) return;
     try {
       const { error } = await supabase
-        .from("deliveries" as any)
+        .from("deliveries")
         .update({
           driver_id: driverProfile.id,
           status: "accepted",
