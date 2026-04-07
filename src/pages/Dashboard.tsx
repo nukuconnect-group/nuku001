@@ -286,6 +286,9 @@ const Dashboard = () => {
               <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
                 <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Paramètres
               </TabsTrigger>
+              <TabsTrigger value="affiliation" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1" onClick={() => window.location.href = '/affiliation'}>
+                <Gift className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Affiliation
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="products" className="space-y-3">
