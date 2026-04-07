@@ -91,18 +91,32 @@ const DriverDashboard = () => {
     setIsLoading(true);
     try {
       // Fetch driver profile
-      const { data: dp } = await supabase
-        .from("driver_profiles" as any)
+      let { data: dp } = await supabase
+        .from("driver_profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+      
+      // Auto-create driver profile if it doesn't exist
+      if (!dp && profile) {
+        const { data: profileData } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+        if (profileData) {
+          const { data: newDp } = await supabase.from("driver_profiles").insert({
+            user_id: user.id,
+            profile_id: profileData.id,
+            vehicle_type: "moto",
+            is_available: false,
+          }).select("*").single();
+          dp = newDp;
+        }
+      }
       
       setDriverProfile(dp);
 
       if (dp) {
         // Fetch available deliveries (pending, no driver)
         const { data: available } = await supabase
-          .from("deliveries" as any)
+          .from("deliveries")
           .select("*")
           .eq("status", "pending")
           .is("driver_id", null)
@@ -112,7 +126,7 @@ const DriverDashboard = () => {
 
         // Fetch my deliveries
         const { data: mine } = await supabase
-          .from("deliveries" as any)
+          .from("deliveries")
           .select("*")
           .eq("driver_id", (dp as any).id)
           .order("created_at", { ascending: false });
@@ -140,7 +154,7 @@ const DriverDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, profile]);
 
   useEffect(() => {
     if (!isReady || profileLoading) return;
@@ -222,7 +236,7 @@ const DriverDashboard = () => {
       }
 
       await supabase
-        .from("driver_profiles" as any)
+        .from("driver_profiles")
         .update(updates)
         .eq("id", driverProfile.id);
       
@@ -242,7 +256,7 @@ const DriverDashboard = () => {
     if (!driverProfile) return;
     try {
       const { error } = await supabase
-        .from("deliveries" as any)
+        .from("deliveries")
         .update({
           driver_id: driverProfile.id,
           status: "accepted",
@@ -271,8 +285,24 @@ const DriverDashboard = () => {
       if (newStatus === "picked_up") updates.picked_up_at = new Date().toISOString();
       if (newStatus === "delivered") updates.delivered_at = new Date().toISOString();
 
-      await supabase.from("deliveries" as any).update(updates).eq("id", deliveryId);
+      await supabase.from("deliveries").update(updates).eq("id", deliveryId);
+      
+      // If delivered, increment driver total_deliveries and total_earnings
+      if (newStatus === "delivered" && driverProfile) {
+        const delivery = myDeliveries.find(d => d.id === deliveryId);
+        const fee = delivery?.driver_fee || 0;
+        await supabase.from("driver_profiles").update({
+          total_deliveries: (driverProfile.total_deliveries || 0) + 1,
+          total_earnings: (driverProfile.total_earnings || 0) + fee,
+        }).eq("id", driverProfile.id);
+      }
+
       toast({ title: "Statut mis à jour", description: `Livraison ${statusLabels[newStatus]?.label || newStatus}` });
+      
+      if (newStatus === "delivered") {
+        toast({ title: "💰 Gains crédités !", description: "Vos gains de livraison ont été ajoutés à votre solde." });
+      }
+      
       fetchDriverData();
     } catch {
       toast({ title: "Erreur", description: "Impossible de mettre à jour.", variant: "destructive" });
