@@ -50,6 +50,7 @@ const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const FormationDetail = lazy(() => import("./pages/FormationDetail"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const Categories = lazy(() => import("./pages/Categories"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
