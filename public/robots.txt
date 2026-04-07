@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /settings
 Disallow: /reset-password
 
-Sitemap: https://nukuconnect.lovable.app/sitemap.xml
+Sitemap: https://www.nukuconnect.com/sitemap.xml

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://nukuconnect.lovable.app/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/marketplace</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/producteurs</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/formations</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/nuku-ai</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/tracabilite</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/a-propos</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/aide</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/plans</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/devenir-fournisseur</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://nukuconnect.lovable.app/legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.nukuconnect.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.nukuconnect.com/marketplace</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.nukuconnect.com/producteurs</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.nukuconnect.com/formations</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.nukuconnect.com/nuku-ai</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.nukuconnect.com/tracabilite</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.nukuconnect.com/a-propos</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.nukuconnect.com/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.nukuconnect.com/aide</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://www.nukuconnect.com/plans</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.nukuconnect.com/devenir-fournisseur</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.nukuconnect.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.nukuconnect.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.nukuconnect.com/legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

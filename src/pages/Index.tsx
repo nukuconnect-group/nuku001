@@ -24,11 +24,11 @@ const Index = () => {
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "NUKUCONNECT",
-          "url": "https://nukuconnect.lovable.app",
+          "url": "https://www.nukuconnect.com",
           "description": "Marketplace agricole intelligente d'Afrique",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "https://nukuconnect.lovable.app/marketplace?q={search_term_string}",
+            "target": "https://www.nukuconnect.com/marketplace?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         }}
