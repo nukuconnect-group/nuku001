@@ -258,6 +258,12 @@ const DriverDashboard = () => {
     }
   };
 
+  const rejectDelivery = async (deliveryId: string) => {
+    // Simply hide this delivery from the driver's view by removing it from the local state
+    setAvailableDeliveries(prev => prev.filter(d => d.id !== deliveryId));
+    toast({ title: "Livraison rejetée", description: "Cette offre a été masquée de votre liste." });
+  };
+
   const updateDeliveryStatus = async (deliveryId: string, newStatus: string) => {
     try {
       const updates: any = { status: newStatus };
