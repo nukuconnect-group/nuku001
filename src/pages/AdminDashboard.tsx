@@ -1014,6 +1014,11 @@ const AdminDashboard = () => {
             <TabsContent value="support">
               <SupportChat adminProfileId={adminProfile?.id} />
             </TabsContent>
+
+            {/* Emails Tab */}
+            <TabsContent value="emails">
+              <EmailStatsManager />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
