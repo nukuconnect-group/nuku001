@@ -135,6 +135,10 @@ const OrderDetail = () => {
       { label: "En cours de livraison", date: null, done: delivery.status === "in_transit" || delivery.status === "delivered" },
       { label: "Livrée", date: delivery.delivered_at, done: delivery.status === "delivered" },
     );
+  } else {
+    timeline.push(
+      { label: "Sans livreur — Retrait sur place", date: null, done: order.status === "completed" },
+    );
   }
   if (order.status === "completed") {
     timeline.push({ label: "Terminée", date: order.updated_at, done: true });
@@ -248,14 +252,24 @@ const OrderDetail = () => {
               ))}
             </div>
 
-            {/* Link to live tracking */}
-            {delivery && delivery.status !== "delivered" && (
+            {/* Link to live tracking or no-driver info */}
+            {delivery && delivery.status !== "delivered" ? (
               <Link to="/suivi-livraison">
                 <Button variant="hero" size="sm" className="w-full mt-2 gap-2 text-xs">
-                  <MapPin className="w-3.5 h-3.5" /> Suivre en temps réel
+                  <MapPin className="w-3.5 h-3.5" /> Suivre le livreur en temps réel
                 </Button>
               </Link>
-            )}
+            ) : !delivery ? (
+              <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Package className="w-3.5 h-3.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground">Sans livreur assigné</p>
+                    <p>Cette commande est en retrait sur place. Contactez le vendeur pour organiser la récupération.</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
