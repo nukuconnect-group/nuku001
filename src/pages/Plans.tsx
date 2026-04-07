@@ -207,7 +207,7 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      <SEO url="/plans" title="Abonnements et Tarifs" description="Choisissez le plan NUKUCONNECT adapté à votre activité. Gratuit, Pro ou Premium pour maximiser vos ventes agricoles." />
+      <SEO url="/plans" title="Abonnements et Tarifs" description="Choisissez le plan NUKUCONNECT adapté à votre activité. Gratuit, Pro ou Premium pour maximiser vos ventes agricoles." image="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=630&fit=crop&q=80" />
       <Header />
 
       {/* Hero */}

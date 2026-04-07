@@ -243,7 +243,7 @@ const Traceability = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      <SEO url="/tracabilite" title="Traçabilité des Produits" description="Vérifiez l'origine et le parcours de vos produits agricoles. Traçabilité complète de la production à la livraison." />
+      <SEO url="/tracabilite" title="Traçabilité des Produits" description="Vérifiez l'origine et le parcours de vos produits agricoles. Traçabilité complète de la production à la livraison." image="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1200&h=630&fit=crop&q=80" />
       <Header />
 
       {/* Hero */}

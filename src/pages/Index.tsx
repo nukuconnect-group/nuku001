@@ -20,6 +20,7 @@ const Index = () => {
         url="/"
         title="Marketplace Agricole Intelligent d'Afrique"
         description="Achetez et vendez des produits agricoles. Connectez-vous avec des milliers de producteurs vérifiés, livreurs et acheteurs en Afrique."
+        image="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&h=630&fit=crop&q=80"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebSite",
