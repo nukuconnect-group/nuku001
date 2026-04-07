@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthReady } from "@/hooks/useAuthReady";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileContextType {
   user: any;
@@ -24,6 +25,7 @@ export const useProfile = () => useContext(ProfileContext);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user, isReady } = useAuthReady();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const lastUserIdRef = useRef<string | null>(null);
@@ -87,6 +89,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
     if (!currentUserId) {
       requestIdRef.current += 1;
+      // Clear all cached data when user logs out to prevent data mixing
+      if (lastUserIdRef.current !== null) {
+        queryClient.clear();
+      }
       lastUserIdRef.current = null;
       setProfile(null);
       setIsLoading(false);
