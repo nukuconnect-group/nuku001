@@ -581,9 +581,9 @@ const Marketplace = () => {
       <Header />
       <MarketplacePromoPopup />
 
-      <section className="bg-muted/30 border-b border-border py-3 sm:py-4">
+      <section className="hidden sm:block bg-muted/30 border-b border-border py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 max-w-3xl mx-auto">
+          <div className="flex flex-row items-start gap-3 max-w-3xl mx-auto">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input type="text" placeholder={t("header.search")}
@@ -604,7 +604,7 @@ const Marketplace = () => {
                 </button>
               </div>
             </div>
-            <div className="w-full sm:w-56 flex-shrink-0">
+            <div className="w-56 flex-shrink-0">
               <LocationSearchFilter location={location} onLocationChange={setLocation} />
             </div>
           </div>
