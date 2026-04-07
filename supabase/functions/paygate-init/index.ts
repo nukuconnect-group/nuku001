@@ -67,11 +67,15 @@ serve(async (req) => {
     const isCard = use_redirect || !network || network === "CARD";
 
     if (isCard) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const callbackUrl = `${supabaseUrl}/functions/v1/paygate-webhook`;
+
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
       v2Body.append("amount", String(amount));
       v2Body.append("description", description);
       v2Body.append("identifier", identifier);
+      v2Body.append("callback_url", callbackUrl);
 
       const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
         method: "POST",
@@ -115,6 +119,9 @@ serve(async (req) => {
     }
 
     // Mobile Money
+    const supabaseUrlMm = Deno.env.get("SUPABASE_URL")!;
+    const callbackUrlMm = `${supabaseUrlMm}/functions/v1/paygate-webhook`;
+
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
     body.append("phone_number", phone_number || "");
@@ -122,6 +129,7 @@ serve(async (req) => {
     body.append("description", description);
     body.append("identifier", identifier);
     body.append("network", network!);
+    body.append("callback_url", callbackUrlMm);
 
     const resp = await fetch("https://paygateglobal.com/api/v1/pay", {
       method: "POST",

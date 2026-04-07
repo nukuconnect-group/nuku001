@@ -235,7 +235,7 @@ const NukuAI = () => {
 
   return (
     <div className={`min-h-screen bg-background flex flex-col ${isFullscreen ? "" : "pb-14 lg:pb-0"}`}>
-      <SEO url="/nuku-ai" title="Nuku AI - Assistant Agricole Intelligent" description="Posez vos questions agricoles à Nuku AI. Conseils personnalisés sur la culture, l'élevage, la pisciculture et plus encore." />
+      <SEO url="/nuku-ai" title="Nuku AI - Assistant Agricole Intelligent" description="Posez vos questions agricoles à Nuku AI. Conseils personnalisés sur la culture, l'élevage, la pisciculture et plus encore." image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-nuku-ai.jpg" />
       {!isFullscreen && <Header />}
       <main className={`flex-1 flex flex-col ${isFullscreen ? "h-screen" : "max-h-[calc(100vh-120px)] lg:max-h-[calc(100vh-180px)]"}`}>
         {/* Header bar */}

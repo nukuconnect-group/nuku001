@@ -145,6 +145,7 @@ const Cart = () => {
             `Paiement: ${selectedPayment?.name} ✅`,
             selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "Livreur: attribution automatique",
             mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
+            paymentIdentifier ? `tx_ref: ${paymentIdentifier}` : "",
           ].filter(Boolean).join(" | "),
         }).select("id").single();
 

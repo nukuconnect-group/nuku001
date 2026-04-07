@@ -82,6 +82,7 @@ const Formations = () => {
         url="/formations"
         title="Formations Agricoles"
         description="Accédez à des formations agricoles gratuites et certifiantes. Apprenez les techniques modernes de culture, d'élevage et de gestion agricole."
+        image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-formations.jpg"
       />
       <Header />
 
