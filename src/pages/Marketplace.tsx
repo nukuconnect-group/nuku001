@@ -610,7 +610,7 @@ const Marketplace = () => {
           <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
             {sponsoredProducts.map((product) => (
               <div key={product.id} className="flex-shrink-0 w-[180px] snap-start">
-                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} badgeLabel="Vente" />
+                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
               </div>
             ))}
             {/* Demands in desktop sponsored bar - same size as products */}
