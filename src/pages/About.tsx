@@ -29,6 +29,7 @@ const About = () => {
         url="/a-propos"
         title="À Propos de NUKUCONNECT"
         description="Découvrez la mission, la vision et l'équipe derrière NUKUCONNECT, la marketplace agricole intelligente d'Afrique."
+        image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-about.jpg"
       />
       <Header />
 

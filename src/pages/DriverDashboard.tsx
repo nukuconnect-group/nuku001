@@ -615,7 +615,16 @@ const DriverDashboard = () => {
                       <Button variant="hero" size="sm" className="flex-1" onClick={() => acceptDelivery(delivery.id)}>
                         <CheckCircle2 className="w-4 h-4 mr-1" /> Accepter
                       </Button>
+                      <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => rejectDelivery(delivery.id)}>
+                        <XCircle className="w-4 h-4 mr-1" /> Rejeter
+                      </Button>
                     </div>
+                    {/* Navigation to pickup */}
+                    {delivery.pickup_lat && delivery.pickup_lng && (
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${delivery.pickup_lat},${delivery.pickup_lng}`, "_blank")}>
+                        <Navigation className="w-3.5 h-3.5 mr-1" /> Itinéraire vers le point de collecte
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))

@@ -571,6 +571,7 @@ const Marketplace = () => {
         url="/marketplace"
         title="Marketplace - Produits Agricoles d'Afrique"
         description="Explorez des milliers de produits agricoles frais et certifiés. Achetez directement aux producteurs vérifiés d'Afrique."
+        image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-marketplace.jpg"
       />
       <Header />
       <MarketplacePromoPopup />
