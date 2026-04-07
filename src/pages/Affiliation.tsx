@@ -267,7 +267,7 @@ const Affiliation = () => {
                       {new Date(e.created_at).toLocaleDateString("fr-FR")} · {(e.commission_rate * 100).toFixed(0)}% de {formatPrice(e.source_amount)}
                     </p>
                           </div>
-                          <span className="text-sm font-bold text-green-600">+{formatPrice(e.amount)}</span>
+                          <span className="text-sm font-bold text-primary">+{formatPrice(e.amount)}</span>
                         </div>
                       ))}
                     </div>
