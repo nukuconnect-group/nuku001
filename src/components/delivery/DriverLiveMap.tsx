@@ -206,7 +206,7 @@ const DriverLiveMap = ({ delivery, driverName }: DriverLiveMapProps) => {
         </Badge>
       </div>
       
-      <div ref={mapRef} className="w-full h-[250px] sm:h-[300px]" />
+      <div ref={mapRef} className="w-full h-[250px] sm:h-[300px] relative z-0" />
 
       <CardContent className="p-3 space-y-2">
         {/* Driver info */}
