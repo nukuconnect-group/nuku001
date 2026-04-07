@@ -47,7 +47,6 @@ export function useResolvedUserType(userId?: string | null, profileUserType?: st
     if (profileUserType === "driver") {
       return true;
     }
-
     return userId ? driverProfileCache.get(userId) ?? false : false;
   });
 
@@ -56,17 +55,13 @@ export function useResolvedUserType(userId?: string | null, profileUserType?: st
 
     if (profileUserType === "driver") {
       setHasDriverProfile(true);
-      return () => {
-        mounted = false;
-      };
+      return () => { mounted = false; };
     }
 
     setHasDriverProfile(userId ? driverProfileCache.get(userId) ?? false : false);
 
     if (!userId) {
-      return () => {
-        mounted = false;
-      };
+      return () => { mounted = false; };
     }
 
     getHasDriverProfile(userId).then((value) => {
@@ -75,14 +70,17 @@ export function useResolvedUserType(userId?: string | null, profileUserType?: st
       }
     });
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [userId, profileUserType]);
 
   return useMemo(() => {
+    // If profile has an explicit user_type set, always use it
+    // Only use driver profile detection when user_type is null/undefined
+    if (profileUserType) {
+      return profileUserType;
+    }
+    // No explicit type set — check if they have a driver profile
     if (hasDriverProfile) return "driver";
-    // Don't default to "buyer" - return the actual profile type or null
-    return profileUserType || null;
+    return null;
   }, [hasDriverProfile, profileUserType]);
 }
