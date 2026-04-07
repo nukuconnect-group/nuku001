@@ -739,110 +739,128 @@ const Marketplace = () => {
             </div>
           </div>
 
-          {/* Toolbar */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
-                  <SlidersHorizontal className="w-3.5 h-3.5" />{t("mp.filters")}
-                  {activeFiltersCount > 0 && (<Badge variant="default" className="ml-1 px-1.5 py-0 text-[9px] h-4">{activeFiltersCount}</Badge>)}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72 sm:w-80 flex flex-col p-0">
-                <SheetHeader className="p-4 pb-2 flex-shrink-0"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />{t("mp.advancedFilters")}</SheetTitle></SheetHeader>
-                <ScrollArea className="flex-1 px-4 pb-4">
-                  <FiltersContent />
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
-                <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
-                <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
-                <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
-                <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
-                <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Active Filters */}
-          {activeFiltersCount > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground">{t("mp.filters")}:</span>
-              {selectedCategory !== "all" && (
-                <Badge variant="secondary" className="gap-1 text-[10px] h-5">
-                  {marketplaceCategories.find(c => c.name.toLowerCase() === selectedCategory)?.name || selectedCategory}
-                  <button onClick={() => setSelectedCategory("all")}><X className="w-2.5 h-2.5" /></button>
-                </Badge>
-              )}
-              {organicOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.bio")}<button onClick={() => setOrganicOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              {verifiedOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.verified")}<button onClick={() => setVerifiedOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              {location !== t("mp.allRegions") && location !== "Toutes les régions" && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{location}<button onClick={() => setLocation(t("mp.allRegions"))}><X className="w-2.5 h-2.5" /></button></Badge>)}
-              <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] h-5 px-2">{t("mp.clear")}</Button>
-            </div>
-          )}
-
-          {isFiltering ? (
-            <>
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> {t("mp.products")}</p>
-                <div className="flex items-center border border-border rounded-lg p-0.5">
-                  <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
-                </div>
+          {/* Desktop layout: sidebar filters + main content */}
+          <div className="flex gap-6">
+            {/* Desktop Filters Sidebar */}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <div className="sticky top-20 border border-border rounded-xl bg-card p-4 space-y-1">
+                <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
+                  <SlidersHorizontal className="w-4 h-4" /> {t("mp.advancedFilters")}
+                </h3>
+                <FiltersContent />
               </div>
-              {filteredProducts.length > 0 ? (
+            </aside>
+
+            {/* Main content */}
+            <div className="flex-1 min-w-0">
+              {/* Toolbar */}
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                {/* Mobile filter button */}
+                <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs lg:hidden">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />{t("mp.filters")}
+                      {activeFiltersCount > 0 && (<Badge variant="default" className="ml-1 px-1.5 py-0 text-[9px] h-4">{activeFiltersCount}</Badge>)}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-72 sm:w-80 flex flex-col p-0">
+                    <SheetHeader className="p-4 pb-2 flex-shrink-0"><SheetTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="w-4 h-4" />{t("mp.advancedFilters")}</SheetTitle></SheetHeader>
+                    <ScrollArea className="flex-1 px-4 pb-4">
+                      <FiltersContent />
+                    </ScrollArea>
+                  </SheetContent>
+                </Sheet>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
+                    <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
+                    <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
+                    <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
+                    <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
+                    <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Active Filters */}
+              {activeFiltersCount > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground">{t("mp.filters")}:</span>
+                  {selectedCategory !== "all" && (
+                    <Badge variant="secondary" className="gap-1 text-[10px] h-5">
+                      {marketplaceCategories.find(c => c.name.toLowerCase() === selectedCategory)?.name || selectedCategory}
+                      <button onClick={() => setSelectedCategory("all")}><X className="w-2.5 h-2.5" /></button>
+                    </Badge>
+                  )}
+                  {organicOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.bio")}<button onClick={() => setOrganicOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
+                  {verifiedOnly && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{t("mp.verified")}<button onClick={() => setVerifiedOnly(false)}><X className="w-2.5 h-2.5" /></button></Badge>)}
+                  {location !== t("mp.allRegions") && location !== "Toutes les régions" && (<Badge variant="secondary" className="gap-1 text-[10px] h-5">{location}<button onClick={() => setLocation(t("mp.allRegions"))}><X className="w-2.5 h-2.5" /></button></Badge>)}
+                  <Button variant="ghost" size="sm" onClick={handleReset} className="text-[10px] h-5 px-2">{t("mp.clear")}</Button>
+                </div>
+              )}
+
+              {isFiltering ? (
                 <>
-                  <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                    {filteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{filteredProducts.length}</span> {t("mp.products")}</p>
+                    <div className="flex items-center border border-border rounded-lg p-0.5">
+                      <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid3X3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="w-3.5 h-3.5" /></button>
+                    </div>
                   </div>
-                  {visibleCount < filteredProducts.length && (
-                    <div ref={loadMoreRef} className="flex justify-center py-6">
-                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  {filteredProducts.length > 0 ? (
+                    <>
+                      <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
+                        {filteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                      </div>
+                      {visibleCount < filteredProducts.length && (
+                        <div ref={loadMoreRef} className="flex justify-center py-6">
+                          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><Search className="w-6 h-6 text-muted-foreground" /></div>
+                      <h3 className="font-heading text-base font-semibold text-foreground mb-1.5">{t("mp.noProducts")}</h3>
+                      <p className="text-xs text-muted-foreground mb-4">{t("mp.noProductsDesc")}</p>
+                      <Button variant="outline" onClick={handleReset} size="sm" className="text-xs">{t("mp.reset")}</Button>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="text-center py-12">
-                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><Search className="w-6 h-6 text-muted-foreground" /></div>
-                  <h3 className="font-heading text-base font-semibold text-foreground mb-1.5">{t("mp.noProducts")}</h3>
-                  <p className="text-xs text-muted-foreground mb-4">{t("mp.noProductsDesc")}</p>
-                  <Button variant="outline" onClick={handleReset} size="sm" className="text-xs">{t("mp.reset")}</Button>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
+                <>
+                  {flashDeals.length > 0 && (
+                    <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
+                  )}
+                  <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
+                  <NewArrivalsSection products={newArrivals} />
+                  {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
+                    const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
+                    const categoryEmoji = categoryInfo?.emoji || "📦";
+                    return (
+                      <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
+                    );
+                  })}
 
-              {flashDeals.length > 0 && (
-                <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
-              )}
-              <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
-              {/* New Arrivals - Premium Layout */}
-              <NewArrivalsSection products={newArrivals} />
-              {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
-                const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());
-                const categoryEmoji = categoryInfo?.emoji || "📦";
-                return (
-                  <ProductSection key={category} title={category} icon={<span className="text-base">{categoryEmoji}</span>} products={categoryProducts} viewAll={categoryInfo?.name?.toLowerCase() || category} />
-                );
-              })}
-
-              <div className="mt-6 sm:mt-8">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                  {allProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
-                </div>
-                {visibleCount < allProducts.length && (
-                  <div ref={loadMoreRef} className="flex justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <div className="mt-6 sm:mt-8">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+                      {allProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                    </div>
+                    {visibleCount < allProducts.length && (
+                      <div ref={loadMoreRef} className="flex justify-center py-6">
+                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      </div>
+                    )}
                   </div>
-                )}
+                </>
+              )}
+            </div>
+          </div>
               </div>
             </>
           )}
