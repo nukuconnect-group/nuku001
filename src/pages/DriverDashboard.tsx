@@ -777,24 +777,41 @@ const DriverDashboard = () => {
                         )}
                       </div>
 
+                      {/* Earnings details */}
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5 space-y-1">
+                        <p className="text-[10px] font-semibold text-green-800 dark:text-green-300">💰 Détails des gains</p>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Frais de livraison total</span>
+                          <span className="font-medium">{delivery.delivery_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Commission plateforme</span>
+                          <span className="font-medium text-red-600">-{delivery.platform_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold border-t border-green-200 dark:border-green-800 pt-1">
+                          <span className="text-green-700 dark:text-green-400">Votre gain</span>
+                          <span className="text-green-700 dark:text-green-400">{delivery.driver_fee?.toLocaleString() || 0} FCFA</span>
+                        </div>
+                      </div>
+
                       {/* Action buttons based on status */}
                       <div className="flex gap-2">
                         {delivery.status === "accepted" && (
                           <Button variant="hero" size="sm" className="flex-1"
                             onClick={() => updateDeliveryStatus(delivery.id, "picked_up")}>
-                            <Package className="w-4 h-4 mr-1" /> Récupéré
+                            <Package className="w-4 h-4 mr-1" /> J'ai récupéré la commande
                           </Button>
                         )}
                         {delivery.status === "picked_up" && (
                           <Button variant="hero" size="sm" className="flex-1"
                             onClick={() => updateDeliveryStatus(delivery.id, "in_transit")}>
-                            <Navigation className="w-4 h-4 mr-1" /> En route
+                            <Navigation className="w-4 h-4 mr-1" /> Je suis en route
                           </Button>
                         )}
                         {delivery.status === "in_transit" && (
-                          <Button variant="hero" size="sm" className="flex-1"
+                          <Button variant="hero" size="sm" className="flex-1 bg-green-600 hover:bg-green-700"
                             onClick={() => updateDeliveryStatus(delivery.id, "delivered")}>
-                            <CheckCircle2 className="w-4 h-4 mr-1" /> Livré
+                            <CheckCircle2 className="w-4 h-4 mr-1" /> ✅ Marquer comme livré
                           </Button>
                         )}
                         <DeliveryChat
