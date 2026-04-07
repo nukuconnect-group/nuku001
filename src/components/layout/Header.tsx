@@ -615,8 +615,8 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Row 3: Mobile Search - scrolls away */}
-      <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
+      {/* Row 3: Mobile Search - scrolls away (hidden on marketplace) */}
+      <div className={`lg:hidden bg-primary px-3 pb-2 pt-1 ${location.pathname === "/marketplace" ? "hidden" : ""}`} ref={mobileSearchRef}>
         <div className="relative flex items-center gap-1.5">
           <div className="relative flex-1">
             <Input type="text" placeholder={t("header.search")} value={searchQuery}
