@@ -137,6 +137,7 @@ const App = () => {
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />
+                  <Route path="/unsubscribe" element={<Unsubscribe />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
