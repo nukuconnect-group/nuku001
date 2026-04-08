@@ -424,12 +424,15 @@ export type Database = {
           id_front_url: string | null
           id_number: string | null
           id_type: string
+          license_plate: string | null
           reviewed_at: string | null
           selfie_url: string | null
           status: string
           submitted_at: string
           updated_at: string
           user_id: string
+          vehicle_brand: string | null
+          vehicle_color: string | null
         }
         Insert: {
           admin_note?: string | null
@@ -439,12 +442,15 @@ export type Database = {
           id_front_url?: string | null
           id_number?: string | null
           id_type?: string
+          license_plate?: string | null
           reviewed_at?: string | null
           selfie_url?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
           user_id: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
         }
         Update: {
           admin_note?: string | null
@@ -454,12 +460,15 @@ export type Database = {
           id_front_url?: string | null
           id_number?: string | null
           id_type?: string
+          license_plate?: string | null
           reviewed_at?: string | null
           selfie_url?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
           user_id?: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
         }
         Relationships: []
       }
