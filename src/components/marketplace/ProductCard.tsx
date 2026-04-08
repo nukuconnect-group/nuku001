@@ -28,6 +28,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   const { formatPrice } = useLanguage();
   const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [showReviews, setShowReviews] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [listImgError, setListImgError] = useState(false);
 
   const { data: matchingDemands = 0 } = useQuery({
     queryKey: ["demand-count", product.category],
