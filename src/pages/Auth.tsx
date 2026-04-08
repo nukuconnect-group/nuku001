@@ -50,6 +50,7 @@ const Auth = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [signupStep, setSignupStep] = useState<"select" | "form">("select");
+  const [emailVerificationPending, setEmailVerificationPending] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
