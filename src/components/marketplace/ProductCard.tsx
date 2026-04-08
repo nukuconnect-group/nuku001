@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck, Package } from "lucide-react";
 import { Product } from "@/data/marketplace";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
