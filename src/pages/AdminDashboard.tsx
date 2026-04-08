@@ -259,103 +259,124 @@ const AdminDashboard = () => {
     return <Badge variant={s.variant} className="text-[10px]">{s.label}</Badge>;
   };
 
+  const sidebarItems = [
+    { id: "overview", label: "Vue d'ensemble", icon: BarChart3 },
+    { id: "analytics", label: "Analytics", icon: Activity },
+    { id: "users", label: "Utilisateurs", icon: Users },
+    { id: "orders", label: "Commandes", icon: ShoppingCart },
+    { id: "products", label: "Produits", icon: Package },
+    { id: "deliveries", label: "Livraisons", icon: Truck },
+    { id: "demands", label: "Demandes", icon: ShoppingBag },
+    { id: "kyc", label: "Vérification KYC", icon: Shield },
+    { id: "subscriptions", label: "Abonnements", icon: Crown },
+    { id: "finances", label: "Finances", icon: HandCoins },
+    { id: "withdrawals", label: "Retraits", icon: Wallet },
+    { id: "categories", label: "Catégories", icon: LayoutGrid },
+    { id: "chat", label: "Chat", icon: MessageCircle },
+    { id: "support", label: "Support", icon: MessageCircle },
+    { id: "broadcast", label: "Notifications", icon: Megaphone },
+    { id: "emails", label: "Emails", icon: Send },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="py-4 sm:py-8">
-        <div className="container mx-auto px-3 sm:px-4">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="hidden lg:flex flex-col w-56 min-h-[calc(100vh-64px)] border-r border-border bg-card sticky top-0 overflow-y-auto">
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              <span className="font-heading text-sm font-bold">Admin</span>
+            </div>
+          </div>
+          <nav className="flex-1 p-2 space-y-0.5">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  activeTab === item.id
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Mobile tab bar */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border overflow-x-auto">
+          <div className="flex p-1 gap-0.5">
+            {sidebarItems.slice(0, 8).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[56px] flex-shrink-0 ${
+                  activeTab === item.id ? "text-primary bg-primary/10" : "text-muted-foreground"
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-[8px] font-medium truncate">{item.label.split(' ')[0]}</span>
+              </button>
+            ))}
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="text-[10px] bg-muted rounded-lg px-2 min-w-[56px] text-center appearance-none flex-shrink-0"
+            >
+              {sidebarItems.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <main className="flex-1 p-3 sm:p-6 pb-20 lg:pb-6 min-w-0">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center lg:hidden">
+                <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-heading text-lg sm:text-2xl font-bold text-foreground">
-                  Panneau d'administration
+                <h1 className="font-heading text-base sm:text-xl font-bold text-foreground">
+                  {sidebarItems.find(s => s.id === activeTab)?.label || "Administration"}
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Vue d'ensemble de NUKUCONNECT
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  NUKUCONNECT
                 </p>
               </div>
             </div>
-            <Badge className="w-fit gap-1.5 bg-primary/10 text-primary border-primary/20 px-3 py-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              Administrateur
+            <Badge className="w-fit gap-1.5 bg-primary/10 text-primary border-primary/20 px-3 py-1.5 text-xs">
+              <Shield className="w-3 h-3" />Admin
             </Badge>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
-            {statCards.map((stat) => (
-              <Card key={stat.label} className="overflow-hidden">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.color}`}>
-                      <stat.icon className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+          {/* Stats Grid - only on overview */}
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-6">
+              {statCards.map((stat) => (
+                <Card key={stat.label} className="overflow-hidden">
+                  <CardContent className="p-2.5 sm:p-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${stat.color}`}>
+                        <stat.icon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] sm:text-[10px] text-muted-foreground truncate">{stat.label}</p>
+                        <p className="font-heading text-xs sm:text-sm font-bold text-foreground truncate">{stat.value}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.label}</p>
-                      <p className="font-heading text-sm sm:text-lg font-bold text-foreground truncate">{stat.value}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="bg-muted p-1 w-full overflow-x-auto flex justify-start scrollbar-hide">
-              <TabsTrigger value="overview" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <BarChart3 className="w-3.5 h-3.5" />Vue d'ensemble
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Activity className="w-3.5 h-3.5" />Analytics
-              </TabsTrigger>
-              <TabsTrigger value="users" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Users className="w-3.5 h-3.5" />Utilisateurs
-              </TabsTrigger>
-              <TabsTrigger value="orders" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <ShoppingCart className="w-3.5 h-3.5" />Commandes
-              </TabsTrigger>
-              <TabsTrigger value="products" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Package className="w-3.5 h-3.5" />Produits
-              </TabsTrigger>
-              <TabsTrigger value="deliveries" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Truck className="w-3.5 h-3.5" />Livraisons
-              </TabsTrigger>
-              <TabsTrigger value="demands" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <ShoppingBag className="w-3.5 h-3.5" />Demandes
-              </TabsTrigger>
-              <TabsTrigger value="subscriptions" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Crown className="w-3.5 h-3.5" />Abonnements
-              </TabsTrigger>
-              <TabsTrigger value="chat" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <MessageCircle className="w-3.5 h-3.5" />Chat
-              </TabsTrigger>
-              <TabsTrigger value="categories" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <LayoutGrid className="w-3.5 h-3.5" />Catégories
-              </TabsTrigger>
-              <TabsTrigger value="finances" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <HandCoins className="w-3.5 h-3.5" />Finances
-              </TabsTrigger>
-              <TabsTrigger value="withdrawals" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Wallet className="w-3.5 h-3.5" />Retraits
-              </TabsTrigger>
-              <TabsTrigger value="broadcast" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Megaphone className="w-3.5 h-3.5" />Notifications
-              </TabsTrigger>
-              <TabsTrigger value="support" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <MessageCircle className="w-3.5 h-3.5" />Support
-              </TabsTrigger>
-              <TabsTrigger value="emails" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Send className="w-3.5 h-3.5" />Emails
-              </TabsTrigger>
-              <TabsTrigger value="kyc" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
-                <Shield className="w-3.5 h-3.5" />KYC
-              </TabsTrigger>
-            </TabsList>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
             {/* Overview Tab */}
             <TabsContent value="overview">
