@@ -593,6 +593,7 @@ const Dashboard = () => {
         onBoostSuccess={() => { if (profile) fetchProducts(profile.id); }}
       />
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
     </div>
   );
