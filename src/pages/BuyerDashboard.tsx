@@ -249,6 +249,13 @@ const BuyerDashboard = () => {
             ))}
           </div>
 
+          {/* Affiliation */}
+          {user && (
+            <div className="mb-5 sm:mb-8">
+              <AffiliationCard userId={user.id} />
+            </div>
+          )}
+
           {/* Become Producer Banner - responsive */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
             <CardContent className="p-3 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">

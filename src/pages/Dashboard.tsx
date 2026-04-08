@@ -224,6 +224,13 @@ const Dashboard = () => {
             </Link>
           </div>
 
+          {/* Affiliation */}
+          {user && (
+            <div className="mb-4 sm:mb-6">
+              <AffiliationCard userId={user.id} />
+            </div>
+          )}
+
           {/* AI Recommendations */}
           {user && profile && (
             <div className="mb-4 sm:mb-6">
