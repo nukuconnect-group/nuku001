@@ -94,7 +94,6 @@ function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: 
 const baseDeliveryOptions = [
   { id: "pickup", name: "Retrait sur place", description: "Récupérez directement chez le fournisseur", icon: Store, tag: "Gratuit", fixed: true, fixedPrice: 0 },
   { id: "livreur", name: "Livreur NukuConnect", description: "Livraison par nos livreurs partenaires", icon: Truck, tag: "Recommandé", fixed: false, fixedPrice: 0 },
-  { id: "gochap", name: "Gochap", description: "Livraison express via Gochap", icon: Truck, tag: "Express", fixed: false, fixedPrice: 0 },
 ];
 
 export function buildDeliveryOptions(distanceKm: number | null) {
