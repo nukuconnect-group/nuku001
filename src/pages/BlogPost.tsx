@@ -5,24 +5,20 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { useParams, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Clock, Award, Share2, ExternalLink } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Calendar, Clock, Award, Share2, ExternalLink, ArrowRight } from "lucide-react";
+import { articles as blogArticles } from "./Blog";
 
-const articles: Record<string, any> = {
+const articlesContent: Record<string, { content: string; sourceUrl?: string }> = {
   "nukuconnect-meilleure-innovation-togo-top-impact-2025": {
-    title: "Togo Top Impact 2025 : NukuConnect sacré meilleure innovation de l'année",
-    date: "5 février 2026",
-    readTime: "4 min",
-    category: "Distinction",
-    image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=600&fit=crop&q=80",
     sourceUrl: "https://actu-togo.tg/2026/02/05/togo-top-impact-2025-nukuconnect-sacre-meilleure-innovation-de-lannee/",
-    content: `
-## NukuConnect sacré meilleure innovation de l'année 2025
+    content: `## NukuConnect sacré meilleure innovation de l'année 2025
 
 La cérémonie **Togo Top Impact 2025** a récompensé les entreprises et personnalités ayant eu un impact significatif sur le développement économique et social du Togo. Parmi les lauréats, **NukuConnect** a remporté le prestigieux prix de la **meilleure innovation technologique de l'année**.
 
 ### Une reconnaissance méritée
 
-NukuConnect, la marketplace agricole intelligente, a été distinguée pour son approche innovante qui combine l'intelligence artificielle et les technologies numériques pour transformer la chaîne de valeur agricole en Afrique. La plateforme connecte efficacement les producteurs, fournisseurs, acheteurs et livreurs au sein d'un écosystème digitalisé.
+NukuConnect, la marketplace agricole intelligente, a été distinguée pour son approche innovante qui combine l'intelligence artificielle et les technologies numériques pour transformer la chaîne de valeur agricole en Afrique.
 
 ### Les critères de sélection
 
@@ -48,20 +44,133 @@ NukuConnect ne se limite pas à une simple marketplace. C'est un écosystème co
 
 L'équipe de NukuConnect ambitionne de devenir la plateforme agricole de référence en Afrique de l'Ouest, en continuant d'innover et d'intégrer de nouvelles technologies pour mieux servir les acteurs de la chaîne de valeur agricole.
 
-> « Cette distinction nous encourage à poursuivre notre mission : transformer l'agriculture africaine grâce à la technologie et l'intelligence artificielle. » — Équipe NukuConnect
+> « Cette distinction nous encourage à poursuivre notre mission : transformer l'agriculture africaine grâce à la technologie et l'intelligence artificielle. » — Équipe NukuConnect`,
+  },
+  "intelligence-artificielle-agriculture-afrique": {
+    content: `## Comment l'IA révolutionne l'agriculture en Afrique de l'Ouest
 
-### À propos de Togo Top Impact
+L'intelligence artificielle n'est plus réservée aux grandes exploitations des pays développés. En Afrique de l'Ouest, de plus en plus de startups et plateformes l'intègrent pour répondre aux défis spécifiques du continent.
 
-Togo Top Impact est une cérémonie annuelle qui récompense les entreprises, personnalités et initiatives ayant eu un impact positif significatif sur le développement du Togo. L'édition 2025 a mis en lumière l'innovation technologique comme moteur de croissance économique.
-    `,
+### Détection des maladies des cultures
+
+Grâce à la reconnaissance d'images, les agriculteurs peuvent désormais photographier leurs plants et obtenir un diagnostic instantané. Des applications comme **NukuConnect IA** analysent les feuilles et identifient les maladies, parasites et carences en quelques secondes.
+
+### Optimisation des rendements
+
+Les algorithmes de machine learning analysent les données climatiques, les types de sols et les historiques de production pour recommander :
+
+- **Les meilleures périodes de semis** selon la région
+- **Les variétés les plus adaptées** au climat local
+- **Les techniques d'irrigation** optimales
+- **Les rotations de cultures** les plus productives
+
+### Matching intelligent acheteur-producteur
+
+L'IA permet de connecter automatiquement les acheteurs aux producteurs les plus pertinents selon la localisation, la disponibilité et la qualité des produits.
+
+### Les défis à relever
+
+- **L'accès à internet** reste limité dans certaines zones rurales
+- **La formation des agriculteurs** aux outils numériques est essentielle
+- **La collecte de données locales** doit être renforcée pour améliorer les modèles
+
+> L'avenir de l'agriculture africaine passe par une adoption intelligente et progressive de l'IA, adaptée aux réalités du terrain.`,
+  },
+  "tracabilite-produits-agricoles-confiance-consommateur": {
+    content: `## La traçabilité des produits agricoles : un enjeu de confiance
+
+Dans un marché où les consommateurs sont de plus en plus exigeants sur l'origine de leur alimentation, la traçabilité numérique devient un avantage concurrentiel majeur pour les producteurs.
+
+### Qu'est-ce que la traçabilité numérique ?
+
+C'est la capacité de suivre un produit tout au long de sa chaîne de valeur, de la production à la consommation, grâce à des outils numériques.
+
+### Les bénéfices pour les producteurs
+
+- **Valorisation des produits** : Les produits traçables se vendent jusqu'à 30% plus cher
+- **Accès à de nouveaux marchés** : Les acheteurs B2B exigent de plus en plus la traçabilité
+- **Réduction des pertes** : Le suivi en temps réel permet d'optimiser la logistique
+- **Certification facilitée** : Les données collectées simplifient les audits
+
+### Comment NukuConnect intègre la traçabilité
+
+La plateforme permet aux producteurs d'enregistrer :
+
+1. **L'origine du produit** : localisation exacte de la ferme
+2. **Les conditions de production** : date de récolte, méthodes utilisées
+3. **Les certifications** : bio, commerce équitable, etc.
+4. **Le parcours logistique** : chaque étape du transport est enregistrée
+
+### L'avenir de la traçabilité en Afrique
+
+Avec l'essor de la blockchain et de l'IoT, la traçabilité deviendra bientôt la norme plutôt que l'exception dans le commerce agricole africain.`,
+  },
+  "marketplace-agricole-connecter-producteurs-acheteurs": {
+    content: `## Marketplace agricole : connecter directement producteurs et acheteurs
+
+Le modèle traditionnel du commerce agricole en Afrique implique de nombreux intermédiaires, ce qui réduit les marges des producteurs et augmente les prix pour les consommateurs.
+
+### Le problème des intermédiaires
+
+Dans la chaîne traditionnelle, un produit passe en moyenne par 3 à 5 intermédiaires avant d'atteindre le consommateur final. À chaque étape, une marge est ajoutée, parfois jusqu'à 200% du prix d'origine.
+
+### La solution marketplace
+
+Les plateformes comme NukuConnect permettent :
+
+- **La mise en relation directe** entre producteurs et acheteurs
+- **La transparence des prix** : les producteurs fixent leurs prix
+- **La réduction des pertes** : les transactions sont plus rapides
+- **L'accès à un marché élargi** : au-delà de la zone géographique locale
+
+### Les résultats concrets
+
+- Les producteurs voient leurs revenus augmenter de **40 à 60%** en moyenne
+- Les acheteurs économisent **20 à 30%** sur leurs achats
+- Les pertes post-récolte diminuent de **15%** grâce à une commercialisation plus rapide
+
+> La digitalisation du commerce agricole n'est pas une option, c'est une nécessité pour nourrir une Afrique en pleine croissance démographique.`,
+  },
+  "formation-agricole-numerique-competences-producteurs": {
+    content: `## Formation agricole numérique : renforcer les compétences des producteurs
+
+L'accès à la formation est l'un des principaux leviers d'amélioration de la productivité agricole en Afrique. Les plateformes numériques ouvrent de nouvelles possibilités.
+
+### Les défis de la formation traditionnelle
+
+- **L'éloignement géographique** des centres de formation
+- **Le coût** des formations présentielles
+- **Le temps** que les agriculteurs ne peuvent pas consacrer aux déplacements
+- **La langue** : beaucoup de contenus ne sont pas disponibles dans les langues locales
+
+### La formation en ligne comme solution
+
+Les modules de formation intégrés dans des plateformes comme NukuConnect permettent aux producteurs d'apprendre :
+
+- **Les techniques de production** modernes et durables
+- **La gestion financière** de leur exploitation
+- **La commercialisation** de leurs produits
+- **L'utilisation des outils numériques** pour optimiser leur activité
+
+### Des formats adaptés
+
+1. **Vidéos courtes** : des tutoriels de 5 à 10 minutes
+2. **Quiz interactifs** : pour valider les acquis
+3. **Certificats** : pour attester des compétences acquises
+4. **Contenu hors-ligne** : accessible même sans connexion internet
+
+### L'impact mesuré
+
+Les producteurs ayant suivi au moins 3 modules de formation sur NukuConnect ont vu leur productivité augmenter de **25%** en moyenne sur 6 mois.`,
   },
 };
 
 const BlogPost = () => {
   const { slug } = useParams();
-  const article = slug ? articles[slug] : null;
+  const article = blogArticles.find((a) => a.slug === slug);
+  const articleContent = slug ? articlesContent[slug] : null;
 
-  if (!article) {
+  if (!article || !articleContent) {
     return (
       <div className="min-h-screen pb-14 lg:pb-0">
         <Header />
@@ -85,13 +194,17 @@ const BlogPost = () => {
     }
   };
 
+  // Similar articles (exclude current)
+  const similarArticles = blogArticles.filter((a) => a.slug !== slug).slice(0, 3);
+
   return (
     <div className="min-h-screen pb-14 lg:pb-0">
       <SEO
         url={`/blog/${slug}`}
-        title={`${article.title} | NukuConnect Blog`}
-        description={article.content.slice(0, 155)}
+        title={article.title}
+        description={article.excerpt}
         image={article.image}
+        type="article"
       />
       <Header />
       <main className="py-6 sm:py-10">
@@ -120,8 +233,8 @@ const BlogPost = () => {
                 <Button variant="outline" size="sm" className="text-xs gap-1" onClick={handleShare}>
                   <Share2 className="w-3 h-3" /> Partager
                 </Button>
-                {article.sourceUrl && (
-                  <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer">
+                {articleContent.sourceUrl && (
+                  <a href={articleContent.sourceUrl} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm" className="text-xs gap-1">
                       <ExternalLink className="w-3 h-3" /> Source originale
                     </Button>
@@ -139,7 +252,7 @@ const BlogPost = () => {
             </div>
 
             <div className="prose prose-sm sm:prose-base max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-blockquote:border-primary prose-blockquote:text-primary/80 prose-li:text-muted-foreground">
-              {article.content.split('\n').map((line: string, i: number) => {
+              {articleContent.content.split('\n').map((line: string, i: number) => {
                 const trimmed = line.trim();
                 if (!trimmed) return null;
                 if (trimmed.startsWith('## ')) return <h2 key={i} className="text-lg sm:text-xl font-bold mt-6 mb-3">{trimmed.slice(3)}</h2>;
@@ -157,6 +270,34 @@ const BlogPost = () => {
               })}
             </div>
           </article>
+
+          {/* Similar Articles */}
+          {similarArticles.length > 0 && (
+            <section className="mt-12 pt-8 border-t border-border">
+              <h2 className="font-heading text-lg sm:text-xl font-bold text-foreground mb-4">Articles similaires</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {similarArticles.map((a) => (
+                  <Link key={a.slug} to={`/blog/${a.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-elevated transition-all group h-full">
+                      <div className="relative aspect-video overflow-hidden">
+                        <img src={a.image} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      </div>
+                      <CardContent className="p-3">
+                        <Badge variant="outline" className="text-[10px] mb-1.5">{a.category}</Badge>
+                        <h3 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">{a.title}</h3>
+                        <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                          <Calendar className="w-3 h-3" /> {a.date}
+                          <span className="text-primary font-medium flex items-center gap-0.5 ml-auto">
+                            Lire <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </main>
       <Footer />
