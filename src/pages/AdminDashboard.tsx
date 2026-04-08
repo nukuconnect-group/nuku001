@@ -733,7 +733,7 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Activity className="w-5 h-5 mx-auto text-blue-600 mb-1" />
+                      <Activity className="w-5 h-5 mx-auto text-primary mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.this_week_visits || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Cette semaine</p>
                     </CardContent>
