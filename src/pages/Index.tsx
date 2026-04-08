@@ -19,19 +19,25 @@ const Index = () => {
       <SEO
         url="/"
         title="Marketplace Agricole Intelligent d'Afrique"
-        description="Achetez et vendez des produits agricoles. Connectez-vous avec des milliers de producteurs vérifiés, livreurs et acheteurs en Afrique."
+        description="Achetez et vendez des produits agricoles frais en Afrique. Connectez-vous avec des milliers de producteurs vérifiés, livreurs et acheteurs. Inscription gratuite."
         image="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&h=630&fit=crop&q=80"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "NUKUCONNECT",
           "url": "https://www.nukuconnect.com",
-          "description": "Marketplace agricole intelligente d'Afrique",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://www.nukuconnect.com/marketplace?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-          }
+          "description": "Marketplace agricole intelligente d'Afrique — Achetez, vendez et livrez des produits agricoles.",
+          "potentialAction": [
+            {
+              "@type": "SearchAction",
+              "target": "https://www.nukuconnect.com/marketplace?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          ],
+          "sameAs": [
+            "https://web.facebook.com/nukuconnect",
+            "https://www.linkedin.com/company/nukuconnect"
+          ]
         }}
       />
       <Header />

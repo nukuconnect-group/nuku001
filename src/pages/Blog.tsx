@@ -5,18 +5,63 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Calendar, Clock, Award } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Award, Leaf, Globe, TrendingUp, BookOpen } from "lucide-react";
 
-const articles = [
+export const articles = [
   {
     slug: "nukuconnect-meilleure-innovation-togo-top-impact-2025",
     title: "Togo Top Impact 2025 : NukuConnect sacré meilleure innovation de l'année",
-    excerpt: "La plateforme NukuConnect a été récompensée comme la meilleure innovation technologique de l'année lors de la cérémonie Togo Top Impact 2025, célébrant l'excellence et l'impact positif au Togo.",
+    excerpt: "La plateforme NukuConnect a été récompensée comme la meilleure innovation technologique de l'année lors de la cérémonie Togo Top Impact 2025.",
     image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&h=400&fit=crop&q=80",
     date: "5 février 2026",
     readTime: "4 min",
     category: "Distinction",
+    categoryIcon: Award,
     featured: true,
+  },
+  {
+    slug: "intelligence-artificielle-agriculture-afrique",
+    title: "Comment l'IA révolutionne l'agriculture en Afrique de l'Ouest",
+    excerpt: "De la détection de maladies par image à l'optimisation des rendements : l'intelligence artificielle transforme le secteur agricole africain et ouvre de nouvelles perspectives.",
+    image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&h=400&fit=crop&q=80",
+    date: "28 janvier 2026",
+    readTime: "6 min",
+    category: "Innovation",
+    categoryIcon: TrendingUp,
+    featured: false,
+  },
+  {
+    slug: "tracabilite-produits-agricoles-confiance-consommateur",
+    title: "La traçabilité des produits agricoles : un enjeu de confiance pour le consommateur",
+    excerpt: "Suivre un produit de la ferme à l'assiette n'est plus un luxe. Découvrez comment la traçabilité numérique renforce la confiance et valorise les producteurs.",
+    image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=400&fit=crop&q=80",
+    date: "15 janvier 2026",
+    readTime: "5 min",
+    category: "Traçabilité",
+    categoryIcon: Leaf,
+    featured: false,
+  },
+  {
+    slug: "marketplace-agricole-connecter-producteurs-acheteurs",
+    title: "Marketplace agricole : pourquoi connecter directement producteurs et acheteurs change la donne",
+    excerpt: "En supprimant les intermédiaires, les marketplaces agricoles permettent aux producteurs d'augmenter leurs marges et aux acheteurs de bénéficier de prix plus justes.",
+    image: "https://images.unsplash.com/photo-1595508064774-5ff825a60bba?w=800&h=400&fit=crop&q=80",
+    date: "8 janvier 2026",
+    readTime: "4 min",
+    category: "Marché",
+    categoryIcon: Globe,
+    featured: false,
+  },
+  {
+    slug: "formation-agricole-numerique-competences-producteurs",
+    title: "Formation agricole numérique : renforcer les compétences des producteurs",
+    excerpt: "L'accès à des formations en ligne permet aux agriculteurs d'améliorer leurs techniques de production, de gestion et de commercialisation.",
+    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=400&fit=crop&q=80",
+    date: "2 janvier 2026",
+    readTime: "5 min",
+    category: "Formation",
+    categoryIcon: BookOpen,
+    featured: false,
   },
 ];
 
@@ -25,8 +70,9 @@ const Blog = () => {
     <div className="min-h-screen pb-14 lg:pb-0">
       <SEO
         url="/blog"
-        title="Blog - Actualités Agricoles | NukuConnect"
+        title="Blog - Actualités Agricoles"
         description="Découvrez les dernières actualités, innovations et articles sur l'agriculture en Afrique. NukuConnect, la marketplace agricole intelligente."
+        image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=630&fit=crop&q=80"
       />
       <Header />
       <main className="py-6 sm:py-10">
@@ -52,6 +98,7 @@ const Blog = () => {
                       src={article.image}
                       alt={article.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
                     />
                     {article.featured && (
                       <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px]">

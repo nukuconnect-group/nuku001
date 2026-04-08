@@ -33,6 +33,7 @@ import DeliveryManager from "@/components/admin/DeliveryManager";
 import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
 import EmailStatsManager from "@/components/admin/EmailStatsManager";
+import KYCManager from "@/components/admin/KYCManager";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -350,6 +351,9 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="emails" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Send className="w-3.5 h-3.5" />Emails
+              </TabsTrigger>
+              <TabsTrigger value="kyc" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Shield className="w-3.5 h-3.5" />KYC
               </TabsTrigger>
             </TabsList>
 
@@ -1018,6 +1022,11 @@ const AdminDashboard = () => {
             {/* Emails Tab */}
             <TabsContent value="emails">
               <EmailStatsManager />
+            </TabsContent>
+
+            {/* KYC Tab */}
+            <TabsContent value="kyc">
+              <KYCManager />
             </TabsContent>
           </Tabs>
         </div>

@@ -8,6 +8,7 @@ import heroNetwork from "@/assets/hero-network-agriculture.jpg";
 import heroOrganic from "@/assets/hero-organic-farm.jpg";
 import heroAI from "@/assets/hero-ai-agriculture.jpg";
 import heroDrone from "@/assets/hero-drone-agriculture.png";
+import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 
 const slides = [
   {
@@ -16,6 +17,12 @@ const slides = [
     subtitle: "🏆 Prix Togo Top Impact",
     description: "NukuConnect a été récompensée comme la meilleure innovation technologique de l'année 2025 lors de la cérémonie Togo Top Impact.",
     isAward: true,
+  },
+  {
+    image: heroShopping,
+    title: "Achetez vos produits agricoles en ligne, où que vous soyez",
+    subtitle: "Achat en Ligne",
+    description: "Commandez directement auprès des producteurs vérifiés et recevez vos produits frais à domicile.",
   },
   {
     image: heroDrone,
