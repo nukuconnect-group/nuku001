@@ -603,29 +603,45 @@ const DriverDashboard = () => {
                         </p>
                         <p className="text-[10px] text-green-600 dark:text-green-500">Base 500F + 200F/km × {distToSeller.toFixed(1)} km</p>
                       </div>
-                      <div className="flex gap-2">
-                        {driverProfile?.is_approved ? (
-                          <Button variant="hero" className="flex-1" onClick={async () => {
-                            if (!driverProfile) return;
-                            const driverFee = Math.round(500 + distToSeller * 200);
-                            const platformFee = Math.round(driverFee * 0.15);
-                            try {
-                              // We can't create a delivery without an order, so navigate to the product
-                              toast({ title: "Consultez le produit", description: "Quand un acheteur passe commande, la livraison vous sera proposée automatiquement." });
-                              navigate(`/produit/${selectedProduct.id}`);
-                            } finally {
-                              setSelectedProduct(null);
-                            }
-                          }}>
-                            <Truck className="w-4 h-4 mr-1" /> Voir & proposer livraison
-                          </Button>
-                        ) : (
-                          <Button variant="outline" className="flex-1" disabled>
-                            <ShieldCheck className="w-4 h-4 mr-1" /> KYC requis
-                          </Button>
-                        )}
-                        <Button variant="outline" onClick={() => setSelectedProduct(null)}>Fermer</Button>
+
+                      {/* Itinerary & Navigation */}
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">📍 Itinéraire de livraison</p>
+                        <div className="bg-muted/30 rounded-lg p-2.5 space-y-1.5 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                            <span className="text-muted-foreground">Votre position actuelle</span>
+                          </div>
+                          <div className="ml-1 border-l-2 border-dashed border-muted-foreground/30 h-3" />
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                            <span>Fournisseur: <strong>{selectedProduct.profiles?.full_name || "—"}</strong> ({selectedProduct.location || selectedProduct.profiles?.location || "—"})</span>
+                          </div>
+                          <div className="ml-1 border-l-2 border-dashed border-muted-foreground/30 h-3" />
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
+                            <span className="text-muted-foreground">Acheteur (adresse fournie à l'acceptation)</span>
+                          </div>
+                        </div>
                       </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Navigate to seller */}
+                        <Button variant="hero" size="sm" className="text-xs gap-1"
+                          onClick={() => {
+                            const lat = prodLat;
+                            const lng = prodLng;
+                            window.open(`https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&destination=${lat},${lng}&travelmode=driving`, "_blank");
+                          }}>
+                          <Navigation className="w-3.5 h-3.5" /> Aller chez le fournisseur
+                        </Button>
+                        {/* View product details */}
+                        <Button variant="outline" size="sm" className="text-xs gap-1"
+                          onClick={() => navigate(`/produit/${selectedProduct.id}`)}>
+                          <ShoppingBag className="w-3.5 h-3.5" /> Voir le produit
+                        </Button>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setSelectedProduct(null)}>Fermer</Button>
                     </div>
                   </>
                 );

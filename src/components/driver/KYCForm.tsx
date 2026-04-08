@@ -42,7 +42,10 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
-  const [uploading, setUploading] = useState<string | null>(null); // which field is uploading
+  const [licensePlate, setLicensePlate] = useState("");
+  const [vehicleBrand, setVehicleBrand] = useState("");
+  const [vehicleColor, setVehicleColor] = useState("");
+  const [uploading, setUploading] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [idFrontUrl, setIdFrontUrl] = useState("");
   const [idBackUrl, setIdBackUrl] = useState("");
@@ -108,6 +111,10 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       toast({ title: "Veuillez uploader le recto de la pièce", variant: "destructive" });
       return;
     }
+    if (!licensePlate.trim()) {
+      toast({ title: "Numéro de plaque requis", description: "Entrez le numéro d'immatriculation de votre véhicule.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase.from("driver_kyc_submissions").insert({
@@ -117,8 +124,11 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         id_front_url: idFrontUrl || null,
         id_back_url: idBackUrl || null,
         selfie_url: selfieUrl || null,
+        license_plate: licensePlate.trim() || null,
+        vehicle_brand: vehicleBrand.trim() || null,
+        vehicle_color: vehicleColor.trim() || null,
         status: "pending",
-      });
+      } as any);
       if (error) throw error;
       toast({ title: "KYC soumis ! 🎉", description: "Votre demande sera examinée sous 24-48h." });
       onSubmitted();
@@ -220,9 +230,25 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         </div>
       </div>
 
+      {/* Vehicle details */}
       <div className="grid grid-cols-3 gap-2">
-        {renderUploadBox("Recto *", idFrontUrl, setIdFrontUrl, "id-front", "environment")}
-        {renderUploadBox("Verso", idBackUrl, setIdBackUrl, "id-back", "environment")}
+        <div className="space-y-1">
+          <Label className="text-[10px]">Plaque d'immatriculation *</Label>
+          <Input value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} placeholder="TG-1234-AB" className="h-8 text-xs" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px]">Marque / Modèle</Label>
+          <Input value={vehicleBrand} onChange={(e) => setVehicleBrand(e.target.value)} placeholder="Ex: Honda CG" className="h-8 text-xs" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px]">Couleur du véhicule</Label>
+          <Input value={vehicleColor} onChange={(e) => setVehicleColor(e.target.value)} placeholder="Ex: Noir" className="h-8 text-xs" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {renderUploadBox("Recto pièce *", idFrontUrl, setIdFrontUrl, "id-front", "environment")}
+        {renderUploadBox("Verso pièce", idBackUrl, setIdBackUrl, "id-back", "environment")}
         {renderUploadBox("Selfie", selfieUrl, setSelfieUrl, "selfie", "user")}
       </div>
 
