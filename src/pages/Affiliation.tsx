@@ -118,7 +118,7 @@ const Affiliation = () => {
       <Header />
 
       <main className="py-6 sm:py-10">
-        <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           {/* Hero */}
           <div className="text-center mb-8 sm:mb-12">
             <Badge className="mb-3 bg-accent/10 text-accent border-accent/30">

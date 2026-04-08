@@ -30,6 +30,12 @@ const LearnerDashboard = () => {
   useEffect(() => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
+    // Role guard
+    if (profile && profile.user_type !== "learner") {
+      if (profile.user_type === "producer" || profile.user_type === "trainer") { navigate("/dashboard", { replace: true }); return; }
+      if (profile.user_type === "driver") { navigate("/driver-dashboard", { replace: true }); return; }
+      navigate("/buyer-dashboard", { replace: true }); return;
+    }
 
     const load = async () => {
       const { data } = await supabase

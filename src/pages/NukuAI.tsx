@@ -317,14 +317,14 @@ const NukuAI = () => {
                   {message.role === "assistant" ? <Bot className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" /> : <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-secondary-foreground" />}
                 </div>
                 <Card className={`max-w-[88%] sm:max-w-[80%] p-2.5 sm:p-3 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                  <div className={`text-xs sm:text-sm leading-relaxed prose prose-sm max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
+                  <div className={`text-sm sm:text-base leading-relaxed prose prose-sm sm:prose-base max-w-none ${message.role === "user" ? "prose-invert" : ""}`}>
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                     {/* Typing cursor for streaming assistant messages */}
                     {isStreaming && message.role === "assistant" && message === messages[messages.length - 1] && (
                       <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-middle" />
                     )}
                   </div>
-                  <span className="text-[8px] sm:text-[9px] opacity-70 mt-1.5 block">
+                  <span className="text-[9px] sm:text-[10px] opacity-70 mt-1.5 block">
                     {message.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </Card>

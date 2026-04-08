@@ -21,10 +21,11 @@ import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
   DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
-  ShoppingBag, Settings, Wallet, ArrowDownToLine, History
+  ShoppingBag, Settings, Wallet, ArrowDownToLine, History, ShieldCheck, Upload, FileText
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import KYCForm from "@/components/driver/KYCForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /** Haversine distance in km */
@@ -55,13 +56,6 @@ const statusLabels: Record<string, { label: string; color: string; icon: any }> 
   cancelled: { label: "Annulée", color: "bg-red-100 text-red-800", icon: XCircle },
 };
 
-const demoProducts = [
-  { id: "demo-p1", name: "Tomates fraîches bio", price: 1500, unit: "kg", quantity_available: 50, location: "Lomé", images: ["https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=300&h=300&fit=crop"], profiles: { full_name: "Ama Djossou", location: "Lomé", avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" } },
-  { id: "demo-p2", name: "Maïs grain séché", price: 800, unit: "kg", quantity_available: 200, location: "Kara", images: ["https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=300&h=300&fit=crop"], profiles: { full_name: "Koffi Mensah", location: "Kara", avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" } },
-  { id: "demo-p3", name: "Ananas sucré", price: 2000, unit: "pièce", quantity_available: 30, location: "Kpalimé", images: ["https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=300&h=300&fit=crop"], profiles: { full_name: "Yawa Agbéko", location: "Kpalimé", avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" } },
-  { id: "demo-p4", name: "Huile de palme", price: 3500, unit: "litre", quantity_available: 100, location: "Atakpamé", images: ["https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&h=300&fit=crop"], profiles: { full_name: "Komi Lawson", location: "Atakpamé", avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" } },
-  { id: "demo-p5", name: "Manioc frais", price: 500, unit: "kg", quantity_available: 150, location: "Sokodé", images: ["https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=300&h=300&fit=crop"], profiles: { full_name: "Ablavi Tossou", location: "Sokodé", avatar_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop" } },
-];
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
@@ -139,7 +133,7 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        setAvailableProducts(products && products.length > 0 ? products : demoProducts);
+        setAvailableProducts(products || []);
 
         // Fetch withdrawals
         const { data: wds } = await supabase
@@ -397,6 +391,24 @@ const DriverDashboard = () => {
           </div>
         </div>
 
+        {/* KYC Banner when not approved */}
+        {driverProfile && !driverProfile.is_approved && (
+          <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 text-yellow-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-yellow-800 dark:text-yellow-300">Vérification KYC requise</p>
+                  <p className="text-[10px] text-yellow-700 dark:text-yellow-400">Soumettez vos documents pour activer votre compte livreur</p>
+                </div>
+              </div>
+              <KYCForm userId={user?.id} onSubmitted={fetchDriverData} />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Status banner */}
         {driverProfile?.is_available ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
@@ -582,13 +594,35 @@ const DriverDashboard = () => {
                           <p className="text-[10px] text-muted-foreground">{selectedProduct.profiles?.location || ""}</p>
                         </div>
                       </div>
+                      {/* Estimated earnings */}
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5">
+                        <p className="text-[10px] font-semibold text-green-800 dark:text-green-300 mb-1">💰 Gains estimés pour cette livraison</p>
+                        <p className="text-sm font-bold text-green-700 dark:text-green-400">
+                          {Math.round(500 + distToSeller * 200).toLocaleString()} FCFA
+                        </p>
+                        <p className="text-[10px] text-green-600 dark:text-green-500">Base 500F + 200F/km × {distToSeller.toFixed(1)} km</p>
+                      </div>
                       <div className="flex gap-2">
-                        <Button variant="hero" className="flex-1" onClick={() => {
-                          navigate(`/produit/${selectedProduct.id}`);
-                          setSelectedProduct(null);
-                        }}>
-                          <Package className="w-4 h-4 mr-1" /> Voir le produit
-                        </Button>
+                        {driverProfile?.is_approved ? (
+                          <Button variant="hero" className="flex-1" onClick={async () => {
+                            if (!driverProfile) return;
+                            const driverFee = Math.round(500 + distToSeller * 200);
+                            const platformFee = Math.round(driverFee * 0.15);
+                            try {
+                              // We can't create a delivery without an order, so navigate to the product
+                              toast({ title: "Consultez le produit", description: "Quand un acheteur passe commande, la livraison vous sera proposée automatiquement." });
+                              navigate(`/produit/${selectedProduct.id}`);
+                            } finally {
+                              setSelectedProduct(null);
+                            }
+                          }}>
+                            <Truck className="w-4 h-4 mr-1" /> Voir & proposer livraison
+                          </Button>
+                        ) : (
+                          <Button variant="outline" className="flex-1" disabled>
+                            <ShieldCheck className="w-4 h-4 mr-1" /> KYC requis
+                          </Button>
+                        )}
                         <Button variant="outline" onClick={() => setSelectedProduct(null)}>Fermer</Button>
                       </div>
                     </div>

@@ -53,6 +53,13 @@ const Dashboard = () => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
+    // Role guard: only producers and trainers should see this dashboard
+    if (profile.user_type !== "producer" && profile.user_type !== "trainer") {
+      if (profile.user_type === "driver") navigate("/driver-dashboard", { replace: true });
+      else if (profile.user_type === "learner") navigate("/learner-dashboard", { replace: true });
+      else navigate("/buyer-dashboard", { replace: true });
+      return;
+    }
 
     let isMounted = true;
     const loadData = async () => {

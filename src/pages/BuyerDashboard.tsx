@@ -68,6 +68,10 @@ const BuyerDashboard = () => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth?returnTo=/buyer-dashboard", { replace: true }); return; }
     if (!profile) { setIsLoading(false); return; }
+    // Role guard
+    if (profile.user_type === "producer" || profile.user_type === "trainer") { navigate("/dashboard", { replace: true }); return; }
+    if (profile.user_type === "driver") { navigate("/driver-dashboard", { replace: true }); return; }
+    if (profile.user_type === "learner") { navigate("/learner-dashboard", { replace: true }); return; }
 
     let isMounted = true;
     const loadData = async () => {

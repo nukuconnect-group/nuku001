@@ -179,6 +179,7 @@ const Header = () => {
     { label: t("nav.traceability"), href: "/tracabilite" },
     { label: t("nav.tracking"), href: "/suivi-livraison" },
     { label: "Affiliation", href: "/affiliation" },
+    { label: "Blog", href: "/blog" },
     { label: t("nav.about"), href: "/a-propos" },
     { label: t("nav.plans"), href: "/plans" },
     { label: "Contact", href: "/contact" },

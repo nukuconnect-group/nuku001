@@ -415,6 +415,54 @@ export type Database = {
           },
         ]
       }
+      driver_kyc_submissions: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          id_back_url: string | null
+          id_front_url: string | null
+          id_number: string | null
+          id_type: string
+          reviewed_at: string | null
+          selfie_url: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string
+          reviewed_at?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string
+          reviewed_at?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       driver_profiles: {
         Row: {
           created_at: string
