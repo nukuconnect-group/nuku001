@@ -4,20 +4,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Loader2, CheckCircle2, Clock, FileText } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle } from "lucide-react";
 
 interface KYCFormProps {
   userId?: string;
   onSubmitted: () => void;
 }
 
+/** Compress image on a canvas before upload — solves mobile camera large-file issues */
+const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null); // which field is uploading
   const [submitting, setSubmitting] = useState(false);
   const [idFrontUrl, setIdFrontUrl] = useState("");
   const [idBackUrl, setIdBackUrl] = useState("");
@@ -40,31 +65,47 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
 
   const uploadFile = async (file: File, path: string) => {
     if (!userId) return "";
-    const filePath = `${userId}/${path}-${Date.now()}.${file.name.split('.').pop()}`;
-    const { error } = await supabase.storage.from("driver-kyc").upload(filePath, file);
+    // Compress before upload
+    const compressed = await compressImage(file);
+    const filePath = `${userId}/${path}-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from("driver-kyc").upload(filePath, compressed, {
+      contentType: "image/jpeg",
+      upsert: false,
+    });
     if (error) throw error;
     const { data } = supabase.storage.from("driver-kyc").getPublicUrl(filePath);
     return data.publicUrl;
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void, path: string) => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (url: string) => void,
+    path: string,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploading(path);
     try {
       const url = await uploadFile(file, path);
       setter(url);
       toast({ title: "Photo uploadée ✓" });
-    } catch {
-      toast({ title: "Erreur d'upload", variant: "destructive" });
+    } catch (err: any) {
+      console.error("KYC upload error:", err);
+      toast({ title: "Erreur d'upload", description: err.message, variant: "destructive" });
     } finally {
-      setUploading(false);
+      setUploading(null);
+      // Reset input so re-selecting same file triggers change
+      e.target.value = "";
     }
   };
 
   const handleSubmit = async () => {
     if (!userId || !idNumber.trim()) {
       toast({ title: "Remplissez le numéro de pièce", variant: "destructive" });
+      return;
+    }
+    if (!idFrontUrl) {
+      toast({ title: "Veuillez uploader le recto de la pièce", variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -90,26 +131,74 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
 
   if (existingKyc) {
     return (
-      <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-100/50">
+      <div className={`flex items-center gap-2 p-3 rounded-lg ${
+        existingKyc.status === "approved"
+          ? "bg-green-100/60"
+          : existingKyc.status === "rejected"
+          ? "bg-red-100/60"
+          : "bg-yellow-100/50"
+      }`}>
         {existingKyc.status === "pending" ? (
           <>
-            <Clock className="w-4 h-4 text-yellow-600" />
+            <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0" />
             <span className="text-xs text-yellow-800">KYC soumis — en attente de vérification (24-48h)</span>
           </>
         ) : existingKyc.status === "approved" ? (
           <>
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <span className="text-xs text-green-800">KYC approuvé ✓</span>
+            <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <span className="text-xs text-green-800">KYC approuvé ✓ — Votre compte est activé</span>
           </>
         ) : (
-          <>
-            <FileText className="w-4 h-4 text-red-600" />
-            <span className="text-xs text-red-800">KYC refusé: {existingKyc.admin_note || "Veuillez resoumettre"}</span>
-          </>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <span className="text-xs text-red-800 font-medium">KYC refusé</span>
+            </div>
+            {existingKyc.admin_note && (
+              <p className="text-xs text-red-700 ml-6">Motif : {existingKyc.admin_note}</p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-6 text-xs"
+              onClick={() => setExistingKyc(null)}
+            >
+              Resoumettre
+            </Button>
+          </div>
         )}
       </div>
     );
   }
+
+  const renderUploadBox = (
+    label: string,
+    url: string,
+    setter: (v: string) => void,
+    path: string,
+    capture?: "user" | "environment",
+  ) => (
+    <div>
+      <Label className="text-[10px]">{label}</Label>
+      <label className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors relative">
+        {uploading === path ? (
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        ) : url ? (
+          <CheckCircle2 className="w-5 h-5 text-green-600" />
+        ) : (
+          <Upload className="w-4 h-4 text-muted-foreground" />
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          {...(capture ? { capture } : {})}
+          className="hidden"
+          disabled={!!uploading}
+          onChange={(e) => handleFileUpload(e, setter, path)}
+        />
+      </label>
+    </div>
+  );
 
   return (
     <div className="space-y-3">
@@ -132,30 +221,12 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <div>
-          <Label className="text-[10px]">Recto</Label>
-          <label className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-            {idFrontUrl ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, setIdFrontUrl, "id-front")} />
-          </label>
-        </div>
-        <div>
-          <Label className="text-[10px]">Verso</Label>
-          <label className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-            {idBackUrl ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, setIdBackUrl, "id-back")} />
-          </label>
-        </div>
-        <div>
-          <Label className="text-[10px]">Selfie</Label>
-          <label className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-            {selfieUrl ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-            <input type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, setSelfieUrl, "selfie")} />
-          </label>
-        </div>
+        {renderUploadBox("Recto *", idFrontUrl, setIdFrontUrl, "id-front", "environment")}
+        {renderUploadBox("Verso", idBackUrl, setIdBackUrl, "id-back", "environment")}
+        {renderUploadBox("Selfie", selfieUrl, setSelfieUrl, "selfie", "user")}
       </div>
 
-      <Button variant="hero" size="sm" className="w-full gap-1.5" onClick={handleSubmit} disabled={submitting || uploading}>
+      <Button variant="hero" size="sm" className="w-full gap-1.5" onClick={handleSubmit} disabled={submitting || !!uploading}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
         Soumettre mes documents
       </Button>
