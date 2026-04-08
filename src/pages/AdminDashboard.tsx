@@ -790,7 +790,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-medium truncate">{u.full_name || "Sans nom"}</p>
-                                  {u.is_verified && <Badge variant="outline" className="text-[8px] px-1 text-green-600">Vérifié</Badge>}
+                                  {u.is_verified && <Badge variant="outline" className="text-[8px] px-1 text-secondary">Vérifié</Badge>}
                                 </div>
                               </div>
                             </td>
