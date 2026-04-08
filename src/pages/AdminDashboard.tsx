@@ -232,13 +232,13 @@ const AdminDashboard = () => {
 
   const statCards = [
     { label: "Utilisateurs", value: stats?.total_users || 0, icon: Users, color: "bg-primary/15 text-primary" },
-    { label: "Produits", value: stats?.total_products || 0, icon: Package, color: "bg-green-500/15 text-green-600" },
+    { label: "Produits", value: stats?.total_products || 0, icon: Package, color: "bg-secondary/15 text-secondary" },
     { label: "Commandes", value: stats?.total_orders || 0, icon: ShoppingCart, color: "bg-accent/15 text-accent-foreground" },
-    { label: "Revenus", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-yellow-500/15 text-yellow-600" },
-    { label: "Visites", value: analytics?.total_visits || 0, icon: Eye, color: "bg-blue-500/15 text-blue-600" },
-    { label: "Visiteurs", value: analytics?.unique_visitors || 0, icon: Globe, color: "bg-purple-500/15 text-purple-600" },
-    { label: "Aujourd'hui", value: analytics?.today_visits || 0, icon: Activity, color: "bg-pink-500/15 text-pink-600" },
-    { label: "Installations", value: analytics?.pwa_installs || 0, icon: Download, color: "bg-orange-500/15 text-orange-600" },
+    { label: "Revenus", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-accent/20 text-accent-foreground" },
+    { label: "Visites", value: analytics?.total_visits || 0, icon: Eye, color: "bg-primary/10 text-primary" },
+    { label: "Visiteurs", value: analytics?.unique_visitors || 0, icon: Globe, color: "bg-secondary/10 text-secondary" },
+    { label: "Aujourd'hui", value: analytics?.today_visits || 0, icon: Activity, color: "bg-destructive/10 text-destructive" },
+    { label: "Installations", value: analytics?.pwa_installs || 0, icon: Download, color: "bg-accent/15 text-accent-foreground" },
   ];
 
   const getDeviceIcon = (device: string) => {
