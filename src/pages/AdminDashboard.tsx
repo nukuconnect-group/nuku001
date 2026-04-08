@@ -1023,6 +1023,11 @@ const AdminDashboard = () => {
             <TabsContent value="emails">
               <EmailStatsManager />
             </TabsContent>
+
+            {/* KYC Tab */}
+            <TabsContent value="kyc">
+              <KYCManager />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
