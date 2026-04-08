@@ -22,6 +22,7 @@ const slides = [
     title: "Achetez vos produits agricoles en ligne, où que vous soyez",
     subtitle: "Achat en Ligne",
     description: "Commandez directement auprès des producteurs vérifiés et recevez vos produits frais à domicile.",
+    brandOverlay: true,
   },
   {
     image: heroDrone,
