@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import KYCForm from "@/components/driver/KYCForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /** Haversine distance in km */
