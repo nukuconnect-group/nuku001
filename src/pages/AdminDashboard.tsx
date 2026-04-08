@@ -726,7 +726,7 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Users className="w-5 h-5 mx-auto text-green-600 mb-1" />
+                      <Users className="w-5 h-5 mx-auto text-secondary mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.unique_visitors || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Couverture (uniques)</p>
                     </CardContent>
