@@ -324,7 +324,7 @@ const NukuAI = () => {
                       <span className="inline-block w-0.5 h-4 bg-primary animate-pulse ml-0.5 align-middle" />
                     )}
                   </div>
-                  <span className="text-[8px] sm:text-[9px] opacity-70 mt-1.5 block">
+                  <span className="text-[9px] sm:text-[10px] opacity-70 mt-1.5 block">
                     {message.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </Card>
