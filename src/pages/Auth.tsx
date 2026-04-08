@@ -182,8 +182,8 @@ const Auth = () => {
         const savedRef = localStorage.getItem("nukuconnect-ref");
         if (savedRef) {
           supabase.rpc("claim_referral", { p_referral_code: savedRef })
-            .then(() => { localStorage.removeItem("nukuconnect-ref"); })
-            .catch(() => { localStorage.removeItem("nukuconnect-ref"); });
+            .then(() => { localStorage.removeItem("nukuconnect-ref"); });
+          localStorage.removeItem("nukuconnect-ref");
         }
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
