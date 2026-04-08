@@ -132,7 +132,7 @@ const DriverDashboard = () => {
           .select("*, profiles!products_producer_id_fkey(full_name, location, avatar_url)")
           .order("created_at", { ascending: false })
           .limit(10);
-        setAvailableProducts(products && products.length > 0 ? products : demoProducts);
+        setAvailableProducts(products || []);
 
         // Fetch withdrawals
         const { data: wds } = await supabase
