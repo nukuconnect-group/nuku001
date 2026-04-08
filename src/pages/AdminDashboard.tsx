@@ -494,7 +494,7 @@ const AdminDashboard = () => {
                 </Card>
               </div>
             </div>
-            )}
+          )}
 
             {/* Analytics Tab */}
             {activeTab === "analytics" && (
