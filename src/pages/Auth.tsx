@@ -282,6 +282,17 @@ const Auth = () => {
 
           {authMode === "login" ? (
             <div className="space-y-5">
+              {emailVerificationPending && (
+                <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mail className="w-5 h-5 text-primary" />
+                    <h3 className="font-heading text-sm font-bold text-foreground">Vérifiez votre email 📩</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Un email de vérification a été envoyé. Cliquez sur le lien dans l'email puis connectez-vous ici.
+                  </p>
+                </div>
+              )}
               <div>
                 <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground">Bienvenue sur Nukuconnect</h2>
                 <p className="text-sm text-muted-foreground mt-1">Connectez-vous à votre compte</p>
