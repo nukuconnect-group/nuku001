@@ -85,8 +85,17 @@ const HeroCarousel = () => {
       {slides.map((slide, index) => (
         <div key={index} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}>
           <img src={slide.image} alt={slide.subtitle} className="w-full h-full object-cover" loading={index === 0 ? "eager" : "lazy"} />
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/75 to-foreground/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent" />
+          {(slide as any).brandOverlay ? (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/75 to-foreground/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent" />
+            </>
+          )}
         </div>
       ))}
 

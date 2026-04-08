@@ -42,7 +42,10 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
-  const [uploading, setUploading] = useState<string | null>(null); // which field is uploading
+  const [licensePlate, setLicensePlate] = useState("");
+  const [vehicleBrand, setVehicleBrand] = useState("");
+  const [vehicleColor, setVehicleColor] = useState("");
+  const [uploading, setUploading] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [idFrontUrl, setIdFrontUrl] = useState("");
   const [idBackUrl, setIdBackUrl] = useState("");

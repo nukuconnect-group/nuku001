@@ -23,7 +23,7 @@ const CTASection = () => {
         width={1920}
         height={1080}
       />
-      <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary" />
         <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent" />
