@@ -865,7 +865,7 @@ const AdminDashboard = () => {
                         {stats?.pro_subscriptions || 0} Pro • {stats?.free_subscriptions || 0} Gratuit
                       </CardDescription>
                     </div>
-                    <Badge className="bg-green-500/15 text-green-600 border-green-500/20">
+                    <Badge className="bg-secondary/15 text-secondary border-secondary/20">
                       <Crown className="w-3 h-3 mr-1" />{stats?.pro_subscriptions || 0} Pro
                     </Badge>
                   </div>
