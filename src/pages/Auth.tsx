@@ -279,7 +279,7 @@ const Auth = () => {
           {authMode === "login" ? (
             <div className="space-y-5">
               <div>
-                <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground">Bienvenue</h2>
+                <h2 className="font-heading text-xl sm:text-2xl font-bold text-foreground">Bienvenue sur Nukuconnect</h2>
                 <p className="text-sm text-muted-foreground mt-1">Connectez-vous à votre compte</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-4">
