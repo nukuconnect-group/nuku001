@@ -21,7 +21,7 @@ import "leaflet/dist/leaflet.css";
 import {
   Truck, Package, MapPin, Clock, CheckCircle2, XCircle,
   DollarSign, Navigation, Star, Loader2, RefreshCw, Phone, MessageCircle,
-  ShoppingBag, Settings, Wallet, ArrowDownToLine, History
+  ShoppingBag, Settings, Wallet, ArrowDownToLine, History, ShieldCheck, Upload, FileText
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
