@@ -1681,6 +1681,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      claim_referral: { Args: { p_referral_code: string }; Returns: string }
       count_user_products: { Args: { p_user_id: string }; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
