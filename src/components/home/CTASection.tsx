@@ -13,7 +13,16 @@ const partners = [
 
 const CTASection = () => {
   return (
-    <section className="py-6 sm:py-10 lg:py-14 bg-gradient-earth relative overflow-hidden">
+    <section className="py-6 sm:py-10 lg:py-14 relative overflow-hidden">
+      {/* Video background */}
+      <video
+        autoPlay muted loop playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        poster="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&q=60"
+      >
+        <source src="https://videos.pexels.com/video-files/2889412/2889412-hd_1920_1080_30fps.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary" />
         <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent" />
