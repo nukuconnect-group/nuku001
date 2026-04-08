@@ -227,6 +227,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      <SEO
+        url="/auth"
+        title={authMode === "login" ? "Connexion" : "Inscription"}
+        description="Connectez-vous ou créez votre compte NUKUCONNECT pour acheter, vendre et livrer des produits agricoles en Afrique."
+        image="https://images.unsplash.com/photo-1595508064774-5ff825a60bba?w=1200&h=630&fit=crop&q=80"
+      />
       {/* Back button - mobile */}
       <button
         onClick={() => navigate(-1)}
