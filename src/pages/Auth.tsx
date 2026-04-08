@@ -205,13 +205,9 @@ const Auth = () => {
         }, 3 * 60 * 1000); // 3 minutes delay
 
         if (needsConfirmation) {
-          // Redirect to login tab with verification message
           setAuthMode("login");
           setSignupStep("select");
-          toast({ 
-            title: "Inscription réussie ! 🎉", 
-            description: "Un email de vérification a été envoyé. Vérifiez votre boîte de réception puis connectez-vous ici.",
-          });
+          setEmailVerificationPending(true);
           return;
         }
         toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
