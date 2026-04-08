@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import partnerEG from "@/assets/partner-energy-generation.png";
 import partnerRT from "@/assets/partner-republique-togolaise.png";
 import partnerTTI from "@/assets/partner-togo-top-impact.png";
+import heroFarmerVR from "@/assets/hero-african-farmer-vr.jpg";
 
 const partners = [
   { name: "Energy Generation", logo: partnerEG },
