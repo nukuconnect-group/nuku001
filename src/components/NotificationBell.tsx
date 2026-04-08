@@ -47,6 +47,9 @@ const NotificationBell = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
         setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 20));
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
+        setNotifications(prev => prev.map(n => n.id === (payload.new as Notification).id ? (payload.new as Notification) : n));
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
