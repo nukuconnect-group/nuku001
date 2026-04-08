@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
       { loc: "/marketplace", priority: "0.9", changefreq: "daily" },
       { loc: "/formations", priority: "0.8", changefreq: "weekly" },
       { loc: "/producteurs", priority: "0.7", changefreq: "weekly" },
+      { loc: "/blog", priority: "0.7", changefreq: "weekly" },
       { loc: "/a-propos", priority: "0.5", changefreq: "monthly" },
       { loc: "/contact", priority: "0.5", changefreq: "monthly" },
       { loc: "/aide", priority: "0.4", changefreq: "monthly" },
@@ -53,9 +54,20 @@ Deno.serve(async (req) => {
       { loc: "/devenir-fournisseur", priority: "0.6", changefreq: "monthly" },
       { loc: "/tracabilite", priority: "0.5", changefreq: "monthly" },
       { loc: "/nuku-ai", priority: "0.6", changefreq: "monthly" },
+      { loc: "/affiliation", priority: "0.5", changefreq: "monthly" },
+      { loc: "/auth", priority: "0.4", changefreq: "monthly" },
       { loc: "/mentions-legales", priority: "0.2", changefreq: "yearly" },
       { loc: "/confidentialite", priority: "0.2", changefreq: "yearly" },
       { loc: "/conditions", priority: "0.2", changefreq: "yearly" },
+    ];
+
+    // Blog articles (hardcoded slugs matching the app)
+    const blogSlugs = [
+      "nukuconnect-meilleure-innovation-togo-top-impact-2025",
+      "intelligence-artificielle-agriculture-afrique",
+      "tracabilite-produits-agricoles-confiance-consommateur",
+      "marketplace-agricole-connecter-producteurs-acheteurs",
+      "formation-agricole-numerique-competences-producteurs",
     ];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -69,6 +81,17 @@ Deno.serve(async (req) => {
     <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
+  </url>
+`;
+    }
+
+    // Blog articles
+    for (const slug of blogSlugs) {
+      xml += `  <url>
+    <loc>${SITE_URL}/blog/${slug}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 `;
     }
