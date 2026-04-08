@@ -37,11 +37,11 @@ import KYCManager from "@/components/admin/KYCManager";
 
 const COLORS = [
   'hsl(var(--primary))',
-  'hsl(142 76% 36%)',
-  'hsl(217 91% 60%)',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
   'hsl(var(--destructive))',
-  'hsl(45 93% 47%)',
-  'hsl(280 67% 55%)',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
 ];
 
 const AdminDashboard = () => {
@@ -232,13 +232,13 @@ const AdminDashboard = () => {
 
   const statCards = [
     { label: "Utilisateurs", value: stats?.total_users || 0, icon: Users, color: "bg-primary/15 text-primary" },
-    { label: "Produits", value: stats?.total_products || 0, icon: Package, color: "bg-green-500/15 text-green-600" },
+    { label: "Produits", value: stats?.total_products || 0, icon: Package, color: "bg-secondary/15 text-secondary" },
     { label: "Commandes", value: stats?.total_orders || 0, icon: ShoppingCart, color: "bg-accent/15 text-accent-foreground" },
-    { label: "Revenus", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-yellow-500/15 text-yellow-600" },
-    { label: "Visites", value: analytics?.total_visits || 0, icon: Eye, color: "bg-blue-500/15 text-blue-600" },
-    { label: "Visiteurs", value: analytics?.unique_visitors || 0, icon: Globe, color: "bg-purple-500/15 text-purple-600" },
-    { label: "Aujourd'hui", value: analytics?.today_visits || 0, icon: Activity, color: "bg-pink-500/15 text-pink-600" },
-    { label: "Installations", value: analytics?.pwa_installs || 0, icon: Download, color: "bg-orange-500/15 text-orange-600" },
+    { label: "Revenus", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-accent/20 text-accent-foreground" },
+    { label: "Visites", value: analytics?.total_visits || 0, icon: Eye, color: "bg-primary/10 text-primary" },
+    { label: "Visiteurs", value: analytics?.unique_visitors || 0, icon: Globe, color: "bg-secondary/10 text-secondary" },
+    { label: "Aujourd'hui", value: analytics?.today_visits || 0, icon: Activity, color: "bg-destructive/10 text-destructive" },
+    { label: "Installations", value: analytics?.pwa_installs || 0, icon: Download, color: "bg-accent/15 text-accent-foreground" },
   ];
 
   const getDeviceIcon = (device: string) => {
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
                 </Card>
               </div>
             </div>
-            )}
+          )}
 
             {/* Analytics Tab */}
             {activeTab === "analytics" && (
@@ -726,21 +726,21 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Users className="w-5 h-5 mx-auto text-green-600 mb-1" />
+                      <Users className="w-5 h-5 mx-auto text-secondary mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.unique_visitors || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Couverture (uniques)</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Activity className="w-5 h-5 mx-auto text-blue-600 mb-1" />
+                      <Activity className="w-5 h-5 mx-auto text-primary mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.this_week_visits || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Cette semaine</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Download className="w-5 h-5 mx-auto text-orange-600 mb-1" />
+                      <Download className="w-5 h-5 mx-auto text-accent-foreground mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.pwa_installs || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Installations PWA</p>
                     </CardContent>
@@ -790,7 +790,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-medium truncate">{u.full_name || "Sans nom"}</p>
-                                  {u.is_verified && <Badge variant="outline" className="text-[8px] px-1 text-green-600">Vérifié</Badge>}
+                                  {u.is_verified && <Badge variant="outline" className="text-[8px] px-1 text-secondary">Vérifié</Badge>}
                                 </div>
                               </div>
                             </td>
@@ -865,7 +865,7 @@ const AdminDashboard = () => {
                         {stats?.pro_subscriptions || 0} Pro • {stats?.free_subscriptions || 0} Gratuit
                       </CardDescription>
                     </div>
-                    <Badge className="bg-green-500/15 text-green-600 border-green-500/20">
+                    <Badge className="bg-secondary/15 text-secondary border-secondary/20">
                       <Crown className="w-3 h-3 mr-1" />{stats?.pro_subscriptions || 0} Pro
                     </Badge>
                   </div>
