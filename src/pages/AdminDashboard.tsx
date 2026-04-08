@@ -493,6 +493,7 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
             )}
 
             {/* Analytics Tab */}
@@ -1050,7 +1051,6 @@ const AdminDashboard = () => {
             {activeTab === "kyc" && (
               <KYCManager />
             )}
-          
         </main>
       </div>
       <Footer />
