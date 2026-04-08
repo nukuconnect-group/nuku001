@@ -1050,7 +1050,7 @@ const AdminDashboard = () => {
             {activeTab === "kyc" && (
               <KYCManager />
             )}
-          
+          </div>
         </main>
       </div>
       <Footer />
