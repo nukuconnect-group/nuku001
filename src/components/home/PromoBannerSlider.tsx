@@ -22,6 +22,7 @@ import heroNetwork from "@/assets/hero-network-agriculture.jpg";
 import heroOrganic from "@/assets/hero-organic-farm.jpg";
 import heroAI from "@/assets/hero-ai-agriculture.jpg";
 import promoBanner1 from "@/assets/step-4-delivery.jpg";
+import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 
 const banners = [
   {
@@ -30,6 +31,13 @@ const banners = [
     subtitle: "NukuConnect sacrée par Togo Top Impact",
     cta: "Découvrir",
     link: "/a-propos",
+  },
+  {
+    image: heroShopping,
+    title: "Achat en ligne simplifié",
+    subtitle: "Commandez vos produits frais depuis chez vous",
+    cta: "Commander",
+    link: "/marketplace",
   },
   {
     image: heroFarmers,
