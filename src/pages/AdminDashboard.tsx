@@ -33,6 +33,7 @@ import DeliveryManager from "@/components/admin/DeliveryManager";
 import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
 import EmailStatsManager from "@/components/admin/EmailStatsManager";
+import KYCManager from "@/components/admin/KYCManager";
 
 const COLORS = [
   'hsl(var(--primary))',
