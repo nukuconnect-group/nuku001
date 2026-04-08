@@ -120,8 +120,11 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         id_front_url: idFrontUrl || null,
         id_back_url: idBackUrl || null,
         selfie_url: selfieUrl || null,
+        license_plate: licensePlate.trim() || null,
+        vehicle_brand: vehicleBrand.trim() || null,
+        vehicle_color: vehicleColor.trim() || null,
         status: "pending",
-      });
+      } as any);
       if (error) throw error;
       toast({ title: "KYC soumis ! 🎉", description: "Votre demande sera examinée sous 24-48h." });
       onSubmitted();
