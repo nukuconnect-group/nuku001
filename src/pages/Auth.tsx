@@ -190,15 +190,17 @@ const Auth = () => {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
           if (newProfile) await supabase.from("driver_profiles").insert({ user_id: authData.user.id, profile_id: newProfile.id, vehicle_type: producerSector || "moto", zone: producerLocation, is_available: true });
         }
-        // Send welcome email (non-blocking)
-        supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "welcome",
-            recipientEmail: signupEmail,
-            idempotencyKey: `welcome-${authData.user.id}`,
-            templateData: { name: fullName, userType },
-          },
-        }).catch(() => {});
+        // Send welcome email after a delay so confirmation email arrives first
+        setTimeout(() => {
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "welcome",
+              recipientEmail: signupEmail,
+              idempotencyKey: `welcome-${authData.user.id}`,
+              templateData: { name: fullName, userType },
+            },
+          }).catch(() => {});
+        }, 3 * 60 * 1000); // 3 minutes delay
 
         if (needsConfirmation) {
           // Redirect to login tab with verification message
