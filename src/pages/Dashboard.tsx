@@ -24,6 +24,7 @@ import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidge
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
+import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
