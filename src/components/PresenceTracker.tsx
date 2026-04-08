@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { usePresenceTracker } from "@/hooks/usePresence";
 
 /**
