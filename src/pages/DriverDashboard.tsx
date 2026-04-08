@@ -390,6 +390,24 @@ const DriverDashboard = () => {
           </div>
         </div>
 
+        {/* KYC Banner when not approved */}
+        {driverProfile && !driverProfile.is_approved && (
+          <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 text-yellow-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-yellow-800 dark:text-yellow-300">Vérification KYC requise</p>
+                  <p className="text-[10px] text-yellow-700 dark:text-yellow-400">Soumettez vos documents pour activer votre compte livreur</p>
+                </div>
+              </div>
+              <KYCForm userId={user?.id} onSubmitted={fetchDriverData} />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Status banner */}
         {driverProfile?.is_available ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
