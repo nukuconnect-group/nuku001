@@ -166,8 +166,8 @@ const Dashboard = () => {
 
           {/* Charts - responsive */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="lg:col-span-2"><SalesAreaChart /></div>
-            <CategoryPieInfo />
+            <div className="lg:col-span-2"><SalesAreaChart orders={orders} /></div>
+            <CategoryPieInfo orders={orders} />
           </div>
 
           {/* Quick actions row */}

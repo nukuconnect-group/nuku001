@@ -326,21 +326,43 @@ const Cart = () => {
     }
   }, [finalizeOrder, toast]);
 
-  const handlePaymentFailed = useCallback(() => {
-    setPollingEnabled(false);
-    setIsCheckingOut(false);
-    setPendingCheckoutData(null);
-    pendingCheckoutRef.current = null;
-    toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Réessayez.", variant: "destructive" });
-  }, [toast]);
+  const markOrdersFailed = useCallback(async (reason: string) => {
+    const checkoutData = pendingCheckoutRef.current;
+    if (!checkoutData?.orderIds?.length) return;
+    for (const orderId of checkoutData.orderIds) {
+      await supabase.from("orders")
+        .update({ status: "cancelled", notes: reason })
+        .eq("id", orderId)
+        .eq("status", "pending");
+    }
+    // Notify buyer
+    if (user?.id) {
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "order",
+        title: "❌ Paiement échoué",
+        description: reason,
+      });
+    }
+  }, [user]);
 
-  const handlePaymentExpired = useCallback(() => {
+  const handlePaymentFailed = useCallback(async () => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
+    await markOrdersFailed(`Paiement échoué | tx_ref: ${paymentIdentifier}`);
     setPendingCheckoutData(null);
     pendingCheckoutRef.current = null;
-    toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé dans le délai imparti.", variant: "destructive" });
-  }, [toast]);
+    toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Vos commandes ont été annulées. Réessayez.", variant: "destructive" });
+  }, [toast, markOrdersFailed, paymentIdentifier]);
+
+  const handlePaymentExpired = useCallback(async () => {
+    setPollingEnabled(false);
+    setIsCheckingOut(false);
+    await markOrdersFailed(`Paiement expiré (timeout) | tx_ref: ${paymentIdentifier}`);
+    setPendingCheckoutData(null);
+    pendingCheckoutRef.current = null;
+    toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
+  }, [toast, markOrdersFailed, paymentIdentifier]);
 
   usePaygatePolling({
     identifier: paymentIdentifier,

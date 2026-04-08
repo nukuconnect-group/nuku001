@@ -35,9 +35,8 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) {
+    const { data: { user: authUser }, error: authError } = await userClient.auth.getUser();
+    if (authError || !authUser) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -335,6 +335,34 @@ const OrderDetail = () => {
                   : "Mobile Money"}
               </span>
             </div>
+
+            {/* Transaction reference */}
+            {(() => {
+              const txRef = (order.notes || "").split(" | ").find((n: string) => n.startsWith("tx_ref:"))?.replace("tx_ref: ", "");
+              return txRef ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Réf. transaction : <span className="font-mono text-foreground">{txRef}</span></span>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Payment status indicator */}
+            <div className="flex items-center gap-2 text-xs mt-1">
+              {order.status === "confirmed" || order.status === "completed" ? (
+                <Badge className="bg-green-100 text-green-700 border-0 text-[10px] gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Paiement confirmé
+                </Badge>
+              ) : order.status === "cancelled" ? (
+                <Badge className="bg-red-100 text-red-700 border-0 text-[10px] gap-1">
+                  <XCircle className="w-3 h-3" /> Paiement échoué
+                </Badge>
+              ) : (
+                <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px] gap-1">
+                  <Clock className="w-3 h-3" /> En attente de paiement
+                </Badge>
+              )}
+            </div>
           </CardContent>
         </Card>
 
