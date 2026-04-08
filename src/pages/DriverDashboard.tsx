@@ -594,13 +594,35 @@ const DriverDashboard = () => {
                           <p className="text-[10px] text-muted-foreground">{selectedProduct.profiles?.location || ""}</p>
                         </div>
                       </div>
+                      {/* Estimated earnings */}
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-2.5">
+                        <p className="text-[10px] font-semibold text-green-800 dark:text-green-300 mb-1">💰 Gains estimés pour cette livraison</p>
+                        <p className="text-sm font-bold text-green-700 dark:text-green-400">
+                          {Math.round(500 + distToSeller * 200).toLocaleString()} FCFA
+                        </p>
+                        <p className="text-[10px] text-green-600 dark:text-green-500">Base 500F + 200F/km × {distToSeller.toFixed(1)} km</p>
+                      </div>
                       <div className="flex gap-2">
-                        <Button variant="hero" className="flex-1" onClick={() => {
-                          navigate(`/produit/${selectedProduct.id}`);
-                          setSelectedProduct(null);
-                        }}>
-                          <Package className="w-4 h-4 mr-1" /> Voir le produit
-                        </Button>
+                        {driverProfile?.is_approved ? (
+                          <Button variant="hero" className="flex-1" onClick={async () => {
+                            if (!driverProfile) return;
+                            const driverFee = Math.round(500 + distToSeller * 200);
+                            const platformFee = Math.round(driverFee * 0.15);
+                            try {
+                              // We can't create a delivery without an order, so navigate to the product
+                              toast({ title: "Consultez le produit", description: "Quand un acheteur passe commande, la livraison vous sera proposée automatiquement." });
+                              navigate(`/produit/${selectedProduct.id}`);
+                            } finally {
+                              setSelectedProduct(null);
+                            }
+                          }}>
+                            <Truck className="w-4 h-4 mr-1" /> Voir & proposer livraison
+                          </Button>
+                        ) : (
+                          <Button variant="outline" className="flex-1" disabled>
+                            <ShieldCheck className="w-4 h-4 mr-1" /> KYC requis
+                          </Button>
+                        )}
                         <Button variant="outline" onClick={() => setSelectedProduct(null)}>Fermer</Button>
                       </div>
                     </div>
