@@ -111,6 +111,10 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       toast({ title: "Veuillez uploader le recto de la pièce", variant: "destructive" });
       return;
     }
+    if (!licensePlate.trim()) {
+      toast({ title: "Numéro de plaque requis", description: "Entrez le numéro d'immatriculation de votre véhicule.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase.from("driver_kyc_submissions").insert({
