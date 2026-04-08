@@ -27,6 +27,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
+import AffiliationCard from "@/components/dashboard/AffiliationCard";
 
 // Lazy load heavy components
 const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
