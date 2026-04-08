@@ -683,16 +683,23 @@ const Header = () => {
                 </SheetContent>
               </Sheet>
               <div className="w-px h-5 bg-border mx-1" />
-              <div className="flex items-center gap-0.5 flex-1">
+              <div className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
                 {navLinks.map((link) => (
                   <Link key={link.href + link.label} to={link.href}
-                    className={`px-2.5 py-1.5 text-xs font-medium transition-colors rounded-md ${
-                      isActive(link.href) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted hover:text-primary"
+                    className={`px-2.5 py-1.5 text-xs font-medium transition-all duration-200 rounded-md whitespace-nowrap flex-shrink-0 ${
+                      isActive(link.href) ? "bg-primary/10 text-primary shadow-sm" : "text-foreground hover:bg-muted hover:text-primary hover:translate-y-[-1px]"
                     }`}>
                     {link.label}
                   </Link>
                 ))}
               </div>
+              {!user && (
+                <Link to="/auth" className="flex-shrink-0 ml-2">
+                  <Button variant="hero" size="sm" className="h-7 text-xs gap-1.5 rounded-full px-4">
+                    <User className="w-3 h-3" /> {t("auth.loginSignup")}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
       </nav>

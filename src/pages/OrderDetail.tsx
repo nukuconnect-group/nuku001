@@ -43,7 +43,6 @@ const OrderDetail = () => {
     if (!id) return;
 
     const load = async () => {
-      // Fetch order with product
       const { data: orderData } = await supabase
         .from("orders")
         .select("*, products(*)")
@@ -53,7 +52,6 @@ const OrderDetail = () => {
       if (!orderData) { navigate("/buyer-dashboard"); return; }
       setOrder(orderData);
 
-      // Fetch seller profile
       const { data: sellerData } = await supabase
         .from("profiles")
         .select("full_name, avatar_url, location, is_verified")
@@ -61,7 +59,6 @@ const OrderDetail = () => {
         .single();
       setSeller(sellerData);
 
-      // Fetch delivery info
       const { data: deliveryData } = await supabase
         .from("deliveries")
         .select("*")
@@ -73,6 +70,23 @@ const OrderDetail = () => {
     };
     load();
   }, [id, user, isReady, navigate]);
+
+  // Realtime: listen to delivery & order status changes for live tracking
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`order-tracking-${id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (payload: any) => {
+        setOrder((prev: any) => prev ? { ...prev, ...payload.new } : prev);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "deliveries" }, (payload: any) => {
+        if (payload.new.order_id === id) {
+          setDelivery(payload.new);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
 
   const handleDownloadInvoice = () => {
     if (!order) return;
