@@ -740,7 +740,7 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <Download className="w-5 h-5 mx-auto text-orange-600 mb-1" />
+                      <Download className="w-5 h-5 mx-auto text-accent-foreground mb-1" />
                       <p className="text-lg font-bold text-foreground">{analytics?.pwa_installs || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Installations PWA</p>
                     </CardContent>
