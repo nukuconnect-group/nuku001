@@ -65,17 +65,39 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
         runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "unsplash-images",
               expiration: {
-                maxEntries: 50,
+                maxEntries: 80,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/.*supabase.*\/storage\/v1\/object\/public\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "supabase-storage",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
               },
             },
           },
@@ -84,9 +106,22 @@ export default defineConfig(({ mode }) => ({
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
+              networkTimeoutSeconds: 5,
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 5,
+                maxEntries: 150,
+                maxAgeSeconds: 60 * 60,
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/.*supabase.*\/functions\/v1\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "edge-functions-cache",
+              networkTimeoutSeconds: 8,
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 10,
               },
             },
           },
