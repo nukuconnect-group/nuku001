@@ -1,3 +1,4 @@
+import SupportWidget from "@/components/SupportWidget";
 import SEO from "@/components/SEO";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
