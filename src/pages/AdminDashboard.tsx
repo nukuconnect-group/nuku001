@@ -352,6 +352,9 @@ const AdminDashboard = () => {
               <TabsTrigger value="emails" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
                 <Send className="w-3.5 h-3.5" />Emails
               </TabsTrigger>
+              <TabsTrigger value="kyc" className="gap-1.5 text-[11px] sm:text-sm px-2.5 sm:px-3 flex-shrink-0">
+                <Shield className="w-3.5 h-3.5" />KYC
+              </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
