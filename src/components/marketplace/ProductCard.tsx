@@ -67,8 +67,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
       <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-xl border-border/50">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
-            {product.image ? (
-              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.src = ''; el.style.display = 'none'; }} />
+            {product.image && !listImgError ? (
+              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" onError={() => setListImgError(true)} />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground"><Package className="w-8 h-8" /></div>
             )}
