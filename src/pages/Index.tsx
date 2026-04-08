@@ -46,6 +46,28 @@ const Index = () => {
         <PromoBannerSlider />
         <CategoriesSection />
         <FeaturedProducts />
+        {/* Award Banner */}
+        <section className="py-6 sm:py-10 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+          <div className="container mx-auto px-3 sm:px-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 max-w-4xl mx-auto">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-4xl sm:text-5xl">🏆</span>
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Togo Top Impact 2025</p>
+                <h3 className="font-heading text-base sm:text-xl lg:text-2xl font-extrabold text-foreground mb-2">
+                  NukuConnect sacré meilleure innovation de l'année
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3">
+                  Notre plateforme a été récompensée pour son impact sur la chaîne de valeur agricole en Afrique.
+                </p>
+                <a href="/blog/nukuconnect-meilleure-innovation-togo-top-impact-2025" className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-primary hover:underline">
+                  Lire l'article complet →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />
