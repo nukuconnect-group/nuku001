@@ -181,12 +181,9 @@ const Auth = () => {
         // Link referral if present
         const savedRef = localStorage.getItem("nukuconnect-ref");
         if (savedRef) {
-          supabase
-            .from("referrals")
-            .update({ referred_user_id: authData.user.id, status: "active", activated_at: new Date().toISOString() })
-            .eq("referral_code", savedRef)
-            .is("referred_user_id", null)
-            .then(() => { localStorage.removeItem("nukuconnect-ref"); });
+          supabase.rpc("claim_referral", { p_referral_code: savedRef })
+            .then(() => { localStorage.removeItem("nukuconnect-ref"); })
+            .catch(() => { localStorage.removeItem("nukuconnect-ref"); });
         }
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
