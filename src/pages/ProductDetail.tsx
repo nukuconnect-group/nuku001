@@ -416,16 +416,6 @@ const ProductDetail = () => {
                       </div>
                       <Badge className="text-[8px] bg-primary/10 text-primary border-primary/20">Recommandé</Badge>
                     </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border">
-                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <Truck className="w-4 h-4 text-accent" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[10px] font-medium text-foreground">Gochap</p>
-                        <p className="text-[9px] text-muted-foreground">Livraison express</p>
-                      </div>
-                      <Badge variant="secondary" className="text-[8px]">Express</Badge>
-                    </div>
                   </div>
                   <p className="text-[8px] text-muted-foreground text-center">
                     Les livreurs disponibles seront affichés lors du checkout
@@ -684,7 +674,7 @@ const ProductDetail = () => {
                           { step: "Contrôle qualité", icon: "🔍", desc: product.isOrganic ? "Certifié biologique" : "Contrôle standard", detail: product.producer.verified ? "Fournisseur vérifié ✓" : "En cours de vérification", status: product.producer.verified ? "done" : "pending" },
                           { step: "Stockage", icon: "📦", desc: "Conditions de conservation respectées", detail: `${product.quantity} ${product.unit}(s) disponibles`, status: "done" },
                           { step: "Mise en vente", icon: "🏪", desc: "Publié sur NukuConnect", detail: `Catégorie: ${product.category}`, status: "done" },
-                          { step: "Livraison", icon: "🚚", desc: "Prêt à être expédié", detail: "Retrait / Livreur / Gochap", status: "active" },
+                          { step: "Livraison", icon: "🚚", desc: "Prêt à être expédié", detail: "Retrait / Livreur NukuConnect", status: "active" },
                         ].map((item, i) => (
                           <div key={i} className="flex gap-3">
                             <div className="flex flex-col items-center">

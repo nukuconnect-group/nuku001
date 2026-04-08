@@ -1,3 +1,4 @@
+import SupportWidget from "@/components/SupportWidget";
 import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -251,6 +252,7 @@ const LearnerDashboard = () => {
         </div>
       </main>
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
     </div>
   );

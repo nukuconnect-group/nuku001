@@ -27,6 +27,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
+import AffiliationCard from "@/components/dashboard/AffiliationCard";
 
 // Lazy load heavy components
 const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
@@ -247,6 +248,13 @@ const BuyerDashboard = () => {
               </Card>
             ))}
           </div>
+
+          {/* Affiliation */}
+          {user && (
+            <div className="mb-5 sm:mb-8">
+              <AffiliationCard userId={user.id} />
+            </div>
+          )}
 
           {/* Become Producer Banner - responsive */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">

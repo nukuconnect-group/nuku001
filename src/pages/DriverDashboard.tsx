@@ -1,3 +1,4 @@
+import SupportWidget from "@/components/SupportWidget";
 import SEO from "@/components/SEO";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -1001,6 +1002,7 @@ const DriverDashboard = () => {
         </Tabs>
       </main>
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
     </div>
   );
