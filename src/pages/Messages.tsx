@@ -23,7 +23,7 @@ Nous sommes ravis de vous accueillir sur la première plateforme agricole intell
 
 🛒 **Marketplace** — Achetez et vendez des produits agricoles directement entre fournisseurs et acheteurs.
 
-🚚 **Livraison** — Choisissez un livreur NukuConnect ou Gochap pour recevoir vos commandes.
+🚚 **Livraison** — Choisissez un livreur NukuConnect pour recevoir vos commandes.
 
 💬 **Messagerie** — Discutez avec les fournisseurs et livreurs en temps réel.
 

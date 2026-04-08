@@ -16,7 +16,6 @@ const slides = [
     title: "NukuConnect sacrée Meilleure Innovation de l'Année 2025",
     subtitle: "🏆 Prix Togo Top Impact",
     description: "NukuConnect a été récompensée comme la meilleure innovation technologique de l'année 2025 lors de la cérémonie Togo Top Impact.",
-    isAward: true,
   },
   {
     image: heroShopping,

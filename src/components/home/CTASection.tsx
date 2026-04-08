@@ -15,14 +15,14 @@ const partners = [
 const CTASection = () => {
   return (
     <section className="py-6 sm:py-10 lg:py-14 relative overflow-hidden">
-      {/* Video background */}
-      <video
-        autoPlay muted loop playsInline
+      <img
+        src={heroFarmerVR}
+        alt="Agriculteur africain avec casque de réalité virtuelle dans un champ high-tech"
         className="absolute inset-0 w-full h-full object-cover"
-        poster="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200&q=60"
-      >
-        <source src="https://videos.pexels.com/video-files/2889412/2889412-hd_1920_1080_30fps.mp4" type="video/mp4" />
-      </video>
+        loading="lazy"
+        width={1920}
+        height={1080}
+      />
       <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary" />

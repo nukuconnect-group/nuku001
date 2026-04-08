@@ -1001,6 +1001,7 @@ const DriverDashboard = () => {
         </Tabs>
       </main>
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
     </div>
   );

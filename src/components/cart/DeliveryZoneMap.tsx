@@ -101,8 +101,7 @@ export function buildDeliveryOptions(distanceKm: number | null) {
     if (opt.fixed) return { ...opt, price: opt.fixedPrice };
     if (distanceKm === null) return { ...opt, price: 0 };
     const { price } = getDeliveryPriceByDistance(distanceKm);
-    const multiplier = opt.id === "gochap" ? 1.4 : 1;
-    return { ...opt, price: Math.round(price * multiplier / 100) * 100 };
+    return { ...opt, price: Math.round(price / 100) * 100 };
   });
 }
 

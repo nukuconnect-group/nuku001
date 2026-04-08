@@ -674,7 +674,7 @@ const ProductDetail = () => {
                           { step: "Contrôle qualité", icon: "🔍", desc: product.isOrganic ? "Certifié biologique" : "Contrôle standard", detail: product.producer.verified ? "Fournisseur vérifié ✓" : "En cours de vérification", status: product.producer.verified ? "done" : "pending" },
                           { step: "Stockage", icon: "📦", desc: "Conditions de conservation respectées", detail: `${product.quantity} ${product.unit}(s) disponibles`, status: "done" },
                           { step: "Mise en vente", icon: "🏪", desc: "Publié sur NukuConnect", detail: `Catégorie: ${product.category}`, status: "done" },
-                          { step: "Livraison", icon: "🚚", desc: "Prêt à être expédié", detail: "Retrait / Livreur / Gochap", status: "active" },
+                          { step: "Livraison", icon: "🚚", desc: "Prêt à être expédié", detail: "Retrait / Livreur NukuConnect", status: "active" },
                         ].map((item, i) => (
                           <div key={i} className="flex gap-3">
                             <div className="flex flex-col items-center">
