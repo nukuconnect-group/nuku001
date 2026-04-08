@@ -493,10 +493,10 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
+            )}
 
             {/* Analytics Tab */}
-            <TabsContent value="analytics">
+            {activeTab === "analytics" && (
               <div className="space-y-4">
                 {/* Daily Visits Chart */}
                 <Card>
@@ -746,10 +746,10 @@ const AdminDashboard = () => {
                   </Card>
                 </div>
               </div>
-            </TabsContent>
+            )}
 
             {/* Users Tab */}
-            <TabsContent value="users">
+            {activeTab === "users" && (
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -831,30 +831,30 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            )}
 
             {/* Orders Tab */}
-            <TabsContent value="orders">
+            {activeTab === "orders" && (
               <OrderManager orders={orders} stats={stats} onRefresh={refreshData} />
-            </TabsContent>
+            )}
 
             {/* Products Tab */}
-            <TabsContent value="products">
+            {activeTab === "products" && (
               <ProductsManager />
-            </TabsContent>
+            )}
 
             {/* Deliveries Tab */}
-            <TabsContent value="deliveries">
+            {activeTab === "deliveries" && (
               <DeliveryManager />
-            </TabsContent>
+            )}
 
             {/* Demands Tab */}
-            <TabsContent value="demands">
+            {activeTab === "demands" && (
               <DemandsManager />
-            </TabsContent>
+            )}
 
             {/* Subscriptions Tab */}
-            <TabsContent value="subscriptions">
+            {activeTab === "subscriptions" && (
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
                   <div className="flex items-center justify-between">
@@ -912,10 +912,10 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            )}
 
             {/* Chat Tab */}
-            <TabsContent value="chat">
+            {activeTab === "chat" && (
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -1014,45 +1014,45 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+            )}
 
             {/* Categories Tab */}
-            <TabsContent value="categories">
+            {activeTab === "categories" && (
               <CategoryManager />
-            </TabsContent>
+            )}
 
             {/* Finances Tab */}
-            <TabsContent value="finances">
+            {activeTab === "finances" && (
               <FinanceManager orders={orders} users={users} stats={stats} />
-            </TabsContent>
+            )}
 
             {/* Withdrawals Tab */}
-            <TabsContent value="withdrawals">
+            {activeTab === "withdrawals" && (
               <WithdrawalManager />
-            </TabsContent>
+            )}
 
             {/* Broadcast Notification Tab */}
-            <TabsContent value="broadcast">
+            {activeTab === "broadcast" && (
               <BroadcastNotification users={users} />
-            </TabsContent>
+            )}
 
             {/* Support Chat Tab */}
-            <TabsContent value="support">
+            {activeTab === "support" && (
               <SupportChat adminProfileId={adminProfile?.id} />
-            </TabsContent>
+            )}
 
             {/* Emails Tab */}
-            <TabsContent value="emails">
+            {activeTab === "emails" && (
               <EmailStatsManager />
-            </TabsContent>
+            )}
 
             {/* KYC Tab */}
-            <TabsContent value="kyc">
+            {activeTab === "kyc" && (
               <KYCManager />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
+            )}
+          
+        </main>
+      </div>
       <Footer />
     </div>
   );
