@@ -37,11 +37,11 @@ import KYCManager from "@/components/admin/KYCManager";
 
 const COLORS = [
   'hsl(var(--primary))',
-  'hsl(142 76% 36%)',
-  'hsl(217 91% 60%)',
+  'hsl(var(--secondary))',
+  'hsl(var(--accent))',
   'hsl(var(--destructive))',
-  'hsl(45 93% 47%)',
-  'hsl(280 67% 55%)',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
 ];
 
 const AdminDashboard = () => {
