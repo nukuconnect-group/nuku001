@@ -184,7 +184,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         {uploading === path ? (
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
         ) : url ? (
-          <CheckCircle2 className="w-5 h-5 text-green-600" />
+          <img src={url} alt={label} className="w-full h-full object-cover rounded-lg" />
         ) : (
           <Upload className="w-4 h-4 text-muted-foreground" />
         )}

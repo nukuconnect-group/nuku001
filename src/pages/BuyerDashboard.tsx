@@ -113,7 +113,7 @@ const BuyerDashboard = () => {
   const unreadNotifs = notifications.filter(n => !n.is_read).length;
 
   const stats = [
-    { label: "Commandes", value: orders.length, icon: ShoppingBag, color: "bg-primary/20 text-primary", trend: { value: 5, isPositive: true } },
+    { label: "Commandes", value: orders.length, icon: ShoppingBag, color: "bg-primary/20 text-primary" },
     { label: "Dépensé", value: formatPrice(totalSpent), icon: TrendingUp, color: "bg-green-500/20 text-green-600" },
     { label: "Favoris", value: wishlistItems?.length || 0, icon: Heart, color: "bg-destructive/20 text-destructive" },
     { label: "Messages", value: conversations.length, icon: MessageCircle, color: "bg-accent/20 text-accent-foreground" },

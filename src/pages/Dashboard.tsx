@@ -87,10 +87,10 @@ const Dashboard = () => {
   const netRevenue = totalSales - commissionAmount;
   
   const stats = [
-    { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary", trend: { value: 12, isPositive: true } },
-    { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground", trend: { value: 8, isPositive: true } },
-    { label: "Ventes brutes", value: totalSales.toLocaleString() + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600", trend: { value: 23, isPositive: true } },
-    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString() + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600", trend: { value: 15, isPositive: true } },
+    { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
+    { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
+    { label: "Ventes brutes", value: totalSales.toLocaleString() + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
+    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString() + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
 
   const handleDeleteProduct = async (productId: string) => {
