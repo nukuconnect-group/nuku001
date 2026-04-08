@@ -211,11 +211,23 @@
   z-index: 1 !important;
 }
 
-/* Image fallback - prevent broken image icons */
+/* Image fallback - prevent broken image icons and alt text */
 img {
   min-height: 0;
 }
 img[src=""],
 img:not([src]) {
   visibility: hidden;
+}
+img:-moz-broken {
+  opacity: 0;
+}
+
+/* Scrollbar none utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

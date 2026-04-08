@@ -28,6 +28,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   const { formatPrice } = useLanguage();
   const { isInWishlist, toggleWishlist, isAuthenticated } = useWishlist();
   const [showReviews, setShowReviews] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [listImgError, setListImgError] = useState(false);
 
   const { data: matchingDemands = 0 } = useQuery({
     queryKey: ["demand-count", product.category],
@@ -65,8 +67,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
       <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-xl border-border/50">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
-            {product.image ? (
-              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.src = ''; el.style.display = 'none'; }} />
+            {product.image && !listImgError ? (
+              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" onError={() => setListImgError(true)} />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground"><Package className="w-8 h-8" /></div>
             )}
@@ -119,8 +121,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — Alibaba-style tall ratio */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          {product.image ? (
-            <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.parentElement?.classList.add('flex', 'items-center', 'justify-center'); const placeholder = document.createElement('div'); placeholder.className = 'flex flex-col items-center justify-center text-muted-foreground'; placeholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>'; el.parentElement?.appendChild(placeholder); }} />
+          {product.image && !imgError ? (
+            <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" onError={() => setImgError(true)} />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
               <Package className="w-8 h-8" />
