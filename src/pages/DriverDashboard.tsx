@@ -360,6 +360,20 @@ const DriverDashboard = () => {
           </Card>
         )}
 
+        {/* Quick actions */}
+        <div className="flex gap-2">
+          <Link to="/settings" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 h-9">
+              <Settings className="w-3.5 h-3.5" /> Paramètres
+            </Button>
+          </Link>
+          <Link to="/messages" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 h-9">
+              <Bell className="w-3.5 h-3.5" /> Messages
+            </Button>
+          </Link>
+        </div>
+
         {/* Status Header */}
         <DriverStatusHeader
           firstName={firstName}
