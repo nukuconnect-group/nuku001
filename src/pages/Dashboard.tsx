@@ -1,4 +1,6 @@
 import SupportWidget from "@/components/SupportWidget";
+import SupplierVerificationPopup from "@/components/supplier/SupplierVerificationPopup";
+import SupplierKYCSection from "@/components/supplier/SupplierKYCSection";
 import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
