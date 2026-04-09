@@ -168,7 +168,9 @@ const DriverDashboard = () => {
         .is("driver_id", null);
       if (error) throw error;
       toast({ title: "✅ Mission acceptée !" });
-      fetchDriverData();
+      await fetchDriverData();
+      // Auto-switch to active tab and open mission detail
+      setActiveTab("active");
     } catch {
       toast({ title: "Mission plus disponible", variant: "destructive" });
     }
