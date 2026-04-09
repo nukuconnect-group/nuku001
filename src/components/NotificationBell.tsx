@@ -190,11 +190,10 @@ const NotificationBell = () => {
           ) : (
             <div className="divide-y divide-border/50">
               {visibleNotifications.map((notification) => (
-                <Link
+                <div
                   key={notification.id}
-                  to="/notifications"
-                  onClick={() => setOpen(false)}
-                  className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/40 transition-colors ${
+                  onClick={() => handleNotifClick(notification)}
+                  className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer ${
                     !notification.is_read ? "bg-primary/[0.03]" : ""
                   }`}
                 >
@@ -226,7 +225,7 @@ const NotificationBell = () => {
                   {!notification.is_read && (
                     <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />
                   )}
-                </Link>
+                </div>
               ))}
             </div>
           )}
