@@ -7,8 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import {
   MapPin, Navigation, Package, Phone, CheckCircle2,
-  Camera, Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike,
-  Maximize2, Minimize2, PauseCircle, PlayCircle, RotateCcw, Edit3, DollarSign
+  Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike,
+  Maximize2, Minimize2, PauseCircle, PlayCircle, RotateCcw, Edit3, DollarSign,
+  Locate, Layers, ChevronUp, ChevronDown, Star
 } from "lucide-react";
 
 interface MissionDetailViewProps {
@@ -43,13 +44,13 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [productInfo, setProductInfo] = useState<any>(null);
   const [driverVehicle, setDriverVehicle] = useState<string>("moto");
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [editingPrice, setEditingPrice] = useState(false);
   const [newPrice, setNewPrice] = useState("");
-  const [showChat, setShowChat] = useState(false);
   const [waypoints, setWaypoints] = useState<{ lat: number; lng: number; label: string }[]>([]);
   const [addingWaypoint, setAddingWaypoint] = useState(false);
+  const [panelExpanded, setPanelExpanded] = useState(true);
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
 
   const currentStep = getStepIndex(delivery.status);
 
@@ -81,7 +82,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       if (order) {
         setOrderDetails(order);
         setProductInfo(order.products);
-
         const [buyerRes, sellerRes] = await Promise.all([
           supabase.from("profiles").select("full_name, avatar_url, location").eq("id", order.buyer_id).maybeSingle(),
           supabase.from("profiles").select("full_name, avatar_url, location").eq("id", order.seller_id).maybeSingle(),
@@ -114,60 +114,77 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
       const map = L.map(mapRef.current!, {
         center: [driverPosition[0], driverPosition[1]],
-        zoom: 14,
-        zoomControl: true,
+        zoom: 15,
+        zoomControl: false,
         attributionControl: false,
       });
 
+      // Use a cleaner tile layer
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
 
-      // Driver marker
+      // Add zoom control bottom-right
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+
+      // Driver marker with pulse effect
       const driverIcon = L.divIcon({
         className: "custom-marker",
-        html: `<div style="background:#3b82f6;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5)">${getVehicleIconSvg()}</div>`,
+        html: `<div style="position:relative">
+          <div style="position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(59,130,246,0.15);top:-8px;left:-8px;animation:pulse 2s infinite"></div>
+          <div style="background:#3b82f6;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5);position:relative;z-index:2">${getVehicleIconSvg()}</div>
+        </div>`,
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
-      driverMarkerRef.current = L.marker([driverPosition[0], driverPosition[1]], { icon: driverIcon })
-        .addTo(map).bindPopup("📍 Ma position");
+      driverMarkerRef.current = L.marker([driverPosition[0], driverPosition[1]], { icon: driverIcon, zIndexOffset: 1000 })
+        .addTo(map);
 
-      // Pickup marker
+      // Pickup marker (red pin like Gozem)
       if (delivery.pickup_lat && delivery.pickup_lng) {
         const pickupIcon = L.divIcon({
           className: "custom-marker",
-          html: `<div style="background:#f97316;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(249,115,22,0.4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg></div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
+          html: `<div style="display:flex;flex-direction:column;align-items:center">
+            <div style="background:#ef4444;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(239,68,68,0.4)">
+              <div style="transform:rotate(45deg);color:white;font-size:12px;font-weight:bold">📦</div>
+            </div>
+            <div style="width:2px;height:8px;background:#ef4444;margin-top:-2px"></div>
+          </div>`,
+          iconSize: [28, 40],
+          iconAnchor: [14, 40],
         });
         L.marker([delivery.pickup_lat, delivery.pickup_lng], { icon: pickupIcon })
-          .addTo(map).bindPopup(`📦 ${delivery.pickup_address || "Vendeur"}`);
+          .addTo(map).bindPopup(`<b>📦 Point de collecte</b><br/>${delivery.pickup_address || "Vendeur"}`);
       }
 
-      // Dropoff marker
+      // Dropoff marker (green pin)
       if (delivery.dropoff_lat && delivery.dropoff_lng) {
         const dropoffIcon = L.divIcon({
           className: "custom-marker",
-          html: `<div style="background:#22c55e;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
+          html: `<div style="display:flex;flex-direction:column;align-items:center">
+            <div style="background:#22c55e;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4)">
+              <div style="transform:rotate(45deg);color:white;font-size:12px;font-weight:bold">🏠</div>
+            </div>
+            <div style="width:2px;height:8px;background:#22c55e;margin-top:-2px"></div>
+          </div>`,
+          iconSize: [28, 40],
+          iconAnchor: [14, 40],
         });
         L.marker([delivery.dropoff_lat, delivery.dropoff_lng], { icon: dropoffIcon })
-          .addTo(map).bindPopup(`🏠 ${delivery.dropoff_address || "Client"}`);
+          .addTo(map).bindPopup(`<b>🏠 Point de livraison</b><br/>${delivery.dropoff_address || "Client"}`);
       }
 
       // Waypoint markers
       waypoints.forEach((wp, i) => {
         const wpIcon = L.divIcon({
           className: "custom-marker",
-          html: `<div style="background:#8b5cf6;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(139,92,246,0.4);font-size:10px;color:white;font-weight:bold">${i + 1}</div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13],
+          html: `<div style="background:#8b5cf6;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(139,92,246,0.4);font-size:10px;color:white;font-weight:bold">${i + 1}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
         });
         L.marker([wp.lat, wp.lng], { icon: wpIcon })
           .addTo(map).bindPopup(`🔵 Arrêt: ${wp.label}`);
       });
 
-      // Build waypoints for OSRM routing
+      // Build route points
       const buildRoutePoints = (): [number, number][] => {
         const pts: [number, number][] = [];
         if (currentStep <= 1) {
@@ -185,7 +202,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
       const routePts = buildRoutePoints();
 
-      // Fetch real route from OSRM (free, no API key)
+      // Fetch OSRM route
       const fetchOSRMRoute = async (points: [number, number][]) => {
         if (points.length < 2) return null;
         const coords = points.map(p => `${p[1]},${p[0]}`).join(";");
@@ -197,23 +214,25 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           const data = await resp.json();
           if (data.code !== "Ok" || !data.routes?.[0]) return null;
           return data.routes[0];
-        } catch (e) {
-          console.warn("[OSRM] Route fetch failed, fallback to straight line:", e);
+        } catch {
           return null;
         }
       };
 
       const osrmRoute = await fetchOSRMRoute(routePts);
       if (osrmRoute?.geometry?.coordinates) {
-        // OSRM returns [lng, lat] — convert to [lat, lng] for Leaflet
         const leafletCoords: [number, number][] = osrmRoute.geometry.coordinates.map(
           (c: [number, number]) => [c[1], c[0]]
         );
         routeLineRef.current = L.polyline(leafletCoords, {
           color: "#3b82f6", weight: 5, opacity: 0.85,
         }).addTo(map);
+
+        // Set route info
+        const distKm = (osrmRoute.distance / 1000).toFixed(1);
+        const durMin = Math.round(osrmRoute.duration / 60);
+        setRouteInfo({ distance: `${distKm} km`, duration: `${durMin} min` });
       } else if (routePts.length >= 2) {
-        // Fallback: straight line if OSRM unavailable
         routeLineRef.current = L.polyline(routePts, {
           color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8,
         }).addTo(map);
@@ -226,7 +245,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       if (delivery.dropoff_lat && delivery.dropoff_lng) bounds.extend([delivery.dropoff_lat, delivery.dropoff_lng]);
       waypoints.forEach(wp => bounds.extend([wp.lat, wp.lng]));
       if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
       }
 
       // Click to add waypoint
@@ -239,6 +258,14 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       }
 
       mapInstanceRef.current = map;
+
+      // Add pulse animation CSS
+      if (!document.getElementById("map-pulse-css")) {
+        const style = document.createElement("style");
+        style.id = "map-pulse-css";
+        style.textContent = `@keyframes pulse{0%{transform:scale(1);opacity:0.6}50%{transform:scale(1.4);opacity:0.2}100%{transform:scale(1);opacity:0.6}}`;
+        document.head.appendChild(style);
+      }
     };
 
     initMap();
@@ -251,7 +278,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     };
   }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition, driverVehicle, currentStep, waypoints, addingWaypoint]);
 
-  // Update driver marker position
+  // Update driver marker
   useEffect(() => {
     if (!driverMarkerRef.current) return;
     driverMarkerRef.current.setLatLng([driverPosition[0], driverPosition[1]]);
@@ -285,7 +312,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
   const handleOtpConfirm = async () => {
     if (otpInput.length < 4) return;
-    // Verify OTP against stored code
     const { data: del } = await supabase
       .from("deliveries")
       .select("id")
@@ -300,7 +326,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const handleEditPrice = async () => {
     const price = parseInt(newPrice);
     if (!price || price <= 0) return;
-    // Only allow before picking up
     if (currentStep >= 2) return;
     await supabase.from("deliveries").update({
       driver_fee: price,
@@ -312,18 +337,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
   const removeWaypoint = (index: number) => {
     setWaypoints(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const navigateToPickup = () => {
-    if (delivery.pickup_lat && delivery.pickup_lng && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([delivery.pickup_lat, delivery.pickup_lng], 16, { duration: 1 });
-    }
-  };
-
-  const navigateToDropoff = () => {
-    if (delivery.dropoff_lat && delivery.dropoff_lng && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([delivery.dropoff_lat, delivery.dropoff_lng], 16, { duration: 1 });
-    }
   };
 
   const centerOnDriver = () => {
@@ -344,326 +357,313 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     if (bounds.isValid()) mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
   };
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-    setTimeout(() => {
-      mapInstanceRef.current?.invalidateSize();
-    }, 300);
-  };
-
+  // Full-screen Gozem-style layout
   return (
-    <div className={`space-y-3 ${isFullscreen ? "fixed inset-0 z-[100] bg-background overflow-y-auto p-3" : ""}`}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={isFullscreen ? toggleFullscreen : onBack} className="text-xs gap-1 -ml-2">
-          <ArrowLeft className="w-4 h-4" /> {isFullscreen ? "Réduire" : "Retour"}
-        </Button>
-        <div className="flex items-center gap-1">
-          {isPaused && (
-            <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300 bg-amber-50">
-              <PauseCircle className="w-3 h-3 mr-1" /> Pause
-            </Badge>
-          )}
-          <Badge variant="secondary" className="text-[9px]">
-            {WORKFLOW_STEPS[currentStep]?.label}
-          </Badge>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-[100] bg-background flex flex-col">
+      {/* Map takes full screen */}
+      <div className="flex-1 relative">
+        <div ref={mapRef} className="absolute inset-0 z-0" />
 
-      {/* Map */}
-      <div className={`rounded-xl overflow-hidden border border-border shadow-sm ${isFullscreen ? "" : ""}`}>
-        <div ref={mapRef} className={`w-full relative z-0 transition-all ${isFullscreen ? "h-[50vh]" : "h-[220px] sm:h-[280px]"}`} />
-        {/* Map controls overlay */}
-        <div className="absolute top-2 right-2 z-[10] flex flex-col gap-1" style={{ position: 'relative', marginTop: '-50px', marginRight: '8px', float: 'right' }}>
-        </div>
-        <div className="flex items-center justify-between px-3 py-2 bg-background border-t border-border">
-          <div className="flex items-center gap-2 text-xs">
-            {delivery.distance_km && (
-              <span className="flex items-center gap-1 font-medium">
-                <MapPin className="w-3.5 h-3.5 text-primary" />
-                {Number(delivery.distance_km).toFixed(1)} km
-              </span>
-            )}
-            {delivery.estimated_minutes && (
-              <span className="flex items-center gap-1 font-medium">
-                <Clock className="w-3.5 h-3.5 text-orange-500" />
-                ~{delivery.estimated_minutes} min
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={centerOnDriver}>
-              {driverVehicle === "voiture" || driverVehicle === "car" ? <Car className="w-3 h-3" /> : <Bike className="w-3 h-3" />}
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={fitAllBounds} title="Voir tout">
-              <Navigation className="w-3 h-3" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={toggleFullscreen} title={isFullscreen ? "Réduire" : "Plein écran"}>
-              {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-            </Button>
-            <span className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString()} F</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Driver controls: pause, waypoints, edit price */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={isPaused ? "default" : "outline"}
-          size="sm"
-          className="h-8 text-xs gap-1"
-          onClick={() => setIsPaused(!isPaused)}
-        >
-          {isPaused ? <PlayCircle className="w-3.5 h-3.5" /> : <PauseCircle className="w-3.5 h-3.5" />}
-          {isPaused ? "Reprendre" : "Pause"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs gap-1"
-          onClick={() => setAddingWaypoint(!addingWaypoint)}
-        >
-          <MapPin className="w-3.5 h-3.5" />
-          {addingWaypoint ? "Cliquez sur la carte..." : "Ajouter arrêt"}
-        </Button>
-        {currentStep < 2 && (
+        {/* Top bar overlay */}
+        <div className="absolute top-0 left-0 right-0 z-[10] p-3 flex items-center justify-between">
           <Button
             variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1"
-            onClick={() => setEditingPrice(true)}
+            size="icon"
+            className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0"
+            onClick={onBack}
           >
-            <Edit3 className="w-3.5 h-3.5" />
-            Modifier prix
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-        )}
-        {waypoints.length > 0 && (
+          <div className="flex items-center gap-2">
+            {isPaused && (
+              <Badge className="bg-amber-500 text-white text-[10px] shadow">
+                <PauseCircle className="w-3 h-3 mr-1" /> Pause
+              </Badge>
+            )}
+            <Badge className="bg-background/90 backdrop-blur text-foreground text-[10px] shadow border-0">
+              {WORKFLOW_STEPS[currentStep]?.label}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Map control buttons (right side) */}
+        <div className="absolute right-3 bottom-4 z-[10] flex flex-col gap-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs gap-1 text-red-500"
-            onClick={() => setWaypoints([])}
+            variant="outline"
+            size="icon"
+            className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0"
+            onClick={centerOnDriver}
+            title="Ma position"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Effacer arrêts
+            <Locate className="w-5 h-5 text-primary" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0"
+            onClick={fitAllBounds}
+            title="Voir tout"
+          >
+            <Layers className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Route info pill */}
+        {routeInfo && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[10]">
+            <div className="bg-background/90 backdrop-blur rounded-full px-4 py-1.5 shadow-md flex items-center gap-3 text-xs font-medium">
+              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-primary" />{routeInfo.distance}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-orange-500" />{routeInfo.duration}</span>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Waypoints list */}
-      {waypoints.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {waypoints.map((wp, i) => (
-            <Badge key={i} variant="secondary" className="text-[9px] gap-1 cursor-pointer" onClick={() => removeWaypoint(i)}>
-              📍 {wp.label} ✕
-            </Badge>
-          ))}
-        </div>
-      )}
+      {/* Bottom sliding panel (Gozem-style) */}
+      <div className={`bg-background rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-all duration-300 ${panelExpanded ? "max-h-[55vh]" : "max-h-[180px]"} overflow-hidden`}>
+        {/* Handle */}
+        <button
+          className="w-full flex justify-center py-2 cursor-grab"
+          onClick={() => setPanelExpanded(!panelExpanded)}
+        >
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </button>
 
-      {/* Edit price modal */}
-      {editingPrice && (
-        <Card className="border-primary/30">
-          <CardContent className="p-3 space-y-2">
-            <p className="text-xs font-semibold">Modifier le prix de livraison</p>
-            <p className="text-[10px] text-muted-foreground">Négociez le tarif avec le client avant le ramassage</p>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-                placeholder={`Actuel: ${delivery.driver_fee || 0} F`}
-                className="text-sm h-9"
-              />
-              <Button size="sm" className="h-9" onClick={handleEditPrice} disabled={!newPrice}>
-                <DollarSign className="w-3.5 h-3.5 mr-1" /> OK
-              </Button>
-              <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditingPrice(false)}>
-                ✕
-              </Button>
+        <div className="overflow-y-auto px-4 pb-4 space-y-3" style={{ maxHeight: panelExpanded ? "calc(55vh - 40px)" : "140px" }}>
+          {/* ETA + Driver info header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">
+                {currentStep <= 1 ? "En route vers le vendeur" :
+                 currentStep === 2 ? "Colis récupéré" :
+                 currentStep === 3 ? "En route vers le client" : "Livraison terminée"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {routeInfo ? `${routeInfo.duration} • ${routeInfo.distance}` : `~${delivery.estimated_minutes || 30} min`}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-bold text-sm border-0">
+              {(delivery.driver_fee || 0).toLocaleString()} F
+            </Badge>
+          </div>
 
-      {/* Workflow progress */}
-      <div className="flex items-center gap-1 px-1">
-        {WORKFLOW_STEPS.map((step, idx) => {
-          const StepIcon = step.icon;
-          const isActive = idx <= currentStep;
-          const isCurrent = idx === currentStep;
-          return (
-            <div key={step.status} className="flex items-center flex-1">
-              <div className="flex flex-col items-center w-full">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white transition-colors ${
-                  isCurrent ? "bg-primary ring-2 ring-primary/30" : isActive ? "bg-emerald-500" : "bg-muted"
-                }`}>
-                  <StepIcon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-muted-foreground"}`} />
-                </div>
-                <p className={`text-[8px] mt-0.5 text-center leading-tight ${isCurrent ? "font-bold text-primary" : "text-muted-foreground"}`}>
-                  {step.label}
-                </p>
-              </div>
-              {idx < WORKFLOW_STEPS.length - 1 && (
-                <div className={`h-0.5 flex-1 min-w-2 mt-[-12px] ${idx < currentStep ? "bg-emerald-500" : "bg-muted"}`} />
+          {/* Seller & Buyer cards */}
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
+            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+              {sellerProfile?.avatar_url ? (
+                <img src={sellerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <Store className="w-5 h-5 text-orange-600" />
               )}
             </div>
-          );
-        })}
-      </div>
-
-      {/* Seller & Buyer info */}
-      <div className="grid grid-cols-1 gap-2">
-        <Card className="border-orange-200/50">
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-              <Store className="w-5 h-5 text-orange-600" />
-            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground font-medium">VENDEUR</p>
+              <p className="text-xs text-muted-foreground">Vendeur</p>
               <p className="text-sm font-semibold truncate">{sellerProfile?.full_name || "Vendeur"}</p>
               <p className="text-[10px] text-muted-foreground truncate">{delivery.pickup_address || sellerProfile?.location || "—"}</p>
             </div>
-            <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToPickup}>
-                <Navigation className="w-3.5 h-3.5 text-primary" />
-              </Button>
+            <div className="flex gap-1.5">
               <DeliveryChat
                 deliveryId={delivery.id}
                 currentUserRole="driver"
                 otherPartyName={sellerProfile?.full_name || "Vendeur"}
                 trigger={
-                  <Button variant="outline" size="icon" className="w-8 h-8 rounded-full">
-                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20">
+                    <MessageCircle className="w-4 h-4 text-primary" />
                   </Button>
                 }
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-emerald-200/50">
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-              <User className="w-5 h-5 text-emerald-600" />
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+              {buyerProfile?.avatar_url ? (
+                <img src={buyerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <User className="w-5 h-5 text-emerald-600" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground font-medium">CLIENT</p>
+              <p className="text-xs text-muted-foreground">Client</p>
               <p className="text-sm font-semibold truncate">{buyerProfile?.full_name || "Client"}</p>
               <p className="text-[10px] text-muted-foreground truncate">{delivery.dropoff_address || "—"}</p>
             </div>
-            <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToDropoff}>
-                <Navigation className="w-3.5 h-3.5 text-primary" />
-              </Button>
+            <div className="flex gap-1.5">
               <DeliveryChat
                 deliveryId={delivery.id}
                 currentUserRole="driver"
                 otherPartyName={buyerProfile?.full_name || "Client"}
                 trigger={
-                  <Button variant="outline" size="icon" className="w-8 h-8 rounded-full">
-                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20">
+                    <MessageCircle className="w-4 h-4 text-primary" />
                   </Button>
                 }
               />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      {/* Product info */}
-      {productInfo && (
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground font-medium mb-2">PRODUIT À LIVRER</p>
-            <div className="flex items-center gap-3">
+          {/* Workflow steps */}
+          <div className="flex items-center gap-0.5 px-1">
+            {WORKFLOW_STEPS.map((step, idx) => {
+              const StepIcon = step.icon;
+              const isActive = idx <= currentStep;
+              const isCurrent = idx === currentStep;
+              return (
+                <div key={step.status} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center w-full">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                      isCurrent ? "bg-primary ring-2 ring-primary/30" : isActive ? "bg-emerald-500" : "bg-muted"
+                    }`}>
+                      <StepIcon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-muted-foreground"}`} />
+                    </div>
+                    <p className={`text-[8px] mt-0.5 text-center leading-tight ${isCurrent ? "font-bold text-primary" : "text-muted-foreground"}`}>
+                      {step.label}
+                    </p>
+                  </div>
+                  {idx < WORKFLOW_STEPS.length - 1 && (
+                    <div className={`h-0.5 flex-1 min-w-2 mt-[-12px] ${idx < currentStep ? "bg-emerald-500" : "bg-muted"}`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Controls row */}
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              variant={isPaused ? "default" : "outline"}
+              size="sm"
+              className="h-8 text-[10px] gap-1 rounded-full"
+              onClick={() => setIsPaused(!isPaused)}
+            >
+              {isPaused ? <PlayCircle className="w-3.5 h-3.5" /> : <PauseCircle className="w-3.5 h-3.5" />}
+              {isPaused ? "Reprendre" : "Pause"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[10px] gap-1 rounded-full"
+              onClick={() => setAddingWaypoint(!addingWaypoint)}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {addingWaypoint ? "Cliquez carte..." : "Arrêt"}
+            </Button>
+            {currentStep < 2 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-[10px] gap-1 rounded-full"
+                onClick={() => setEditingPrice(true)}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Prix
+              </Button>
+            )}
+            {waypoints.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-[10px] gap-1 text-red-500 rounded-full"
+                onClick={() => setWaypoints([])}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
+
+          {/* Waypoints badges */}
+          {waypoints.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {waypoints.map((wp, i) => (
+                <Badge key={i} variant="secondary" className="text-[9px] gap-1 cursor-pointer" onClick={() => removeWaypoint(i)}>
+                  📍 {wp.label} ✕
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Edit price */}
+          {editingPrice && (
+            <div className="p-3 rounded-xl bg-muted/50 space-y-2">
+              <p className="text-xs font-semibold">Modifier le prix de livraison</p>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  placeholder={`${delivery.driver_fee || 0} F`}
+                  className="text-sm h-9"
+                />
+                <Button size="sm" className="h-9" onClick={handleEditPrice} disabled={!newPrice}>
+                  OK
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditingPrice(false)}>
+                  ✕
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Product info */}
+          {productInfo && (
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
               {productInfo.images?.[0] && (
-                <img src={productInfo.images[0]} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                <img src={productInfo.images[0]} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{productInfo.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs font-medium truncate">{productInfo.name}</p>
+                <p className="text-[10px] text-muted-foreground">
                   Qté: {orderDetails?.quantity} {productInfo.unit} • {orderDetails?.total_price?.toLocaleString()} F
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* Earnings detail */}
-      <Card className="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/50">
-        <CardContent className="p-3 space-y-1">
-          <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">💰 Détail des gains</p>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Frais livraison total</span>
-            <span>{(delivery.delivery_fee || 0).toLocaleString()} F</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Commission plateforme</span>
-            <span className="text-red-500">-{(delivery.platform_fee || 0).toLocaleString()} F</span>
-          </div>
-          <div className="flex justify-between text-xs font-bold border-t border-emerald-200 dark:border-emerald-800 pt-1">
-            <span className="text-emerald-700 dark:text-emerald-400">Votre gain</span>
-            <span className="text-emerald-700 dark:text-emerald-400">{(delivery.driver_fee || 0).toLocaleString()} F</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* OTP Confirmation */}
-      {showOtp && (
-        <Card className="border-primary/30">
-          <CardContent className="p-4 space-y-3 text-center">
-            <Shield className="w-8 h-8 mx-auto text-primary" />
-            <p className="text-sm font-semibold">Code de confirmation</p>
-            <p className="text-xs text-muted-foreground">Demandez le code OTP à 4 chiffres au client pour valider la livraison et débloquer vos gains</p>
-            <Input
-              value={otpInput}
-              onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="Entrez le code"
-              className="text-center text-lg font-bold tracking-widest"
-              maxLength={6}
-            />
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowOtp(false)}>
-                Annuler
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                onClick={handleOtpConfirm}
-                disabled={otpInput.length < 4}
-              >
-                <CheckCircle2 className="w-4 h-4 mr-1" /> Confirmer
-              </Button>
+          {/* OTP */}
+          {showOtp && (
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3 text-center">
+              <Shield className="w-8 h-8 mx-auto text-primary" />
+              <p className="text-sm font-semibold">Code de confirmation</p>
+              <p className="text-xs text-muted-foreground">Demandez le code OTP au client</p>
+              <Input
+                value={otpInput}
+                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="Code OTP"
+                className="text-center text-lg font-bold tracking-widest"
+                maxLength={6}
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowOtp(false)}>
+                  Annuler
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  onClick={handleOtpConfirm}
+                  disabled={otpInput.length < 4}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-1" /> Confirmer
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* Main action button */}
-      {nextAction && !showOtp && (
-        <Button
-          className={`w-full h-12 text-sm font-bold gap-2 ${
-            nextAction.nextStatus === "delivered"
-              ? "bg-emerald-600 hover:bg-emerald-700"
-              : "bg-primary hover:bg-primary/90"
-          }`}
-          onClick={handleNextStep}
-          disabled={isPaused}
-        >
-          <nextAction.icon className="w-5 h-5" />
-          {nextAction.label}
-        </Button>
-      )}
-
-      {/* Legend */}
-      <div className="flex items-center gap-3 text-[9px] text-muted-foreground px-1 flex-wrap">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Ma position</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> Vendeur</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Client</span>
-        {waypoints.length > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-violet-500" /> Arrêts</span>}
+          {/* Main action */}
+          {nextAction && !showOtp && (
+            <Button
+              className={`w-full h-12 text-sm font-bold gap-2 rounded-xl ${
+                nextAction.nextStatus === "delivered"
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-primary hover:bg-primary/90"
+              }`}
+              onClick={handleNextStep}
+              disabled={isPaused}
+            >
+              <nextAction.icon className="w-5 h-5" />
+              {nextAction.label}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
