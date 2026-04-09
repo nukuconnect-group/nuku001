@@ -494,6 +494,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background pb-14 lg:pb-0">
+        <SEO url="/cart" title="Panier" description="Consultez votre panier d'achats sur NukuConnect. Finalisez vos commandes de produits agricoles frais." noIndex />
         <Header />
         <main>
           <div className="container mx-auto px-4 py-12">

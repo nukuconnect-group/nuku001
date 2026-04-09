@@ -7,6 +7,7 @@ import { Shield } from "lucide-react";
 const Terms = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO url="/terms" title="Conditions Générales" description="Conditions générales d'utilisation de NukuConnect. Règles et obligations pour les utilisateurs de la marketplace agricole." />
       <Header />
       <main>
         <div className="bg-primary/5 border-b border-border py-8 sm:py-12">
