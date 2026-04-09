@@ -293,11 +293,35 @@ const DriverDashboard = () => {
     );
   }
 
+  const needsAvatar = !profile?.avatar_url;
+
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
       <SEO url="/driver-dashboard" title="Tableau de bord Livreur" description="Gérez vos livraisons et suivez vos gains." noIndex />
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg">
+        {/* Avatar required */}
+        {needsAvatar && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Photo de profil requise</p>
+                  <p className="text-[10px] text-muted-foreground">Ajoutez une photo portrait pour rassurer les acheteurs</p>
+                </div>
+              </div>
+              <Link to="/settings">
+                <Button variant="hero" size="sm" className="w-full text-xs">
+                  Aller dans Paramètres pour ajouter ma photo
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
         {/* KYC Banner */}
         {driverProfile && !driverProfile.is_approved && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
