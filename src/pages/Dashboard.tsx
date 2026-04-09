@@ -228,6 +228,28 @@ const Dashboard = () => {
             </Link>
           </div>
 
+          {/* KYC Reminder for unverified suppliers */}
+          {profile && !profile.is_verified && subscription?.plan && subscription.plan !== "free" && (
+            <Card className="mb-4 sm:mb-6 border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+              <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-amber-700" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-amber-800 dark:text-amber-300">Obtenez le badge Fournisseur vérifié</p>
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400">Complétez votre vérification KYC pour rassurer les acheteurs et augmenter vos ventes.</p>
+                </div>
+                <Button variant="outline" size="sm" className="text-[10px] h-8 border-amber-300 text-amber-800 hover:bg-amber-100 whitespace-nowrap flex-shrink-0"
+                  onClick={() => {
+                    const el = document.querySelector('[value="settings"]');
+                    if (el instanceof HTMLElement) el.click();
+                  }}>
+                  Vérifier mon compte
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Affiliation */}
           {user && (
             <div className="mb-4 sm:mb-6">
