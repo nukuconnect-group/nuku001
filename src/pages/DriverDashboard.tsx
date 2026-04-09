@@ -31,7 +31,8 @@ const DriverDashboard = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
   const [selectedMission, setSelectedMission] = useState<any>(null);
@@ -41,7 +42,7 @@ const DriverDashboard = () => {
 
   const fetchDriverData = useCallback(async () => {
     if (!user) return;
-    setIsLoading(true);
+    if (!initialLoadDone) setIsLoading(true);
     try {
       let { data: dp } = await supabase
         .from("driver_profiles")
@@ -65,34 +66,22 @@ const DriverDashboard = () => {
       setDriverProfile(dp);
 
       if (dp) {
-        const { data: available } = await supabase
-          .from("deliveries")
-          .select("*")
-          .eq("status", "pending")
-          .is("driver_id", null)
-          .order("created_at", { ascending: false });
-        setAvailableDeliveries(available || []);
-
-        const { data: mine } = await supabase
-          .from("deliveries")
-          .select("*")
-          .eq("driver_id", (dp as any).id)
-          .order("created_at", { ascending: false });
-        setMyDeliveries(mine || []);
-
-        const { data: wds } = await supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-        setWithdrawals(wds || []);
+        const [availRes, mineRes, wdsRes] = await Promise.all([
+          supabase.from("deliveries").select("*").eq("status", "pending").is("driver_id", null).order("created_at", { ascending: false }),
+          supabase.from("deliveries").select("*").eq("driver_id", (dp as any).id).order("created_at", { ascending: false }),
+          supabase.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        ]);
+        setAvailableDeliveries(availRes.data || []);
+        setMyDeliveries(mineRes.data || []);
+        setWithdrawals(wdsRes.data || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
     } finally {
       setIsLoading(false);
+      setInitialLoadDone(true);
     }
-  }, [user, profile]);
+  }, [user, profile, initialLoadDone]);
 
   useEffect(() => {
     if (!isReady || profileLoading) return;
@@ -179,13 +168,33 @@ const DriverDashboard = () => {
         .is("driver_id", null);
       if (error) throw error;
       toast({ title: "✅ Mission acceptée !" });
-      fetchDriverData();
+      await fetchDriverData();
+      // Auto-switch to active tab and open mission detail
+      setActiveTab("active");
     } catch {
       toast({ title: "Mission plus disponible", variant: "destructive" });
     }
   };
 
   const rejectDelivery = async (deliveryId: string) => {
+    try {
+      // Notify the buyer about the rejection
+      const delivery = availableDeliveries.find(d => d.id === deliveryId);
+      if (delivery?.order_id) {
+        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", delivery.order_id).maybeSingle();
+        if (order) {
+          const { data: buyerProfile } = await supabase.from("profiles").select("user_id").eq("id", order.buyer_id).maybeSingle();
+          if (buyerProfile) {
+            await supabase.from("notifications").insert({
+              user_id: buyerProfile.user_id,
+              title: "❌ Livraison refusée par un livreur",
+              description: `Un livreur a refusé la mission pour la commande #${delivery.order_id.slice(0, 8)}. Un autre livreur sera recherché.`,
+              type: "delivery",
+            });
+          }
+        }
+      }
+    } catch {}
     setAvailableDeliveries(prev => prev.filter(d => d.id !== deliveryId));
     toast({ title: "Mission refusée" });
   };
@@ -277,7 +286,7 @@ const DriverDashboard = () => {
 
   const newMissions = availableDeliveries;
 
-  if (profileLoading || isLoading) {
+  if (profileLoading || (isLoading && !initialLoadDone)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -384,14 +393,6 @@ const DriverDashboard = () => {
                     type="new"
                     onAccept={acceptDelivery}
                     onReject={rejectDelivery}
-                    onSelect={(del) => {
-                      acceptDelivery(del.id).then(() => {
-                        fetchDriverData().then(() => {
-                          // After accepting, move to active tab
-                          setActiveTab("active");
-                        });
-                      });
-                    }}
                   />
                 ))
               )}
