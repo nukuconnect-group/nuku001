@@ -1,15 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import {
-  MapPin, Navigation, Package, Phone, CheckCircle2,
-  Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike,
-  Maximize2, Minimize2, PauseCircle, PlayCircle, RotateCcw, Edit3, DollarSign,
-  Locate, Layers, ChevronUp, ChevronDown, Star
+  MapPin, Navigation, Package, CheckCircle2,
+  Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield,
+  Locate, Layers, PauseCircle, PlayCircle, RotateCcw, Edit3,
+  ChevronUp, ChevronDown
 } from "lucide-react";
 
 interface MissionDetailViewProps {
@@ -37,6 +36,9 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const mapInstanceRef = useRef<any>(null);
   const driverMarkerRef = useRef<any>(null);
   const routeLineRef = useRef<any>(null);
+  const leafletRef = useRef<any>(null);
+  const gpsWatchRef = useRef<number | null>(null);
+
   const [otpInput, setOtpInput] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -51,8 +53,40 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [addingWaypoint, setAddingWaypoint] = useState(false);
   const [panelExpanded, setPanelExpanded] = useState(true);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  const [routeSteps, setRouteSteps] = useState<any[]>([]);
+  const [livePos, setLivePos] = useState<[number, number]>(driverPosition);
 
   const currentStep = getStepIndex(delivery.status);
+
+  // Real GPS tracking
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    const onPos = (pos: GeolocationPosition) => {
+      const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+      setLivePos(newPos);
+
+      // Update driver position in DB
+      if (delivery.id) {
+        supabase.from("deliveries").update({
+          driver_current_lat: newPos[0],
+          driver_current_lng: newPos[1],
+        }).eq("id", delivery.id).then(() => {});
+      }
+    };
+
+    gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000,
+    });
+
+    return () => {
+      if (gpsWatchRef.current !== null) {
+        navigator.geolocation.clearWatch(gpsWatchRef.current);
+      }
+    };
+  }, [delivery.id]);
 
   // Fetch driver vehicle type
   useEffect(() => {
@@ -100,32 +134,67 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M10 10l3-6h4l-1 6"/><path d="M8 13h5l3-3"/></svg>`;
   };
 
+  // Build route points
+  const buildRoutePoints = useCallback((): [number, number][] => {
+    const pts: [number, number][] = [];
+    if (currentStep <= 1) {
+      pts.push([livePos[0], livePos[1]]);
+      waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+      if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
+    } else {
+      if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
+      pts.push([livePos[0], livePos[1]]);
+      waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+      if (delivery.dropoff_lat && delivery.dropoff_lng) pts.push([delivery.dropoff_lat, delivery.dropoff_lng]);
+    }
+    return pts;
+  }, [currentStep, livePos, waypoints, delivery]);
+
+  // Fetch OSRM route
+  const fetchOSRMRoute = useCallback(async (points: [number, number][]) => {
+    if (points.length < 2) return null;
+    const coords = points.map(p => `${p[1]},${p[0]}`).join(";");
+    try {
+      const resp = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`
+      );
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      if (data.code !== "Ok" || !data.routes?.[0]) return null;
+      return data.routes[0];
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Initialize leaflet map
   useEffect(() => {
     if (!mapRef.current) return;
+    let cancelled = false;
 
     const initMap = async () => {
       const L = await import("leaflet");
       await import("leaflet/dist/leaflet.css");
+      leafletRef.current = L;
 
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
 
-      const map = L.map(mapRef.current!, {
-        center: [driverPosition[0], driverPosition[1]],
+      if (cancelled || !mapRef.current) return;
+
+      const map = L.map(mapRef.current, {
+        center: [livePos[0], livePos[1]],
         zoom: 15,
         zoomControl: false,
         attributionControl: false,
       });
 
-      // Use a cleaner tile layer
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
-
-      // Add zoom control bottom-right
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      // Driver marker with pulse effect
+      // Driver marker with pulse
       const driverIcon = L.divIcon({
         className: "custom-marker",
         html: `<div style="position:relative">
@@ -135,10 +204,9 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
-      driverMarkerRef.current = L.marker([driverPosition[0], driverPosition[1]], { icon: driverIcon, zIndexOffset: 1000 })
-        .addTo(map);
+      driverMarkerRef.current = L.marker([livePos[0], livePos[1]], { icon: driverIcon, zIndexOffset: 1000 }).addTo(map);
 
-      // Pickup marker (red pin like Gozem)
+      // Pickup marker
       if (delivery.pickup_lat && delivery.pickup_lng) {
         const pickupIcon = L.divIcon({
           className: "custom-marker",
@@ -146,7 +214,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             <div style="background:#ef4444;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(239,68,68,0.4)">
               <div style="transform:rotate(45deg);color:white;font-size:12px;font-weight:bold">📦</div>
             </div>
-            <div style="width:2px;height:8px;background:#ef4444;margin-top:-2px"></div>
           </div>`,
           iconSize: [28, 40],
           iconAnchor: [14, 40],
@@ -155,7 +222,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           .addTo(map).bindPopup(`<b>📦 Point de collecte</b><br/>${delivery.pickup_address || "Vendeur"}`);
       }
 
-      // Dropoff marker (green pin)
+      // Dropoff marker
       if (delivery.dropoff_lat && delivery.dropoff_lng) {
         const dropoffIcon = L.divIcon({
           className: "custom-marker",
@@ -163,7 +230,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             <div style="background:#22c55e;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4)">
               <div style="transform:rotate(45deg);color:white;font-size:12px;font-weight:bold">🏠</div>
             </div>
-            <div style="width:2px;height:8px;background:#22c55e;margin-top:-2px"></div>
           </div>`,
           iconSize: [28, 40],
           iconAnchor: [14, 40],
@@ -180,45 +246,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           iconSize: [24, 24],
           iconAnchor: [12, 12],
         });
-        L.marker([wp.lat, wp.lng], { icon: wpIcon })
-          .addTo(map).bindPopup(`🔵 Arrêt: ${wp.label}`);
+        L.marker([wp.lat, wp.lng], { icon: wpIcon }).addTo(map).bindPopup(`🔵 Arrêt: ${wp.label}`);
       });
 
-      // Build route points
-      const buildRoutePoints = (): [number, number][] => {
-        const pts: [number, number][] = [];
-        if (currentStep <= 1) {
-          pts.push([driverPosition[0], driverPosition[1]]);
-          waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
-          if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
-        } else {
-          if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
-          pts.push([driverPosition[0], driverPosition[1]]);
-          waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
-          if (delivery.dropoff_lat && delivery.dropoff_lng) pts.push([delivery.dropoff_lat, delivery.dropoff_lng]);
-        }
-        return pts;
-      };
-
+      // Route
       const routePts = buildRoutePoints();
-
-      // Fetch OSRM route
-      const fetchOSRMRoute = async (points: [number, number][]) => {
-        if (points.length < 2) return null;
-        const coords = points.map(p => `${p[1]},${p[0]}`).join(";");
-        try {
-          const resp = await fetch(
-            `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`
-          );
-          if (!resp.ok) return null;
-          const data = await resp.json();
-          if (data.code !== "Ok" || !data.routes?.[0]) return null;
-          return data.routes[0];
-        } catch {
-          return null;
-        }
-      };
-
       const osrmRoute = await fetchOSRMRoute(routePts);
       if (osrmRoute?.geometry?.coordinates) {
         const leafletCoords: [number, number][] = osrmRoute.geometry.coordinates.map(
@@ -228,10 +260,22 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           color: "#3b82f6", weight: 5, opacity: 0.85,
         }).addTo(map);
 
-        // Set route info
         const distKm = (osrmRoute.distance / 1000).toFixed(1);
         const durMin = Math.round(osrmRoute.duration / 60);
         setRouteInfo({ distance: `${distKm} km`, duration: `${durMin} min` });
+
+        // Extract turn-by-turn steps
+        const steps = osrmRoute.legs?.flatMap((leg: any) =>
+          leg.steps?.map((s: any) => ({
+            instruction: s.maneuver?.type === "depart" ? "Départ" :
+              s.maneuver?.type === "arrive" ? "Arrivée" :
+              s.maneuver?.modifier ? `Tournez ${s.maneuver.modifier === "left" ? "à gauche" : s.maneuver.modifier === "right" ? "à droite" : s.maneuver.modifier}` :
+              s.maneuver?.type || "Continuer",
+            distance: s.distance ? `${(s.distance / 1000).toFixed(1)} km` : "",
+            name: s.name || "",
+          }))
+        ) || [];
+        setRouteSteps(steps.filter((s: any) => s.distance));
       } else if (routePts.length >= 2) {
         routeLineRef.current = L.polyline(routePts, {
           color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8,
@@ -240,13 +284,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
       // Fit bounds
       const bounds = L.latLngBounds([]);
-      bounds.extend([driverPosition[0], driverPosition[1]]);
+      bounds.extend([livePos[0], livePos[1]]);
       if (delivery.pickup_lat && delivery.pickup_lng) bounds.extend([delivery.pickup_lat, delivery.pickup_lng]);
       if (delivery.dropoff_lat && delivery.dropoff_lng) bounds.extend([delivery.dropoff_lat, delivery.dropoff_lng]);
       waypoints.forEach(wp => bounds.extend([wp.lat, wp.lng]));
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
-      }
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16 });
 
       // Click to add waypoint
       if (addingWaypoint) {
@@ -259,30 +301,64 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
       mapInstanceRef.current = map;
 
-      // Add pulse animation CSS
+      // Pulse CSS
       if (!document.getElementById("map-pulse-css")) {
         const style = document.createElement("style");
         style.id = "map-pulse-css";
         style.textContent = `@keyframes pulse{0%{transform:scale(1);opacity:0.6}50%{transform:scale(1.4);opacity:0.2}100%{transform:scale(1);opacity:0.6}}`;
         document.head.appendChild(style);
       }
+
+      // Force map to recalculate size after render
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
     };
 
     initMap();
 
     return () => {
+      cancelled = true;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition, driverVehicle, currentStep, waypoints, addingWaypoint]);
+  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverVehicle, currentStep, waypoints, addingWaypoint]);
 
-  // Update driver marker
+  // Update driver marker position in real time
   useEffect(() => {
     if (!driverMarkerRef.current) return;
-    driverMarkerRef.current.setLatLng([driverPosition[0], driverPosition[1]]);
-  }, [driverPosition]);
+    driverMarkerRef.current.setLatLng([livePos[0], livePos[1]]);
+  }, [livePos]);
+
+  // Refresh route periodically when moving
+  useEffect(() => {
+    if (isPaused || delivery.status === "delivered") return;
+    const interval = setInterval(async () => {
+      if (!mapInstanceRef.current || !leafletRef.current) return;
+      const routePts = buildRoutePoints();
+      const osrmRoute = await fetchOSRMRoute(routePts);
+      if (osrmRoute?.geometry?.coordinates) {
+        const L = leafletRef.current;
+        if (routeLineRef.current) {
+          mapInstanceRef.current.removeLayer(routeLineRef.current);
+        }
+        const leafletCoords: [number, number][] = osrmRoute.geometry.coordinates.map(
+          (c: [number, number]) => [c[1], c[0]]
+        );
+        routeLineRef.current = L.polyline(leafletCoords, {
+          color: "#3b82f6", weight: 5, opacity: 0.85,
+        }).addTo(mapInstanceRef.current);
+
+        const distKm = (osrmRoute.distance / 1000).toFixed(1);
+        const durMin = Math.round(osrmRoute.duration / 60);
+        setRouteInfo({ distance: `${distKm} km`, duration: `${durMin} min` });
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isPaused, delivery.status, buildRoutePoints, fetchOSRMRoute]);
 
   const getNextAction = () => {
     switch (delivery.status) {
@@ -341,28 +417,26 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
   const centerOnDriver = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([driverPosition[0], driverPosition[1]], 16, { duration: 1 });
+      mapInstanceRef.current.flyTo([livePos[0], livePos[1]], 16, { duration: 1 });
     }
   };
 
   const fitAllBounds = () => {
-    if (!mapInstanceRef.current) return;
-    const L = (window as any).L;
-    if (!L) return;
+    if (!mapInstanceRef.current || !leafletRef.current) return;
+    const L = leafletRef.current;
     const bounds = L.latLngBounds([]);
-    bounds.extend([driverPosition[0], driverPosition[1]]);
+    bounds.extend([livePos[0], livePos[1]]);
     if (delivery.pickup_lat && delivery.pickup_lng) bounds.extend([delivery.pickup_lat, delivery.pickup_lng]);
     if (delivery.dropoff_lat && delivery.dropoff_lng) bounds.extend([delivery.dropoff_lat, delivery.dropoff_lng]);
     waypoints.forEach((wp: any) => bounds.extend([wp.lat, wp.lng]));
     if (bounds.isValid()) mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
   };
 
-  // Full-screen Gozem-style layout
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">
       {/* Map takes full screen */}
-      <div className="flex-1 relative">
-        <div ref={mapRef} className="absolute inset-0 z-0" />
+      <div className="flex-1 relative min-h-0">
+        <div ref={mapRef} className="absolute inset-0 z-0" style={{ width: "100%", height: "100%" }} />
 
         {/* Top bar overlay */}
         <div className="absolute top-0 left-0 right-0 z-[10] p-3 flex items-center justify-between">
@@ -386,24 +460,12 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           </div>
         </div>
 
-        {/* Map control buttons (right side) */}
+        {/* Map control buttons */}
         <div className="absolute right-3 bottom-4 z-[10] flex flex-col gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0"
-            onClick={centerOnDriver}
-            title="Ma position"
-          >
+          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={centerOnDriver} title="Ma position">
             <Locate className="w-5 h-5 text-primary" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0"
-            onClick={fitAllBounds}
-            title="Voir tout"
-          >
+          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={fitAllBounds} title="Voir tout">
             <Layers className="w-5 h-5" />
           </Button>
         </div>
@@ -417,20 +479,29 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             </div>
           </div>
         )}
+
+        {/* Next turn instruction pill */}
+        {routeSteps.length > 0 && (
+          <div className="absolute top-[6.5rem] left-1/2 -translate-x-1/2 z-[10] max-w-[90vw]">
+            <div className="bg-primary text-primary-foreground rounded-xl px-3 py-2 shadow-lg text-xs font-medium flex items-center gap-2">
+              <Navigation className="w-4 h-4 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="truncate">{routeSteps[0].instruction}{routeSteps[0].name ? ` — ${routeSteps[0].name}` : ""}</p>
+                <p className="text-[10px] opacity-75">{routeSteps[0].distance}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom sliding panel (Gozem-style) */}
-      <div className={`bg-background rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-all duration-300 ${panelExpanded ? "max-h-[55vh]" : "max-h-[180px]"} overflow-hidden`}>
-        {/* Handle */}
-        <button
-          className="w-full flex justify-center py-2 cursor-grab"
-          onClick={() => setPanelExpanded(!panelExpanded)}
-        >
+      {/* Bottom sliding panel */}
+      <div className={`bg-background rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-all duration-300 ${panelExpanded ? "max-h-[55vh]" : "max-h-[180px]"} overflow-hidden flex-shrink-0`}>
+        <button className="w-full flex justify-center py-2 cursor-grab" onClick={() => setPanelExpanded(!panelExpanded)}>
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </button>
 
         <div className="overflow-y-auto px-4 pb-4 space-y-3" style={{ maxHeight: panelExpanded ? "calc(55vh - 40px)" : "140px" }}>
-          {/* ETA + Driver info header */}
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-bold">
@@ -447,11 +518,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             </Badge>
           </div>
 
-          {/* Seller & Buyer cards */}
+          {/* Seller & Buyer */}
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
-            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {sellerProfile?.avatar_url ? (
-                <img src={sellerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                <img src={sellerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               ) : (
                 <Store className="w-5 h-5 text-orange-600" />
               )}
@@ -461,24 +532,14 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-sm font-semibold truncate">{sellerProfile?.full_name || "Vendeur"}</p>
               <p className="text-[10px] text-muted-foreground truncate">{delivery.pickup_address || sellerProfile?.location || "—"}</p>
             </div>
-            <div className="flex gap-1.5">
-              <DeliveryChat
-                deliveryId={delivery.id}
-                currentUserRole="driver"
-                otherPartyName={sellerProfile?.full_name || "Vendeur"}
-                trigger={
-                  <Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20">
-                    <MessageCircle className="w-4 h-4 text-primary" />
-                  </Button>
-                }
-              />
-            </div>
+            <DeliveryChat deliveryId={delivery.id} currentUserRole="driver" otherPartyName={sellerProfile?.full_name || "Vendeur"}
+              trigger={<Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20"><MessageCircle className="w-4 h-4 text-primary" /></Button>} />
           </div>
 
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {buyerProfile?.avatar_url ? (
-                <img src={buyerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                <img src={buyerProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               ) : (
                 <User className="w-5 h-5 text-emerald-600" />
               )}
@@ -488,18 +549,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-sm font-semibold truncate">{buyerProfile?.full_name || "Client"}</p>
               <p className="text-[10px] text-muted-foreground truncate">{delivery.dropoff_address || "—"}</p>
             </div>
-            <div className="flex gap-1.5">
-              <DeliveryChat
-                deliveryId={delivery.id}
-                currentUserRole="driver"
-                otherPartyName={buyerProfile?.full_name || "Client"}
-                trigger={
-                  <Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20">
-                    <MessageCircle className="w-4 h-4 text-primary" />
-                  </Button>
-                }
-              />
-            </div>
+            <DeliveryChat deliveryId={delivery.id} currentUserRole="driver" otherPartyName={buyerProfile?.full_name || "Client"}
+              trigger={<Button variant="outline" size="icon" className="w-9 h-9 rounded-full border-primary/20"><MessageCircle className="w-4 h-4 text-primary" /></Button>} />
           </div>
 
           {/* Workflow steps */}
@@ -528,44 +579,23 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             })}
           </div>
 
-          {/* Controls row */}
+          {/* Controls */}
           <div className="flex flex-wrap gap-1.5">
-            <Button
-              variant={isPaused ? "default" : "outline"}
-              size="sm"
-              className="h-8 text-[10px] gap-1 rounded-full"
-              onClick={() => setIsPaused(!isPaused)}
-            >
+            <Button variant={isPaused ? "default" : "outline"} size="sm" className="h-8 text-[10px] gap-1 rounded-full" onClick={() => setIsPaused(!isPaused)}>
               {isPaused ? <PlayCircle className="w-3.5 h-3.5" /> : <PauseCircle className="w-3.5 h-3.5" />}
               {isPaused ? "Reprendre" : "Pause"}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-[10px] gap-1 rounded-full"
-              onClick={() => setAddingWaypoint(!addingWaypoint)}
-            >
+            <Button variant="outline" size="sm" className="h-8 text-[10px] gap-1 rounded-full" onClick={() => setAddingWaypoint(!addingWaypoint)}>
               <MapPin className="w-3.5 h-3.5" />
               {addingWaypoint ? "Cliquez carte..." : "Arrêt"}
             </Button>
             {currentStep < 2 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-[10px] gap-1 rounded-full"
-                onClick={() => setEditingPrice(true)}
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                Prix
+              <Button variant="outline" size="sm" className="h-8 text-[10px] gap-1 rounded-full" onClick={() => setEditingPrice(true)}>
+                <Edit3 className="w-3.5 h-3.5" /> Prix
               </Button>
             )}
             {waypoints.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-[10px] gap-1 text-red-500 rounded-full"
-                onClick={() => setWaypoints([])}
-              >
+              <Button variant="ghost" size="sm" className="h-8 text-[10px] gap-1 text-red-500 rounded-full" onClick={() => setWaypoints([])}>
                 <RotateCcw className="w-3.5 h-3.5" />
               </Button>
             )}
@@ -587,19 +617,9 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
             <div className="p-3 rounded-xl bg-muted/50 space-y-2">
               <p className="text-xs font-semibold">Modifier le prix de livraison</p>
               <div className="flex gap-2">
-                <Input
-                  type="number"
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                  placeholder={`${delivery.driver_fee || 0} F`}
-                  className="text-sm h-9"
-                />
-                <Button size="sm" className="h-9" onClick={handleEditPrice} disabled={!newPrice}>
-                  OK
-                </Button>
-                <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditingPrice(false)}>
-                  ✕
-                </Button>
+                <Input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder={`${delivery.driver_fee || 0} F`} className="text-sm h-9" />
+                <Button size="sm" className="h-9" onClick={handleEditPrice} disabled={!newPrice}>OK</Button>
+                <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditingPrice(false)}>✕</Button>
               </div>
             </div>
           )}
@@ -608,7 +628,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           {productInfo && (
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/50">
               {productInfo.images?.[0] && (
-                <img src={productInfo.images[0]} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
+                <img src={productInfo.images[0]} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{productInfo.name}</p>
@@ -633,15 +654,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
                 maxLength={6}
               />
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowOtp(false)}>
-                  Annuler
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                  onClick={handleOtpConfirm}
-                  disabled={otpInput.length < 4}
-                >
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowOtp(false)}>Annuler</Button>
+                <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={handleOtpConfirm} disabled={otpInput.length < 4}>
                   <CheckCircle2 className="w-4 h-4 mr-1" /> Confirmer
                 </Button>
               </div>
