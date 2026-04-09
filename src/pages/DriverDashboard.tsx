@@ -42,7 +42,7 @@ const DriverDashboard = () => {
 
   const fetchDriverData = useCallback(async () => {
     if (!user) return;
-    setIsLoading(true);
+    if (!initialLoadDone) setIsLoading(true);
     try {
       let { data: dp } = await supabase
         .from("driver_profiles")
@@ -66,34 +66,22 @@ const DriverDashboard = () => {
       setDriverProfile(dp);
 
       if (dp) {
-        const { data: available } = await supabase
-          .from("deliveries")
-          .select("*")
-          .eq("status", "pending")
-          .is("driver_id", null)
-          .order("created_at", { ascending: false });
-        setAvailableDeliveries(available || []);
-
-        const { data: mine } = await supabase
-          .from("deliveries")
-          .select("*")
-          .eq("driver_id", (dp as any).id)
-          .order("created_at", { ascending: false });
-        setMyDeliveries(mine || []);
-
-        const { data: wds } = await supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-        setWithdrawals(wds || []);
+        const [availRes, mineRes, wdsRes] = await Promise.all([
+          supabase.from("deliveries").select("*").eq("status", "pending").is("driver_id", null).order("created_at", { ascending: false }),
+          supabase.from("deliveries").select("*").eq("driver_id", (dp as any).id).order("created_at", { ascending: false }),
+          supabase.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        ]);
+        setAvailableDeliveries(availRes.data || []);
+        setMyDeliveries(mineRes.data || []);
+        setWithdrawals(wdsRes.data || []);
       }
     } catch (err) {
       console.error("Error fetching driver data:", err);
     } finally {
       setIsLoading(false);
+      setInitialLoadDone(true);
     }
-  }, [user, profile]);
+  }, [user, profile, initialLoadDone]);
 
   useEffect(() => {
     if (!isReady || profileLoading) return;
