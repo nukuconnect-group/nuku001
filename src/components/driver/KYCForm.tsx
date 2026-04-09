@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle, Camera } from "lucide-react";
 
 interface KYCFormProps {
   userId?: string;
