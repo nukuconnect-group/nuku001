@@ -132,19 +132,19 @@ const MobileBottomNav = () => {
             <span className="text-[9px] font-medium">Marché</span>
           </Link>
 
-          <div className="relative -mt-7 flex flex-col items-center">
-            <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md animate-pulse" />
-            <button onClick={handleSellClick}
-              className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent flex items-center justify-center shadow-[0_4px_20px_hsl(var(--primary)/0.4)] text-primary-foreground hover:shadow-[0_6px_28px_hsl(var(--primary)/0.55)] transition-all duration-300 active:scale-90 ring-[3px] ring-background">
-              {showSellLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <Plus className="w-7 h-7 stroke-[2.5]" />
-              )}
-            </button>
-            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-primary whitespace-nowrap tracking-wide uppercase">
-              Vendre
-            </span>
+          <div className="flex flex-col items-center justify-center -mt-5">
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md animate-pulse" />
+              <button onClick={handleSellClick}
+                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent flex items-center justify-center shadow-[0_4px_20px_hsl(var(--primary)/0.4)] text-primary-foreground hover:shadow-[0_6px_28px_hsl(var(--primary)/0.55)] transition-all duration-300 active:scale-90 ring-[3px] ring-background">
+                {showSellLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Plus className="w-6 h-6 stroke-[2.5]" />
+                )}
+              </button>
+            </div>
+            <span className="text-[9px] font-bold text-primary mt-0.5 tracking-wide">Vendre</span>
           </div>
 
           <Link to="/messages"
