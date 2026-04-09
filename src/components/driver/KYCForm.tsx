@@ -299,7 +299,37 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       <div className="grid grid-cols-3 gap-2">
         {renderUploadBox("Recto pièce *", idFrontUrl, setIdFrontUrl, "id-front", "environment")}
         {renderUploadBox("Verso pièce", idBackUrl, setIdBackUrl, "id-back", "environment")}
-        {renderUploadBox("Selfie", selfieUrl, setSelfieUrl, "selfie", "user")}
+        
+        {/* Selfie with camera */}
+        <div>
+          <Label className="text-[10px]">Photo portrait *</Label>
+          {showCamera ? (
+            <div className="relative h-16 rounded-lg overflow-hidden border-2 border-primary">
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              <div className="absolute bottom-0 inset-x-0 flex justify-center gap-1 p-0.5 bg-black/40">
+                <Button size="sm" variant="ghost" className="h-5 text-[8px] text-white" onClick={capturePhoto}>
+                  📸 Capturer
+                </Button>
+                <Button size="sm" variant="ghost" className="h-5 text-[8px] text-white" onClick={stopCamera}>
+                  ✕
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div 
+              className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={startCamera}
+            >
+              {uploading === "selfie" ? (
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              ) : selfieUrl ? (
+                <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover rounded-lg" />
+              ) : (
+                <Camera className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <Button variant="hero" size="sm" className="w-full gap-1.5" onClick={handleSubmit} disabled={submitting || !!uploading}>
