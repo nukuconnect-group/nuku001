@@ -586,7 +586,10 @@ const Dashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              <div className="space-y-4">
+                <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
