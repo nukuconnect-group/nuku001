@@ -650,41 +650,56 @@ const Header = () => {
       </div>
 
 
-      {/* Row 4: Desktop Nav - scrolls away */}
+      {/* Row 4: Desktop Nav with categories in menu */}
       <nav className="hidden lg:block bg-card border-b border-border z-40">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
-              <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
-                <SheetTrigger asChild>
+              {/* Categories mega menu trigger */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium flex-shrink-0">
                     <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
-                    <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
-                      <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
-                    </SheetTitle>
-                  </SheetHeader>
-                  <ScrollArea className="h-[calc(100vh-60px)]">
-                    <div className="p-3 grid grid-cols-2 gap-2">
-                      {marketplaceCategories.map((category) => (
-                        <Link key={category.id} to={`/marketplace?category=${category.id}`} onClick={() => setCategoriesOpen(false)}
-                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all text-center group">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <span className="text-xl">{category.emoji}</span>
-                          </div>
-                          <span className="text-xs font-medium">{category.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{t("mp.products")}</span>
-                        </Link>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[500px] bg-card p-0 max-h-[70vh] overflow-y-auto">
+                  <div className="p-3">
+                    <Link to="/categories" className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted font-semibold text-xs text-primary mb-1">
+                      Toutes les catégories
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                    <DropdownMenuSeparator />
+                    <div className="mt-2 space-y-0.5">
+                      {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
+                        <div key={cat.id}>
+                          <Link
+                            to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
+                            className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted transition-colors group"
+                          >
+                            <span className="text-xs font-semibold uppercase text-foreground group-hover:text-primary transition-colors">{cat.name}</span>
+                            {cat.subcategories?.length > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                          </Link>
+                          {cat.subcategories?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 px-3 pb-2">
+                              {cat.subcategories.slice(0, 6).map((sub: string) => (
+                                <Link
+                                  key={sub}
+                                  to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
+                                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
+                                >
+                                  {sub}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
-                  </ScrollArea>
-                </SheetContent>
-              </Sheet>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <div className="w-px h-5 bg-border mx-1 flex-shrink-0" />
-              {/* Main links - limited to 7, rest goes into "Plus" dropdown */}
+              {/* Main links */}
               <div className="flex items-center gap-0.5 flex-1 min-w-0">
                 {navLinks.slice(0, 7).map((link) => (
                   <Link key={link.href + link.label} to={link.href}
@@ -711,21 +726,6 @@ const Header = () => {
                             </Link>
                           </DropdownMenuItem>
                         ))}
-                      </div>
-                      <DropdownMenuSeparator className="my-2" />
-                      <div className="px-2">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Catégories populaires</p>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {marketplaceCategories.filter((c: any) => c.is_active).slice(0, 6).map((cat: any) => (
-                            <Link
-                              key={cat.id}
-                              to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-                              className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-muted transition-colors text-center"
-                            >
-                              <span className="text-[10px] font-medium text-foreground">{cat.name}</span>
-                            </Link>
-                          ))}
-                        </div>
                       </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
