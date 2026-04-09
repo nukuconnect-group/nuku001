@@ -51,6 +51,9 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   const [idBackUrl, setIdBackUrl] = useState("");
   const [selfieUrl, setSelfieUrl] = useState("");
   const [existingKyc, setExistingKyc] = useState<any>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (!userId) return;
