@@ -29,7 +29,7 @@ const MissionCard = ({ delivery, type, onAccept, onReject, onSelect }: MissionCa
   return (
     <Card
       className="overflow-hidden cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
-      onClick={() => onSelect?.(delivery)}
+      onClick={() => type !== "new" && onSelect?.(delivery)}
     >
       <CardContent className="p-3 space-y-2.5">
         {/* Header */}
