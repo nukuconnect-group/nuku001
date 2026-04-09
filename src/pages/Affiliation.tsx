@@ -105,7 +105,9 @@ const Affiliation = () => {
   };
 
   const totalEarned = earnings.reduce((s, e) => s + Number(e.amount), 0);
-  const activeReferrals = referrals.filter(r => r.status === "active").length;
+  // Only count referrals where someone actually signed up (referred_user_id is set)
+  const activeReferrals = referrals.filter(r => r.status === "active" && r.referred_user_id).length;
+  const totalSignups = referrals.filter(r => r.referred_user_id).length;
 
   return (
     <div className="min-h-screen pb-14 lg:pb-0">
@@ -194,8 +196,8 @@ const Affiliation = () => {
                 <Card>
                   <CardContent className="p-3 sm:p-4 text-center">
                     <Users className="w-5 h-5 mx-auto text-primary mb-1" />
-                    <p className="text-lg sm:text-xl font-bold">{referrals.length}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Filleuls</p>
+                    <p className="text-lg sm:text-xl font-bold">{totalSignups}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Inscrits</p>
                   </CardContent>
                 </Card>
                 <Card>
