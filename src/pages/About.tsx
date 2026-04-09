@@ -30,6 +30,20 @@ const About = () => {
         title="À Propos de NUKUCONNECT"
         description="Découvrez la mission, la vision et l'équipe derrière NUKUCONNECT, la marketplace agricole intelligente d'Afrique."
         image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-about.jpg"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "À Propos de NUKUCONNECT",
+          "url": "https://www.nukuconnect.com/a-propos",
+          "description": "La marketplace agricole intelligente d'Afrique.",
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "NUKUCONNECT",
+            "url": "https://www.nukuconnect.com",
+            "logo": "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png",
+            "sameAs": ["https://web.facebook.com/nukuconnect", "https://www.linkedin.com/company/nukuconnect"]
+          }
+        }}
       />
       <Header />
 

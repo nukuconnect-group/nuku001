@@ -83,6 +83,13 @@ const Formations = () => {
         title="Formations Agricoles"
         description="Accédez à des formations agricoles gratuites et certifiantes. Apprenez les techniques modernes de culture, d'élevage et de gestion agricole."
         image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-formations.jpg"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "Formations agricoles NUKUCONNECT",
+          "url": "https://www.nukuconnect.com/formations",
+          "description": "Formations en agriculture, aquaculture et gestion agricole en Afrique."
+        }}
       />
       <Header />
 

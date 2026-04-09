@@ -158,6 +158,18 @@ const Contact = () => {
         title="Contactez-nous"
         description="Contactez l'équipe NUKUCONNECT pour toute question, suggestion ou demande de partenariat. Nous sommes à votre écoute."
         image="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1200&h=630&fit=crop&q=80"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Contactez NUKUCONNECT",
+          "url": "https://www.nukuconnect.com/contact",
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "NUKUCONNECT",
+            "email": "contact@nukuconnect.com",
+            "address": { "@type": "PostalAddress", "addressLocality": "Lomé", "addressCountry": "TG" }
+          }
+        }}
       />
       <Header />
       <main>
