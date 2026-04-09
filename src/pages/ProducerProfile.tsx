@@ -286,7 +286,9 @@ const ProducerProfile = () => {
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground">{producer.full_name}</h1>
                     {producer.is_verified && (
-                      <Badge className="bg-primary text-primary-foreground gap-1"><ShieldCheck className="w-3 h-3" />Vérifié</Badge>
+                      <Badge className="bg-emerald-600 text-white gap-1 text-xs px-2.5 py-1">
+                        <ShieldCheck className="w-3.5 h-3.5" />Fournisseur vérifié
+                      </Badge>
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
