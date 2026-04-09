@@ -26,7 +26,8 @@ export default function AffiliationCard({ userId }: Props) {
         .eq("referrer_id", userId);
       if (refs && refs.length > 0) {
         setCode(refs[0].referral_code);
-        setCount(refs.filter(r => r.status === "active").length);
+        // Only count referrals where someone actually signed up
+        setCount(refs.filter(r => r.status === "active" && r.referred_user_id).length);
       }
       const { data: earnings } = await supabase
         .from("referral_earnings")

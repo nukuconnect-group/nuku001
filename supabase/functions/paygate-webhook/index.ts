@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Paygate webhook callback schema
 const WebhookSchema = z.object({
   tx_reference: z.string().min(1),
   status: z.union([z.string(), z.number()]),
@@ -23,10 +22,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Parse webhook payload (could be form-encoded or JSON)
     let rawData: Record<string, unknown>;
     const contentType = req.headers.get("content-type") || "";
-    
+
     if (contentType.includes("application/x-www-form-urlencoded")) {
       const formData = await req.formData();
       rawData = Object.fromEntries(formData.entries());
@@ -47,7 +45,6 @@ Deno.serve(async (req) => {
 
     const { tx_reference, status, identifier, amount, payment_reference } = parsed.data;
 
-    // Convert Paygate status code
     const rawStatus = typeof status === "number" ? status : parseInt(String(status), 10);
     let paymentStatus = "unknown";
     if (rawStatus === 0) paymentStatus = "completed";
@@ -57,52 +54,85 @@ Deno.serve(async (req) => {
 
     console.log(`[paygate-webhook] tx_reference=${tx_reference}, status=${paymentStatus} (raw=${rawStatus})`);
 
-    // If payment is completed, update the order status
-    if (paymentStatus === "completed" && tx_reference) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-      // Find orders with this tx_reference in notes
+    // Use tx_reference or identifier as idempotency key
+    const idempotencyKey = tx_reference || identifier || "";
+
+    if (paymentStatus === "completed" && idempotencyKey) {
+      // Find pending orders matching this transaction — idempotent: only update status=pending
       const { data: orders, error: queryError } = await supabase
         .from("orders")
         .select("id, status, buyer_id, notes")
-        .or(`notes.ilike.%${tx_reference}%`)
+        .or(`notes.ilike.%${idempotencyKey}%`)
         .eq("status", "pending");
 
       if (queryError) {
         console.error("[paygate-webhook] Query error:", queryError.message);
       } else if (orders && orders.length > 0) {
         for (const order of orders) {
-          // Update order status to confirmed
-          const { error: updateError } = await supabase
+          // Atomic update: only pending → confirmed (idempotent — second call does nothing)
+          const { data: updated, error: updateError } = await supabase
             .from("orders")
-            .update({ 
+            .update({
               status: "confirmed",
-              notes: `${order.notes || ""} | Paiement confirmé via webhook: ${payment_reference || tx_reference}`
+              notes: `${order.notes || ""} | Paiement confirmé webhook: ${payment_reference || tx_reference} | ref: ${idempotencyKey}`,
             })
-            .eq("id", order.id);
+            .eq("id", order.id)
+            .eq("status", "pending") // idempotency guard
+            .select("id")
+            .maybeSingle();
 
           if (updateError) {
-            console.error(`[paygate-webhook] Failed to update order ${order.id}:`, updateError.message);
-          } else {
-            console.log(`[paygate-webhook] Order ${order.id} confirmed via webhook`);
+            console.error(`[paygate-webhook] Update error order ${order.id}:`, updateError.message);
+          } else if (updated) {
+            console.log(`[paygate-webhook] Order ${order.id} confirmed (idempotent)`);
 
-            // Notify the buyer
             await supabase.from("notifications").insert({
               user_id: order.buyer_id,
               type: "order",
               title: "✅ Paiement confirmé",
               description: `Votre paiement de ${amount || "N/A"} FCFA a été confirmé avec succès.`,
             });
+          } else {
+            console.log(`[paygate-webhook] Order ${order.id} already confirmed — skipped (idempotent)`);
           }
         }
       } else {
-        console.log("[paygate-webhook] No pending orders found for tx_reference:", tx_reference);
+        console.log("[paygate-webhook] No pending orders for idempotencyKey:", idempotencyKey);
+      }
+    } else if (paymentStatus === "failed" || paymentStatus === "expired") {
+      // Cancel pending orders for failed/expired payments
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id, buyer_id, notes")
+        .or(`notes.ilike.%${idempotencyKey}%`)
+        .eq("status", "pending");
+
+      if (orders && orders.length > 0) {
+        for (const order of orders) {
+          await supabase
+            .from("orders")
+            .update({
+              status: "cancelled",
+              notes: `${order.notes || ""} | Paiement ${paymentStatus} webhook: ${tx_reference}`,
+            })
+            .eq("id", order.id)
+            .eq("status", "pending");
+
+          await supabase.from("notifications").insert({
+            user_id: order.buyer_id,
+            type: "order",
+            title: paymentStatus === "failed" ? "❌ Paiement échoué" : "⏰ Paiement expiré",
+            description: `Votre paiement n'a pas abouti. La commande a été annulée.`,
+          });
+        }
+        console.log(`[paygate-webhook] ${orders.length} orders cancelled (${paymentStatus})`);
       }
     }
 
-    // Always respond 200 to acknowledge receipt
     return new Response(JSON.stringify({ received: true, status: paymentStatus }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

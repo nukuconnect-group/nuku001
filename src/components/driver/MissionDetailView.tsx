@@ -167,8 +167,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           .addTo(map).bindPopup(`🔵 Arrêt: ${wp.label}`);
       });
 
-      // Route line
-      const buildRoute = (): [number, number][] => {
+      // Build waypoints for OSRM routing
+      const buildRoutePoints = (): [number, number][] => {
         const pts: [number, number][] = [];
         if (currentStep <= 1) {
           pts.push([driverPosition[0], driverPosition[1]]);
@@ -183,10 +183,39 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         return pts;
       };
 
-      const route = buildRoute();
-      if (route.length >= 2) {
-        routeLineRef.current = L.polyline(route, {
-          color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8
+      const routePts = buildRoutePoints();
+
+      // Fetch real route from OSRM (free, no API key)
+      const fetchOSRMRoute = async (points: [number, number][]) => {
+        if (points.length < 2) return null;
+        const coords = points.map(p => `${p[1]},${p[0]}`).join(";");
+        try {
+          const resp = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`
+          );
+          if (!resp.ok) return null;
+          const data = await resp.json();
+          if (data.code !== "Ok" || !data.routes?.[0]) return null;
+          return data.routes[0];
+        } catch (e) {
+          console.warn("[OSRM] Route fetch failed, fallback to straight line:", e);
+          return null;
+        }
+      };
+
+      const osrmRoute = await fetchOSRMRoute(routePts);
+      if (osrmRoute?.geometry?.coordinates) {
+        // OSRM returns [lng, lat] — convert to [lat, lng] for Leaflet
+        const leafletCoords: [number, number][] = osrmRoute.geometry.coordinates.map(
+          (c: [number, number]) => [c[1], c[0]]
+        );
+        routeLineRef.current = L.polyline(leafletCoords, {
+          color: "#3b82f6", weight: 5, opacity: 0.85,
+        }).addTo(map);
+      } else if (routePts.length >= 2) {
+        // Fallback: straight line if OSRM unavailable
+        routeLineRef.current = L.polyline(routePts, {
+          color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8,
         }).addTo(map);
       }
 

@@ -94,11 +94,12 @@ const Auth = () => {
 
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
 
-  // Capture referral code from URL and persist it
+  // Capture referral code from URL and persist it — switch to signup tab
   useEffect(() => {
     const refCode = new URLSearchParams(window.location.search).get("ref");
     if (refCode) {
       localStorage.setItem("nukuconnect-ref", refCode);
+      setAuthMode("signup"); // Show signup form when opening a referral link
     }
   }, []);
 
@@ -178,12 +179,18 @@ const Auth = () => {
         const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
         await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
-        // Link referral if present
+        // Link referral if present — only remove localStorage AFTER successful claim
         const savedRef = localStorage.getItem("nukuconnect-ref");
         if (savedRef) {
           supabase.rpc("claim_referral", { p_referral_code: savedRef })
-            .then(() => { localStorage.removeItem("nukuconnect-ref"); });
-          localStorage.removeItem("nukuconnect-ref");
+            .then(({ error }) => {
+              if (!error) {
+                localStorage.removeItem("nukuconnect-ref");
+                console.log("[Referral] Claimed successfully:", savedRef);
+              } else {
+                console.warn("[Referral] Claim failed:", error.message);
+              }
+            });
         }
         if (userType === "driver") {
           const { data: newProfile } = await supabase.from("profiles").select("id").eq("user_id", authData.user.id).maybeSingle();
