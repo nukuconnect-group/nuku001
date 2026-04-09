@@ -69,6 +69,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
+      <SEO title="Réinitialiser le mot de passe" description="Réinitialisez votre mot de passe NukuConnect." noIndex />
       <Header />
       <main className="py-10">
         <div className="container mx-auto px-4">

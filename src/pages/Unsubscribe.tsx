@@ -62,6 +62,7 @@ const Unsubscribe = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background flex items-center justify-center px-4">
+      <SEO title="Désinscription" description="Gérez vos préférences d'email NukuConnect." noIndex />
       <Card className="max-w-md w-full">
         <CardContent className="py-10 text-center space-y-4">
           {status === "loading" && (
