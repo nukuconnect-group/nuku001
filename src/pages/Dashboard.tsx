@@ -46,6 +46,7 @@ const Dashboard = () => {
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
+  useSubscriptionExpiry(user?.id);
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
