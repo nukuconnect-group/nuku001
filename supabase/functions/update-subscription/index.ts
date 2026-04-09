@@ -44,15 +44,14 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
@@ -67,17 +66,57 @@ serve(async (req) => {
     const planConfig = VALID_PLANS[plan];
     const expectedAmount = billing_period === "monthly" ? planConfig.monthlyPrice : planConfig.annualPrice;
     const now = new Date();
-    const expiresAt = billing_period === "monthly"
-      ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+    // Free plan = 1 month, paid plans = based on billing period
+    let expiresAt: Date;
+    if (plan === "free") {
+      expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 1 month
+    } else {
+      expiresAt = billing_period === "monthly"
+        ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+        : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+    }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: existingSubscription } = await adminClient
       .from("subscriptions")
-      .select("plan, status, expires_at")
+      .select("plan, status, expires_at, started_at")
       .eq("user_id", userId)
       .maybeSingle();
+
+    // Block re-subscribing to free plan if user already had one
+    if (plan === "free" && existingSubscription) {
+      const hadFreePlan = existingSubscription.plan === "free";
+      const isExpired = existingSubscription.expires_at && new Date(existingSubscription.expires_at).getTime() <= now.getTime();
+      
+      if (hadFreePlan && isExpired) {
+        return new Response(JSON.stringify({ 
+          error: "Votre période gratuite a expiré. Veuillez passer au pack Pro ou supérieur pour continuer." 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // If already on active free plan
+      if (hadFreePlan && existingSubscription.status === "active" && existingSubscription.expires_at && new Date(existingSubscription.expires_at).getTime() > now.getTime()) {
+        return new Response(JSON.stringify({ error: "Vous avez déjà un plan gratuit actif." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // If user previously had a paid plan (or expired free), block free re-subscription
+      if (!hadFreePlan) {
+        return new Response(JSON.stringify({ 
+          error: "Le plan gratuit n'est disponible que pour les nouveaux comptes. Veuillez choisir un plan Pro ou supérieur." 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (
       plan !== "free" &&
