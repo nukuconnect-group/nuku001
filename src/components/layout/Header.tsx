@@ -656,7 +656,7 @@ const Header = () => {
             <div className="flex items-center h-10 gap-1">
               <Sheet open={categoriesOpen} onOpenChange={setCategoriesOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium">
+                  <Button variant="ghost" className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium flex-shrink-0">
                     <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
@@ -683,16 +683,35 @@ const Header = () => {
                   </ScrollArea>
                 </SheetContent>
               </Sheet>
-              <div className="w-px h-5 bg-border mx-1" />
-              <div className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
-                {navLinks.map((link) => (
+              <div className="w-px h-5 bg-border mx-1 flex-shrink-0" />
+              {/* Main links - limited to 7, rest goes into "Plus" dropdown */}
+              <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                {navLinks.slice(0, 7).map((link) => (
                   <Link key={link.href + link.label} to={link.href}
                     className={`px-2.5 py-1.5 text-xs font-medium transition-all duration-200 rounded-md whitespace-nowrap flex-shrink-0 ${
-                      isActive(link.href) ? "bg-primary/10 text-primary shadow-sm" : "text-foreground hover:bg-muted hover:text-primary hover:translate-y-[-1px]"
+                      isActive(link.href) ? "bg-primary/10 text-primary shadow-sm" : "text-foreground hover:bg-muted hover:text-primary"
                     }`}>
                     {link.label}
                   </Link>
                 ))}
+                {navLinks.length > 7 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs font-medium gap-1 flex-shrink-0">
+                        Plus <ChevronDown className="w-3 h-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48 bg-card">
+                      {navLinks.slice(7).map((link) => (
+                        <DropdownMenuItem key={link.href + link.label} asChild className="cursor-pointer">
+                          <Link to={link.href} className="text-xs">
+                            {link.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
               {!user && (
                 <Link to="/auth" className="flex-shrink-0 ml-2">
