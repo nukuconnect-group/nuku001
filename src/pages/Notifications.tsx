@@ -111,12 +111,19 @@ const Notifications = () => {
   };
 
   const getNotifLink = (notif: Notification): string | null => {
+    const title = (notif.title || "").toLowerCase();
     switch (notif.type) {
-      case "order": return "/acheteur";
+      case "order": return "/dashboard";
       case "message": return "/messages";
       case "product": return notif.product_id ? `/produit/${notif.product_id}` : "/marketplace";
-      case "delivery": return "/suivi-livraison";
+      case "delivery":
+        if (title.includes("livraison disponible") || title.includes("livreur")) return "/driver-dashboard";
+        return "/suivi-livraison";
+      case "kyc":
+        if (title.includes("livreur")) return "/driver-dashboard";
+        return "/dashboard";
       case "review": return notif.product_id ? `/produit/${notif.product_id}` : null;
+      case "withdrawal": return "/dashboard";
       default: return notif.product_id ? `/produit/${notif.product_id}` : null;
     }
   };
