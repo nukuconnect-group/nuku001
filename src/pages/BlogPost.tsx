@@ -205,6 +205,21 @@ const BlogPost = () => {
         description={article.excerpt}
         image={article.image}
         type="article"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: article.title,
+          description: article.excerpt,
+          image: article.image,
+          datePublished: article.date,
+          author: { "@type": "Organization", name: "NUKUCONNECT" },
+          publisher: {
+            "@type": "Organization",
+            name: "NUKUCONNECT",
+            logo: { "@type": "ImageObject", url: "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png" },
+          },
+          mainEntityOfPage: `https://www.nukuconnect.com/blog/${slug}`,
+        }}
       />
       <Header />
       <main className="py-6 sm:py-10">

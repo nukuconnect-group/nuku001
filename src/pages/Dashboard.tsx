@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionExpiry } from "@/hooks/useSubscriptionExpiry";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -45,6 +46,7 @@ const Dashboard = () => {
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
+  useSubscriptionExpiry(user?.id);
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
