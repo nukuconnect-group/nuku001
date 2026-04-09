@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
