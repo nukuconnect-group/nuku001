@@ -175,6 +175,24 @@ const DriverDashboard = () => {
   };
 
   const rejectDelivery = async (deliveryId: string) => {
+    try {
+      // Notify the buyer about the rejection
+      const delivery = availableDeliveries.find(d => d.id === deliveryId);
+      if (delivery?.order_id) {
+        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", delivery.order_id).maybeSingle();
+        if (order) {
+          const { data: buyerProfile } = await supabase.from("profiles").select("user_id").eq("id", order.buyer_id).maybeSingle();
+          if (buyerProfile) {
+            await supabase.from("notifications").insert({
+              user_id: buyerProfile.user_id,
+              title: "❌ Livraison refusée par un livreur",
+              description: `Un livreur a refusé la mission pour la commande #${delivery.order_id.slice(0, 8)}. Un autre livreur sera recherché.`,
+              type: "delivery",
+            });
+          }
+        }
+      }
+    } catch {}
     setAvailableDeliveries(prev => prev.filter(d => d.id !== deliveryId));
     toast({ title: "Mission refusée" });
   };
