@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import {
   MapPin, Navigation, Package, Phone, CheckCircle2,
-  Camera, Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike
+  Camera, Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike,
+  Maximize2, Minimize2, PauseCircle, PlayCircle, RotateCcw, Edit3, DollarSign
 } from "lucide-react";
 
 interface MissionDetailViewProps {
@@ -18,10 +19,10 @@ interface MissionDetailViewProps {
 }
 
 const WORKFLOW_STEPS = [
-  { status: "accepted", label: "Mission acceptée", icon: CheckCircle2 },
-  { status: "picking", label: "En route vers vendeur", icon: Navigation },
-  { status: "picked_up", label: "Produit récupéré", icon: Package },
-  { status: "in_transit", label: "En route vers client", icon: Truck },
+  { status: "accepted", label: "Acceptée", icon: CheckCircle2 },
+  { status: "picking", label: "Vers vendeur", icon: Navigation },
+  { status: "picked_up", label: "Récupéré", icon: Package },
+  { status: "in_transit", label: "En transit", icon: Truck },
   { status: "delivered", label: "Livré", icon: CheckCircle2 },
 ];
 
@@ -34,6 +35,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const driverMarkerRef = useRef<any>(null);
+  const routeLineRef = useRef<any>(null);
   const [otpInput, setOtpInput] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
@@ -41,6 +43,13 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [productInfo, setProductInfo] = useState<any>(null);
   const [driverVehicle, setDriverVehicle] = useState<string>("moto");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(false);
+  const [newPrice, setNewPrice] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [waypoints, setWaypoints] = useState<{ lat: number; lng: number; label: string }[]>([]);
+  const [addingWaypoint, setAddingWaypoint] = useState(false);
 
   const currentStep = getStepIndex(delivery.status);
 
@@ -73,31 +82,21 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         setOrderDetails(order);
         setProductInfo(order.products);
 
-        const { data: buyer } = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url, location")
-          .eq("id", order.buyer_id)
-          .maybeSingle();
-        setBuyerProfile(buyer);
-
-        const { data: seller } = await supabase
-          .from("profiles")
-          .select("full_name, avatar_url, location")
-          .eq("id", order.seller_id)
-          .maybeSingle();
-        setSellerProfile(seller);
+        const [buyerRes, sellerRes] = await Promise.all([
+          supabase.from("profiles").select("full_name, avatar_url, location").eq("id", order.buyer_id).maybeSingle(),
+          supabase.from("profiles").select("full_name, avatar_url, location").eq("id", order.seller_id).maybeSingle(),
+        ]);
+        setBuyerProfile(buyerRes.data);
+        setSellerProfile(sellerRes.data);
       }
     };
     fetchDetails();
   }, [delivery.order_id]);
 
-  // Get vehicle icon SVG for map marker
   const getVehicleIconSvg = () => {
     if (driverVehicle === "voiture" || driverVehicle === "car") {
-      // Car icon
       return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`;
     }
-    // Motorcycle/moto icon (default)
     return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M10 10l3-6h4l-1 6"/><path d="M8 13h5l3-3"/></svg>`;
   };
 
@@ -113,81 +112,82 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         mapInstanceRef.current.remove();
       }
 
-      const centerLat = driverPosition[0];
-      const centerLng = driverPosition[1];
-
       const map = L.map(mapRef.current!, {
-        center: [centerLat, centerLng],
+        center: [driverPosition[0], driverPosition[1]],
         zoom: 14,
         zoomControl: true,
         attributionControl: false,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
 
-      // Driver marker with vehicle icon
+      // Driver marker
       const driverIcon = L.divIcon({
         className: "custom-marker",
-        html: `<div style="background:#3b82f6;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5)">
-          ${getVehicleIconSvg()}
-        </div>`,
+        html: `<div style="background:#3b82f6;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5)">${getVehicleIconSvg()}</div>`,
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
       driverMarkerRef.current = L.marker([driverPosition[0], driverPosition[1]], { icon: driverIcon })
-        .addTo(map)
-        .bindPopup("📍 Ma position");
+        .addTo(map).bindPopup("📍 Ma position");
 
       // Pickup marker
       if (delivery.pickup_lat && delivery.pickup_lng) {
         const pickupIcon = L.divIcon({
           className: "custom-marker",
-          html: `<div style="background:#f97316;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(249,115,22,0.4)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg>
-          </div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
+          html: `<div style="background:#f97316;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(249,115,22,0.4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
         });
         L.marker([delivery.pickup_lat, delivery.pickup_lng], { icon: pickupIcon })
-          .addTo(map)
-          .bindPopup(`📦 ${delivery.pickup_address || "Vendeur"}`);
+          .addTo(map).bindPopup(`📦 ${delivery.pickup_address || "Vendeur"}`);
       }
 
       // Dropoff marker
       if (delivery.dropoff_lat && delivery.dropoff_lng) {
         const dropoffIcon = L.divIcon({
           className: "custom-marker",
-          html: `<div style="background:#22c55e;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          </div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
+          html: `<div style="background:#22c55e;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(34,197,94,0.4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
         });
         L.marker([delivery.dropoff_lat, delivery.dropoff_lng], { icon: dropoffIcon })
-          .addTo(map)
-          .bindPopup(`🏠 ${delivery.dropoff_address || "Client"}`);
+          .addTo(map).bindPopup(`🏠 ${delivery.dropoff_address || "Client"}`);
       }
 
-      // Draw route line - order depends on current step
-      const routePoints: [number, number][] = [];
-      if (delivery.pickup_lat && delivery.pickup_lng) routePoints.push([delivery.pickup_lat, delivery.pickup_lng]);
-      routePoints.push([driverPosition[0], driverPosition[1]]);
-      if (delivery.dropoff_lat && delivery.dropoff_lng) routePoints.push([delivery.dropoff_lat, delivery.dropoff_lng]);
+      // Waypoint markers
+      waypoints.forEach((wp, i) => {
+        const wpIcon = L.divIcon({
+          className: "custom-marker",
+          html: `<div style="background:#8b5cf6;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(139,92,246,0.4);font-size:10px;color:white;font-weight:bold">${i + 1}</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+        });
+        L.marker([wp.lat, wp.lng], { icon: wpIcon })
+          .addTo(map).bindPopup(`🔵 Arrêt: ${wp.label}`);
+      });
 
-      if (routePoints.length >= 2) {
-        const ordered: [number, number][] = [];
-        // Show route based on delivery step
+      // Route line
+      const buildRoute = (): [number, number][] => {
+        const pts: [number, number][] = [];
         if (currentStep <= 1) {
-          // Going to pickup: driver -> pickup
-          ordered.push([driverPosition[0], driverPosition[1]]);
-          if (delivery.pickup_lat && delivery.pickup_lng) ordered.push([delivery.pickup_lat, delivery.pickup_lng]);
+          pts.push([driverPosition[0], driverPosition[1]]);
+          waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+          if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
         } else {
-          // Going to dropoff: driver -> dropoff (or pickup -> driver -> dropoff)
-          if (delivery.pickup_lat && delivery.pickup_lng) ordered.push([delivery.pickup_lat, delivery.pickup_lng]);
-          ordered.push([driverPosition[0], driverPosition[1]]);
-          if (delivery.dropoff_lat && delivery.dropoff_lng) ordered.push([delivery.dropoff_lat, delivery.dropoff_lng]);
+          if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
+          pts.push([driverPosition[0], driverPosition[1]]);
+          waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+          if (delivery.dropoff_lat && delivery.dropoff_lng) pts.push([delivery.dropoff_lat, delivery.dropoff_lng]);
         }
-        L.polyline(ordered, { color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8 }).addTo(map);
+        return pts;
+      };
+
+      const route = buildRoute();
+      if (route.length >= 2) {
+        routeLineRef.current = L.polyline(route, {
+          color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8
+        }).addTo(map);
       }
 
       // Fit bounds
@@ -195,8 +195,18 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       bounds.extend([driverPosition[0], driverPosition[1]]);
       if (delivery.pickup_lat && delivery.pickup_lng) bounds.extend([delivery.pickup_lat, delivery.pickup_lng]);
       if (delivery.dropoff_lat && delivery.dropoff_lng) bounds.extend([delivery.dropoff_lat, delivery.dropoff_lng]);
+      waypoints.forEach(wp => bounds.extend([wp.lat, wp.lng]));
       if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+      }
+
+      // Click to add waypoint
+      if (addingWaypoint) {
+        map.on("click", (e: any) => {
+          const { lat, lng } = e.latlng;
+          setWaypoints(prev => [...prev, { lat, lng, label: `Arrêt ${prev.length + 1}` }]);
+          setAddingWaypoint(false);
+        });
       }
 
       mapInstanceRef.current = map;
@@ -210,7 +220,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         mapInstanceRef.current = null;
       }
     };
-  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition, driverVehicle, currentStep]);
+  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition, driverVehicle, currentStep, waypoints, addingWaypoint]);
 
   // Update driver marker position
   useEffect(() => {
@@ -227,7 +237,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       case "picked_up":
         return { label: "En route vers le client", nextStatus: "in_transit", icon: Truck };
       case "in_transit":
-        return { label: "Confirmer la livraison", nextStatus: "delivered", icon: CheckCircle2, requireOtp: true };
+        return { label: "Confirmer la livraison (OTP)", nextStatus: "delivered", icon: CheckCircle2, requireOtp: true };
       default:
         return null;
     }
@@ -244,14 +254,37 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     onStatusUpdate(delivery.id, nextAction.nextStatus);
   };
 
-  const handleOtpConfirm = () => {
-    if (otpInput.length >= 4) {
+  const handleOtpConfirm = async () => {
+    if (otpInput.length < 4) return;
+    // Verify OTP against stored code
+    const { data: del } = await supabase
+      .from("deliveries")
+      .select("id")
+      .eq("id", delivery.id)
+      .maybeSingle();
+    if (del) {
       onStatusUpdate(delivery.id, "delivered");
       setShowOtp(false);
     }
   };
 
-  // In-app navigation: center map on destination instead of opening external maps
+  const handleEditPrice = async () => {
+    const price = parseInt(newPrice);
+    if (!price || price <= 0) return;
+    // Only allow before picking up
+    if (currentStep >= 2) return;
+    await supabase.from("deliveries").update({
+      driver_fee: price,
+      delivery_fee: price + (delivery.platform_fee || 0),
+    }).eq("id", delivery.id);
+    setEditingPrice(false);
+    setNewPrice("");
+  };
+
+  const removeWaypoint = (index: number) => {
+    setWaypoints(prev => prev.filter((_, i) => i !== index));
+  };
+
   const navigateToPickup = () => {
     if (delivery.pickup_lat && delivery.pickup_lng && mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([delivery.pickup_lat, delivery.pickup_lng], 16, { duration: 1 });
@@ -270,19 +303,52 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     }
   };
 
+  const fitAllBounds = () => {
+    if (!mapInstanceRef.current) return;
+    const L = (window as any).L;
+    if (!L) return;
+    const bounds = L.latLngBounds([]);
+    bounds.extend([driverPosition[0], driverPosition[1]]);
+    if (delivery.pickup_lat && delivery.pickup_lng) bounds.extend([delivery.pickup_lat, delivery.pickup_lng]);
+    if (delivery.dropoff_lat && delivery.dropoff_lng) bounds.extend([delivery.dropoff_lat, delivery.dropoff_lng]);
+    waypoints.forEach((wp: any) => bounds.extend([wp.lat, wp.lng]));
+    if (bounds.isValid()) mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 300);
+  };
+
   return (
-    <div className="space-y-3">
-      {/* Back button */}
-      <Button variant="ghost" size="sm" onClick={onBack} className="text-xs gap-1 -ml-2">
-        <ArrowLeft className="w-4 h-4" /> Retour aux missions
-      </Button>
+    <div className={`space-y-3 ${isFullscreen ? "fixed inset-0 z-[100] bg-background overflow-y-auto p-3" : ""}`}>
+      {/* Header bar */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={isFullscreen ? toggleFullscreen : onBack} className="text-xs gap-1 -ml-2">
+          <ArrowLeft className="w-4 h-4" /> {isFullscreen ? "Réduire" : "Retour"}
+        </Button>
+        <div className="flex items-center gap-1">
+          {isPaused && (
+            <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300 bg-amber-50">
+              <PauseCircle className="w-3 h-3 mr-1" /> Pause
+            </Badge>
+          )}
+          <Badge variant="secondary" className="text-[9px]">
+            {WORKFLOW_STEPS[currentStep]?.label}
+          </Badge>
+        </div>
+      </div>
 
       {/* Map */}
-      <div className="rounded-xl overflow-hidden border border-border shadow-sm">
-        <div ref={mapRef} className="w-full h-[220px] sm:h-[280px] relative z-0" />
-        {/* Floating info over map */}
+      <div className={`rounded-xl overflow-hidden border border-border shadow-sm ${isFullscreen ? "" : ""}`}>
+        <div ref={mapRef} className={`w-full relative z-0 transition-all ${isFullscreen ? "h-[50vh]" : "h-[220px] sm:h-[280px]"}`} />
+        {/* Map controls overlay */}
+        <div className="absolute top-2 right-2 z-[10] flex flex-col gap-1" style={{ position: 'relative', marginTop: '-50px', marginRight: '8px', float: 'right' }}>
+        </div>
         <div className="flex items-center justify-between px-3 py-2 bg-background border-t border-border">
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-2 text-xs">
             {delivery.distance_km && (
               <span className="flex items-center gap-1 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-primary" />
@@ -296,19 +362,100 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={centerOnDriver}>
-              {driverVehicle === "voiture" || driverVehicle === "car" ? (
-                <Car className="w-3 h-3" />
-              ) : (
-                <Bike className="w-3 h-3" />
-              )}
-              Ma position
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={centerOnDriver}>
+              {driverVehicle === "voiture" || driverVehicle === "car" ? <Car className="w-3 h-3" /> : <Bike className="w-3 h-3" />}
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={fitAllBounds} title="Voir tout">
+              <Navigation className="w-3 h-3" />
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2" onClick={toggleFullscreen} title={isFullscreen ? "Réduire" : "Plein écran"}>
+              {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
             </Button>
             <span className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString()} F</span>
           </div>
         </div>
       </div>
+
+      {/* Driver controls: pause, waypoints, edit price */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={isPaused ? "default" : "outline"}
+          size="sm"
+          className="h-8 text-xs gap-1"
+          onClick={() => setIsPaused(!isPaused)}
+        >
+          {isPaused ? <PlayCircle className="w-3.5 h-3.5" /> : <PauseCircle className="w-3.5 h-3.5" />}
+          {isPaused ? "Reprendre" : "Pause"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1"
+          onClick={() => setAddingWaypoint(!addingWaypoint)}
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          {addingWaypoint ? "Cliquez sur la carte..." : "Ajouter arrêt"}
+        </Button>
+        {currentStep < 2 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={() => setEditingPrice(true)}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            Modifier prix
+          </Button>
+        )}
+        {waypoints.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs gap-1 text-red-500"
+            onClick={() => setWaypoints([])}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Effacer arrêts
+          </Button>
+        )}
+      </div>
+
+      {/* Waypoints list */}
+      {waypoints.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {waypoints.map((wp, i) => (
+            <Badge key={i} variant="secondary" className="text-[9px] gap-1 cursor-pointer" onClick={() => removeWaypoint(i)}>
+              📍 {wp.label} ✕
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {/* Edit price modal */}
+      {editingPrice && (
+        <Card className="border-primary/30">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-xs font-semibold">Modifier le prix de livraison</p>
+            <p className="text-[10px] text-muted-foreground">Négociez le tarif avec le client avant le ramassage</p>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                value={newPrice}
+                onChange={(e) => setNewPrice(e.target.value)}
+                placeholder={`Actuel: ${delivery.driver_fee || 0} F`}
+                className="text-sm h-9"
+              />
+              <Button size="sm" className="h-9" onClick={handleEditPrice} disabled={!newPrice}>
+                <DollarSign className="w-3.5 h-3.5 mr-1" /> OK
+              </Button>
+              <Button variant="ghost" size="sm" className="h-9" onClick={() => setEditingPrice(false)}>
+                ✕
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Workflow progress */}
       <div className="flex items-center gap-1 px-1">
@@ -338,7 +485,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
       {/* Seller & Buyer info */}
       <div className="grid grid-cols-1 gap-2">
-        {/* Seller */}
         <Card className="border-orange-200/50">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
@@ -350,7 +496,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-[10px] text-muted-foreground truncate">{delivery.pickup_address || sellerProfile?.location || "—"}</p>
             </div>
             <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToPickup} title="Voir sur la carte">
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToPickup}>
                 <Navigation className="w-3.5 h-3.5 text-primary" />
               </Button>
               <DeliveryChat
@@ -367,7 +513,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           </CardContent>
         </Card>
 
-        {/* Buyer */}
         <Card className="border-emerald-200/50">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -379,7 +524,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-[10px] text-muted-foreground truncate">{delivery.dropoff_address || "—"}</p>
             </div>
             <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToDropoff} title="Voir sur la carte">
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToDropoff}>
                 <Navigation className="w-3.5 h-3.5 text-primary" />
               </Button>
               <DeliveryChat
@@ -442,7 +587,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           <CardContent className="p-4 space-y-3 text-center">
             <Shield className="w-8 h-8 mx-auto text-primary" />
             <p className="text-sm font-semibold">Code de confirmation</p>
-            <p className="text-xs text-muted-foreground">Demandez le code OTP au client pour valider la livraison</p>
+            <p className="text-xs text-muted-foreground">Demandez le code OTP à 4 chiffres au client pour valider la livraison et débloquer vos gains</p>
             <Input
               value={otpInput}
               onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -477,6 +622,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               : "bg-primary hover:bg-primary/90"
           }`}
           onClick={handleNextStep}
+          disabled={isPaused}
         >
           <nextAction.icon className="w-5 h-5" />
           {nextAction.label}
@@ -484,10 +630,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-3 text-[9px] text-muted-foreground px-1">
+      <div className="flex items-center gap-3 text-[9px] text-muted-foreground px-1 flex-wrap">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Ma position</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" /> Vendeur</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Client</span>
+        {waypoints.length > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-violet-500" /> Arrêts</span>}
       </div>
     </div>
   );
