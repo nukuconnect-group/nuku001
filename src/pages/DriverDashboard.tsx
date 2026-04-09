@@ -31,7 +31,8 @@ const DriverDashboard = () => {
   const [availableDeliveries, setAvailableDeliveries] = useState<any[]>([]);
   const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [driverPosition, setDriverPosition] = useState<[number, number]>([6.1725, 1.2314]);
   const [selectedMission, setSelectedMission] = useState<any>(null);
