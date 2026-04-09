@@ -105,6 +105,53 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
     }
   };
 
+  // Camera selfie capture
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      streamRef.current = stream;
+      setShowCamera(true);
+      setTimeout(() => { if (videoRef.current) videoRef.current.srcObject = stream; }, 100);
+    } catch {
+      toast({ title: "Impossible d'accéder à la caméra", variant: "destructive" });
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")!.drawImage(video, 0, 0);
+    stopCamera();
+    setUploading("selfie");
+    try {
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed"))), "image/jpeg", 0.8)
+      );
+      const compressed = await compressImage(new File([blob], "selfie.jpg"));
+      const filePath = `${userId}/selfie-${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from("driver-kyc").upload(filePath, compressed, { contentType: "image/jpeg", upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("driver-kyc").getPublicUrl(filePath);
+      setSelfieUrl(data.publicUrl);
+      toast({ title: "Photo capturée ✓" });
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setShowCamera(false);
+  };
+
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((t) => t.stop()); }, []);
+
   const handleSubmit = async () => {
     if (!userId || !idNumber.trim()) {
       toast({ title: "Remplissez le numéro de pièce", variant: "destructive" });
