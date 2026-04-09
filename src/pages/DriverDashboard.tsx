@@ -319,7 +319,7 @@ const DriverDashboard = () => {
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
       <SEO url="/driver-dashboard" title="Tableau de bord Livreur" description="Gérez vos livraisons et suivez vos gains." noIndex />
       <Header />
-      <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg">
+      <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
         {/* Avatar required */}
         {needsAvatar && (
           <Card className="border-primary/30 bg-primary/5">

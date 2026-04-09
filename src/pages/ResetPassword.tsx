@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
+      <SEO title="Réinitialiser le mot de passe" description="Réinitialisez votre mot de passe NukuConnect." noIndex />
       <Header />
       <main className="py-10">
         <div className="container mx-auto px-4">

@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -6,6 +7,7 @@ import { Lock } from "lucide-react";
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
+      <SEO url="/privacy" title="Politique de Confidentialité" description="Découvrez comment NukuConnect protège vos données personnelles. Notre politique de confidentialité détaillée." />
       <Header />
       <main>
         <div className="bg-primary/5 border-b border-border py-8 sm:py-12">

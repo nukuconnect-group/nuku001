@@ -591,6 +591,14 @@ const Marketplace = () => {
         title="Marketplace - Produits Agricoles d'Afrique"
         description="Explorez des milliers de produits agricoles frais et certifiés. Achetez directement aux producteurs vérifiés d'Afrique."
         image="https://fpnhdihvnfsiymopbjgt.supabase.co/storage/v1/object/public/product-images/og/og-marketplace.jpg"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Marketplace NUKUCONNECT",
+          "url": "https://www.nukuconnect.com/marketplace",
+          "description": "Explorez des milliers de produits agricoles frais et certifiés d'Afrique.",
+          "isPartOf": { "@type": "WebSite", "name": "NUKUCONNECT", "url": "https://www.nukuconnect.com" }
+        }}
       />
       <Header />
       <MarketplacePromoPopup />
