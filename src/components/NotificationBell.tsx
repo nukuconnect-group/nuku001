@@ -68,8 +68,35 @@ const NotificationBell = () => {
       case "subscription": return <CreditCard className="w-4 h-4 text-violet-500" />;
       case "withdrawal": return <CreditCard className="w-4 h-4 text-amber-500" />;
       case "demand": return <Heart className="w-4 h-4 text-rose-500" />;
+      case "kyc": return <AlertCircle className="w-4 h-4 text-primary" />;
       default: return <Bell className="w-4 h-4 text-muted-foreground" />;
     }
+  };
+
+  const getNotifRoute = (notif: Notification): string => {
+    const title = (notif.title || "").toLowerCase();
+    switch (notif.type) {
+      case "order": return "/dashboard";
+      case "message": return "/messages";
+      case "delivery":
+        if (title.includes("livreur") || title.includes("livraison disponible")) return "/driver-dashboard";
+        return "/suivi-livraison";
+      case "product": return "/marketplace";
+      case "kyc":
+        if (title.includes("livreur")) return "/driver-dashboard";
+        return "/dashboard";
+      case "withdrawal": return "/dashboard";
+      default: return "/notifications";
+    }
+  };
+
+  const handleNotifClick = async (notif: Notification) => {
+    if (!notif.is_read && user?.id) {
+      await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+    setOpen(false);
+    navigate(getNotifRoute(notif));
   };
 
   const getTypeColor = (type: string) => {

@@ -162,17 +162,16 @@ const DriverDashboard = () => {
   const acceptDelivery = async (deliveryId: string) => {
     if (!driverProfile) return;
     try {
-      const { error } = await supabase.from("deliveries")
-        .update({ driver_id: driverProfile.id, status: "accepted", accepted_at: new Date().toISOString() })
-        .eq("id", deliveryId)
-        .is("driver_id", null);
+      const { data, error } = await supabase.functions.invoke("accept-delivery", {
+        body: { delivery_id: deliveryId },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast({ title: "✅ Mission acceptée !" });
       await fetchDriverData();
-      // Auto-switch to active tab and open mission detail
       setActiveTab("active");
-    } catch {
-      toast({ title: "Mission plus disponible", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: err?.message || "Mission plus disponible", variant: "destructive" });
     }
   };
 
