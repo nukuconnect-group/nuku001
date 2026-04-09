@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  CheckCircle2, XCircle, Clock, FileText, Loader2, Eye, User, ShieldCheck,
+  CheckCircle2, XCircle, Clock, FileText, Loader2, Eye, User, ShieldCheck, Truck, Store,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -25,34 +26,37 @@ const statusBadge = (status: string) => {
 
 const KYCManager = () => {
   const { toast } = useToast();
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [driverSubs, setDriverSubs] = useState<any[]>([]);
+  const [supplierSubs, setSupplierSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKyc, setSelectedKyc] = useState<any>(null);
+  const [selectedType, setSelectedType] = useState<"driver" | "supplier">("driver");
   const [adminNote, setAdminNote] = useState("");
   const [processing, setProcessing] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
 
   const loadData = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("driver_kyc_submissions")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [dRes, sRes] = await Promise.all([
+      supabase.from("driver_kyc_submissions").select("*").order("created_at", { ascending: false }),
+      supabase.from("supplier_kyc_submissions").select("*").order("created_at", { ascending: false }),
+    ]);
 
-    if (data) {
-      setSubmissions(data);
-      // Load profile names
-      const userIds = [...new Set(data.map((s: any) => s.user_id))];
-      if (userIds.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, avatar_url")
-          .in("user_id", userIds);
-        if (profs) {
-          const map: Record<string, any> = {};
-          profs.forEach((p: any) => { map[p.user_id] = p; });
-          setProfiles(map);
-        }
+    const allData = [...(dRes.data || []), ...(sRes.data || [])];
+    setDriverSubs(dRes.data || []);
+    setSupplierSubs(sRes.data || []);
+
+    // Load profile names
+    const userIds = [...new Set(allData.map((s: any) => s.user_id))];
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+      if (profs) {
+        const map: Record<string, any> = {};
+        profs.forEach((p: any) => { map[p.user_id] = p; });
+        setProfiles(map);
       }
     }
     setLoading(false);
@@ -60,47 +64,50 @@ const KYCManager = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  const handleDecision = async (kyc: any, decision: "approved" | "rejected") => {
+  const handleDecision = async (kyc: any, type: "driver" | "supplier", decision: "approved" | "rejected") => {
     setProcessing(true);
     try {
-      // Update KYC status
+      const table = type === "driver" ? "driver_kyc_submissions" : "supplier_kyc_submissions";
+
       const { error: kycError } = await supabase
-        .from("driver_kyc_submissions")
+        .from(table)
         .update({
           status: decision,
           admin_note: decision === "rejected" ? adminNote : null,
           reviewed_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", kyc.id);
       if (kycError) throw kycError;
 
-      // If approved, activate driver profile
+      // If approved
       if (decision === "approved") {
-        const { error: dpError } = await supabase
-          .from("driver_profiles")
-          .update({ is_approved: true })
-          .eq("user_id", kyc.user_id);
-        if (dpError) throw dpError;
+        if (type === "driver") {
+          await supabase.from("driver_profiles").update({ is_approved: true }).eq("user_id", kyc.user_id);
+        } else {
+          // Activate verified badge for supplier
+          await supabase.from("profiles").update({ is_verified: true }).eq("user_id", kyc.user_id);
+        }
       }
 
-      // Send notification to the driver
-      const { error: notifError } = await supabase.from("notifications").insert({
+      // Notify
+      await supabase.from("notifications").insert({
         user_id: kyc.user_id,
         type: "kyc",
         title: decision === "approved"
-          ? "✅ Compte livreur activé !"
+          ? type === "driver" ? "✅ Compte livreur activé !" : "✅ Fournisseur vérifié !"
           : "❌ Vérification KYC refusée",
         description: decision === "approved"
-          ? "Votre vérification KYC a été approuvée. Votre compte livreur est maintenant actif. Vous pouvez commencer à accepter des livraisons !"
-          : `Votre vérification KYC a été refusée.${adminNote ? ` Motif : ${adminNote}` : " Veuillez resoumettre vos documents."}`,
+          ? type === "driver"
+            ? "Votre vérification KYC a été approuvée. Votre compte livreur est maintenant actif."
+            : "Votre vérification a été approuvée ! Le badge vérifié est maintenant actif sur votre profil. 🎉"
+          : `Votre vérification a été refusée.${adminNote ? ` Motif : ${adminNote}` : " Veuillez resoumettre vos documents."}`,
       });
-      if (notifError) console.error("Notification error:", notifError);
 
       toast({
         title: decision === "approved" ? "KYC approuvé ✓" : "KYC refusé",
         description: decision === "approved"
-          ? "Le livreur a été notifié et son compte activé."
-          : "Le livreur a été notifié du refus.",
+          ? type === "supplier" ? "Le fournisseur est maintenant vérifié avec le badge." : "Le livreur a été activé."
+          : "L'utilisateur a été notifié du refus.",
       });
 
       setSelectedKyc(null);
@@ -123,8 +130,52 @@ const KYCManager = () => {
     );
   }
 
-  const pending = submissions.filter((s) => s.status === "pending");
-  const reviewed = submissions.filter((s) => s.status !== "pending");
+  const renderList = (submissions: any[], type: "driver" | "supplier") => {
+    const pending = submissions.filter((s) => s.status === "pending");
+    return (
+      <div className="space-y-2">
+        {pending.length > 0 && (
+          <Badge className="bg-yellow-100 text-yellow-800 text-[10px] mb-2">{pending.length} en attente</Badge>
+        )}
+        {submissions.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">Aucune soumission</p>
+        ) : (
+          submissions.map((kyc) => {
+            const profile = profiles[kyc.user_id];
+            return (
+              <div key={kyc.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <User className="w-4 h-4 text-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{profile?.full_name || (type === "driver" ? "Livreur" : "Fournisseur")}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {kyc.id_type?.toUpperCase()} • {kyc.id_number || "—"} • {new Date(kyc.created_at).toLocaleDateString("fr-FR")}
+                      {type === "supplier" && kyc.business_name ? ` • ${kyc.business_name}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {statusBadge(kyc.status)}
+                  <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => { setSelectedKyc(kyc); setSelectedType(type); setAdminNote(kyc.admin_note || ""); }}>
+                    <Eye className="w-3 h-3" /> Voir
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  };
+
+  const driverPending = driverSubs.filter(s => s.status === "pending").length;
+  const supplierPending = supplierSubs.filter(s => s.status === "pending").length;
 
   return (
     <div className="space-y-4">
@@ -132,50 +183,24 @@ const KYCManager = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            Vérifications KYC Livreurs
-            {pending.length > 0 && (
-              <Badge className="bg-yellow-100 text-yellow-800 text-[10px]">{pending.length} en attente</Badge>
-            )}
+            Vérifications KYC
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {submissions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Aucune soumission KYC</p>
-          ) : (
-            <div className="space-y-2">
-              {submissions.map((kyc) => {
-                const profile = profiles[kyc.user_id];
-                return (
-                  <div
-                    key={kyc.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                        {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <User className="w-4 h-4 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{profile?.full_name || "Livreur"}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {kyc.id_type.toUpperCase()} • {kyc.id_number || "—"} • {new Date(kyc.created_at).toLocaleDateString("fr-FR")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {statusBadge(kyc.status)}
-                      <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => { setSelectedKyc(kyc); setAdminNote(kyc.admin_note || ""); }}>
-                        <Eye className="w-3 h-3" /> Voir
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <Tabs defaultValue="drivers">
+            <TabsList className="mb-3">
+              <TabsTrigger value="drivers" className="text-xs gap-1">
+                <Truck className="w-3 h-3" /> Livreurs
+                {driverPending > 0 && <Badge className="bg-yellow-100 text-yellow-800 text-[8px] ml-1 px-1">{driverPending}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="suppliers" className="text-xs gap-1">
+                <Store className="w-3 h-3" /> Fournisseurs
+                {supplierPending > 0 && <Badge className="bg-yellow-100 text-yellow-800 text-[8px] ml-1 px-1">{supplierPending}</Badge>}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="drivers">{renderList(driverSubs, "driver")}</TabsContent>
+            <TabsContent value="suppliers">{renderList(supplierSubs, "supplier")}</TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -185,16 +210,25 @@ const KYCManager = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4" />
-              Détail KYC — {profiles[selectedKyc?.user_id]?.full_name || "Livreur"}
+              Détail KYC — {profiles[selectedKyc?.user_id]?.full_name || (selectedType === "driver" ? "Livreur" : "Fournisseur")}
             </DialogTitle>
           </DialogHeader>
           {selectedKyc && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div><span className="text-muted-foreground">Type :</span> {selectedKyc.id_type.toUpperCase()}</div>
+                <div><span className="text-muted-foreground">Type :</span> {selectedKyc.id_type?.toUpperCase()}</div>
                 <div><span className="text-muted-foreground">Numéro :</span> {selectedKyc.id_number || "—"}</div>
                 <div><span className="text-muted-foreground">Soumis le :</span> {new Date(selectedKyc.created_at).toLocaleString("fr-FR")}</div>
                 <div><span className="text-muted-foreground">Statut :</span> {statusBadge(selectedKyc.status)}</div>
+                {selectedType === "supplier" && selectedKyc.business_name && (
+                  <div className="col-span-2"><span className="text-muted-foreground">Entreprise :</span> {selectedKyc.business_name} ({selectedKyc.business_type})</div>
+                )}
+                {selectedType === "driver" && selectedKyc.license_plate && (
+                  <>
+                    <div><span className="text-muted-foreground">Plaque :</span> {selectedKyc.license_plate}</div>
+                    <div><span className="text-muted-foreground">Véhicule :</span> {selectedKyc.vehicle_brand || "—"} {selectedKyc.vehicle_color || ""}</div>
+                  </>
+                )}
               </div>
 
               {/* Document previews */}
@@ -228,11 +262,7 @@ const KYCManager = () => {
                     rows={2}
                   />
                   <div className="flex gap-2">
-                    <Button
-                      className="flex-1 gap-1.5"
-                      onClick={() => handleDecision(selectedKyc, "approved")}
-                      disabled={processing}
-                    >
+                    <Button className="flex-1 gap-1.5" onClick={() => handleDecision(selectedKyc, selectedType, "approved")} disabled={processing}>
                       {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                       Approuver
                     </Button>
@@ -244,7 +274,7 @@ const KYCManager = () => {
                           toast({ title: "Ajoutez une note pour le refus", variant: "destructive" });
                           return;
                         }
-                        handleDecision(selectedKyc, "rejected");
+                        handleDecision(selectedKyc, selectedType, "rejected");
                       }}
                       disabled={processing}
                     >

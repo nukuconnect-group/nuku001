@@ -609,6 +609,7 @@ const Dashboard = () => {
       />
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
+      <SupplierVerificationPopup userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
       <MobileBottomNav />
     </div>
   );
