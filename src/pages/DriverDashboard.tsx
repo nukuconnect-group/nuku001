@@ -162,13 +162,33 @@ const DriverDashboard = () => {
   const acceptDelivery = async (deliveryId: string) => {
     if (!driverProfile) return;
     try {
-      const { data, error } = await supabase.functions.invoke("accept-delivery", {
-        body: { delivery_id: deliveryId },
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error("Session expirée, reconnectez-vous.");
+      }
+
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/accept-delivery`;
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ delivery_id: deliveryId }),
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Mission plus disponible");
+      }
+
       toast({ title: "✅ Mission acceptée !" });
       await fetchDriverData();
+      setSelectedMission(null);
       setActiveTab("active");
     } catch (err: any) {
       toast({ title: err?.message || "Mission plus disponible", variant: "destructive" });
