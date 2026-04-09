@@ -8,43 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Calendar, Clock, Award, Share2, ExternalLink, ArrowRight } from "lucide-react";
 import { articles as blogArticles } from "./Blog";
+import nukuAwardImg from "@/assets/nuku-award.jpeg";
 
-const articlesContent: Record<string, { content: string; sourceUrl?: string }> = {
+const articlesContent: Record<string, { content: string; sourceUrl?: string; heroImage?: string }> = {
   "nukuconnect-meilleure-innovation-togo-top-impact-2025": {
     sourceUrl: "https://actu-togo.tg/2026/02/05/togo-top-impact-2025-nukuconnect-sacre-meilleure-innovation-de-lannee/",
-    content: `## NukuConnect sacré meilleure innovation de l'année 2025
+    heroImage: "nuku-award",
+    content: `## NukuConnect sacré meilleure innovation de l'année
 
-La cérémonie **Togo Top Impact 2025** a récompensé les entreprises et personnalités ayant eu un impact significatif sur le développement économique et social du Togo. Parmi les lauréats, **NukuConnect** a remporté le prestigieux prix de la **meilleure innovation technologique de l'année**.
+Samedi 31 janvier 2026 à l'hôtel Sarakawa de Lomé, Togo Top Impact a décerné le prix de la meilleure innovation de l'année à NukuConnect. Cette distinction récompense une startup togolaise qui transforme la chaîne d'approvisionnement agricole grâce au numérique.
 
-### Une reconnaissance méritée
+NukuConnect s'est spécialisée dans la connexion entre producteurs, vendeurs et acheteurs à travers le Togo et l'Afrique de l'Ouest. La startup a développé une plateforme numérique qui facilite les échanges et la distribution de produits agricoles et alimentaires.
 
-NukuConnect, la marketplace agricole intelligente, a été distinguée pour son approche innovante qui combine l'intelligence artificielle et les technologies numériques pour transformer la chaîne de valeur agricole en Afrique.
+L'activité principale de NukuConnect consiste à mettre en relation quotidienne les différents acteurs de la chaîne d'approvisionnement. Cette approche vise à optimiser les flux de distribution et à réduire le nombre d'intermédiaires entre le producteur et le consommateur final. En éliminant certains maillons superflus, la plateforme permet aux producteurs d'obtenir de meilleurs prix pour leurs récoltes tout en rendant les produits plus accessibles aux acheteurs.
 
-### Les critères de sélection
+La startup ne se limite pas à faciliter les transactions commerciales. Elle s'engage activement dans des initiatives liées à la sécurité alimentaire, en collaboration potentielle avec des organisations comme ADRA Togo. Cet engagement dépasse le simple cadre commercial pour toucher des enjeux cruciaux de développement.
 
-Le jury a salué plusieurs aspects clés de NukuConnect :
+NukuConnect s'inscrit dans l'écosystème technologique togolais en pleine expansion. La startup illustre comment les solutions numériques peuvent répondre à des problématiques concrètes du secteur agricole. En connectant les acteurs traditionnellement isolés les uns des autres, elle crée un réseau qui profite à l'ensemble de la chaîne de valeur.
 
-- **L'innovation technologique** : Un assistant IA agricole qui fournit des conseils personnalisés aux producteurs
-- **L'impact social** : La plateforme permet aux petits producteurs d'accéder à de nouveaux marchés
-- **La traçabilité** : Un système complet de suivi des produits de la ferme à l'assiette
-- **La logistique intégrée** : Un réseau de livreurs avec suivi GPS en temps réel
-- **La formation** : Des modules de formation accessibles directement dans l'application
+La plateforme répond à plusieurs défis du secteur agricole ouest-africain. Les producteurs ruraux ont souvent du mal à accéder aux marchés urbains et à obtenir des prix justes pour leurs produits. Les acheteurs, de leur côté, peinent parfois à s'approvisionner directement auprès des sources de production. NukuConnect propose une solution qui bénéficie aux deux parties.
 
-### Un écosystème complet
+Le prix de la meilleure innovation reconnaît cette capacité à apporter une réponse technologique à un problème ancien. L'agriculture représente un secteur économique vital pour le Togo et l'Afrique de l'Ouest, mais elle souffre souvent d'inefficacités dans sa chaîne de distribution. En digitalisant ces processus, NukuConnect contribue à moderniser le secteur tout en préservant son caractère local.
 
-NukuConnect ne se limite pas à une simple marketplace. C'est un écosystème complet qui comprend :
+Cette distinction lors de la huitième édition de Togo Top Impact confirme le potentiel de la startup et sa contribution au développement économique du pays. Elle met en lumière l'émergence d'un écosystème technologique togolais capable de produire des solutions innovantes adaptées aux réalités locales.
 
-1. **Une marketplace intelligente** avec matching IA entre acheteurs et vendeurs
-2. **Un assistant agricole IA** pour accompagner les producteurs
-3. **Un système de traçabilité** pour garantir la qualité des produits
-4. **Une plateforme de formation** en agriculture et aquaculture
-5. **Un réseau logistique** avec suivi en temps réel
-
-### Vision pour l'avenir
-
-L'équipe de NukuConnect ambitionne de devenir la plateforme agricole de référence en Afrique de l'Ouest, en continuant d'innover et d'intégrer de nouvelles technologies pour mieux servir les acteurs de la chaîne de valeur agricole.
-
-> « Cette distinction nous encourage à poursuivre notre mission : transformer l'agriculture africaine grâce à la technologie et l'intelligence artificielle. » — Équipe NukuConnect`,
+NukuConnect démontre qu'innovation et tradition peuvent se rencontrer pour créer de la valeur. En connectant les acteurs du monde agricole à travers une plateforme numérique, la startup trace une voie nouvelle pour un secteur aussi ancien que l'agriculture elle-même.`,
   },
   "intelligence-artificielle-agriculture-afrique": {
     content: `## Comment l'IA révolutionne l'agriculture en Afrique de l'Ouest
@@ -194,8 +182,8 @@ const BlogPost = () => {
     }
   };
 
-  // Similar articles (exclude current)
   const similarArticles = blogArticles.filter((a) => a.slug !== slug).slice(0, 3);
+  const heroImg = articleContent.heroImage === "nuku-award" ? nukuAwardImg : article.image;
 
   return (
     <div className="min-h-screen pb-14 lg:pb-0">
@@ -223,70 +211,137 @@ const BlogPost = () => {
       />
       <Header />
       <main className="py-6 sm:py-10">
-        <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
+        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
           <Link to="/blog" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mb-4">
             <ArrowLeft className="w-3 h-3" /> Retour au blog
           </Link>
 
-          <article>
-            <div className="mb-6">
-              <Badge className="mb-3 bg-primary/10 text-primary border-primary/30">
-                <Award className="w-3 h-3 mr-1" /> {article.category}
-              </Badge>
-              <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-extrabold text-foreground mb-3">
-                {article.title}
-              </h1>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" /> {article.date}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {article.readTime}
-                </span>
+          {/* Full-width layout with sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+            {/* Main article */}
+            <article className="min-w-0">
+              <div className="mb-6">
+                <Badge className="mb-3 bg-primary/10 text-primary border-primary/30">
+                  <Award className="w-3 h-3 mr-1" /> {article.category}
+                </Badge>
+                <h1 className="font-heading text-xl sm:text-2xl lg:text-3xl font-extrabold text-foreground mb-3">
+                  {article.title}
+                </h1>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> {article.date}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {article.readTime}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs gap-1" onClick={handleShare}>
+                    <Share2 className="w-3 h-3" /> Partager
+                  </Button>
+                  {articleContent.sourceUrl && (
+                    <a href={articleContent.sourceUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="text-xs gap-1">
+                        <ExternalLink className="w-3 h-3" /> Source originale
+                      </Button>
+                    </a>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1" onClick={handleShare}>
-                  <Share2 className="w-3 h-3" /> Partager
-                </Button>
-                {articleContent.sourceUrl && (
-                  <a href={articleContent.sourceUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="text-xs gap-1">
-                      <ExternalLink className="w-3 h-3" /> Source originale
+
+              <div className="rounded-xl overflow-hidden mb-8">
+                <img
+                  src={heroImg}
+                  alt={article.title}
+                  className="w-full h-auto sm:h-80 lg:h-[420px] object-cover"
+                />
+              </div>
+
+              <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-blockquote:border-primary prose-blockquote:text-primary/80 prose-li:text-muted-foreground">
+                {articleContent.content.split('\n').map((line: string, i: number) => {
+                  const trimmed = line.trim();
+                  if (!trimmed) return null;
+                  if (trimmed.startsWith('## ')) return <h2 key={i} className="text-lg sm:text-xl lg:text-2xl font-bold mt-6 mb-3">{trimmed.slice(3)}</h2>;
+                  if (trimmed.startsWith('### ')) return <h3 key={i} className="text-base sm:text-lg font-bold mt-5 mb-2">{trimmed.slice(4)}</h3>;
+                  if (trimmed.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-primary pl-4 py-2 my-4 italic text-sm text-primary/80 bg-primary/5 rounded-r-lg">{trimmed.slice(2)}</blockquote>;
+                  if (trimmed.startsWith('- **')) {
+                    const match = trimmed.match(/^- \*\*(.+?)\*\*\s*:\s*(.+)$/);
+                    if (match) return <div key={i} className="flex items-start gap-2 my-1.5 text-sm"><span className="text-primary mt-1">•</span><span><strong className="text-foreground">{match[1]}</strong> : <span className="text-muted-foreground">{match[2]}</span></span></div>;
+                  }
+                  if (trimmed.match(/^\d+\.\s\*\*/)) {
+                    const match = trimmed.match(/^\d+\.\s\*\*(.+?)\*\*\s*(.*)$/);
+                    if (match) return <div key={i} className="flex items-start gap-2 my-1.5 text-sm"><span className="text-primary font-bold">{trimmed.match(/^\d+/)?.[0]}.</span><span><strong className="text-foreground">{match[1]}</strong> <span className="text-muted-foreground">{match[2]}</span></span></div>;
+                  }
+                  return <p key={i} className="text-sm sm:text-base leading-relaxed my-3 text-muted-foreground">{trimmed.replace(/\*\*(.+?)\*\*/g, '').includes(trimmed) ? trimmed : trimmed.split(/\*\*(.+?)\*\*/).map((part, j) => j % 2 === 1 ? <strong key={j} className="text-foreground">{part}</strong> : part)}</p>;
+                })}
+              </div>
+            </article>
+
+            {/* Sidebar widgets */}
+            <aside className="space-y-6">
+              {/* About NukuConnect */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-heading text-sm font-bold text-foreground mb-2">À propos de NukuConnect</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    NukuConnect est la marketplace agricole intelligente qui connecte producteurs, fournisseurs et acheteurs en Afrique de l'Ouest grâce à l'IA et au numérique.
+                  </p>
+                  <Link to="/">
+                    <Button variant="hero" size="sm" className="w-full mt-3 text-xs">
+                      Découvrir la plateforme
                     </Button>
-                  </a>
-                )}
-              </div>
-            </div>
+                  </Link>
+                </CardContent>
+              </Card>
 
-            <div className="rounded-xl overflow-hidden mb-8">
-              <img
-                src={article.image}
-                alt={article.title}
-                className="w-full h-48 sm:h-64 lg:h-80 object-cover"
-              />
-            </div>
+              {/* Latest articles */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-heading text-sm font-bold text-foreground mb-3">Articles récents</h3>
+                  <div className="space-y-3">
+                    {similarArticles.map((a) => (
+                      <Link key={a.slug} to={`/blog/${a.slug}`} className="flex gap-3 group">
+                        <img src={a.image} alt={a.title} className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">{a.title}</h4>
+                          <span className="text-[10px] text-muted-foreground">{a.date}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-            <div className="prose prose-sm sm:prose-base max-w-none text-foreground prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-blockquote:border-primary prose-blockquote:text-primary/80 prose-li:text-muted-foreground">
-              {articleContent.content.split('\n').map((line: string, i: number) => {
-                const trimmed = line.trim();
-                if (!trimmed) return null;
-                if (trimmed.startsWith('## ')) return <h2 key={i} className="text-lg sm:text-xl font-bold mt-6 mb-3">{trimmed.slice(3)}</h2>;
-                if (trimmed.startsWith('### ')) return <h3 key={i} className="text-base sm:text-lg font-bold mt-5 mb-2">{trimmed.slice(4)}</h3>;
-                if (trimmed.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-primary pl-4 py-2 my-4 italic text-sm text-primary/80 bg-primary/5 rounded-r-lg">{trimmed.slice(2)}</blockquote>;
-                if (trimmed.startsWith('- **')) {
-                  const match = trimmed.match(/^- \*\*(.+?)\*\*\s*:\s*(.+)$/);
-                  if (match) return <div key={i} className="flex items-start gap-2 my-1.5 text-sm"><span className="text-primary mt-1">•</span><span><strong className="text-foreground">{match[1]}</strong> : <span className="text-muted-foreground">{match[2]}</span></span></div>;
-                }
-                if (trimmed.match(/^\d+\.\s\*\*/)) {
-                  const match = trimmed.match(/^\d+\.\s\*\*(.+?)\*\*\s*(.*)$/);
-                  if (match) return <div key={i} className="flex items-start gap-2 my-1.5 text-sm"><span className="text-primary font-bold">{trimmed.match(/^\d+/)?.[0]}.</span><span><strong className="text-foreground">{match[1]}</strong> <span className="text-muted-foreground">{match[2]}</span></span></div>;
-                }
-                return <p key={i} className="text-sm sm:text-base leading-relaxed my-3 text-muted-foreground">{trimmed.replace(/\*\*(.+?)\*\*/g, '').includes(trimmed) ? trimmed : trimmed.split(/\*\*(.+?)\*\*/).map((part, j) => j % 2 === 1 ? <strong key={j} className="text-foreground">{part}</strong> : part)}</p>;
-              })}
-            </div>
-          </article>
+              {/* Categories */}
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-heading text-sm font-bold text-foreground mb-3">Catégories</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["Distinction", "Innovation", "Traçabilité", "Marché", "Formation"].map((cat) => (
+                      <Badge key={cat} variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10">
+                        {cat}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Similar Articles */}
+              {/* CTA */}
+              <Card className="bg-gradient-hero text-primary-foreground">
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-heading text-sm font-bold mb-2">Rejoignez NukuConnect</h3>
+                  <p className="text-xs opacity-90 mb-3">Vendez vos produits agricoles à des milliers d'acheteurs.</p>
+                  <Link to="/auth">
+                    <Button variant="secondary" size="sm" className="text-xs w-full">
+                      Créer un compte gratuit
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
+
+          {/* Similar Articles - full width below */}
           {similarArticles.length > 0 && (
             <section className="mt-12 pt-8 border-t border-border">
               <h2 className="font-heading text-lg sm:text-xl font-bold text-foreground mb-4">Articles similaires</h2>

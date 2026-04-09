@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import {
   MapPin, Navigation, Package, Phone, CheckCircle2,
-  Camera, Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield
+  Camera, Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield, Car, Bike
 } from "lucide-react";
 
 interface MissionDetailViewProps {
@@ -40,8 +40,24 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [buyerProfile, setBuyerProfile] = useState<any>(null);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [productInfo, setProductInfo] = useState<any>(null);
+  const [driverVehicle, setDriverVehicle] = useState<string>("moto");
 
   const currentStep = getStepIndex(delivery.status);
+
+  // Fetch driver vehicle type
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) return;
+      const { data } = await supabase
+        .from("driver_profiles")
+        .select("vehicle_type")
+        .eq("user_id", session.session.user.id)
+        .maybeSingle();
+      if (data?.vehicle_type) setDriverVehicle(data.vehicle_type);
+    };
+    fetchVehicle();
+  }, []);
 
   // Fetch order, buyer, seller details
   useEffect(() => {
@@ -57,7 +73,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         setOrderDetails(order);
         setProductInfo(order.products);
 
-        // Fetch buyer profile
         const { data: buyer } = await supabase
           .from("profiles")
           .select("full_name, avatar_url, location")
@@ -65,7 +80,6 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           .maybeSingle();
         setBuyerProfile(buyer);
 
-        // Fetch seller profile
         const { data: seller } = await supabase
           .from("profiles")
           .select("full_name, avatar_url, location")
@@ -76,6 +90,16 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     };
     fetchDetails();
   }, [delivery.order_id]);
+
+  // Get vehicle icon SVG for map marker
+  const getVehicleIconSvg = () => {
+    if (driverVehicle === "voiture" || driverVehicle === "car") {
+      // Car icon
+      return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>`;
+    }
+    // Motorcycle/moto icon (default)
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M10 10l3-6h4l-1 6"/><path d="M8 13h5l3-3"/></svg>`;
+  };
 
   // Initialize leaflet map
   useEffect(() => {
@@ -95,20 +119,20 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       const map = L.map(mapRef.current!, {
         center: [centerLat, centerLng],
         zoom: 14,
-        zoomControl: false,
+        zoomControl: true,
         attributionControl: false,
       });
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
 
-      // Driver marker
+      // Driver marker with vehicle icon
       const driverIcon = L.divIcon({
         className: "custom-marker",
-        html: `<div style="background:#3b82f6;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L19 21l-7-4-7 4z"/></svg>
+        html: `<div style="background:#3b82f6;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 12px rgba(59,130,246,0.5)">
+          ${getVehicleIconSvg()}
         </div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
       });
       driverMarkerRef.current = L.marker([driverPosition[0], driverPosition[1]], { icon: driverIcon })
         .addTo(map)
@@ -144,19 +168,26 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
           .bindPopup(`🏠 ${delivery.dropoff_address || "Client"}`);
       }
 
-      // Draw route line
+      // Draw route line - order depends on current step
       const routePoints: [number, number][] = [];
       if (delivery.pickup_lat && delivery.pickup_lng) routePoints.push([delivery.pickup_lat, delivery.pickup_lng]);
       routePoints.push([driverPosition[0], driverPosition[1]]);
       if (delivery.dropoff_lat && delivery.dropoff_lng) routePoints.push([delivery.dropoff_lat, delivery.dropoff_lng]);
 
       if (routePoints.length >= 2) {
-        // Order: pickup -> driver -> dropoff for proper line
         const ordered: [number, number][] = [];
-        if (delivery.pickup_lat && delivery.pickup_lng) ordered.push([delivery.pickup_lat, delivery.pickup_lng]);
-        ordered.push([driverPosition[0], driverPosition[1]]);
-        if (delivery.dropoff_lat && delivery.dropoff_lng) ordered.push([delivery.dropoff_lat, delivery.dropoff_lng]);
-        L.polyline(ordered, { color: "#3b82f6", weight: 3, dashArray: "8 4", opacity: 0.8 }).addTo(map);
+        // Show route based on delivery step
+        if (currentStep <= 1) {
+          // Going to pickup: driver -> pickup
+          ordered.push([driverPosition[0], driverPosition[1]]);
+          if (delivery.pickup_lat && delivery.pickup_lng) ordered.push([delivery.pickup_lat, delivery.pickup_lng]);
+        } else {
+          // Going to dropoff: driver -> dropoff (or pickup -> driver -> dropoff)
+          if (delivery.pickup_lat && delivery.pickup_lng) ordered.push([delivery.pickup_lat, delivery.pickup_lng]);
+          ordered.push([driverPosition[0], driverPosition[1]]);
+          if (delivery.dropoff_lat && delivery.dropoff_lng) ordered.push([delivery.dropoff_lat, delivery.dropoff_lng]);
+        }
+        L.polyline(ordered, { color: "#3b82f6", weight: 4, dashArray: "8 4", opacity: 0.8 }).addTo(map);
       }
 
       // Fit bounds
@@ -179,7 +210,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         mapInstanceRef.current = null;
       }
     };
-  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition]);
+  }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverPosition, driverVehicle, currentStep]);
 
   // Update driver marker position
   useEffect(() => {
@@ -214,28 +245,28 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   };
 
   const handleOtpConfirm = () => {
-    // For now accept any 4-digit code; in production, validate against server
     if (otpInput.length >= 4) {
       onStatusUpdate(delivery.id, "delivered");
       setShowOtp(false);
     }
   };
 
+  // In-app navigation: center map on destination instead of opening external maps
   const navigateToPickup = () => {
-    if (delivery.pickup_lat && delivery.pickup_lng) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&destination=${delivery.pickup_lat},${delivery.pickup_lng}&travelmode=driving`,
-        "_blank"
-      );
+    if (delivery.pickup_lat && delivery.pickup_lng && mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([delivery.pickup_lat, delivery.pickup_lng], 16, { duration: 1 });
     }
   };
 
   const navigateToDropoff = () => {
-    if (delivery.dropoff_lat && delivery.dropoff_lng) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&origin=${driverPosition[0]},${driverPosition[1]}&destination=${delivery.dropoff_lat},${delivery.dropoff_lng}&travelmode=driving`,
-        "_blank"
-      );
+    if (delivery.dropoff_lat && delivery.dropoff_lng && mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([delivery.dropoff_lat, delivery.dropoff_lng], 16, { duration: 1 });
+    }
+  };
+
+  const centerOnDriver = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([driverPosition[0], driverPosition[1]], 16, { duration: 1 });
     }
   };
 
@@ -265,7 +296,17 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               </span>
             )}
           </div>
-          <span className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString()} F</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={centerOnDriver}>
+              {driverVehicle === "voiture" || driverVehicle === "car" ? (
+                <Car className="w-3 h-3" />
+              ) : (
+                <Bike className="w-3 h-3" />
+              )}
+              Ma position
+            </Button>
+            <span className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString()} F</span>
+          </div>
         </div>
       </div>
 
@@ -309,9 +350,19 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-[10px] text-muted-foreground truncate">{delivery.pickup_address || sellerProfile?.location || "—"}</p>
             </div>
             <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToPickup}>
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToPickup} title="Voir sur la carte">
                 <Navigation className="w-3.5 h-3.5 text-primary" />
               </Button>
+              <DeliveryChat
+                deliveryId={delivery.id}
+                currentUserRole="driver"
+                otherPartyName={sellerProfile?.full_name || "Vendeur"}
+                trigger={
+                  <Button variant="outline" size="icon" className="w-8 h-8 rounded-full">
+                    <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                  </Button>
+                }
+              />
             </div>
           </CardContent>
         </Card>
@@ -328,7 +379,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <p className="text-[10px] text-muted-foreground truncate">{delivery.dropoff_address || "—"}</p>
             </div>
             <div className="flex gap-1.5 flex-shrink-0">
-              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToDropoff}>
+              <Button variant="outline" size="icon" className="w-8 h-8 rounded-full" onClick={navigateToDropoff} title="Voir sur la carte">
                 <Navigation className="w-3.5 h-3.5 text-primary" />
               </Button>
               <DeliveryChat
@@ -417,7 +468,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         </Card>
       )}
 
-      {/* Main action button - slide style */}
+      {/* Main action button */}
       {nextAction && !showOtp && (
         <Button
           className={`w-full h-12 text-sm font-bold gap-2 ${
