@@ -393,14 +393,6 @@ const DriverDashboard = () => {
                     type="new"
                     onAccept={acceptDelivery}
                     onReject={rejectDelivery}
-                    onSelect={(del) => {
-                      acceptDelivery(del.id).then(() => {
-                        fetchDriverData().then(() => {
-                          // After accepting, move to active tab
-                          setActiveTab("active");
-                        });
-                      });
-                    }}
                   />
                 ))
               )}
