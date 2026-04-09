@@ -5,15 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle, Camera } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, Clock, AlertCircle, Camera } from "lucide-react";
 
-interface KYCFormProps {
+interface SupplierKYCFormProps {
   userId?: string;
   onSubmitted: () => void;
 }
 
-/** Compress image on a canvas before upload — solves mobile camera large-file issues */
-const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> =>
+const compressImage = (file: File | Blob, maxWidth = 1200, quality = 0.7): Promise<Blob> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -35,16 +34,15 @@ const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob
       img.src = e.target?.result as string;
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(file instanceof File ? file : new File([file], "photo.jpg"));
   });
 
-const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
+const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
-  const [licensePlate, setLicensePlate] = useState("");
-  const [vehicleBrand, setVehicleBrand] = useState("");
-  const [vehicleColor, setVehicleColor] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("individual");
   const [uploading, setUploading] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [idFrontUrl, setIdFrontUrl] = useState("");
@@ -58,7 +56,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   useEffect(() => {
     if (!userId) return;
     supabase
-      .from("driver_kyc_submissions")
+      .from("supplier_kyc_submissions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
@@ -69,10 +67,9 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       });
   }, [userId]);
 
-  const uploadFile = async (file: File, path: string) => {
+  const uploadFile = async (blob: Blob, path: string) => {
     if (!userId) return "";
-    // Compress before upload
-    const compressed = await compressImage(file);
+    const compressed = await compressImage(blob);
     const filePath = `${userId}/${path}-${Date.now()}.jpg`;
     const { error } = await supabase.storage.from("driver-kyc").upload(filePath, compressed, {
       contentType: "image/jpeg",
@@ -96,22 +93,22 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       setter(url);
       toast({ title: "Photo uploadée ✓" });
     } catch (err: any) {
-      console.error("KYC upload error:", err);
       toast({ title: "Erreur d'upload", description: err.message, variant: "destructive" });
     } finally {
       setUploading(null);
-      // Reset input so re-selecting same file triggers change
       e.target.value = "";
     }
   };
 
-  // Camera selfie capture
+  // Camera selfie
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
       streamRef.current = stream;
       setShowCamera(true);
-      setTimeout(() => { if (videoRef.current) videoRef.current.srcObject = stream; }, 100);
+      setTimeout(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      }, 100);
     } catch {
       toast({ title: "Impossible d'accéder à la caméra", variant: "destructive" });
     }
@@ -130,13 +127,9 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       const blob = await new Promise<Blob>((resolve, reject) =>
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed"))), "image/jpeg", 0.8)
       );
-      const compressed = await compressImage(new File([blob], "selfie.jpg"));
-      const filePath = `${userId}/selfie-${Date.now()}.jpg`;
-      const { error } = await supabase.storage.from("driver-kyc").upload(filePath, compressed, { contentType: "image/jpeg", upsert: false });
-      if (error) throw error;
-      const { data } = supabase.storage.from("driver-kyc").getPublicUrl(filePath);
-      setSelfieUrl(data.publicUrl);
-      toast({ title: "Photo capturée ✓" });
+      const url = await uploadFile(blob, "supplier-selfie");
+      setSelfieUrl(url);
+      toast({ title: "Selfie capturé ✓" });
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
     } finally {
@@ -161,24 +154,23 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       toast({ title: "Veuillez uploader le recto de la pièce", variant: "destructive" });
       return;
     }
-    if (!licensePlate.trim()) {
-      toast({ title: "Numéro de plaque requis", description: "Entrez le numéro d'immatriculation de votre véhicule.", variant: "destructive" });
+    if (!selfieUrl) {
+      toast({ title: "Veuillez prendre votre photo (selfie)", variant: "destructive" });
       return;
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("driver_kyc_submissions").insert({
+      const { error } = await supabase.from("supplier_kyc_submissions").insert({
         user_id: userId,
         id_type: idType,
         id_number: idNumber.trim(),
         id_front_url: idFrontUrl || null,
         id_back_url: idBackUrl || null,
         selfie_url: selfieUrl || null,
-        license_plate: licensePlate.trim() || null,
-        vehicle_brand: vehicleBrand.trim() || null,
-        vehicle_color: vehicleColor.trim() || null,
+        business_name: businessName.trim() || null,
+        business_type: businessType,
         status: "pending",
-      } as any);
+      });
       if (error) throw error;
       toast({ title: "KYC soumis ! 🎉", description: "Votre demande sera examinée sous 24-48h." });
       onSubmitted();
@@ -206,7 +198,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         ) : existingKyc.status === "approved" ? (
           <>
             <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-            <span className="text-xs text-green-800">KYC approuvé ✓ — Votre compte est activé</span>
+            <span className="text-xs text-green-800">✓ Fournisseur vérifié — Badge activé</span>
           </>
         ) : (
           <div className="space-y-1">
@@ -217,12 +209,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
             {existingKyc.admin_note && (
               <p className="text-xs text-red-700 ml-6">Motif : {existingKyc.admin_note}</p>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-6 text-xs"
-              onClick={() => setExistingKyc(null)}
-            >
+            <Button variant="outline" size="sm" className="ml-6 text-xs" onClick={() => setExistingKyc(null)}>
               Resoumettre
             </Button>
           </div>
@@ -236,7 +223,6 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
     url: string,
     setter: (v: string) => void,
     path: string,
-    capture?: "user" | "environment",
   ) => (
     <div>
       <Label className="text-[10px]">{label}</Label>
@@ -251,7 +237,6 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
         <input
           type="file"
           accept="image/*"
-          {...(capture ? { capture } : {})}
           className="hidden"
           disabled={!!uploading}
           onChange={(e) => handleFileUpload(e, setter, path)}
@@ -264,7 +249,25 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-[10px]">Type de pièce</Label>
+          <Label className="text-[10px]">Nom entreprise / activité</Label>
+          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex: Ferme Kokoe" className="h-8 text-xs" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px]">Type d'activité</Label>
+          <Select value={businessType} onValueChange={setBusinessType}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="individual">Individuel</SelectItem>
+              <SelectItem value="cooperative">Coopérative</SelectItem>
+              <SelectItem value="enterprise">Entreprise</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-[10px]">Type de pièce d'identité</Label>
           <Select value={idType} onValueChange={setIdType}>
             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -275,30 +278,14 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px]">Numéro</Label>
+          <Label className="text-[10px]">Numéro de pièce *</Label>
           <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="N° de pièce" className="h-8 text-xs" />
         </div>
       </div>
 
-      {/* Vehicle details */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[10px]">Plaque d'immatriculation *</Label>
-          <Input value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} placeholder="TG-1234-AB" className="h-8 text-xs" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-[10px]">Marque / Modèle</Label>
-          <Input value={vehicleBrand} onChange={(e) => setVehicleBrand(e.target.value)} placeholder="Ex: Honda CG" className="h-8 text-xs" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-[10px]">Couleur du véhicule</Label>
-          <Input value={vehicleColor} onChange={(e) => setVehicleColor(e.target.value)} placeholder="Ex: Noir" className="h-8 text-xs" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {renderUploadBox("Recto pièce *", idFrontUrl, setIdFrontUrl, "id-front", "environment")}
-        {renderUploadBox("Verso pièce", idBackUrl, setIdBackUrl, "id-back", "environment")}
+        {renderUploadBox("Recto pièce *", idFrontUrl, setIdFrontUrl, "supplier-id-front")}
+        {renderUploadBox("Verso pièce", idBackUrl, setIdBackUrl, "supplier-id-back")}
         
         {/* Selfie with camera */}
         <div>
@@ -316,17 +303,19 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
               </div>
             </div>
           ) : (
-            <div 
-              className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={startCamera}
-            >
-              {uploading === "selfie" ? (
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              ) : selfieUrl ? (
-                <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover rounded-lg" />
-              ) : (
-                <Camera className="w-4 h-4 text-muted-foreground" />
-              )}
+            <div className="flex flex-col gap-1">
+              <div 
+                className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={startCamera}
+              >
+                {uploading === "selfie" ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                ) : selfieUrl ? (
+                  <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover rounded-lg" />
+                ) : (
+                  <Camera className="w-4 h-4 text-muted-foreground" />
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -334,10 +323,10 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
 
       <Button variant="hero" size="sm" className="w-full gap-1.5" onClick={handleSubmit} disabled={submitting || !!uploading}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-        Soumettre mes documents
+        Soumettre pour vérification
       </Button>
     </div>
   );
 };
 
-export default KYCForm;
+export default SupplierKYCForm;

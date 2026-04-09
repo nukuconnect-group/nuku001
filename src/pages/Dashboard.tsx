@@ -1,4 +1,6 @@
 import SupportWidget from "@/components/SupportWidget";
+import SupplierVerificationPopup from "@/components/supplier/SupplierVerificationPopup";
+import SupplierKYCSection from "@/components/supplier/SupplierKYCSection";
 import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -584,7 +586,10 @@ const Dashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              <div className="space-y-4">
+                <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -604,6 +609,7 @@ const Dashboard = () => {
       />
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
+      <SupplierVerificationPopup userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
       <MobileBottomNav />
     </div>
   );
