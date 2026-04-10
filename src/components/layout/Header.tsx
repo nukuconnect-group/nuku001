@@ -728,11 +728,11 @@ const Header = () => {
                       </Link>
                       <div className="h-px bg-border mx-3 my-1" />
                       {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
-                        <div key={cat.id} className="group/item">
+                        <div key={cat.id} data-cat-id={cat.id}>
                           <Link
                             to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
                             onClick={() => setCategoriesOpen(false)}
-                            className="flex items-center justify-between px-4 py-2.5 hover:bg-primary/5 transition-colors text-xs font-medium text-foreground group-hover/item:text-primary"
+                            className="flex items-center justify-between px-4 py-2.5 hover:bg-primary/5 transition-colors text-xs font-medium text-foreground hover:text-primary"
                           >
                             <span className="uppercase">{cat.name}</span>
                             {cat.subcategories?.length > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
