@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Calendar, Clock, Award, Share2, ExternalLink, ArrowRight } from "lucide-react";
 import { articles as blogArticles } from "./Blog";
 import nukuAwardImg from "@/assets/nuku-award.jpeg";
+import BlogComments from "@/components/blog/BlogComments";
 
 const articlesContent: Record<string, { content: string; sourceUrl?: string; heroImage?: string }> = {
   "nukuconnect-meilleure-innovation-togo-top-impact-2025": {
@@ -275,6 +276,9 @@ const BlogPost = () => {
                   return <p key={i} className="text-sm sm:text-base leading-relaxed my-3 text-muted-foreground">{trimmed.replace(/\*\*(.+?)\*\*/g, '').includes(trimmed) ? trimmed : trimmed.split(/\*\*(.+?)\*\*/).map((part, j) => j % 2 === 1 ? <strong key={j} className="text-foreground">{part}</strong> : part)}</p>;
                 })}
               </div>
+
+              {/* Comments */}
+              <BlogComments slug={slug!} />
             </article>
 
             {/* Sidebar widgets */}

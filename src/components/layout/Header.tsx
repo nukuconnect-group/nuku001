@@ -24,6 +24,7 @@ import CartSidebar from "@/components/cart/CartSidebar";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
+import HeaderPromoSlider from "@/components/layout/HeaderPromoSlider";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
 const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
@@ -45,6 +46,52 @@ const currencies = [
   { code: "EUR" as CurrencyCode, name: "Euro", symbol: "€" },
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
+
+// Motta-style mega panel for subcategories
+const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClose: () => void }) => {
+  const [hoveredCat, setHoveredCat] = useState<string | null>(categories[0]?.id || null);
+  const activeCat = categories.find(c => c.id === hoveredCat);
+
+  // Attach hover listeners after mount
+  useEffect(() => {
+    const items = document.querySelectorAll('[data-cat-id]');
+    const handlers = new Map<Element, () => void>();
+    items.forEach(el => {
+      const handler = () => setHoveredCat(el.getAttribute('data-cat-id'));
+      el.addEventListener('mouseenter', handler);
+      handlers.set(el, handler);
+    });
+    return () => {
+      handlers.forEach((handler, el) => el.removeEventListener('mouseenter', handler));
+    };
+  }, [categories]);
+
+  if (!activeCat?.subcategories?.length) {
+    return (
+      <div className="w-[280px] p-4 flex items-center justify-center text-xs text-muted-foreground">
+        Survolez une catégorie pour voir les sous-catégories
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-[280px] p-3 max-h-[70vh] overflow-y-auto">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">{activeCat.name}</p>
+      <div className="space-y-0.5">
+        {activeCat.subcategories.map((sub: string) => (
+          <Link
+            key={sub}
+            to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
+            onClick={onClose}
+            className="block px-3 py-2 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+          >
+            {sub}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -253,6 +300,11 @@ const Header = () => {
 
   return (
     <>
+      {/* Promo slider - mobile only */}
+      <div className="lg:hidden">
+        <HeaderPromoSlider />
+      </div>
+
       {/* Row 1: Top Bar (Desktop) - scrolls away */}
       <div className="hidden lg:block bg-muted/50 border-b border-border z-40">
         <div className="container mx-auto px-4">
@@ -654,50 +706,54 @@ const Header = () => {
       <nav className="hidden lg:block bg-card border-b border-border z-40">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
-              {/* Categories mega menu trigger */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium flex-shrink-0">
-                    <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-[500px] bg-card p-0 max-h-[70vh] overflow-y-auto">
-                  <div className="p-3">
-                    <Link to="/categories" className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted font-semibold text-xs text-primary mb-1">
-                      Toutes les catégories
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                    <DropdownMenuSeparator />
-                    <div className="mt-2 space-y-0.5">
+              {/* Categories Motta-style sidebar trigger */}
+              <div className="relative group/cat flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  className="gap-2 text-foreground hover:bg-muted h-8 px-3 text-xs font-medium"
+                  onMouseEnter={() => setCategoriesOpen(true)}
+                  onClick={() => setCategoriesOpen(!categoriesOpen)}
+                >
+                  <LayoutGrid className="w-4 h-4" />{t("nav.categories")}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${categoriesOpen ? "rotate-180" : ""}`} />
+                </Button>
+                {categoriesOpen && (
+                  <div
+                    className="absolute top-full left-0 z-50 flex bg-card border border-border rounded-lg shadow-xl mt-0.5"
+                    onMouseLeave={() => setCategoriesOpen(false)}
+                  >
+                    {/* Left: category list */}
+                    <div className="w-[240px] border-r border-border py-2 max-h-[70vh] overflow-y-auto">
+                      <Link
+                        to="/categories"
+                        className="flex items-center justify-between px-4 py-2 text-xs font-semibold text-primary hover:bg-muted"
+                        onClick={() => setCategoriesOpen(false)}
+                      >
+                        Toutes les catégories
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                      <div className="h-px bg-border mx-3 my-1" />
                       {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
-                        <div key={cat.id}>
+                        <div key={cat.id} data-cat-id={cat.id}>
                           <Link
                             to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-                            className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted transition-colors group"
+                            onClick={() => setCategoriesOpen(false)}
+                            className="flex items-center justify-between px-4 py-2.5 hover:bg-primary/5 transition-colors text-xs font-medium text-foreground hover:text-primary"
                           >
-                            <span className="text-xs font-semibold uppercase text-foreground group-hover:text-primary transition-colors">{cat.name}</span>
+                            <span className="uppercase">{cat.name}</span>
                             {cat.subcategories?.length > 0 && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
                           </Link>
-                          {cat.subcategories?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 px-3 pb-2">
-                              {cat.subcategories.slice(0, 6).map((sub: string) => (
-                                <Link
-                                  key={sub}
-                                  to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
-                                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
-                                >
-                                  {sub}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
+                    {/* Right: subcategories panel - shows for hovered category */}
+                    <CategoriesMegaPanel
+                      categories={marketplaceCategories.filter((c: any) => c.is_active)}
+                      onClose={() => setCategoriesOpen(false)}
+                    />
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                )}
+              </div>
               <div className="w-px h-5 bg-border mx-1 flex-shrink-0" />
               {/* Main links */}
               <div className="flex items-center gap-0.5 flex-1 min-w-0">
