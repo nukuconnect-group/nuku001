@@ -11,8 +11,8 @@ import teamCeo from "@/assets/team-ceo.png";
 import teamCto from "@/assets/team-cto.png";
 
 const teamMembers = [
-  { name: "Edem ADZO Kodzo", role: "CEO & Co-fondateur", bio: "Visionnaire et entrepreneur, co-fondateur de NUKUCONNECT. Passionné par l'innovation technologique au service de l'agriculture africaine.", avatar: teamCeo, facebook: "https://web.facebook.com/edem.adzo.9", linkedin: "https://www.linkedin.com/in/kodzo-edem-adzo-a18a774b/" },
-  { name: "Komi Sena AFANDONOUGBO", role: "CTO & Co-fondateur", bio: "Expert en développement logiciel et architecte de la plateforme NUKUCONNECT. Spécialiste en solutions digitales pour l'agritech.", avatar: teamCto, facebook: "https://web.facebook.com/freelyzhec", linkedin: "https://www.linkedin.com/in/leader-komisenaa-3730a5189/" },
+  { name: "Edem ADZO Kodzo", role: "CEO & Co-fondateur", bio: "Visionnaire et entrepreneur, expert en Management d'entreprise, co-fondateur de NUKUCONNECT. Passionné par l'innovation technologique au service de l'agriculture africaine.", avatar: teamCeo, facebook: "https://web.facebook.com/edem.adzo.9", linkedin: "https://www.linkedin.com/in/kodzo-edem-adzo-a18a774b/" },
+  { name: "Komi Sena AFANDONOUGBO", role: "CTO & Co-fondateur", bio: "Consultant et Expert en aquaculture, Développeur Full Stack et architecte de la plateforme NUKUCONNECT. Spécialiste en solutions digitales pour l'agritech.", avatar: teamCto, facebook: "https://web.facebook.com/freelyzhec", linkedin: "https://www.linkedin.com/in/leader-komisenaa-3730a5189/" },
 ];
 
 const values = [

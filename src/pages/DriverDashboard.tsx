@@ -22,6 +22,7 @@ import DriverStatusHeader from "@/components/driver/DriverStatusHeader";
 import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
 import DriverEarningsPanel from "@/components/driver/DriverEarningsPanel";
+import DriverStatsCharts from "@/components/driver/DriverStatsCharts";
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
@@ -475,7 +476,8 @@ const DriverDashboard = () => {
             </TabsContent>
 
             {/* Earnings */}
-            <TabsContent value="earnings" className="mt-3">
+            <TabsContent value="earnings" className="mt-3 space-y-4">
+              <DriverStatsCharts completedDeliveries={completedDeliveries} />
               <DriverEarningsPanel
                 totalEarnings={totalEarnings}
                 totalWithdrawn={totalWithdrawn}
