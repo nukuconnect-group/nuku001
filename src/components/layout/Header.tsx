@@ -46,6 +46,52 @@ const currencies = [
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
+// Motta-style mega panel for subcategories
+const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClose: () => void }) => {
+  const [hoveredCat, setHoveredCat] = useState<string | null>(categories[0]?.id || null);
+  const activeCat = categories.find(c => c.id === hoveredCat);
+
+  // Attach hover listeners after mount
+  useEffect(() => {
+    const items = document.querySelectorAll('[data-cat-id]');
+    const handlers = new Map<Element, () => void>();
+    items.forEach(el => {
+      const handler = () => setHoveredCat(el.getAttribute('data-cat-id'));
+      el.addEventListener('mouseenter', handler);
+      handlers.set(el, handler);
+    });
+    return () => {
+      handlers.forEach((handler, el) => el.removeEventListener('mouseenter', handler));
+    };
+  }, [categories]);
+
+  if (!activeCat?.subcategories?.length) {
+    return (
+      <div className="w-[280px] p-4 flex items-center justify-center text-xs text-muted-foreground">
+        Survolez une catégorie pour voir les sous-catégories
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-[280px] p-3 max-h-[70vh] overflow-y-auto">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">{activeCat.name}</p>
+      <div className="space-y-0.5">
+        {activeCat.subcategories.map((sub: string) => (
+          <Link
+            key={sub}
+            to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
+            onClick={onClose}
+            className="block px-3 py-2 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+          >
+            {sub}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
