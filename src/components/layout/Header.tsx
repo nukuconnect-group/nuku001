@@ -24,6 +24,7 @@ import CartSidebar from "@/components/cart/CartSidebar";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
+import HeaderPromoSlider from "@/components/layout/HeaderPromoSlider";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
 const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
@@ -299,6 +300,11 @@ const Header = () => {
 
   return (
     <>
+      {/* Promo slider - mobile only */}
+      <div className="lg:hidden">
+        <HeaderPromoSlider />
+      </div>
+
       {/* Row 1: Top Bar (Desktop) - scrolls away */}
       <div className="hidden lg:block bg-muted/50 border-b border-border z-40">
         <div className="container mx-auto px-4">
