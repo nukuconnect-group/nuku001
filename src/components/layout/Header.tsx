@@ -580,86 +580,17 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Account dropdown - hidden on mobile, shown on desktop */}
-                {user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex">
-                        {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-primary-foreground/20 rounded-full">
-                            <span className="text-xs font-bold text-primary-foreground">
-                              {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-card">
-                      <div className="p-3 border-b border-border">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
-                            {profile?.avatar_url ? (
-                              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-sm font-bold text-primary-foreground">
-                                {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{profile?.full_name || user.email?.split("@")[0]}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-1">
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to={getDashboardLink()} className="flex items-center gap-2 text-xs">
-                            <LayoutDashboard className="w-3.5 h-3.5" />{t("dashboard.title")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/messages" className="flex items-center gap-2 text-xs">
-                            <MessageCircle className="w-3.5 h-3.5" />Messagerie
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
-                            <Package className="w-3.5 h-3.5" />{t("dashboard.orders")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/plans" className="flex items-center gap-2 text-xs">
-                            <Wallet className="w-3.5 h-3.5" />{t("dashboard.payments")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
-                            <Truck className="w-3.5 h-3.5" />{t("dashboard.trackOrders")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/settings" className="flex items-center gap-2 text-xs">
-                            <Settings className="w-3.5 h-3.5" />{t("dashboard.settings")}
-                          </Link>
-                        </DropdownMenuItem>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
-                        <LogOut className="w-3.5 h-3.5 mr-2" />{t("auth.logout")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Link to="/auth" className="hidden lg:block">
-                    <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
-                      <User className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                )}
+                {/* Account button - opens right sidebar */}
+                <Button variant="ghost" size="icon"
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex"
+                  onClick={() => setAccountSidebarOpen(true)}>
+                  {user && profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                  {user && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />}
+                </Button>
 
                 <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)}
                   className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
