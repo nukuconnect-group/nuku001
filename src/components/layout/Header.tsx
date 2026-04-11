@@ -48,12 +48,12 @@ const currencies = [
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
-// Motta-style mega panel for subcategories
+// Motta-style mega panel with product thumbnails
 const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClose: () => void }) => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(categories[0]?.id || null);
   const activeCat = categories.find(c => c.id === hoveredCat);
+  const { data: allProducts = [] } = useProducts();
 
-  // Attach hover listeners after mount
   useEffect(() => {
     const items = document.querySelectorAll('[data-cat-id]');
     const handlers = new Map<Element, () => void>();
@@ -67,29 +67,79 @@ const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClo
     };
   }, [categories]);
 
-  if (!activeCat?.subcategories?.length) {
+  // Get products for active category
+  const categoryProducts = useMemo(() => {
+    if (!activeCat) return [];
+    const catName = activeCat.name.toLowerCase();
+    return allProducts.filter(p => p.category?.toLowerCase() === catName).slice(0, 6);
+  }, [activeCat, allProducts]);
+
+  if (!activeCat) {
     return (
-      <div className="w-[280px] p-4 flex items-center justify-center text-xs text-muted-foreground">
-        Survolez une catégorie pour voir les sous-catégories
+      <div className="w-[320px] p-4 flex items-center justify-center text-xs text-muted-foreground">
+        Survolez une catégorie pour voir les produits
       </div>
     );
   }
 
   return (
-    <div className="w-[280px] p-3 max-h-[70vh] overflow-y-auto">
+    <div className="w-[320px] p-3 max-h-[70vh] overflow-y-auto">
       <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">{activeCat.name}</p>
-      <div className="space-y-0.5">
-        {activeCat.subcategories.map((sub: string) => (
-          <Link
-            key={sub}
-            to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
-            onClick={onClose}
-            className="block px-3 py-2 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
-          >
-            {sub}
-          </Link>
-        ))}
-      </div>
+      
+      {/* Product thumbnails */}
+      {categoryProducts.length > 0 ? (
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {categoryProducts.map(product => (
+            <Link
+              key={product.id}
+              to={`/produit/${product.slug || product.id}`}
+              onClick={onClose}
+              className="group block"
+            >
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border/50 hover:border-primary/30 transition-colors">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200"; }}
+                />
+              </div>
+              <p className="text-[9px] text-foreground font-medium truncate mt-1 group-hover:text-primary transition-colors">{product.name}</p>
+              <p className="text-[8px] text-primary font-bold">{product.price} FCFA</p>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Subcategories */}
+      {activeCat.subcategories?.length > 0 && (
+        <div className="space-y-0.5 border-t border-border pt-2">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase mb-1">Sous-catégories</p>
+          {activeCat.subcategories.map((sub: string) => (
+            <Link
+              key={sub}
+              to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
+              onClick={onClose}
+              className="block px-3 py-1.5 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+            >
+              {sub}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {categoryProducts.length === 0 && !activeCat.subcategories?.length && (
+        <p className="text-xs text-muted-foreground text-center py-4">Aucun produit dans cette catégorie</p>
+      )}
+
+      <Link
+        to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}`}
+        onClick={onClose}
+        className="block mt-2 text-center text-[10px] text-primary font-semibold hover:underline"
+      >
+        Voir tous les produits →
+      </Link>
     </div>
   );
 };
