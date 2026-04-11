@@ -25,6 +25,7 @@ import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/Langua
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import HeaderPromoSlider from "@/components/layout/HeaderPromoSlider";
+import AccountSidebar from "@/components/layout/AccountSidebar";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
 const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
