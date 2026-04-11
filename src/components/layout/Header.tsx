@@ -497,9 +497,9 @@ const Header = () => {
                 </span>
               </Link>
 
-              <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
+                <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
                 <div className="relative w-full">
-                  <Input type="text" placeholder={t("header.search")} value={searchQuery}
+                  <Input type="text" placeholder="Rechercher produit, catégorie, fournisseur..." value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
                     onFocus={() => setShowSearchResults(true)}
                     className="w-full h-10 pl-4 pr-44 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
@@ -673,7 +673,7 @@ const Header = () => {
       <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
         <div className="relative flex items-center gap-1.5">
           <div className="relative flex-1">
-            <Input type="text" placeholder={t("header.search")} value={searchQuery}
+              <Input type="text" placeholder="Rechercher produit, catégorie..." value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
               className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
