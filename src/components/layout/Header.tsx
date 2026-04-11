@@ -732,6 +732,7 @@ const Header = () => {
       </nav>
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
+      <AccountSidebar isOpen={accountSidebarOpen} onClose={() => setAccountSidebarOpen(false)} />
 
       <Suspense fallback={null}>
         <LocationPickerDialog
