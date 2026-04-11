@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle2, XCircle, Clock, FileText, Loader2, Eye, User, ShieldCheck, Truck, Store,
+  ZoomIn,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -34,6 +35,7 @@ const KYCManager = () => {
   const [adminNote, setAdminNote] = useState("");
   const [processing, setProcessing] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -46,7 +48,6 @@ const KYCManager = () => {
     setDriverSubs(dRes.data || []);
     setSupplierSubs(sRes.data || []);
 
-    // Load profile names
     const userIds = [...new Set(allData.map((s: any) => s.user_id))];
     if (userIds.length > 0) {
       const { data: profs } = await supabase
@@ -79,17 +80,14 @@ const KYCManager = () => {
         .eq("id", kyc.id);
       if (kycError) throw kycError;
 
-      // If approved
       if (decision === "approved") {
         if (type === "driver") {
           await supabase.from("driver_profiles").update({ is_approved: true }).eq("user_id", kyc.user_id);
         } else {
-          // Activate verified badge for supplier
           await supabase.from("profiles").update({ is_verified: true }).eq("user_id", kyc.user_id);
         }
       }
 
-      // Notify
       await supabase.from("notifications").insert({
         user_id: kyc.user_id,
         type: "kyc",
@@ -204,9 +202,9 @@ const KYCManager = () => {
         </CardContent>
       </Card>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog — LARGE format images */}
       <Dialog open={!!selectedKyc} onOpenChange={(o) => { if (!o) setSelectedKyc(null); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4" />
@@ -214,46 +212,93 @@ const KYCManager = () => {
             </DialogTitle>
           </DialogHeader>
           {selectedKyc && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div><span className="text-muted-foreground">Type :</span> {selectedKyc.id_type?.toUpperCase()}</div>
-                <div><span className="text-muted-foreground">Numéro :</span> {selectedKyc.id_number || "—"}</div>
-                <div><span className="text-muted-foreground">Soumis le :</span> {new Date(selectedKyc.created_at).toLocaleString("fr-FR")}</div>
-                <div><span className="text-muted-foreground">Statut :</span> {statusBadge(selectedKyc.status)}</div>
+            <div className="space-y-5">
+              {/* Profile info */}
+              <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {profiles[selectedKyc.user_id]?.avatar_url ? (
+                    <img src={profiles[selectedKyc.user_id].avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-6 h-6 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{profiles[selectedKyc.user_id]?.full_name || "Utilisateur"}</p>
+                  <div className="flex items-center gap-2 mt-1">{statusBadge(selectedKyc.status)}</div>
+                </div>
+              </div>
+
+              {/* Details grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg border border-border">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Type de pièce</p>
+                  <p className="text-sm font-medium">{selectedKyc.id_type?.toUpperCase()}</p>
+                </div>
+                <div className="p-3 rounded-lg border border-border">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Numéro</p>
+                  <p className="text-sm font-medium">{selectedKyc.id_number || "—"}</p>
+                </div>
+                <div className="p-3 rounded-lg border border-border">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Soumis le</p>
+                  <p className="text-sm font-medium">{new Date(selectedKyc.created_at).toLocaleString("fr-FR")}</p>
+                </div>
                 {selectedType === "supplier" && selectedKyc.business_name && (
-                  <div className="col-span-2"><span className="text-muted-foreground">Entreprise :</span> {selectedKyc.business_name} ({selectedKyc.business_type})</div>
+                  <div className="p-3 rounded-lg border border-border">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Entreprise</p>
+                    <p className="text-sm font-medium">{selectedKyc.business_name} ({selectedKyc.business_type})</p>
+                  </div>
                 )}
                 {selectedType === "driver" && selectedKyc.license_plate && (
                   <>
-                    <div><span className="text-muted-foreground">Plaque :</span> {selectedKyc.license_plate}</div>
-                    <div><span className="text-muted-foreground">Véhicule :</span> {selectedKyc.vehicle_brand || "—"} {selectedKyc.vehicle_color || ""}</div>
+                    <div className="p-3 rounded-lg border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Plaque</p>
+                      <p className="text-sm font-medium">{selectedKyc.license_plate}</p>
+                    </div>
+                    <div className="p-3 rounded-lg border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Véhicule</p>
+                      <p className="text-sm font-medium">{selectedKyc.vehicle_brand || "—"} {selectedKyc.vehicle_color || ""}</p>
+                    </div>
                   </>
                 )}
               </div>
 
-              {/* Document previews */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "Recto", url: selectedKyc.id_front_url },
-                  { label: "Verso", url: selectedKyc.id_back_url },
-                  { label: "Selfie", url: selectedKyc.selfie_url },
-                ].map(({ label, url }) => (
-                  <div key={label} className="space-y-1">
-                    <p className="text-[10px] text-muted-foreground">{label}</p>
-                    {url ? (
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        <img src={url} alt={label} className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity" />
-                      </a>
-                    ) : (
-                      <div className="w-full h-24 rounded-lg border bg-muted/30 flex items-center justify-center text-[10px] text-muted-foreground">Non fourni</div>
-                    )}
-                  </div>
-                ))}
+              {/* Document previews — LARGE format */}
+              <div>
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Documents soumis
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { label: "Recto de la pièce", url: selectedKyc.id_front_url },
+                    { label: "Verso de la pièce", url: selectedKyc.id_back_url },
+                    { label: "Photo portrait (Selfie)", url: selectedKyc.selfie_url },
+                  ].map(({ label, url }) => (
+                    <div key={label} className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                      {url ? (
+                        <div className="relative group cursor-pointer" onClick={() => setZoomImage(url)}>
+                          <img
+                            src={url}
+                            alt={label}
+                            className="w-full h-48 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+                            <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-48 rounded-lg border-2 border-dashed border-border bg-muted/30 flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">Non fourni</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Actions */}
               {selectedKyc.status === "pending" && (
-                <div className="space-y-3 pt-2 border-t">
+                <div className="space-y-3 pt-3 border-t">
                   <Textarea
                     value={adminNote}
                     onChange={(e) => setAdminNote(e.target.value)}
@@ -286,11 +331,20 @@ const KYCManager = () => {
               )}
 
               {selectedKyc.status !== "pending" && selectedKyc.admin_note && (
-                <div className="p-2 rounded-lg bg-muted/50 text-xs">
-                  <span className="text-muted-foreground">Note admin :</span> {selectedKyc.admin_note}
+                <div className="p-3 rounded-lg bg-muted/50 text-xs">
+                  <span className="text-muted-foreground font-medium">Note admin :</span> {selectedKyc.admin_note}
                 </div>
               )}
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Full-screen image zoom */}
+      <Dialog open={!!zoomImage} onOpenChange={(o) => { if (!o) setZoomImage(null); }}>
+        <DialogContent className="max-w-4xl p-2">
+          {zoomImage && (
+            <img src={zoomImage} alt="Document KYC" className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
           )}
         </DialogContent>
       </Dialog>

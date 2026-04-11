@@ -27,6 +27,28 @@ export interface DbProduct {
   };
 }
 
+const categoryFallbackImages: Record<string, string> = {
+  céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  légumes: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400",
+  fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400",
+  tubercules: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400",
+  élevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400",
+  aviculture: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400",
+  pisciculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400",
+  aquaculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400",
+  agrobusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400",
+  équipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400",
+};
+
+const getProductImage = (images: string[] | null, category: string): string => {
+  if (images?.[0]) return images[0];
+  const key = category.toLowerCase().trim();
+  for (const [k, v] of Object.entries(categoryFallbackImages)) {
+    if (key.includes(k)) return v;
+  }
+  return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400";
+};
+
 const mapDbToProduct = (p: DbProduct): Product => ({
   id: p.id,
   slug: (p as any).slug || undefined,
@@ -38,7 +60,7 @@ const mapDbToProduct = (p: DbProduct): Product => ({
   location: p.location || "Togo",
   description: p.description || "",
   isOrganic: p.is_organic,
-  image: p.images?.[0] || "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400",
+  image: getProductImage(p.images, p.category),
   images: p.images || [],
   createdAt: p.created_at,
   producer: {

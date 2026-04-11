@@ -25,6 +25,7 @@ import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/Langua
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import HeaderPromoSlider from "@/components/layout/HeaderPromoSlider";
+import AccountSidebar from "@/components/layout/AccountSidebar";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
 const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
@@ -47,12 +48,12 @@ const currencies = [
   { code: "GBP" as CurrencyCode, name: "Livre Sterling", symbol: "£" },
 ];
 
-// Motta-style mega panel for subcategories
+// Motta-style mega panel with product thumbnails
 const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClose: () => void }) => {
   const [hoveredCat, setHoveredCat] = useState<string | null>(categories[0]?.id || null);
   const activeCat = categories.find(c => c.id === hoveredCat);
+  const { data: allProducts = [] } = useProducts();
 
-  // Attach hover listeners after mount
   useEffect(() => {
     const items = document.querySelectorAll('[data-cat-id]');
     const handlers = new Map<Element, () => void>();
@@ -66,29 +67,79 @@ const CategoriesMegaPanel = ({ categories, onClose }: { categories: any[]; onClo
     };
   }, [categories]);
 
-  if (!activeCat?.subcategories?.length) {
+  // Get products for active category
+  const categoryProducts = useMemo(() => {
+    if (!activeCat) return [];
+    const catName = activeCat.name.toLowerCase();
+    return allProducts.filter(p => p.category?.toLowerCase() === catName).slice(0, 6);
+  }, [activeCat, allProducts]);
+
+  if (!activeCat) {
     return (
-      <div className="w-[280px] p-4 flex items-center justify-center text-xs text-muted-foreground">
-        Survolez une catégorie pour voir les sous-catégories
+      <div className="w-[320px] p-4 flex items-center justify-center text-xs text-muted-foreground">
+        Survolez une catégorie pour voir les produits
       </div>
     );
   }
 
   return (
-    <div className="w-[280px] p-3 max-h-[70vh] overflow-y-auto">
+    <div className="w-[320px] p-3 max-h-[70vh] overflow-y-auto">
       <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">{activeCat.name}</p>
-      <div className="space-y-0.5">
-        {activeCat.subcategories.map((sub: string) => (
-          <Link
-            key={sub}
-            to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
-            onClick={onClose}
-            className="block px-3 py-2 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
-          >
-            {sub}
-          </Link>
-        ))}
-      </div>
+      
+      {/* Product thumbnails */}
+      {categoryProducts.length > 0 ? (
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {categoryProducts.map(product => (
+            <Link
+              key={product.id}
+              to={`/produit/${product.slug || product.id}`}
+              onClick={onClose}
+              className="group block"
+            >
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border/50 hover:border-primary/30 transition-colors">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200"; }}
+                />
+              </div>
+              <p className="text-[9px] text-foreground font-medium truncate mt-1 group-hover:text-primary transition-colors">{product.name}</p>
+              <p className="text-[8px] text-primary font-bold">{product.price} FCFA</p>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Subcategories */}
+      {activeCat.subcategories?.length > 0 && (
+        <div className="space-y-0.5 border-t border-border pt-2">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase mb-1">Sous-catégories</p>
+          {activeCat.subcategories.map((sub: string) => (
+            <Link
+              key={sub}
+              to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}&sub=${encodeURIComponent(sub)}`}
+              onClick={onClose}
+              className="block px-3 py-1.5 text-xs text-foreground hover:bg-primary/5 hover:text-primary rounded-md transition-colors"
+            >
+              {sub}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {categoryProducts.length === 0 && !activeCat.subcategories?.length && (
+        <p className="text-xs text-muted-foreground text-center py-4">Aucun produit dans cette catégorie</p>
+      )}
+
+      <Link
+        to={`/marketplace?category=${encodeURIComponent(activeCat.name.toLowerCase())}`}
+        onClick={onClose}
+        className="block mt-2 text-center text-[10px] text-primary font-semibold hover:underline"
+      >
+        Voir tous les produits →
+      </Link>
     </div>
   );
 };
@@ -101,6 +152,7 @@ const Header = () => {
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [accountSidebarOpen, setAccountSidebarOpen] = useState(false);
   const [menuTab, setMenuTab] = useState<"menu" | "categories">("menu");
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
@@ -497,9 +549,9 @@ const Header = () => {
                 </span>
               </Link>
 
-              <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
+                <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
                 <div className="relative w-full">
-                  <Input type="text" placeholder={t("header.search")} value={searchQuery}
+                  <Input type="text" placeholder="Rechercher produit, catégorie, fournisseur..." value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
                     onFocus={() => setShowSearchResults(true)}
                     className="w-full h-10 pl-4 pr-44 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
@@ -578,86 +630,17 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Account dropdown - hidden on mobile, shown on desktop */}
-                {user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex">
-                        {profile?.avatar_url ? (
-                          <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-primary-foreground/20 rounded-full">
-                            <span className="text-xs font-bold text-primary-foreground">
-                              {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-card">
-                      <div className="p-3 border-b border-border">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
-                            {profile?.avatar_url ? (
-                              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-sm font-bold text-primary-foreground">
-                                {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{profile?.full_name || user.email?.split("@")[0]}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-1">
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to={getDashboardLink()} className="flex items-center gap-2 text-xs">
-                            <LayoutDashboard className="w-3.5 h-3.5" />{t("dashboard.title")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/messages" className="flex items-center gap-2 text-xs">
-                            <MessageCircle className="w-3.5 h-3.5" />Messagerie
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
-                            <Package className="w-3.5 h-3.5" />{t("dashboard.orders")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/plans" className="flex items-center gap-2 text-xs">
-                            <Wallet className="w-3.5 h-3.5" />{t("dashboard.payments")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/suivi-livraison" className="flex items-center gap-2 text-xs">
-                            <Truck className="w-3.5 h-3.5" />{t("dashboard.trackOrders")}
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link to="/settings" className="flex items-center gap-2 text-xs">
-                            <Settings className="w-3.5 h-3.5" />{t("dashboard.settings")}
-                          </Link>
-                        </DropdownMenuItem>
-                      </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer text-xs">
-                        <LogOut className="w-3.5 h-3.5 mr-2" />{t("auth.logout")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Link to="/auth" className="hidden lg:block">
-                    <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
-                      <User className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                )}
+                {/* Account button - opens right sidebar */}
+                <Button variant="ghost" size="icon"
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex"
+                  onClick={() => setAccountSidebarOpen(true)}>
+                  {user && profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                  {user && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />}
+                </Button>
 
                 <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)}
                   className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
@@ -673,7 +656,7 @@ const Header = () => {
       <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
         <div className="relative flex items-center gap-1.5">
           <div className="relative flex-1">
-            <Input type="text" placeholder={t("header.search")} value={searchQuery}
+              <Input type="text" placeholder="Rechercher produit, catégorie..." value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
               className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
@@ -799,6 +782,7 @@ const Header = () => {
       </nav>
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
+      <AccountSidebar isOpen={accountSidebarOpen} onClose={() => setAccountSidebarOpen(false)} />
 
       <Suspense fallback={null}>
         <LocationPickerDialog

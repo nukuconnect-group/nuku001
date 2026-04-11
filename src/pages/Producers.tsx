@@ -46,7 +46,7 @@ const Producers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
   const [sortBy, setSortBy] = useState("recent");
-  const [activeTab, setActiveTab] = useState("suppliers");
+  const [activeTab] = useState("suppliers");
 
   const { data: producers = [], isLoading } = useQuery({
     queryKey: ["network-profiles", activeTab],
@@ -191,27 +191,13 @@ const Producers = () => {
         </div>
       </section>
 
-      {/* Tabs */}
+      {/* Content - suppliers only, no tabs */}
       <section className="border-b border-border bg-card">
         <div className="container mx-auto px-4">
-          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSearchQuery(""); }}>
-            <TabsList className="bg-transparent border-0 h-auto p-0 gap-0">
-              <TabsTrigger
-                value="suppliers"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-4 py-2.5 text-xs sm:text-sm font-semibold gap-1.5"
-              >
-                <Package className="w-3.5 h-3.5" />
-                {t("net.suppliers")}
-              </TabsTrigger>
-              <TabsTrigger
-                value="buyers"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none px-4 py-2.5 text-xs sm:text-sm font-semibold gap-1.5"
-              >
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {t("net.buyers")}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-2 py-2.5">
+            <Package className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">{t("net.suppliers")}</span>
+          </div>
         </div>
       </section>
 
