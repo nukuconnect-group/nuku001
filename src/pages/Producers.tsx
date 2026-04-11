@@ -46,7 +46,7 @@ const Producers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
   const [sortBy, setSortBy] = useState("recent");
-  const [activeTab, setActiveTab] = useState("suppliers");
+  const [activeTab] = useState("suppliers");
 
   const { data: producers = [], isLoading } = useQuery({
     queryKey: ["network-profiles", activeTab],
