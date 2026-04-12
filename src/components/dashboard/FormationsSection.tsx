@@ -27,7 +27,7 @@ interface FormationProgress {
 }
 
 const FormationsSection = () => {
-  const [formations, setFormations] = useState<Formation[]>([]);
+  const [enrolledFormations, setEnrolledFormations] = useState<Formation[]>([]);
   const [progress, setProgress] = useState<FormationProgress[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,23 +36,32 @@ const FormationsSection = () => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      const { data: formationsData } = await supabase
-        .from("formations" as any)
-        .select("*")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      
-      setFormations((formationsData as any[]) || []);
-
-      if (session?.user) {
-        const [progressRes, certsRes] = await Promise.all([
-          supabase.from("formation_progress" as any).select("formation_id, progress_percent").eq("user_id", session.user.id).is("module_id", null),
-          supabase.from("certificates" as any).select("*").eq("user_id", session.user.id),
-        ]);
-        setProgress((progressRes.data as any[]) || []);
-        setCertificates((certsRes.data as any[]) || []);
+      if (!session?.user) {
+        setLoading(false);
+        return;
       }
+
+      // Only fetch formations the user is enrolled in
+      const [progressRes, certsRes] = await Promise.all([
+        supabase.from("formation_progress" as any).select("formation_id, progress_percent").eq("user_id", session.user.id).is("module_id", null),
+        supabase.from("certificates" as any).select("*").eq("user_id", session.user.id),
+      ]);
+      
+      const enrolledProgress = (progressRes.data as any[]) || [];
+      setProgress(enrolledProgress);
+      setCertificates((certsRes.data as any[]) || []);
+
+      // Fetch only enrolled formations
+      if (enrolledProgress.length > 0) {
+        const formationIds = enrolledProgress.map(p => p.formation_id);
+        const { data: formationsData } = await supabase
+          .from("formations" as any)
+          .select("*")
+          .in("id", formationIds)
+          .eq("is_published", true);
+        setEnrolledFormations((formationsData as any[]) || []);
+      }
+
       setLoading(false);
     };
     load();
@@ -110,18 +119,18 @@ const FormationsSection = () => {
         </div>
       )}
 
-      {/* Formations grid */}
-      {formations.length === 0 ? (
+      {/* Only show enrolled formations */}
+      {enrolledFormations.length === 0 ? (
         <Card className="p-6 text-center">
           <GraduationCap className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-xs text-muted-foreground mb-3">Aucune formation disponible</p>
+          <p className="text-xs text-muted-foreground mb-3">Vous n'êtes inscrit à aucune formation</p>
           <Link to="/formations">
             <Button variant="hero" size="sm" className="text-xs">Explorer les formations</Button>
           </Link>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {formations.map((f) => {
+          {enrolledFormations.map((f) => {
             const prog = getProgress(f.id);
             return (
               <Card key={f.id} className="group overflow-hidden hover:shadow-elevated transition-all">
@@ -153,14 +162,6 @@ const FormationsSection = () => {
                         </div>
                         <Progress value={prog} className="h-1" />
                       </div>
-                    )}
-                    {prog === 0 && (
-                      <Link to="/formations">
-                        <Button variant="hero" size="sm" className="w-full text-[10px] h-6 mt-1 gap-1">
-                          <GraduationCap className="w-3 h-3" />
-                          {f.is_paid ? "S'inscrire" : "Commencer"}
-                        </Button>
-                      </Link>
                     )}
                     {prog > 0 && prog < 100 && (
                       <Link to="/formations">

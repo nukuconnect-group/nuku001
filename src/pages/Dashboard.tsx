@@ -140,17 +140,29 @@ const Dashboard = () => {
           {/* Welcome */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
+              <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
                   <User className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
                 )}
+                {profile?.is_verified && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
+                    <ShieldCheck className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                )}
               </div>
               <div className="min-w-0">
-                <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
-                  {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
-                </h1>
+                <div className="flex items-center gap-1.5">
+                  <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
+                    {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
+                  </h1>
+                  {profile?.is_verified && (
+                    <Badge className="bg-emerald-100 text-emerald-800 text-[8px] px-1.5 py-0 gap-0.5 flex-shrink-0">
+                      <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bienvenue dans votre espace fournisseur</p>
               </div>
             </div>

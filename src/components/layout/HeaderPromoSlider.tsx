@@ -1,39 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Truck, GraduationCap, ShoppingBag, Sparkles } from "lucide-react";
+import { Leaf, Truck, GraduationCap, ShoppingBag } from "lucide-react";
 
 const slides = [
   {
     title: "PRODUITS FRAIS",
     subtitle: "Direct producteurs",
-    cta: "Explorer",
+    cta: "EXPLORER",
     href: "/marketplace",
-    icon: Leaf,
-    accent: "text-green-500",
+    Icon: Leaf,
   },
   {
-    title: "LIVRAISON RAPIDE",
+    title: "LIVRAISON EXPRESS",
     subtitle: "Partout en Afrique",
-    cta: "Commander",
+    cta: "COMMANDER",
     href: "/marketplace",
-    icon: Truck,
-    accent: "text-blue-500",
+    Icon: Truck,
   },
   {
-    title: "FORMATIONS",
-    subtitle: "Agricoles gratuites",
-    cta: "Apprendre",
+    title: "FORMATIONS GRATUITES",
+    subtitle: "Agricoles & aquacoles",
+    cta: "APPRENDRE",
     href: "/formations",
-    icon: GraduationCap,
-    accent: "text-amber-500",
+    Icon: GraduationCap,
   },
   {
     title: "MARKETPLACE",
     subtitle: "Achetez & Vendez",
-    cta: "Découvrir",
+    cta: "DÉCOUVRIR",
     href: "/marketplace",
-    icon: ShoppingBag,
-    accent: "text-emerald-500",
+    Icon: ShoppingBag,
   },
 ];
 
@@ -48,28 +44,29 @@ const HeaderPromoSlider = () => {
   }, [next]);
 
   return (
-    <div className="relative overflow-hidden h-9 bg-gradient-to-r from-primary/95 to-primary/80">
+    <div className="relative overflow-hidden h-8 sm:h-9 bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary)/0.9)] to-[hsl(var(--primary)/0.85)]">
       <div
         className="flex transition-transform duration-500 ease-in-out h-full"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {slides.map((slide, i) => {
-          const Icon = slide.icon;
+          const { Icon } = slide;
           return (
             <Link
               key={i}
               to={slide.href}
-              className="flex-shrink-0 w-full h-full flex items-center justify-center gap-2 px-4"
+              className="flex-shrink-0 w-full h-full flex items-center justify-center gap-2 sm:gap-3 px-4"
             >
-              <Icon className={`w-3.5 h-3.5 text-primary-foreground/90`} />
-              <span className="text-[10px] sm:text-xs font-extrabold uppercase text-primary-foreground tracking-[0.12em]">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" />
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
                 {slide.title}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-primary-foreground/70 hidden sm:inline font-medium">
+              <span className="text-[8px] sm:text-[9px] text-primary-foreground/60 hidden sm:inline font-medium tracking-wide">
                 — {slide.subtitle}
               </span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-accent uppercase tracking-wide ml-1 flex items-center gap-0.5">
-                <Sparkles className="w-2.5 h-2.5" />
+              <span className="text-[8px] sm:text-[9px] font-extrabold text-accent uppercase tracking-[0.15em] ml-1 border border-accent/40 rounded-sm px-1.5 py-0.5 leading-none">
                 {slide.cta}
               </span>
             </Link>
@@ -82,7 +79,7 @@ const HeaderPromoSlider = () => {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary-foreground w-3" : "bg-primary-foreground/30"}`}
+            className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary-foreground w-2.5 sm:w-3" : "bg-primary-foreground/25"}`}
           />
         ))}
       </div>
