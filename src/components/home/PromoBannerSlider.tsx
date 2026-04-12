@@ -263,12 +263,12 @@ const PromoBannerSlider = () => {
         </div>
       )}
 
-      {/* Fournisseurs actifs - mobile only */}
+      {/* Fournisseurs vérifiés - mobile only */}
       <div className="md:hidden px-3 py-2">
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-primary" />Fournisseurs actifs
+              <Users className="w-4 h-4 text-primary" />Fournisseurs vérifiés
             </h3>
             <Link to="/producteurs" className="text-[10px] text-primary font-medium">Voir tous →</Link>
           </div>
