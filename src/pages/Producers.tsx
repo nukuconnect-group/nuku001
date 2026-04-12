@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, MapPin, Star, ShieldCheck, MessageCircle,
-  Users, Package, Loader2, SlidersHorizontal, UserPlus, UserCheck, ShoppingBag, Bell
+  Search, MapPin, ShieldCheck, MessageCircle,
+  Users, Package, Loader2, SlidersHorizontal, UserPlus, UserCheck, TrendingUp
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -46,49 +45,49 @@ const Producers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
   const [sortBy, setSortBy] = useState("recent");
-  const [activeTab] = useState("suppliers");
 
   const { data: producers = [], isLoading } = useQuery({
-    queryKey: ["network-profiles", activeTab],
+    queryKey: ["network-profiles-suppliers"],
     queryFn: async () => {
-      const userType = activeTab === "suppliers" ? "producer" : "buyer";
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("user_type", userType);
+        .eq("user_type", "producer");
 
       if (error || !profiles || profiles.length === 0) return [];
 
       const profileIds = profiles.map((p) => p.id);
-      const { data: products } = await supabase
-        .from("products")
-        .select("producer_id")
-        .in("producer_id", profileIds);
+      const [productsRes, followsRes, ordersRes] = await Promise.all([
+        supabase.from("products").select("producer_id").in("producer_id", profileIds),
+        supabase.from("follows").select("following_id").in("following_id", profileIds),
+        supabase.from("orders").select("seller_id").in("seller_id", profileIds),
+      ]);
 
       const productCounts: Record<string, number> = {};
-      (products || []).forEach((p) => {
+      (productsRes.data || []).forEach((p) => {
         productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
       });
 
-      const { data: followsData } = await supabase
-        .from("follows")
-        .select("following_id")
-        .in("following_id", profileIds);
-
       const followerCounts: Record<string, number> = {};
-      (followsData || []).forEach((f) => {
+      (followsRes.data || []).forEach((f) => {
         followerCounts[f.following_id] = (followerCounts[f.following_id] || 0) + 1;
+      });
+
+      const salesCounts: Record<string, number> = {};
+      (ordersRes.data || []).forEach((o) => {
+        salesCounts[o.seller_id] = (salesCounts[o.seller_id] || 0) + 1;
       });
 
       return profiles.map((p) => ({
         id: p.id,
         user_id: p.user_id,
-        name: p.full_name || (activeTab === "suppliers" ? t("net.suppliers") : t("net.buyers")),
+        name: p.full_name || t("net.suppliers"),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
         location: p.location || "Non spécifié",
         verified: p.is_verified,
         products: productCounts[p.id] || 0,
+        sales: salesCounts[p.id] || 0,
         bio: p.bio || "",
         followers: followerCounts[p.id] || 0,
         createdAt: p.created_at,
@@ -144,8 +143,6 @@ const Producers = () => {
     }
   };
 
-  const isSupplierTab = activeTab === "suppliers";
-
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO
@@ -181,7 +178,7 @@ const Producers = () => {
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
-                placeholder={isSupplierTab ? t("net.searchSupplier") : t("net.searchBuyer")}
+                placeholder={t("net.searchSupplier")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-11 text-sm"
@@ -191,7 +188,7 @@ const Producers = () => {
         </div>
       </section>
 
-      {/* Content - suppliers only, no tabs */}
+      {/* Content header */}
       <section className="border-b border-border bg-card">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-2 py-2.5">
@@ -206,7 +203,7 @@ const Producers = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProducers.length}</span> {isSupplierTab ? t("net.suppliers").toLowerCase() : t("net.buyers").toLowerCase()}
+              <span className="font-semibold text-foreground">{filteredProducers.length}</span> {t("net.suppliers").toLowerCase()}
             </p>
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -236,7 +233,7 @@ const Producers = () => {
         </div>
       </section>
 
-      {/* Grid */}
+      {/* Grid - Pro card design inspired by uploaded reference */}
       <section className="py-6 sm:py-8">
         <div className="container mx-auto px-4">
           {isLoading ? (
@@ -247,7 +244,7 @@ const Producers = () => {
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-foreground mb-2">
-                {isSupplierTab ? t("net.noSupplier") : t("net.noBuyer")}
+                {t("net.noSupplier")}
               </h3>
               <p className="text-sm text-muted-foreground">{t("net.modifyFilters")}</p>
             </div>
@@ -260,53 +257,62 @@ const Producers = () => {
                 return (
                   <Link key={producer.id} to={`/producteurs/${producer.id}`} className="block group">
                     <Card className="overflow-hidden h-full border-border/40 hover:border-primary/30 hover:shadow-elevated transition-all duration-300">
-                      <div className="relative aspect-square overflow-hidden bg-muted">
+                      {/* Cover / background */}
+                      <div className="relative h-20 sm:h-24 overflow-hidden bg-muted">
                         {producer.cover ? (
                           <img src={producer.cover} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
 
-                        {/* Avatar */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-300">
+                        {/* Verified badge top-right */}
+                        {producer.verified && (
+                          <div className="absolute top-2 right-2">
+                            <Badge className="bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm">
+                              <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Avatar overlapping cover */}
+                      <div className="flex justify-center -mt-8 relative z-10">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-muted">
                           {producer.avatar ? (
-                            <img src={producer.avatar} alt={producer.name} className="w-14 h-14 sm:w-18 sm:h-18 rounded-full object-cover border-2 border-card shadow-lg" />
+                            <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-primary/20 border-2 border-card shadow-lg flex items-center justify-center">
+                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
                               <Users className="w-6 h-6 text-primary" />
                             </div>
                           )}
                         </div>
-
-                        {producer.verified && (
-                          <div className="absolute top-2 right-2">
-                            <Badge className="bg-primary/90 text-primary-foreground text-[8px] px-1.5 py-0.5 gap-0.5">
-                              <ShieldCheck className="w-2.5 h-2.5" />{t("net.verified")}
-                            </Badge>
-                          </div>
-                        )}
-
-                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                          <h3 className="font-heading font-semibold text-white text-xs sm:text-sm truncate text-center">
-                            {producer.name}
-                          </h3>
-                          <div className="flex items-center justify-center gap-1 text-white/80 text-[9px] mt-0.5">
-                            <MapPin className="w-2.5 h-2.5" />
-                            <span className="truncate">{producer.location}</span>
-                          </div>
-                        </div>
                       </div>
 
-                      <CardContent className="p-2.5 sm:p-3 space-y-2">
-                        <div className="flex items-center justify-between text-[9px] sm:text-[10px]">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            {isSupplierTab ? <Package className="w-3 h-3" /> : <ShoppingBag className="w-3 h-3" />}
-                            <span>{isSupplierTab ? `${producer.products} ${producer.products > 1 ? t("net.productsPlural") : t("net.products")}` : t("net.buyer")}</span>
+                      <CardContent className="p-2.5 sm:p-3 pt-1.5 text-center space-y-1.5">
+                        <h3 className="font-heading font-bold text-foreground text-xs sm:text-sm truncate">
+                          {producer.name}
+                        </h3>
+                        <div className="flex items-center justify-center gap-1 text-muted-foreground text-[9px] sm:text-[10px]">
+                          <MapPin className="w-2.5 h-2.5" />
+                          <span className="truncate">{producer.location}</span>
+                        </div>
+
+                        {/* Stats row */}
+                        <div className="flex items-center justify-center gap-3 py-1.5">
+                          <div className="text-center">
+                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.products}</p>
+                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Produits</p>
                           </div>
-                          <div className="flex items-center gap-0.5 text-muted-foreground">
-                            <Users className="w-3 h-3" />
-                            <span>{producer.followers} {producer.followers > 1 ? t("net.subscribersPlural") : t("net.subscriber")}</span>
+                          <div className="w-px h-6 bg-border" />
+                          <div className="text-center">
+                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.sales}</p>
+                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Ventes</p>
+                          </div>
+                          <div className="w-px h-6 bg-border" />
+                          <div className="text-center">
+                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.followers}</p>
+                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Abonnés</p>
                           </div>
                         </div>
 
@@ -316,7 +322,8 @@ const Producers = () => {
                           </p>
                         )}
 
-                        <div className="flex gap-1.5">
+                        {/* Action buttons */}
+                        <div className="flex gap-1.5 pt-1">
                           {!isSelf && (
                             <Button
                               variant={following ? "secondary" : "hero"}
@@ -328,8 +335,7 @@ const Producers = () => {
                               {following ? (
                                 <>
                                   <UserCheck className="w-3 h-3" />
-                                  <span className="hidden sm:inline">{t("net.following")}</span>
-                                  <Bell className="w-2.5 h-2.5 sm:hidden" />
+                                  <span>{t("net.following")}</span>
                                 </>
                               ) : (
                                 <>
@@ -340,7 +346,7 @@ const Producers = () => {
                             </Button>
                           )}
                           <Button
-                            variant="outline" size="sm" className="h-7 px-2"
+                            variant="outline" size="sm" className="h-7 px-2 text-[9px] sm:text-[10px] gap-1"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();

@@ -130,7 +130,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "mp.allCategoriesFilter": "Toutes catégories",
     "mp.recentPublications": "Publications récentes",
     "mp.seeAll": "Tout voir →",
-    "mp.activeSuppliers": "Fournisseurs actifs",
+    "mp.activeSuppliers": "Fournisseurs vérifiés",
     "mp.seeAllSuppliers": "Voir tous →",
     // Product
     "product.back": "Retour",
