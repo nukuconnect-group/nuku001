@@ -33,7 +33,7 @@ import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -147,8 +147,8 @@ const Dashboard = () => {
                   <User className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
                 )}
                 {profile?.is_verified && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
-                    <ShieldCheck className="w-3 h-3 text-primary-foreground" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card">
+                    <ShieldCheck className="w-3 h-3 text-white" />
                   </div>
                 )}
               </div>
@@ -158,7 +158,7 @@ const Dashboard = () => {
                     {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
                   </h1>
                   {profile?.is_verified && (
-                    <Badge className="bg-emerald-100 text-emerald-800 text-[8px] px-1.5 py-0 gap-0.5 flex-shrink-0">
+                    <Badge className="bg-emerald-500 text-white text-[8px] px-1.5 py-0 gap-0.5 flex-shrink-0">
                       <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
                     </Badge>
                   )}
@@ -178,6 +178,41 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Wallet / Balance Card */}
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Portefeuille</span>
+                </div>
+                {profile?.is_verified && (
+                  <Badge className="bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 text-[9px] gap-0.5">
+                    <ShieldCheck className="w-3 h-3" /> Compte vérifié
+                  </Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Ventes brutes</p>
+                  <p className="text-lg sm:text-2xl font-bold">{totalSales.toLocaleString()} F</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Commission ({commissionRate}%)</p>
+                  <p className="text-lg sm:text-2xl font-bold">-{commissionAmount.toLocaleString()} F</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Solde net</p>
+                  <p className="text-lg sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString()} F</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* KYC Status Banner */}
+          <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+          <div className="mb-4 sm:mb-6" />
+
           <StatsGrid stats={stats} />
 
           {/* Charts - responsive */}
@@ -186,58 +221,38 @@ const Dashboard = () => {
             <CategoryPieInfo orders={orders} />
           </div>
 
-          {/* Quick actions row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <Card className="cursor-pointer hover:shadow-elevated transition-all" onClick={() => setShowAddProduct(true)}>
-              <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Plus className="w-4 h-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-foreground">Publier</p>
-                  <p className="text-[10px] text-muted-foreground">Nouveau produit</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Link to="/tracabilite">
-              <Card className="cursor-pointer hover:shadow-elevated transition-all h-full">
-                <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                    <QrCode className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Traçabilité</p>
-                    <p className="text-[10px] text-muted-foreground">Tracer produits</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/suivi-livraison">
-              <Card className="cursor-pointer hover:shadow-elevated transition-all h-full">
-                <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <ShoppingCart className="w-4 h-4 text-accent-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Commandes</p>
-                    <p className="text-[10px] text-muted-foreground">Suivre commandes</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/messages">
-              <Card className="cursor-pointer hover:shadow-elevated transition-all h-full">
-                <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground">Messages</p>
-                    <p className="text-[10px] text-muted-foreground">Messagerie</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+          {/* Quick actions row — Independent icon cards */}
+          <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+            <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
+          </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {[
+              { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
+              { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
+              { icon: ShoppingCart, label: "Commandes", color: "bg-accent/10 text-accent-foreground", href: "/suivi-livraison" },
+              { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
+              { icon: Wallet, label: "Retraits", color: "bg-purple-500/10 text-purple-600", onClick: () => {
+                const el = document.querySelector('[value="withdrawals"]');
+                if (el instanceof HTMLElement) el.click();
+              }},
+              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", onClick: () => {
+                const el = document.querySelector('[value="settings"]');
+                if (el instanceof HTMLElement) el.click();
+              }},
+            ].map((action, i) => {
+              const content = (
+                <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group">
+                  <CardContent className="p-3 flex flex-col items-center gap-1.5 text-center">
+                    <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <action.icon className="w-5 h-5" />
+                    </div>
+                    <p className="text-[10px] font-semibold text-foreground">{action.label}</p>
+                  </CardContent>
+                </Card>
+              );
+              if (action.href) return <Link key={i} to={action.href}>{content}</Link>;
+              return <div key={i} onClick={action.onClick}>{content}</div>;
+            })}
           </div>
 
           {/* KYC Reminder for unverified suppliers */}

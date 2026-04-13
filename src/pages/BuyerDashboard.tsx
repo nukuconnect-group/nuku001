@@ -228,6 +228,30 @@ const BuyerDashboard = () => {
             </div>
           </div>
 
+          {/* Wallet / Balance Card */}
+          <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Receipt className="w-5 h-5" />
+                <span className="text-sm font-semibold">Résumé des achats</span>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Total dépensé</p>
+                  <p className="text-lg sm:text-2xl font-bold">{formatPrice(totalSpent)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Commandes</p>
+                  <p className="text-lg sm:text-2xl font-bold">{orders.length}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">En attente</p>
+                  <p className="text-lg sm:text-2xl font-bold text-accent">{pendingOrders}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Stats Grid - responsive */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 sm:mb-8">
             {stats.map((stat) => (

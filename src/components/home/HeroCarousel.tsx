@@ -101,9 +101,19 @@ const HeroCarousel = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl">
+          {/* Subtitle badge - like reference image */}
+          <div className="overflow-hidden mb-2 sm:mb-3">
+            {slides.map((slide, index) => (
+              <p key={index} className={`text-sm sm:text-base md:text-lg font-medium italic text-accent transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
+                {slide.subtitle}
+              </p>
+            ))}
+          </div>
+
+          {/* Title — Bold uppercase like reference */}
           <div className="overflow-hidden mb-2 sm:mb-6">
             {slides.map((slide, index) => (
-              <h1 key={index} className={`font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-primary-foreground leading-tight transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
+              <h1 key={index} className={`font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-primary-foreground leading-tight uppercase tracking-tight transition-all duration-700 ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 absolute"}`}>
                 {slide.title}
               </h1>
             ))}
@@ -117,10 +127,16 @@ const HeroCarousel = () => {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-10">
+          {/* CTA Buttons — like reference with outlined + filled */}
+          <div className="flex flex-row gap-2 sm:gap-3 mb-4 sm:mb-10">
             <Link to="/marketplace">
-              <Button variant="hero" size="sm" className="text-xs sm:text-base sm:h-11 w-full sm:w-auto">
-                Commencer maintenant <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Button variant="heroOutline" size="sm" className="text-xs sm:text-sm sm:h-11 uppercase font-bold tracking-wider border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-foreground">
+                Explorer
+              </Button>
+            </Link>
+            <Link to="/categories">
+              <Button variant="hero" size="sm" className="text-xs sm:text-sm sm:h-11 uppercase font-bold tracking-wider bg-accent text-accent-foreground hover:bg-accent/90">
+                Catégories
               </Button>
             </Link>
           </div>
@@ -136,10 +152,11 @@ const HeroCarousel = () => {
         </div>
       </div>
 
+      {/* Dots */}
       <div className="absolute bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
         {slides.map((_, index) => (
           <button key={index} onClick={() => goToSlide(index)}
-            className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? "w-8 bg-primary" : "w-1.5 bg-primary-foreground/40"}`} />
+            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-500 border-2 ${index === currentSlide ? "bg-primary border-primary" : "bg-transparent border-primary-foreground/50"}`} />
         ))}
       </div>
     </section>
