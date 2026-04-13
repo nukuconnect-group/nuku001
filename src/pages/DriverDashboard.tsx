@@ -321,6 +321,37 @@ const DriverDashboard = () => {
       <SEO url="/driver-dashboard" title="Tableau de bord Livreur" description="Gérez vos livraisons et suivez vos gains." noIndex />
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
+        {/* Wallet Card */}
+        <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5" />
+                <span className="text-sm font-semibold">Portefeuille Livreur</span>
+              </div>
+              {driverProfile?.is_approved && (
+                <Badge className="bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 text-[9px] gap-0.5">
+                  <ShieldCheck className="w-3 h-3" /> Livreur vérifié
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-[10px] text-primary-foreground/70">Gains totaux</p>
+                <p className="text-lg sm:text-2xl font-bold">{totalEarnings.toLocaleString()} F</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-primary-foreground/70">Retiré</p>
+                <p className="text-lg sm:text-2xl font-bold">-{totalWithdrawn.toLocaleString()} F</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-primary-foreground/70">Disponible</p>
+                <p className="text-lg sm:text-2xl font-bold text-accent">{availableBalance.toLocaleString()} F</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Avatar required */}
         {needsAvatar && (
           <Card className="border-primary/30 bg-primary/5">
