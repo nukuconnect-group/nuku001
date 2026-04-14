@@ -29,7 +29,7 @@ import {
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
-  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 
@@ -382,7 +382,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   </div>
                 </div>
 
-                {/* Help & Settings */}
+                {/* Help, Support & Settings */}
                 <Link to="/aide" onClick={onClose}
                   className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
                   <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
@@ -391,6 +391,29 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <span className="flex-1 text-[13px] font-medium tracking-tight">Centre d'assistance</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
+                <button
+                  onClick={() => { onClose(); window.open("https://wa.me/22891201468", "_blank"); }}
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-4 h-4 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-[13px] font-medium tracking-tight block">Support WhatsApp</span>
+                    <span className="text-[10px] text-muted-foreground">+228 91 20 14 68</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                </button>
+                <button
+                  onClick={() => { onClose(); navigate("/aide"); }}
+                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Headphones className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="flex-1 text-[13px] font-medium tracking-tight">Support client</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                </button>
                 <Link to="/settings" onClick={onClose}
                   className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
                   <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
