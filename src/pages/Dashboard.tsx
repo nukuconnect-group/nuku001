@@ -292,11 +292,18 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* AI Recommendations */}
+          {/* AI Recommendations - Collapsible */}
           {user && profile && (
-            <div className="mb-4 sm:mb-6">
-              <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
-            </div>
+            <details className="mb-4 sm:mb-6">
+              <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-semibold text-foreground">Recommandations IA</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+              </summary>
+              <div className="mt-2">
+                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
+              </div>
+            </details>
           )}
 
           {/* Delivery Tracking Widget */}
@@ -317,7 +324,7 @@ const Dashboard = () => {
           </div>
 
           {/* Buy/Sell Intent */}
-          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/10">
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/10">
             <CardContent className="p-3 sm:p-4">
               <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-primary" />
@@ -329,15 +336,6 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Buyer Demands */}
-          <Card className="mb-4 sm:mb-6">
-            <CardContent className="p-3 sm:p-4">
-              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                <ShoppingCart className="w-3.5 h-3.5 text-accent-foreground" />
-                Demandes d'achat des acheteurs
-              </h3>
-              <p className="text-[10px] text-muted-foreground mb-2">Découvrez ce que les acheteurs recherchent</p>
               <DemandsList limit={5} />
             </CardContent>
           </Card>
