@@ -233,10 +233,12 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             <div className="flex items-center gap-1.5 pt-1.5 mt-0.5 border-t border-border/50">
               <img src={product.producer.avatar || defaultAvatar} alt={product.producer.name} className="w-4 h-4 rounded-full object-cover" />
               <span className="text-[8px] sm:text-[9px] text-muted-foreground truncate flex-1">{product.producer.name}</span>
-              {product.producer.verified && (
-                <span className="flex items-center gap-0.5 text-[7px] text-emerald-600 font-semibold flex-shrink-0">
+              {product.producer.verified ? (
+                <span className="flex items-center gap-0.5 text-[7px] text-secondary font-semibold flex-shrink-0">
                   <ShieldCheck className="w-3 h-3" />Vérifié
                 </span>
+              ) : (
+                <span className="text-[7px] text-muted-foreground flex-shrink-0">Non vérifié</span>
               )}
             </div>
           )}
