@@ -646,8 +646,8 @@ const Marketplace = () => {
         </div>
       </section>
 
-      {/* Mobile Categories - horizontal swipe */}
-      <div className="lg:hidden bg-card border-b border-border overflow-x-auto scrollbar-hide"
+      {/* Categories - horizontal swipe on ALL devices */}
+      <div className="bg-card border-b border-border overflow-x-auto scrollbar-hide"
         style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="flex items-center gap-1.5 px-3 py-2 min-w-max">
           <button
