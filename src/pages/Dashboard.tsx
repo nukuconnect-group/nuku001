@@ -209,9 +209,13 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* KYC Status Banner */}
-          <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-          <div className="mb-4 sm:mb-6" />
+          {/* KYC Status Banner - only show if NOT verified */}
+          {!profile?.is_verified && (
+            <>
+              <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+              <div className="mb-4 sm:mb-6" />
+            </>
+          )}
 
           <StatsGrid stats={stats} />
 
@@ -225,13 +229,17 @@ const Dashboard = () => {
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
             <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
-              { icon: ShoppingCart, label: "Commandes", color: "bg-accent/10 text-accent-foreground", href: "/suivi-livraison" },
+              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: Wallet, label: "Retraits", color: "bg-purple-500/10 text-purple-600", onClick: () => {
+              { icon: BarChart3, label: "Ventes", color: "bg-purple-500/10 text-purple-600", onClick: () => {
+                const el = document.querySelector('[value="analytics"]');
+                if (el instanceof HTMLElement) el.click();
+              }},
+              { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
               }},
