@@ -336,9 +336,8 @@ const Dashboard = () => {
               </Button>
             </CardContent>
           </Card>
-              <DemandsList limit={5} />
-            </CardContent>
-          </Card>
+
+
 
           {/* Tabs */}
           <Tabs defaultValue="products" className="space-y-3 sm:space-y-4">
