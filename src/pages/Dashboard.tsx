@@ -33,7 +33,7 @@ import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard, Sparkles, ChevronDown
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -209,9 +209,13 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* KYC Status Banner */}
-          <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-          <div className="mb-4 sm:mb-6" />
+          {/* KYC Status Banner - only show if NOT verified */}
+          {!profile?.is_verified && (
+            <>
+              <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+              <div className="mb-4 sm:mb-6" />
+            </>
+          )}
 
           <StatsGrid stats={stats} />
 
@@ -225,13 +229,17 @@ const Dashboard = () => {
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
             <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
-              { icon: ShoppingCart, label: "Commandes", color: "bg-accent/10 text-accent-foreground", href: "/suivi-livraison" },
+              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: Wallet, label: "Retraits", color: "bg-purple-500/10 text-purple-600", onClick: () => {
+              { icon: BarChart3, label: "Ventes", color: "bg-purple-500/10 text-purple-600", onClick: () => {
+                const el = document.querySelector('[value="analytics"]');
+                if (el instanceof HTMLElement) el.click();
+              }},
+              { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
               }},
@@ -284,11 +292,18 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* AI Recommendations */}
+          {/* AI Recommendations - Collapsible */}
           {user && profile && (
-            <div className="mb-4 sm:mb-6">
-              <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
-            </div>
+            <details className="mb-4 sm:mb-6">
+              <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-semibold text-foreground">Recommandations IA</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+              </summary>
+              <div className="mt-2">
+                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
+              </div>
+            </details>
           )}
 
           {/* Delivery Tracking Widget */}
@@ -309,7 +324,7 @@ const Dashboard = () => {
           </div>
 
           {/* Buy/Sell Intent */}
-          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/10">
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/10">
             <CardContent className="p-3 sm:p-4">
               <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-primary" />
@@ -322,17 +337,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Buyer Demands */}
-          <Card className="mb-4 sm:mb-6">
-            <CardContent className="p-3 sm:p-4">
-              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                <ShoppingCart className="w-3.5 h-3.5 text-accent-foreground" />
-                Demandes d'achat des acheteurs
-              </h3>
-              <p className="text-[10px] text-muted-foreground mb-2">Découvrez ce que les acheteurs recherchent</p>
-              <DemandsList limit={5} />
-            </CardContent>
-          </Card>
+
 
           {/* Tabs */}
           <Tabs defaultValue="products" className="space-y-3 sm:space-y-4">

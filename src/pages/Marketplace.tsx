@@ -646,8 +646,8 @@ const Marketplace = () => {
         </div>
       </section>
 
-      {/* Mobile Categories - horizontal swipe */}
-      <div className="lg:hidden bg-card border-b border-border overflow-x-auto scrollbar-hide"
+      {/* Categories - horizontal swipe on ALL devices */}
+      <div className="bg-card border-b border-border overflow-x-auto scrollbar-hide"
         style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="flex items-center gap-1.5 px-3 py-2 min-w-max">
           <button
@@ -670,39 +670,33 @@ const Marketplace = () => {
         </div>
       </div>
 
-      {/* Products / Demands Toggle + Region filter */}
+      {/* Products / Demands Toggle */}
       <div className="bg-card border-b border-border">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-0 py-1">
-            <div className="flex items-center w-full sm:w-auto">
-              <button
-                onClick={() => setMarketView("products")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 text-[11px] sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                  marketView === "products"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}>
-                <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                <span className="truncate">Produits</span>
-              </button>
-              <button
-                onClick={() => setMarketView("demands")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 text-[11px] sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
-                  marketView === "demands"
-                    ? "border-accent text-accent"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}>
-                <HandCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                <span className="truncate">Demandes</span>
-                {demandsCount > 0 && (
-                  <Badge className="bg-accent text-accent-foreground text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0 ml-0.5 sm:ml-1 flex-shrink-0">{demandsCount}</Badge>
-                )}
-              </button>
-            </div>
-            {/* Region filter - responsive */}
-            <div className="w-full sm:w-auto sm:ml-auto sm:max-w-[220px] lg:w-52 px-1 pb-1.5 sm:pb-0 sm:px-0">
-              <LocationSearchFilter location={location} onLocationChange={setLocation} />
-            </div>
+          <div className="flex items-center py-1">
+            <button
+              onClick={() => setMarketView("products")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 text-[11px] sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                marketView === "products"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+              <span className="truncate">Produits</span>
+            </button>
+            <button
+              onClick={() => setMarketView("demands")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 text-[11px] sm:text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                marketView === "demands"
+                  ? "border-secondary text-secondary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
+              <HandCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+              <span className="truncate">Demandes</span>
+              {demandsCount > 0 && (
+                <Badge className="bg-secondary text-secondary-foreground text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0 ml-0.5 sm:ml-1 flex-shrink-0">{demandsCount}</Badge>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -908,7 +902,7 @@ const Marketplace = () => {
                   {flashDeals.length > 0 && (
                     <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
                   )}
-                  <ProductSection title={t("mp.forYou")} icon={<Sparkles className="w-4 h-4 text-primary" />} products={featuredProducts} />
+                  <ProductSection title={t("mp.forYou")} icon={<TrendingUp className="w-4 h-4 text-primary" />} products={featuredProducts} />
                   <NewArrivalsSection products={newArrivals} />
                   {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
                     const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());

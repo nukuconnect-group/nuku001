@@ -113,7 +113,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "mp.noProductsDesc": "Essayez de modifier vos filtres",
     "mp.clear": "Effacer",
     "mp.flashDeals": "Offres Flash",
-    "mp.forYou": "Sélection pour vous",
+    "mp.forYou": "Populaires",
     "mp.newArrivals": "Nouveautés",
     "mp.allProducts": "Tous les produits",
     "mp.sortRecent": "Plus récents",

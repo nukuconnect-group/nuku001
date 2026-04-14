@@ -44,7 +44,7 @@ const HeaderPromoSlider = () => {
   }, [next]);
 
   return (
-    <div className="relative overflow-hidden h-8 sm:h-9 bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary)/0.9)] to-[hsl(var(--primary)/0.85)]">
+    <div className="relative overflow-hidden h-8 sm:h-9 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--secondary)/0.9)] to-[hsl(var(--primary)/0.85)]">
       <div
         className="flex transition-transform duration-500 ease-in-out h-full"
         style={{ transform: `translateX(-${current * 100}%)` }}
@@ -66,7 +66,7 @@ const HeaderPromoSlider = () => {
               <span className="text-[8px] sm:text-[9px] text-primary-foreground/60 hidden sm:inline font-medium tracking-wide">
                 — {slide.subtitle}
               </span>
-              <span className="text-[8px] sm:text-[9px] font-extrabold text-accent uppercase tracking-[0.15em] ml-1 border border-accent/40 rounded-sm px-1.5 py-0.5 leading-none">
+              <span className="text-[8px] sm:text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
                 {slide.cta}
               </span>
             </Link>

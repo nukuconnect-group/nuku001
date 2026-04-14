@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, MapPin, ShieldCheck, MessageCircle,
-  Users, Package, Loader2, SlidersHorizontal, UserPlus, UserCheck, TrendingUp
+  Users, Package, Loader2, SlidersHorizontal, UserPlus, UserCheck, TrendingUp, User
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -266,14 +266,18 @@ const Producers = () => {
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
 
-                        {/* Verified badge top-right */}
-                        {producer.verified && (
-                          <div className="absolute top-2 right-2">
-                            <Badge className="bg-primary text-primary-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm">
+                        {/* Verified / Non verified badge top-right */}
+                        <div className="absolute top-2 right-2">
+                          {producer.verified ? (
+                            <Badge className="bg-secondary text-secondary-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm">
                               <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
                             </Badge>
-                          </div>
-                        )}
+                          ) : (
+                            <Badge variant="outline" className="bg-card/80 text-muted-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm border-border">
+                              Non vérifié
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       {/* Avatar overlapping cover */}
@@ -283,7 +287,7 @@ const Producers = () => {
                             <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                              <Users className="w-6 h-6 text-primary" />
+                              <User className="w-6 h-6 text-primary" />
                             </div>
                           )}
                         </div>
