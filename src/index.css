@@ -84,8 +84,8 @@
     --muted: 210 15% 18%;
     --muted-foreground: 210 10% 60%;
 
-    --accent: 42 85% 50%;
-    --accent-foreground: 210 25% 10%;
+    --accent: 120 80% 30%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -96,7 +96,7 @@
 
     --chart-1: 207 80% 55%;
     --chart-2: 120 80% 30%;
-    --chart-3: 42 85% 50%;
+    --chart-3: 150 50% 45%;
     --chart-4: 280 60% 60%;
     --chart-5: 25 75% 55%;
 
