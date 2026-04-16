@@ -137,14 +137,15 @@ const PromoBannerSlider = () => {
     { id: "ziafo", name: "Yannick ZIAFO", avatar: avatarMale1 },
   ];
 
-  // Also fetch real producers to merge DB avatars when available
+  // Fetch real verified producers first, then fill with others
   const { data: dbProducers = [] } = useQuery({
-    queryKey: ["homepage-producers"],
+    queryKey: ["homepage-verified-producers"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, user_type")
+        .select("id, full_name, avatar_url, user_type, is_verified")
         .eq("user_type", "producer")
+        .order("is_verified", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
@@ -153,18 +154,29 @@ const PromoBannerSlider = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Merge: use DB avatar if available, otherwise use the featured avatar
+  // Show real DB producers first (verified on top), fill remaining with featured
   const displayProducers = useMemo(() => {
-    return featuredProducers.map(fp => {
-      const match = dbProducers.find(db =>
-        db.full_name?.toLowerCase().includes(fp.name.split(' ')[0].toLowerCase())
-      );
-      return {
-        id: match?.id || fp.id,
+    const realProducers = dbProducers
+      .filter(p => p.full_name)
+      .map(p => ({
+        id: p.id,
+        name: p.full_name || "Fournisseur",
+        avatar: p.avatar_url || defaultAvatar,
+        verified: p.is_verified,
+      }));
+    
+    // If not enough real producers, add featured ones
+    const remaining = 12 - realProducers.length;
+    if (remaining > 0) {
+      const filler = featuredProducers.slice(0, remaining).map(fp => ({
+        id: fp.id,
         name: fp.name,
-        avatar: match?.avatar_url || fp.avatar,
-      };
-    });
+        avatar: fp.avatar,
+        verified: false,
+      }));
+      return [...realProducers, ...filler];
+    }
+    return realProducers.slice(0, 12);
   }, [dbProducers]);
 
   return (
@@ -277,10 +289,20 @@ const PromoBannerSlider = () => {
               <Link key={producer.id} to={`/producteurs/${producer.id}`}
                 className="flex-shrink-0 flex flex-col items-center gap-1 w-16 group">
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors bg-muted">
-                    <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
+                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${producer.verified ? 'border-secondary' : 'border-primary/20'} group-hover:border-primary transition-colors bg-muted`}>
+                    {producer.avatar && producer.avatar !== defaultAvatar ? (
+                      <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
                   </div>
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full" />
+                  {producer.verified && (
+                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-card rounded-full flex items-center justify-center">
+                      <span className="text-[6px] text-white font-bold">✓</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-[9px] font-medium text-foreground text-center line-clamp-1 w-full">
                   {producer.name.split(' ')[0]}

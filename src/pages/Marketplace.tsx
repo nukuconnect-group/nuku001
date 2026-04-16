@@ -603,8 +603,8 @@ const Marketplace = () => {
       <Header />
       <MarketplacePromoPopup />
 
-      {/* Sponsored Products & Demands - Top banner (desktop only) */}
-      <section className="hidden lg:block bg-muted/30 border-b border-border py-3">
+      {/* Sponsored Products - Top banner (desktop/tablet) */}
+      <section className="hidden sm:block bg-muted/30 border-b border-border py-3">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-heading text-sm font-bold text-foreground flex items-center gap-2">
@@ -620,27 +620,6 @@ const Marketplace = () => {
               <div key={product.id} className="flex-shrink-0 w-[180px] snap-start">
                 <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
               </div>
-            ))}
-            {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-              <Link to="/marketplace" onClick={() => setMarketView("demands")} key={`dm-desk-${demand.id}`} className="flex-shrink-0 w-[180px] snap-start">
-                <div className="rounded-xl overflow-hidden border border-border bg-card h-full flex flex-col">
-                  <div className="relative aspect-square bg-accent/10 flex items-center justify-center overflow-hidden">
-                    {demand.image_url ? (
-                      <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
-                    ) : (
-                      <HandCoins className="w-10 h-10 text-accent/40" />
-                    )}
-                    <Badge className="absolute top-1.5 left-1.5 bg-accent text-accent-foreground text-[8px] px-1.5 py-0.5">
-                      <HandCoins className="w-2.5 h-2.5 mr-0.5" />Demande
-                    </Badge>
-                  </div>
-                  <div className="p-2">
-                    <h4 className="text-xs font-semibold text-foreground line-clamp-2">{demand.title}</h4>
-                    {demand.budget && <p className="text-xs font-bold text-accent mt-1">{fmtPrice(demand.budget)}</p>}
-                    <p className="text-[9px] text-muted-foreground mt-0.5">{demand.category}</p>
-                  </div>
-                </div>
-              </Link>
             ))}
           </div>
         </div>
@@ -755,9 +734,9 @@ const Marketplace = () => {
       <section className="pt-1 pb-3 sm:py-6 lg:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {/* Sponsored Products & Demands Slider — mobile only */}
-          <div className="mb-3 sm:mb-4 lg:hidden">
+          <div className="mb-3 sm:mb-4 sm:hidden">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="font-heading text-xs sm:text-sm font-bold text-foreground flex items-center gap-1.5">
+              <h2 className="font-heading text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5 text-accent" />Produits sponsorisés
               </h2>
               <div className="flex gap-1">
@@ -766,43 +745,10 @@ const Marketplace = () => {
               </div>
             </div>
             <div ref={sponsoredRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
-              {/* Sponsored products - same size cards with "Vente" badge */}
               {sponsoredProducts.map((product) => (
-                <Link to={`/produit/${product.id}`} key={`sp-${product.id}`} className="flex-shrink-0 w-[130px] snap-start group">
-                  <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
-                    <div className="relative aspect-square">
-                      <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <Badge className="absolute top-1 left-1 bg-primary/90 text-primary-foreground text-[7px] px-1 py-0 h-3.5">
-                        <Package className="w-2 h-2 mr-0.5" />Vente
-                      </Badge>
-                    </div>
-                    <div className="p-1.5">
-                      <h4 className="text-[10px] font-semibold text-foreground line-clamp-1">{product.name}</h4>
-                      <p className="text-[10px] font-bold text-primary mt-0.5">{fmtPrice(product.price)}<span className="text-[8px] text-muted-foreground font-normal">/{product.unit}</span></p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-              {/* Demands in the same slider - same width */}
-              {allDemands && allDemands.slice(0, 4).map((demand: any) => (
-                <Link to="/marketplace" onClick={() => setMarketView("demands")} key={`dm-${demand.id}`} className="flex-shrink-0 w-[130px] snap-start">
-                  <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm h-full flex flex-col">
-                    <div className="relative aspect-square bg-accent/10 flex items-center justify-center overflow-hidden">
-                      {demand.image_url ? (
-                        <img src={demand.image_url} alt={demand.title} loading="lazy" className="w-full h-full object-cover" />
-                      ) : (
-                        <HandCoins className="w-8 h-8 text-accent/40" />
-                      )}
-                      <Badge className="absolute top-1 left-1 bg-accent text-accent-foreground text-[7px] px-1 py-0 h-3.5">
-                        <HandCoins className="w-2 h-2 mr-0.5" />Demande
-                      </Badge>
-                    </div>
-                    <div className="p-1.5 flex-1">
-                      <h4 className="text-[10px] font-semibold text-foreground line-clamp-1">{demand.title}</h4>
-                      {demand.budget && <p className="text-[10px] font-bold text-accent mt-0.5">{fmtPrice(demand.budget)}<span className="text-[8px] text-muted-foreground font-normal"> FCFA</span></p>}
-                    </div>
-                  </div>
-                </Link>
+                <div key={`sp-mob-${product.id}`} className="flex-shrink-0 w-[140px] snap-start">
+                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />
+                </div>
               ))}
             </div>
           </div>
@@ -902,7 +848,7 @@ const Marketplace = () => {
                   {flashDeals.length > 0 && (
                     <ProductSection title={t("mp.flashDeals")} icon={<Flame className="w-4 h-4 text-destructive" />} products={flashDeals} />
                   )}
-                  <ProductSection title={t("mp.forYou")} icon={<TrendingUp className="w-4 h-4 text-primary" />} products={featuredProducts} />
+                  <ProductSection title={t("mp.forYou")} icon={<Flame className="w-4 h-4 text-primary" />} products={featuredProducts} />
                   <NewArrivalsSection products={newArrivals} />
                   {Object.entries(productsByCategory).slice(0, 4).map(([category, categoryProducts]) => {
                     const categoryInfo = marketplaceCategories.find(c => c.name.toLowerCase() === category.toLowerCase());

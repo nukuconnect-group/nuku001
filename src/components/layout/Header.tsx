@@ -624,10 +624,16 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Account button - opens right sidebar */}
+                {/* Account button - sidebar if logged in, full page auth if not */}
                 <Button variant="ghost" size="icon"
                   className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex"
-                  onClick={() => setAccountSidebarOpen(true)}>
+                  onClick={() => {
+                    if (user) {
+                      setAccountSidebarOpen(true);
+                    } else {
+                      navigate("/auth");
+                    }
+                  }}>
                   {user && profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                   ) : (
@@ -650,7 +656,7 @@ const Header = () => {
       <div className="lg:hidden bg-primary px-3 pb-2 pt-1" ref={mobileSearchRef}>
         <div className="relative flex items-center gap-1.5">
           <div className="relative flex-1">
-              <Input type="text" placeholder="Rechercher produit, catégorie..." value={searchQuery}
+              <Input type="text" placeholder="Rechercher produit, catégorie, fournisseur..." value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
               onFocus={() => setShowSearchResults(true)}
               className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
