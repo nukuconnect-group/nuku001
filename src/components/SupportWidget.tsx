@@ -21,34 +21,51 @@ const SUPPORT_CATEGORIES = [
 
 const autoReplies: Record<string, { reply: string; suggestions?: string[] }> = {
   bonjour: {
-    reply: "Bonjour ! 👋 Comment puis-je vous aider aujourd'hui ?",
-    suggestions: ["J'ai un problème de commande", "Suivi de livraison", "Question sur le paiement"],
+    reply: "Bonjour ! 👋 Je suis l'assistant virtuel NukuConnect. Comment puis-je vous aider aujourd'hui ?",
+    suggestions: ["J'ai un problème de commande", "Suivi de livraison", "Question sur le paiement", "Mon abonnement"],
+  },
+  salut: {
+    reply: "Salut ! 👋 Bienvenue sur le support NukuConnect. Décrivez votre besoin et je ferai de mon mieux pour vous aider.",
+    suggestions: ["Commander un produit", "Devenir fournisseur", "Problème technique"],
   },
   aide: {
-    reply: "Je suis là pour vous aider ! Décrivez votre problème et notre équipe reviendra vers vous rapidement.",
+    reply: "Je suis là pour vous aider ! 🤝 Voici les sujets les plus fréquents. Si votre question est complexe, un agent humain prendra le relais automatiquement.",
+    suggestions: ["Commandes", "Livraisons", "Paiements", "Mon compte"],
   },
   commande: {
-    reply: "Pour toute question sur une commande, merci de préciser le numéro ou la date. Un agent prendra en charge votre demande.",
-    suggestions: ["Annuler une commande", "Modifier la quantité", "Statut de ma commande"],
+    reply: "📦 Pour les commandes :\n• Consultez vos commandes dans **Tableau de bord > Commandes**\n• Chaque commande a un statut en temps réel\n• Pour annuler, contactez le fournisseur via la messagerie\n\nPrécisez votre problème et je vous guiderai.",
+    suggestions: ["Annuler une commande", "Commande non reçue", "Modifier ma commande", "Contacter le vendeur"],
   },
   livraison: {
-    reply: "Pour le suivi de livraison, rendez-vous dans Tableau de bord > Suivi. Si le problème persiste, un agent vous contactera.",
-    suggestions: ["Livraison en retard", "Changer l'adresse", "Contacter le livreur"],
+    reply: "🚚 Pour la livraison :\n• Suivez en temps réel dans **Suivi de livraison**\n• Nos livreurs sont notifiés automatiquement\n• Délai moyen : 30min-2h en zone urbaine\n\nQuel est votre souci exact ?",
+    suggestions: ["Livraison en retard", "Changer l'adresse", "Contacter le livreur", "Livraison internationale"],
   },
   paiement: {
-    reply: "Pour les questions de paiement, vérifiez votre historique dans Paramètres > Transactions. Un agent va examiner votre demande.",
-    suggestions: ["Remboursement", "Erreur de paiement", "Retrait de gains"],
+    reply: "💳 Pour les paiements :\n• Modes acceptés : Mobile Money (T-Money, Flooz), PayGate\n• Les paiements sont sécurisés et traçables\n• Remboursements traités sous 48h\n\nQuel est votre problème ?",
+    suggestions: ["Remboursement", "Paiement échoué", "Retrait de gains", "Facture"],
+  },
+  abonnement: {
+    reply: "👑 Pour votre abonnement :\n• **Gratuit** : 3 produits, durée 3 mois\n• **Premium** : crédits pour sponsoriser vos produits\n• Gérez votre pack dans **Mon abonnement**\n\nQue souhaitez-vous savoir ?",
+    suggestions: ["Changer de pack", "Renouveler", "Avantages Premium"],
   },
   produit: {
-    reply: "Pour signaler un problème avec un produit, précisez le nom et le souci rencontré. Notre équipe qualité va intervenir.",
-    suggestions: ["Produit endommagé", "Produit non conforme", "Signaler un vendeur"],
+    reply: "🛒 Pour les produits :\n• Publiez via **Tableau de bord > Publier un produit**\n• Ajoutez des photos de qualité pour plus de ventes\n• Les produits sont modérés par notre IA\n\nQuel est votre besoin ?",
+    suggestions: ["Produit non conforme", "Signaler un vendeur", "Publier un produit"],
   },
   retrait: {
-    reply: "Les retraits sont traités sous 24 à 48h ouvrables. Vérifiez que votre numéro Mobile Money est correct dans vos paramètres.",
+    reply: "💰 Retraits de gains :\n• Traités sous **24-48h ouvrables**\n• Via Mobile Money (T-Money ou Flooz)\n• Minimum de retrait : 1 000 FCFA\n• Vérifiez votre numéro dans Paramètres\n\nBesoin d'aide supplémentaire ?",
+    suggestions: ["Retrait en attente", "Modifier mon numéro", "Historique des retraits"],
+  },
+  kyc: {
+    reply: "🔒 Vérification KYC :\n• Nécessaire pour le badge **Fournisseur vérifié**\n• Soumettez votre pièce d'identité + selfie\n• Délai de validation : 24-72h\n• Disponible pour les comptes Pro/Business",
+    suggestions: ["Soumettre mon KYC", "Statut de mon KYC", "Problème avec ma vérification"],
+  },
+  merci: {
+    reply: "De rien ! 😊 N'hésitez pas si vous avez d'autres questions. L'équipe NukuConnect est là pour vous accompagner. Bonne journée ! 🌟",
   },
   default: {
-    reply: "Merci pour votre message ! Un agent de notre équipe va prendre en charge votre demande sous peu. 🎧",
-    suggestions: ["Parler à un agent", "Consulter la FAQ"],
+    reply: "Merci pour votre message ! 🎧 Je vais analyser votre demande. Si nécessaire, un agent humain prendra le relais sous peu.\n\nEn attendant, vous pouvez consulter notre **Centre d'aide** pour des réponses rapides.",
+    suggestions: ["Parler à un agent", "Centre d'aide", "WhatsApp : +228 91 20 14 68"],
   },
 };
 
