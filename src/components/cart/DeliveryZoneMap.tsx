@@ -94,10 +94,12 @@ function getDeliveryPriceByDistance(distanceKm: number): { price: number; tier: 
 const baseDeliveryOptions = [
   { id: "pickup", name: "Retrait sur place", description: "Récupérez directement chez le fournisseur", icon: Store, tag: "Gratuit", fixed: true, fixedPrice: 0 },
   { id: "livreur", name: "Livreur NukuConnect", description: "Livraison par nos livreurs partenaires", icon: Truck, tag: "Recommandé", fixed: false, fixedPrice: 0 },
+  { id: "international", name: "Livraison internationale", description: "Nukuconnect SAS gère l'expédition via ses partenaires de transport international", icon: Package, tag: "International", fixed: true, fixedPrice: 0 },
 ];
 
 export function buildDeliveryOptions(distanceKm: number | null) {
   return baseDeliveryOptions.map(opt => {
+    if (opt.id === "international") return { ...opt, price: 0 };
     if (opt.fixed) return { ...opt, price: opt.fixedPrice };
     if (distanceKm === null) return { ...opt, price: 0 };
     const { price } = getDeliveryPriceByDistance(distanceKm);
