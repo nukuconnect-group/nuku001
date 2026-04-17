@@ -144,7 +144,7 @@ const Cart = () => {
       }
 
       // Create delivery records
-      if (deliveryMethod !== "pickup" && orderIds.length > 0) {
+      if (deliveryMethod === "livreur" && orderIds.length > 0) {
         const driverFee = Math.round(deliveryPrice * 0.8);
         const platformFee = deliveryPrice - driverFee;
 
@@ -583,7 +583,7 @@ const Cart = () => {
                 onDynamicPriceChange={setDynamicDeliveryPrice}
               />
 
-              {deliveryMethod !== "pickup" && (
+              {deliveryMethod === "livreur" && (
                 <>
                   {/* Seller location & distance info */}
                   <Card className="border-muted">

@@ -3,10 +3,12 @@ import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import SupportWidget from "@/components/SupportWidget";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useProfile } from "@/contexts/ProfileContext";
 import {
   HelpCircle, Search, ShoppingCart, User, CreditCard, Truck,
   MessageCircle, Shield, Settings, ChevronDown, ChevronUp, Mail
@@ -138,6 +140,8 @@ const faqCategories = [
 const Help = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+  const { user, profile } = useProfile();
+  const openSupportChat = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("chat") === "1";
 
   const toggleItem = (key: string) => {
     setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
@@ -252,6 +256,12 @@ const Help = () => {
         </div>
       </main>
       <Footer />
+      <SupportWidget
+        userId={user?.id}
+        userName={profile?.full_name || undefined}
+        userEmail={user?.email}
+        openByDefault={openSupportChat}
+      />
       <MobileBottomNav />
     </div>
   );
