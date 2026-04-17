@@ -405,7 +405,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </button>
                 <button
-                  onClick={() => { onClose(); navigate("/aide"); }}
+                  onClick={() => { onClose(); navigate("/aide?chat=1"); }}
                   className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
                 >
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

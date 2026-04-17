@@ -269,11 +269,12 @@ const DeliveryZoneMap = ({
   const computedOptions = useMemo(() => {
     return buildDeliveryOptions(distanceInfo?.maxDistance ?? null);
   }, [distanceInfo]);
+  const isInternational = deliveryMethod === "international";
 
   const selectedOption = computedOptions.find(o => o.id === deliveryMethod);
   const currentPrice = selectedOption?.price ?? 0;
 
-  useMemo(() => {
+  useEffect(() => {
     onDynamicPriceChange?.(currentPrice);
   }, [currentPrice, onDynamicPriceChange]);
 
@@ -313,7 +314,7 @@ const DeliveryZoneMap = ({
                 </div>
                 <span className="font-semibold text-foreground text-xs sm:text-sm whitespace-nowrap">
                   {option.price === 0
-                    ? (option.id === "pickup" ? "Gratuit" : "Sélectionnez une ville")
+                    ? (option.id === "pickup" ? "Gratuit" : option.id === "international" ? "Sur devis" : "Sélectionnez une ville")
                     : formatPrice(option.price)}
                 </span>
               </div>
@@ -324,121 +325,143 @@ const DeliveryZoneMap = ({
         {/* Delivery address form */}
         {deliveryMethod !== "pickup" && (
           <div className="space-y-4 p-4 bg-muted/50 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" />
-                Adresse de livraison
-              </h4>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
-                onClick={detectLocation}
-                disabled={geoLoading}
-              >
-                {geoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <LocateFixed className="w-3 h-3" />}
-                Ma position
-              </Button>
-            </div>
+            {isInternational ? (
+              <div className="space-y-3">
+                <div className="bg-secondary/10 border border-secondary/20 rounded-xl p-3 text-xs text-foreground">
+                  <p className="font-semibold mb-1">Expédition internationale</p>
+                  <p className="text-muted-foreground">
+                    Nukuconnect SAS coordonne la livraison avec ses partenaires de transport international. Renseignez simplement votre destination complète.
+                  </p>
+                </div>
 
-            {geoError && (
-              <p className="text-[10px] text-destructive flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />{geoError}
-              </p>
-            )}
-
-            {/* Auto-detected zone indicator */}
-            {city && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center gap-2">
-                <Navigation className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                <span className="text-xs text-foreground">
-                  Zone détectée : <strong>{city}</strong>{quarter ? `, ${quarter}` : ""}
-                </span>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    Destination (ville, pays) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    value={city}
+                    onChange={(e) => onCityChange(e.target.value)}
+                    placeholder="Ex : Paris, France"
+                    className="h-9 text-sm"
+                  />
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Adresse de livraison
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
+                    onClick={detectLocation}
+                    disabled={geoLoading}
+                  >
+                    {geoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <LocateFixed className="w-3 h-3" />}
+                    Ma position
+                  </Button>
+                </div>
 
-            <div className="grid sm:grid-cols-2 gap-3">
-              {/* City autocomplete */}
-              <div className="space-y-1.5 relative" ref={cityRef}>
-                <Label className="text-xs">
-                  Ville <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  value={citySearch || city}
-                  onChange={(e) => {
-                    setCitySearch(e.target.value);
-                    setShowCityDropdown(true);
-                    if (!e.target.value) onCityChange("");
-                  }}
-                  onFocus={() => setShowCityDropdown(true)}
-                  placeholder="Tapez ou sélectionnez..."
-                  className="h-9 text-sm"
-                />
-                {showCityDropdown && filteredCities.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredCities.map((zone) => (
-                      <button
-                        key={zone.id}
-                        type="button"
-                        className={`w-full text-left px-3 py-2 text-xs hover:bg-primary/10 transition-colors flex items-center gap-2 ${
-                          city === zone.name ? "bg-primary/5 font-semibold text-primary" : "text-foreground"
-                        }`}
-                        onClick={() => {
-                          onCityChange(zone.name);
-                          setCitySearch(zone.name);
-                          setShowCityDropdown(false);
-                          setMarkerPos([zone.lat, zone.lng]);
-                          onQuarterChange("");
-                          setQuarterSearch("");
-                        }}
-                      >
-                        <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                        {zone.name}
-                      </button>
-                    ))}
+                {geoError && (
+                  <p className="text-[10px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />{geoError}
+                  </p>
+                )}
+
+                {city && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <Navigation className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <span className="text-xs text-foreground">
+                      Zone détectée : <strong>{city}</strong>{quarter ? `, ${quarter}` : ""}
+                    </span>
                   </div>
                 )}
-              </div>
 
-              {/* Quarter autocomplete */}
-              <div className="space-y-1.5 relative" ref={quarterRef}>
-                <Label className="text-xs">Quartier</Label>
-                <Input
-                  value={quarterSearch || quarter}
-                  onChange={(e) => {
-                    setQuarterSearch(e.target.value);
-                    onQuarterChange(e.target.value);
-                    setShowQuarterDropdown(true);
-                  }}
-                  onFocus={() => setShowQuarterDropdown(true)}
-                  placeholder={selectedZone ? "Tapez votre quartier..." : "Sélectionnez d'abord une ville"}
-                  className="h-9 text-sm"
-                  disabled={!selectedZone}
-                />
-                {showQuarterDropdown && filteredQuarters.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {filteredQuarters.map((q) => (
-                      <button
-                        key={q}
-                        type="button"
-                        className={`w-full text-left px-3 py-2 text-xs hover:bg-primary/10 transition-colors flex items-center gap-2 ${
-                          quarter === q ? "bg-primary/5 font-semibold text-primary" : "text-foreground"
-                        }`}
-                        onClick={() => {
-                          onQuarterChange(q);
-                          setQuarterSearch(q);
-                          setShowQuarterDropdown(false);
-                        }}
-                      >
-                        <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                        {q}
-                      </button>
-                    ))}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5 relative" ref={cityRef}>
+                    <Label className="text-xs">
+                      Ville <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={citySearch || city}
+                      onChange={(e) => {
+                        setCitySearch(e.target.value);
+                        setShowCityDropdown(true);
+                        if (!e.target.value) onCityChange("");
+                      }}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Tapez ou sélectionnez..."
+                      className="h-9 text-sm"
+                    />
+                    {showCityDropdown && filteredCities.length > 0 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredCities.map((zone) => (
+                          <button
+                            key={zone.id}
+                            type="button"
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-primary/10 transition-colors flex items-center gap-2 ${
+                              city === zone.name ? "bg-primary/5 font-semibold text-primary" : "text-foreground"
+                            }`}
+                            onClick={() => {
+                              onCityChange(zone.name);
+                              setCitySearch(zone.name);
+                              setShowCityDropdown(false);
+                              setMarkerPos([zone.lat, zone.lng]);
+                              onQuarterChange("");
+                              setQuarterSearch("");
+                            }}
+                          >
+                            <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                            {zone.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+
+                  <div className="space-y-1.5 relative" ref={quarterRef}>
+                    <Label className="text-xs">Quartier</Label>
+                    <Input
+                      value={quarterSearch || quarter}
+                      onChange={(e) => {
+                        setQuarterSearch(e.target.value);
+                        onQuarterChange(e.target.value);
+                        setShowQuarterDropdown(true);
+                      }}
+                      onFocus={() => setShowQuarterDropdown(true)}
+                      placeholder={selectedZone ? "Tapez votre quartier..." : "Sélectionnez d'abord une ville"}
+                      className="h-9 text-sm"
+                      disabled={!selectedZone}
+                    />
+                    {showQuarterDropdown && filteredQuarters.length > 0 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredQuarters.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-primary/10 transition-colors flex items-center gap-2 ${
+                              quarter === q ? "bg-primary/5 font-semibold text-primary" : "text-foreground"
+                            }`}
+                            onClick={() => {
+                              onQuarterChange(q);
+                              setQuarterSearch(q);
+                              setShowQuarterDropdown(false);
+                            }}
+                          >
+                            <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-xs">
@@ -453,7 +476,7 @@ const DeliveryZoneMap = ({
             </div>
 
             {/* Distance & pricing info */}
-            {distanceInfo && city && (
+            {!isInternational && distanceInfo && city && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <Ruler className="w-4 h-4 text-primary" />
@@ -484,7 +507,7 @@ const DeliveryZoneMap = ({
               </div>
             )}
 
-            {city && !distanceInfo && (
+            {!isInternational && city && !distanceInfo && (
               <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 text-xs text-muted-foreground flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-accent flex-shrink-0" />
                 Localisation du fournisseur non disponible. Un tarif standard sera appliqué.
@@ -492,7 +515,7 @@ const DeliveryZoneMap = ({
             )}
 
             {/* Interactive Map */}
-            {city && (
+            {!isInternational && city && (
               <div className="rounded-xl overflow-hidden border border-border">
                 <div className="relative">
                   <div style={{ height: 240 }}>
@@ -545,27 +568,29 @@ const DeliveryZoneMap = ({
             )}
 
             {/* Pricing scale */}
-            <div className="text-[10px] text-muted-foreground space-y-1 pt-1">
-              <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire (min. {formatPrice(MIN_DELIVERY_PRICE)}) :</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                {[
-                  { label: "≤ 3 km", price: 1000 },
-                  { label: "≤ 7 km", price: 1200 },
-                  { label: "≤ 15 km", price: 1500 },
-                  { label: "≤ 30 km", price: 2500 },
-                  { label: "≤ 80 km", price: 4000 },
-                  { label: "> 80 km", price: 6000 },
-                ].map(t => (
-                  <div key={t.label} className={`rounded px-2 py-1 ${
-                    currentPrice === t.price
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "bg-muted"
-                  }`}>
-                    {t.label} → {formatPrice(t.price)}
-                  </div>
-                ))}
+            {!isInternational && (
+              <div className="text-[10px] text-muted-foreground space-y-1 pt-1">
+                <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire (min. {formatPrice(MIN_DELIVERY_PRICE)}) :</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+                  {[
+                    { label: "≤ 3 km", price: 1000 },
+                    { label: "≤ 7 km", price: 1200 },
+                    { label: "≤ 15 km", price: 1500 },
+                    { label: "≤ 30 km", price: 2500 },
+                    { label: "≤ 80 km", price: 4000 },
+                    { label: "> 80 km", price: 6000 },
+                  ].map(t => (
+                    <div key={t.label} className={`rounded px-2 py-1 ${
+                      currentPrice === t.price
+                        ? "bg-primary/10 text-primary font-semibold"
+                        : "bg-muted"
+                    }`}>
+                      {t.label} → {formatPrice(t.price)}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import ProductCard from "@/components/marketplace/ProductCard";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
 import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
 import avatarMale2 from "@/assets/avatars/avatar-male-2.png";
@@ -137,33 +135,24 @@ const PromoBannerSlider = () => {
     { id: "ziafo", name: "Yannick ZIAFO", avatar: avatarMale1 },
   ];
 
-  // Fetch real verified producers first, then fill with others
-  const { data: dbProducers = [] } = useQuery({
-    queryKey: ["homepage-verified-producers"],
-    queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url, user_type, is_verified")
-        .eq("user_type", "producer")
-        .order("is_verified", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return profiles || [];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
   // Show real DB producers first (verified on top), fill remaining with featured
   const displayProducers = useMemo(() => {
-    const realProducers = dbProducers
-      .filter(p => p.full_name)
-      .map(p => ({
-        id: p.id,
-        name: p.full_name || "Fournisseur",
-        avatar: p.avatar_url || defaultAvatar,
-        verified: p.is_verified,
-      }));
+    const seen = new Set<string>();
+    const realProducers = (products || [])
+      .map((product) => product.producer)
+      .filter((producer) => {
+        const producerId = producer?.id;
+        if (!producerId || seen.has(producerId)) return false;
+        seen.add(producerId);
+        return true;
+      })
+      .map((producer) => ({
+        id: producer.id || crypto.randomUUID(),
+        name: producer.name || "Fournisseur",
+        avatar: producer.avatar || defaultAvatar,
+        verified: Boolean(producer.verified),
+      }))
+      .sort((a, b) => Number(b.verified) - Number(a.verified));
     
     // If not enough real producers, add featured ones
     const remaining = 12 - realProducers.length;
@@ -177,7 +166,7 @@ const PromoBannerSlider = () => {
       return [...realProducers, ...filler];
     }
     return realProducers.slice(0, 12);
-  }, [dbProducers]);
+  }, [products]);
 
   return (
     <div>

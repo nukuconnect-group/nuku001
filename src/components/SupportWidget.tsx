@@ -81,9 +81,10 @@ interface Props {
   userId?: string;
   userName?: string;
   userEmail?: string;
+  openByDefault?: boolean;
 }
 
-export default function SupportWidget({ userId, userName, userEmail }: Props) {
+export default function SupportWidget({ userId, userName, userEmail, openByDefault = false }: Props) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
@@ -93,6 +94,12 @@ export default function SupportWidget({ userId, userName, userEmail }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (openByDefault && userId) {
+      setOpen(true);
+    }
+  }, [openByDefault, userId]);
 
   useEffect(() => {
     if (!open || !userId) return;
