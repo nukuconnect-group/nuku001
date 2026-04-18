@@ -94,12 +94,13 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
+  const isAuthenticated = Boolean(userId);
 
   useEffect(() => {
-    if (openByDefault && userId) {
+    if (openByDefault) {
       setOpen(true);
     }
-  }, [openByDefault, userId]);
+  }, [openByDefault]);
 
   useEffect(() => {
     if (!open || !userId) return;
@@ -123,9 +124,8 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Realtime
   useEffect(() => {
-    if (!ticketId) return;
+    if (!ticketId || !userId) return;
     const channel = supabase
       .channel(`support-${ticketId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `ticket_id=eq.${ticketId}` },
@@ -135,14 +135,13 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
         })
       ).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [ticketId]);
+  }, [ticketId, userId]);
 
   const startNewTicket = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setShowCategories(false);
-    setTicketId(null);
+    setTicketId(isAuthenticated ? null : `guest-${Date.now()}`);
     setMessages([]);
-    // Send initial auto-greeting
     const cat = SUPPORT_CATEGORIES.find(c => c.id === categoryId);
     const greeting = {
       id: `greeting-${Date.now()}`,
@@ -158,18 +157,51 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !userId) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput) return;
+
     setSending(true);
-    const tid = ticketId || crypto.randomUUID();
+    const tid = ticketId || `${isAuthenticated ? "ticket" : "guest"}-${crypto.randomUUID()}`;
     if (!ticketId) setTicketId(tid);
+
+    const autoReply = getAutoReply(trimmedInput);
+
+    if (!isAuthenticated) {
+      const userMsg = {
+        id: `guest-user-${Date.now()}`,
+        ticket_id: tid,
+        sender_role: "user",
+        content: trimmedInput,
+        created_at: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, userMsg]);
+      setInput("");
+      setSending(false);
+
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `guest-bot-${Date.now()}`,
+            ticket_id: tid,
+            sender_role: "bot",
+            content: autoReply.reply,
+            created_at: new Date().toISOString(),
+            _suggestions: autoReply.suggestions,
+          },
+        ]);
+      }, 700);
+      return;
+    }
 
     const userMsg = {
       ticket_id: tid,
       user_id: userId,
       sender_role: "user",
-      content: input.trim(),
+      content: trimmedInput,
       subject: messages.filter(m => !m.id?.startsWith("greeting")).length === 0
-        ? `[${selectedCategory || "autre"}] ${input.trim().slice(0, 60)}`
+        ? `[${selectedCategory || "autre"}] ${trimmedInput.slice(0, 60)}`
         : null,
       user_name: userName || null,
       user_email: userEmail || null,
@@ -178,8 +210,6 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
     const { data } = await supabase.from("support_messages").insert(userMsg).select().single();
     if (data) setMessages(prev => [...prev, data]);
 
-    // Auto-reply
-    const autoReply = getAutoReply(input);
     setInput("");
     setSending(false);
 
@@ -205,8 +235,6 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
     setTicketId(null);
     setMessages([]);
   };
-
-  if (!userId) return null;
 
   const widgetSize = expanded
     ? "fixed inset-4 lg:inset-8 z-50"
@@ -235,9 +263,9 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
               )}
               <Headphones className="w-5 h-5 text-primary" />
               <div>
-                <p className="text-xs font-bold text-foreground">Support NukuConnect</p>
+                <p className="text-xs font-bold text-foreground">Support IA NukuConnect</p>
                 <p className="text-[9px] text-muted-foreground">
-                  {ticketId ? `Ticket #${ticketId.slice(0, 8)}` : "Centre d'aide"}
+                  {ticketId ? `Ticket #${ticketId.slice(0, 8)}` : isAuthenticated ? "Centre d'aide" : "Assistant instantané"}
                 </p>
               </div>
             </div>

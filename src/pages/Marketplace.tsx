@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ProductCard from "@/components/marketplace/ProductCard";
 import CompareDrawer from "@/components/marketplace/CompareDrawer";
+import SupportWidget from "@/components/SupportWidget";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -22,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -214,6 +216,7 @@ const Marketplace = () => {
   const [searchParams] = useSearchParams();
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { toast } = useToast();
+  const { user, profile } = useProfile();
   const { data: dbProducts, isLoading } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
@@ -888,6 +891,7 @@ const Marketplace = () => {
         onClear={() => { setCompareProducts([]); setCompareOpen(false); }}
       />
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} userEmail={user?.email} />
       <MobileBottomNav />
 
       <VoiceSearchModal
