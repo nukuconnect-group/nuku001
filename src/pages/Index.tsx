@@ -12,8 +12,12 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
+import SupportWidget from "@/components/SupportWidget";
+import { useProfile } from "@/contexts/ProfileContext";
 
 const Index = () => {
+  const { user, profile } = useProfile();
+
   return (
     <div className="min-h-screen pb-14 lg:pb-0">
       <SEO
@@ -42,13 +46,10 @@ const Index = () => {
       />
       <Header />
       <main className="space-y-0">
-        {/* HeroCarousel: desktop/tablet only */}
         <div className="hidden md:block">
           <HeroCarousel />
         </div>
-        {/* Solutions section: desktop/tablet only, before publications */}
         <SolutionsSection />
-        {/* PromoBannerSlider: mobile hero + products */}
         <PromoBannerSlider />
         <CategoriesSection />
         <FeaturedProducts />
@@ -58,6 +59,7 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} userEmail={user?.email} />
       <NukuAIFloating />
       <MobileBottomNav />
     </div>
