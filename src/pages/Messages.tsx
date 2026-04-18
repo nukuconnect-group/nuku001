@@ -7,6 +7,7 @@ import { Loader2, MessageCircle, Bot, Sparkles, LogIn } from "lucide-react";
 import { useConversations, type ConversationItem } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatArea from "@/components/messages/ChatArea";
 import { Card } from "@/components/ui/card";
@@ -43,7 +44,10 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // On mobile, opening a conversation auto-fullscreens
+  const effectiveFullscreen = isFullscreen || (isMobile && !!selectedConversation);
   const { conversations, loading, profileId, userId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
     selectedConversation?.id || null,
@@ -133,16 +137,15 @@ const Messages = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col ${isFullscreen ? "" : "pb-14 lg:pb-0"}`}>
-      {!isFullscreen && <Header />}
+    <div className={`min-h-screen bg-background flex flex-col ${effectiveFullscreen ? "" : "pb-14 lg:pb-0"}`}>
+      {!effectiveFullscreen && <Header />}
       <main className="flex-1 flex overflow-hidden">
-        <div className={`w-full flex ${isFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4rem)]"}`}>
-          {/* Conversation list: hidden on mobile when a conversation is selected, always visible on desktop (unless fullscreen) */}
+        <div className={`w-full flex ${effectiveFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4rem)]"}`}>
           <ConversationList
             conversations={conversations}
             selectedId={selectedConversation?.id || null}
             onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
-            hidden={isFullscreen || (!!selectedConversation || showWelcome)}
+            hidden={effectiveFullscreen || (!!selectedConversation || showWelcome)}
           />
           <div className={`flex-1 flex flex-col min-w-0 ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
             {showWelcome && !selectedConversation ? (
@@ -189,14 +192,14 @@ const Messages = () => {
                 onSend={sendMessage}
                 onLocalMessage={handleLocalMessage}
                 messagesEndRef={messagesEndRef}
-                isFullscreen={isFullscreen}
+                isFullscreen={effectiveFullscreen}
                 onToggleFullscreen={() => setIsFullscreen(f => !f)}
               />
             )}
           </div>
         </div>
       </main>
-      {!isFullscreen && <MobileBottomNav />}
+      {!effectiveFullscreen && <MobileBottomNav />}
     </div>
   );
 };
