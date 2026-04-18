@@ -24,7 +24,7 @@ export interface DbProduct {
     is_verified: boolean;
     location: string | null;
     bio: string | null;
-    phone: string | null;
+    phone?: string | null;
   };
 }
 
