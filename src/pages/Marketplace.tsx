@@ -891,6 +891,7 @@ const Marketplace = () => {
         onClear={() => { setCompareProducts([]); setCompareOpen(false); }}
       />
       <Footer />
+      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} userEmail={user?.email} />
       <MobileBottomNav />
 
       <VoiceSearchModal
