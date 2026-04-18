@@ -12,7 +12,6 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
-import SupportWidget from "@/components/SupportWidget";
 import { useProfile } from "@/contexts/ProfileContext";
 
 const Index = () => {
@@ -59,7 +58,6 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer />
-      <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} userEmail={user?.email} />
       <NukuAIFloating />
       <MobileBottomNav />
     </div>
