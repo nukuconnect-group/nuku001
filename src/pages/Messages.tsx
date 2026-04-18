@@ -7,6 +7,7 @@ import { Loader2, MessageCircle, Bot, Sparkles, LogIn } from "lucide-react";
 import { useConversations, type ConversationItem } from "@/hooks/useConversations";
 import { useMessages } from "@/hooks/useMessages";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatArea from "@/components/messages/ChatArea";
 import { Card } from "@/components/ui/card";
@@ -43,7 +44,10 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // On mobile, opening a conversation auto-fullscreens
+  const effectiveFullscreen = isFullscreen || (isMobile && !!selectedConversation);
   const { conversations, loading, profileId, userId } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
     selectedConversation?.id || null,
