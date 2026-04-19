@@ -1599,6 +1599,157 @@ export type Database = {
         }
         Relationships: []
       }
+      token_packs: {
+        Row: {
+          bonus_tokens: number
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          name: string
+          price_fcfa: number
+          sort_order: number
+          tokens: number
+          updated_at: string
+        }
+        Insert: {
+          bonus_tokens?: number
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name: string
+          price_fcfa: number
+          sort_order?: number
+          tokens: number
+          updated_at?: string
+        }
+        Update: {
+          bonus_tokens?: number
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          name?: string
+          price_fcfa?: number
+          sort_order?: number
+          tokens?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      token_purchases: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          pack_code: string
+          pack_id: string | null
+          payment_identifier: string | null
+          payment_reference: string | null
+          payment_status: string
+          price_fcfa: number
+          tokens_purchased: number
+          tokens_remaining: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pack_code: string
+          pack_id?: string | null
+          payment_identifier?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          price_fcfa: number
+          tokens_purchased: number
+          tokens_remaining: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pack_code?: string
+          pack_id?: string | null
+          payment_identifier?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          price_fcfa?: number
+          tokens_purchased?: number
+          tokens_remaining?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_purchases_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "token_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      token_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          id: string
+          purchase_id: string | null
+          reason: string | null
+          reference_id: string | null
+          reference_type: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          id?: string
+          purchase_id?: string | null
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          id?: string
+          purchase_id?: string | null
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_transactions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "token_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traceability_events: {
         Row: {
           created_at: string
@@ -1792,7 +1943,15 @@ export type Database = {
         Returns: undefined
       }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
+      complete_token_purchase: {
+        Args: { p_payment_reference?: string; p_purchase_id: string }
+        Returns: Json
+      }
       count_user_products: { Args: { p_user_id: string }; Returns: number }
+      create_token_purchase: {
+        Args: { p_pack_code: string; p_payment_identifier: string }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1805,6 +1964,7 @@ export type Database = {
         Args: { p_formation_id: string; p_user_id: string }
         Returns: string
       }
+      expire_old_tokens: { Args: never; Returns: number }
       get_admin_analytics: { Args: never; Returns: Json }
       get_admin_orders: { Args: never; Returns: Json[] }
       get_admin_stats: { Args: never; Returns: Json }
@@ -1829,6 +1989,7 @@ export type Database = {
           status: string
         }[]
       }
+      get_user_token_balance: { Args: { p_user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1852,6 +2013,16 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      spend_user_tokens: {
+        Args: {
+          p_amount: number
+          p_reason: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       unaccent: { Args: { "": string }; Returns: string }
       update_user_subscription: {

@@ -33,6 +33,7 @@ const Cart = lazy(() => import("./pages/Cart"));
 const DriverDashboard = lazy(() => import("./pages/DriverDashboard"));
 const LearnerDashboard = lazy(() => import("./pages/LearnerDashboard"));
 const Plans = lazy(() => import("./pages/Plans"));
+const Tokens = lazy(() => import("./pages/Tokens"));
 const DeliveryTracking = lazy(() => import("./pages/DeliveryTracking"));
 const About = lazy(() => import("./pages/About"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -126,7 +127,9 @@ const App = () => {
                   <Route path="/commande/:id" element={<OrderDetail />} />
                   <Route path="/driver-dashboard" element={<DriverDashboard />} />
                   <Route path="/learner-dashboard" element={<LearnerDashboard />} />
-                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/plans" element={<Tokens />} />
+                  <Route path="/jetons" element={<Tokens />} />
+                  <Route path="/tokens" element={<Tokens />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                   <Route path="/a-propos" element={<About />} />
                   <Route path="/notifications" element={<Notifications />} />
