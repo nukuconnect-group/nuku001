@@ -31,6 +31,7 @@ import AffiliationCard from "@/components/dashboard/AffiliationCard";
 
 // Lazy load heavy components
 const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
+const TokenWalletCard = lazy(() => import("@/components/dashboard/TokenWalletCard"));
 const ProfileSettingsPanel = lazy(() => import("@/components/dashboard/ProfileSettingsPanel"));
 const FormationsSection = lazy(() => import("@/components/dashboard/FormationsSection"));
 const DeliveryTrackingWidget = lazy(() => import("@/components/dashboard/DeliveryTrackingWidget"));
@@ -377,8 +378,9 @@ const BuyerDashboard = () => {
 
           {/* Subscription Management */}
           <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
-            <div className="mb-5 sm:mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-5 sm:mb-8">
               <SubscriptionCard />
+              <TokenWalletCard />
             </div>
           </Suspense>
 

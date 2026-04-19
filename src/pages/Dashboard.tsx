@@ -20,6 +20,7 @@ import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import TokenWalletCard from "@/components/dashboard/TokenWalletCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
 import FormationsSection from "@/components/dashboard/FormationsSection";
@@ -293,9 +294,10 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Subscription Management */}
-          <div className="mb-4 sm:mb-6">
+          {/* Subscription + Token Wallet */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <SubscriptionCard />
+            <TokenWalletCard />
           </div>
 
           {/* Formations Section */}

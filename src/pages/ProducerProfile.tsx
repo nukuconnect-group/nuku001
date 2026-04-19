@@ -260,72 +260,100 @@ const ProducerProfile = () => {
       />
       <Header />
       <main>
-        <div className="relative w-full h-32 sm:h-48 lg:h-56 bg-gradient-hero overflow-hidden">
+        {/* Alibaba-style banner: cover + supplier identity overlay */}
+        <div className="relative w-full h-40 sm:h-56 lg:h-72 bg-gradient-to-br from-primary via-primary/80 to-accent overflow-hidden">
           {producer.cover_url && (
-            <img src={producer.cover_url} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={producer.cover_url} alt="cover" className="absolute inset-0 w-full h-full object-cover opacity-50" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="container mx-auto px-4 pt-3 relative z-10">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-primary-foreground hover:text-primary-foreground/80 transition-colors mb-2">
+              <ArrowLeft className="w-4 h-4" /><span className="text-xs sm:text-sm">Retour</span>
+            </button>
+          </div>
         </div>
 
-        <div className="container mx-auto px-4 -mt-20 sm:-mt-24 relative z-10">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground transition-colors mb-4">
-            <ArrowLeft className="w-4 h-4" /><span className="text-sm">Retour</span>
-          </button>
-        </div>
+        <div className="container mx-auto px-3 sm:px-4 pb-12 -mt-16 sm:-mt-20 relative z-20">
+          {/* Alibaba-style supplier card */}
+          <Card className="mb-4 sm:mb-6 shadow-elevated overflow-hidden">
+            <CardContent className="p-3 sm:p-5 lg:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-5">
+                {/* Logo entreprise */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={producer.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200"}
+                    alt={(producer as any).business_name || producer.full_name || ""}
+                    className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border-2 border-card shadow-md bg-card"
+                  />
+                  {producer.is_verified && (
+                    <span className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-600 border-2 border-card flex items-center justify-center shadow-lg animate-pulse">
+                      <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+                    </span>
+                  )}
+                </div>
 
-        <div className="container mx-auto px-4 pb-12 -mt-8 sm:-mt-12 relative z-10">
-          <Card className="mb-8 shadow-elevated">
-            <CardContent className="p-6 lg:p-8">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                <img
-                  src={producer.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
-                  alt={producer.full_name || ""}
-                  className="w-24 h-24 lg:w-32 lg:h-32 rounded-full object-cover border-4 border-primary/20"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="font-heading text-2xl lg:text-3xl font-bold text-foreground">{producer.full_name}</h1>
+                {/* Identité entreprise */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-2 mb-1.5 flex-wrap">
+                    <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">
+                      {(producer as any).business_name || producer.full_name}
+                    </h1>
                     {producer.is_verified && (
-                      <Badge className="bg-emerald-600 text-white gap-1 text-xs px-2.5 py-1">
-                        <ShieldCheck className="w-3.5 h-3.5" />Fournisseur vérifié
+                      <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white gap-1 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm animate-pulse">
+                        <ShieldCheck className="w-3 h-3" />Pro Vérifié
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+
+                  {/* Stats horizontales style Alibaba */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs text-muted-foreground mb-2.5">
                     {rating > 0 && (
                       <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-accent fill-accent" />
-                        <span className="font-medium text-foreground">{rating.toFixed(1)}</span>/5
+                        <Star className="w-3.5 h-3.5 text-accent fill-accent" />
+                        <span className="font-bold text-foreground">{rating.toFixed(1)}</span>/5
                       </span>
                     )}
                     {producer.location && (
-                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{producer.location}</span>
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{producer.location}</span>
                     )}
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Membre depuis {new Date(producer.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      <Calendar className="w-3 h-3" />
+                      Depuis {new Date(producer.created_at).getFullYear()}
+                    </span>
+                    <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                      ✓ {(producer as any).response_rate || 95}% réponse
                     </span>
                   </div>
-                  {producer.bio && <p className="text-muted-foreground mb-4">{producer.bio}</p>}
-                  <Button variant="hero" className="gap-2" onClick={() => navigate(`/messages?contact=${producer.id}`)}>
-                    <MessageCircle className="w-4 h-4" />Discuter
-                  </Button>
+
+                  {producer.bio && <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">{producer.bio}</p>}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="hero" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate(`/messages?contact=${producer.id}`)}>
+                      <MessageCircle className="w-3.5 h-3.5" />Contacter
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                      <Star className="w-3.5 h-3.5" />Suivre
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex md:flex-col gap-6 md:gap-4">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <Package className="w-5 h-5 text-primary" />
-                      <span className="font-heading text-2xl font-bold text-foreground">{products.length}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">Produits</span>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <ShoppingBag className="w-5 h-5 text-primary" />
-                      <span className="font-heading text-2xl font-bold text-foreground">{salesCount}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">Ventes</span>
-                  </div>
+              </div>
+
+              {/* Stats grid bas - style Alibaba */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-4 border-t border-border">
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary mx-auto mb-0.5" />
+                  <p className="font-heading text-base sm:text-xl font-bold text-foreground">{products.length}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground">Produits</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary mx-auto mb-0.5" />
+                  <p className="font-heading text-base sm:text-xl font-bold text-foreground">{salesCount}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground">Ventes</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent mx-auto mb-0.5" />
+                  <p className="font-heading text-base sm:text-xl font-bold text-foreground">{rating > 0 ? rating.toFixed(1) : "—"}</p>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground">Note</p>
                 </div>
               </div>
             </CardContent>
