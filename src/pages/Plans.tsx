@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,29 +18,78 @@ import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 import visaMcLogo from "@/assets/visa-mastercard.png";
 
+// Packs alignés avec la table token_packs (1 jeton = 1 boost OU 1 traçabilité)
 const plans = [
   {
-    id: "free", name: "Gratuit", monthlyPrice: 0, annualPrice: 0, maxProducts: 3, commission: 8,
-    description: "Pour découvrir NUKUCONNECT", icon: Zap, color: "bg-muted", popular: false,
-    features: ["Création de compte", "3 annonces produits max", "Messagerie de base", "Accès au marketplace", "Support communautaire", "Commission de 8% sur les ventes"],
-    limitations: ["Limité à 3 produits", "Pas de mise en avant", "Pas de statistiques avancées", "Pas de badge vérifié"],
+    id: "free", name: "Gratuit", price: 0, maxProducts: 3, commission: 8,
+    description: "Découvrir NUKUCONNECT", icon: Zap, color: "bg-muted", popular: false,
+    features: [
+      "Création de compte fournisseur",
+      "Jusqu'à 3 annonces produits",
+      "Messagerie acheteurs",
+      "Accès au marketplace",
+      "Vérification KYC gratuite (badge vérifié)",
+      "Commission 8% sur les ventes",
+    ],
+    limitations: ["Pas de mise en avant", "Pas d'accès NukuAI", "Pas de traçabilité"],
   },
   {
-    id: "pro", name: "Pro", monthlyPrice: 5000, annualPrice: 50000, maxProducts: 15, commission: 5,
-    description: "Pour les fournisseurs actifs", icon: Star, color: "bg-primary", popular: true,
-    features: ["Tout le plan Gratuit", "15 annonces produits", "Badge vérifié", "Mise en avant (3/mois)", "Statistiques de ventes", "Support prioritaire", "Formations premium", "QR codes traçabilité", "Chat NukuConnect IA illimité", "Commission réduite à 5%"],
+    id: "starter", name: "Starter", price: 2500, maxProducts: 10, commission: 8,
+    description: "Pour démarrer activement", icon: Sparkles, color: "bg-secondary", popular: false,
+    features: [
+      "Tout le plan Gratuit",
+      "Jusqu'à 10 annonces produits",
+      "Sponsoriser vos produits 4 fois dans l'année",
+      "Badge Vérifié animé",
+      "Support standard",
+      "Commission 8% sur les ventes",
+    ],
+    limitations: ["Pas d'accès NukuAI", "Pas de traçabilité", "Pas d'analytics avancées"],
+  },
+  {
+    id: "standard", name: "Standard", price: 5000, maxProducts: 25, commission: 8,
+    description: "Le plus populaire — recommandé", icon: Star, color: "bg-primary", popular: true,
+    features: [
+      "Tout le plan Starter",
+      "Jusqu'à 25 annonces produits",
+      "Sponsoriser vos produits 8 fois dans l'année",
+      "Module Traçabilité activé (QR codes)",
+      "Badge Vérifié animé Premium",
+      "Accès illimité à NukuConnect AI",
+      "Support prioritaire",
+      "Commission 8% sur les ventes",
+    ],
     limitations: [],
   },
   {
-    id: "business", name: "Business", monthlyPrice: 15000, annualPrice: 150000, maxProducts: 9999, commission: 3,
-    description: "Pour les entreprises agricoles", icon: Rocket, color: "bg-gradient-hero", popular: false,
-    features: ["Tout le plan Pro", "Annonces illimitées", "Mise en avant illimitée", "Dashboard analytics avancé", "API d'intégration", "Account manager dédié", "Formation sur mesure", "Certification qualité", "Chat NukuConnect IA prioritaire", "Commission réduite à 3%"],
+    id: "premium", name: "Premium", price: 10000, maxProducts: 9999, commission: 5,
+    description: "Pour les pros & entreprises", icon: Rocket, color: "bg-gradient-hero", popular: false,
+    features: [
+      "Tout le plan Standard",
+      "Annonces produits illimitées",
+      "Sponsoriser vos produits 20 fois dans l'année",
+      "API d'intégration ERP/CRM",
+      "Dashboard analytics avancées",
+      "Mises en avant homepage",
+      "Account Manager dédié",
+      "Support 24/7",
+      "Commission réduite à 5% sur les ventes",
+    ],
     limitations: [],
   },
   {
-    id: "enterprise", name: "Entreprise", monthlyPrice: -1, annualPrice: -1, maxProducts: 9999, commission: 2,
-    description: "Solutions personnalisées", icon: Crown, color: "bg-accent", popular: false,
-    features: ["Tout le plan Business", "Infrastructure dédiée", "SLA garanti 99.9%", "Intégration ERP/CRM", "White-label possible", "Support 24/7", "Formation équipe", "Audit sécurité", "Commission négociable (à partir de 2%)"],
+    id: "enterprise", name: "Entreprise", price: -1, maxProducts: 9999, commission: 2,
+    description: "Solutions sur mesure", icon: Crown, color: "bg-accent", popular: false,
+    features: [
+      "Tout le plan Premium",
+      "Infrastructure dédiée",
+      "SLA garanti 99.9%",
+      "Intégrations sur mesure",
+      "White-label possible",
+      "Formation équipe complète",
+      "Audit sécurité",
+      "Commission négociable (à partir de 2%)",
+    ],
     limitations: [],
   },
 ];
@@ -52,9 +101,8 @@ const networks = [
 ];
 
 const Plans = () => {
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [paymentStep, setPaymentStep] = useState<string | null>(null); // planId being paid
+  const [paymentStep, setPaymentStep] = useState<string | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
@@ -72,7 +120,7 @@ const Plans = () => {
     const { data, error } = await supabase.functions.invoke("update-subscription", {
       body: {
         plan: planId,
-        billing_period: billing,
+        billing_period: "annual",
         payment_identifier: paymentProof?.identifier,
         payment_tx_reference: paymentProof?.tx_reference,
       },
@@ -81,12 +129,11 @@ const Plans = () => {
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
 
-    // Send welcome notification
     await supabase.from("notifications").insert({
       user_id: session.user.id,
       type: "subscription",
-      title: `🎉 Félicitations ! Plan ${plan.name} activé`,
-      description: `Bienvenue sur le plan ${plan.name} ! Vous bénéficiez de ${plan.maxProducts === 9999 ? "produits illimités" : plan.maxProducts + " produits"}, commission de ${plan.commission}%. ${planId === "pro" ? "Passez au Business pour encore plus d'avantages !" : planId === "free" ? "Passez au Pro pour débloquer plus de fonctionnalités !" : "Vous profitez du meilleur plan !"}`,
+      title: `🎉 Plan ${plan.name} activé !`,
+      description: `Bienvenue sur le plan ${plan.name}. Commission ${plan.commission}%, ${plan.maxProducts >= 9999 ? "annonces illimitées" : plan.maxProducts + " annonces"}.`,
     });
 
     await refreshSubscription();
@@ -94,7 +141,7 @@ const Plans = () => {
     setPaymentStep(null);
     setPollingEnabled(false);
     setSubscribing(null);
-  }, [billing, refreshSubscription, toast]);
+  }, [refreshSubscription, toast]);
 
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
@@ -141,7 +188,6 @@ const Plans = () => {
       return;
     }
 
-    // Free plan - activate directly
     if (planId === "free") {
       setSubscribing(planId);
       try {
@@ -154,17 +200,15 @@ const Plans = () => {
       return;
     }
 
-    // Paid plan - show payment step
     setPaymentStep(planId);
   };
 
   const initiatePayment = async (planId: string) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
-    const price = billing === "monthly" ? plan.monthlyPrice : plan.annualPrice;
+    const price = plan.price;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast({ title: "Connexion requise", description: "Connectez-vous pour poursuivre le paiement.", variant: "destructive" });
       navigate("/auth");
       return;
     }
@@ -176,13 +220,13 @@ const Plans = () => {
 
     setSubscribing(planId);
     try {
-      const identifier = `NUKU-SUB-${session.user.id}-${planId}-${billing}-${Date.now()}`;
+      const identifier = `NUKU-SUB-${session.user.id}-${planId}-${Date.now()}`;
       setPaymentIdentifier(identifier);
 
       const { data, error } = await supabase.functions.invoke("paygate-init", {
         body: {
           amount: price,
-          description: `Abonnement ${plan.name} ${billing === "monthly" ? "Mensuel" : "Annuel"} - NUKUCONNECT`,
+          description: `Plan ${plan.name} - NUKUCONNECT`,
           identifier,
           phone_number: phoneNumber.replace(/\s/g, ""),
           network: selectedNetwork === "CARD" ? "" : selectedNetwork,
@@ -190,7 +234,6 @@ const Plans = () => {
       });
 
       if (error) throw error;
-
       if (data?.mode === "redirect" && data?.payment_url) {
         window.open(data.payment_url, "_blank");
       }
@@ -207,180 +250,141 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      <SEO url="/plans" title="Abonnements et Tarifs" description="Choisissez le plan NUKUCONNECT adapté à votre activité. Gratuit, Pro ou Premium pour maximiser vos ventes agricoles." image="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=630&fit=crop&q=80" />
+      <SEO url="/plans" title="Plans Premium NUKUCONNECT" description="Choisissez votre plan : Gratuit, Starter, Standard, Premium ou Entreprise. Boostez vos ventes agricoles avec NukuConnect." image="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=630&fit=crop&q=80" />
       <Header />
 
-      {/* Hero */}
-      <section className="pt-4 sm:pt-12 pb-8 sm:pb-16 bg-gradient-earth">
+      <section className="pt-4 sm:pt-12 pb-8 sm:pb-12 bg-gradient-earth">
         <div className="container mx-auto px-3 sm:px-4 text-center">
           <Badge variant="secondary" className="mb-3 sm:mb-4 text-[11px] sm:text-sm">
             <Crown className="w-3 h-3 mr-1" />
-            Plans d'adhésion
+            Plans Premium
           </Badge>
           <h1 className="font-heading text-xl sm:text-3xl lg:text-5xl font-bold text-foreground mb-2 sm:mb-4">
-            Choisissez votre plan d'adhésion
+            Devenez Premium pour vendre plus
           </h1>
-          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto mb-6 sm:mb-8">
-            Des solutions adaptées à chaque étape de votre croissance.
+          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto mb-4 sm:mb-6">
+            Débloquez le badge vérifié, NukuAI, la traçabilité et boostez vos produits.
           </p>
 
           {currentPlan && (
-            <div className="mb-6">
+            <div className="mb-4">
               <Badge className="bg-primary text-primary-foreground text-sm px-4 py-1">
-                Plan actuel : {currentPlan === "free" ? "Gratuit" : currentPlan === "pro" ? "Pro" : currentPlan === "business" ? "Business" : currentPlan}
+                Plan actuel : {plans.find(p => p.id === currentPlan)?.name || currentPlan}
               </Badge>
             </div>
           )}
 
-          <div className="inline-flex items-center bg-muted rounded-full p-1 gap-0.5">
-            <button
-              onClick={() => setBilling("monthly")}
-              className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${billing === "monthly" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Mensuel
-            </button>
-            <button
-              onClick={() => setBilling("annual")}
-              className={`px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all relative ${billing === "annual" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              Annuel
-              <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full">-17%</span>
-            </button>
-          </div>
+          <p className="text-[10px] sm:text-xs text-muted-foreground italic">
+            Tous les packs payants sont valables 12 mois.
+          </p>
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="py-8 sm:py-16">
+      <section className="py-6 sm:py-12">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             {plans.map((plan) => {
-              const price = billing === "monthly" ? plan.monthlyPrice : plan.annualPrice;
+              const price = plan.price;
               const isCustom = price === -1;
-              const period = billing === "monthly" ? "/mois" : "/an";
               const isCurrent = currentPlan === plan.id;
               const isPayingThis = paymentStep === plan.id;
 
               return (
-                <Card key={plan.id} className={`relative overflow-hidden ${plan.popular ? "border-primary shadow-elevated" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
+                <Card key={plan.id} className={`relative overflow-hidden flex flex-col ${plan.popular ? "border-primary shadow-elevated lg:scale-105 z-10" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
                   {plan.popular && (
-                    <div className="absolute top-3 right-3"><Badge variant="default" className="bg-primary text-[10px]">Populaire</Badge></div>
+                    <div className="absolute top-2 right-2 z-10"><Badge className="bg-primary text-[9px]">⭐ Recommandé</Badge></div>
                   )}
                   {isCurrent && (
-                    <div className="absolute top-3 left-3"><Badge className="bg-accent text-accent-foreground text-[10px]">Actuel</Badge></div>
+                    <div className="absolute top-2 left-2 z-10"><Badge className="bg-accent text-accent-foreground text-[9px]">Actuel</Badge></div>
                   )}
 
-                  <CardHeader className="pb-3 p-4 sm:p-6">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${plan.color} flex items-center justify-center mb-3`}>
-                      <plan.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+                  <CardHeader className="pb-2 p-3 sm:p-4">
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl ${plan.color} flex items-center justify-center mb-2`}>
+                      <plan.icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                     </div>
-                    <CardTitle className="text-base sm:text-xl">{plan.name}</CardTitle>
-                    <CardDescription className="text-[11px] sm:text-sm">{plan.description}</CardDescription>
+                    <CardTitle className="text-sm sm:text-base">{plan.name}</CardTitle>
+                    <CardDescription className="text-[10px] sm:text-xs line-clamp-2">{plan.description}</CardDescription>
                   </CardHeader>
 
-                  <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
+                  <CardContent className="space-y-3 p-3 sm:p-4 pt-0 flex-1 flex flex-col">
                     <div>
                       {isCustom ? (
-                        <span className="font-heading text-lg sm:text-xl font-bold text-foreground">Sur devis</span>
+                        <span className="font-heading text-base font-bold text-foreground">Sur devis</span>
                       ) : price === 0 ? (
-                        <span className="font-heading text-2xl sm:text-4xl font-bold text-foreground">Gratuit</span>
+                        <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">Gratuit</span>
                       ) : (
                         <>
-                          <span className="font-heading text-2xl sm:text-4xl font-bold text-foreground">{price.toLocaleString()}</span>
-                          <span className="text-xs sm:text-sm text-muted-foreground"> FCFA</span>
-                          <span className="text-[10px] sm:text-sm text-muted-foreground">{period}</span>
+                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{price.toLocaleString()}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground"> FCFA</span>
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground block">/an</span>
                         </>
                       )}
                     </div>
 
-                    <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/30 text-primary">
-                      Commission : {plan.commission}%
+                    <Badge variant="outline" className="text-[9px] sm:text-[10px] border-primary/30 text-primary w-fit">
+                      Commission ventes : {plan.commission}%
                     </Badge>
 
-                    <ul className="space-y-2">
+                    <ul className="space-y-1.5 flex-1">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                          <span className="text-[11px] sm:text-sm text-muted-foreground">{f}</span>
+                        <li key={f} className="flex items-start gap-1.5">
+                          <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight">{f}</span>
+                        </li>
+                      ))}
+                      {plan.limitations.map((l) => (
+                        <li key={l} className="flex items-start gap-1.5 opacity-50">
+                          <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex items-center justify-center text-muted-foreground text-[10px] flex-shrink-0">×</span>
+                          <span className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight">{l}</span>
                         </li>
                       ))}
                     </ul>
 
-                    {plan.limitations.length > 0 && (
-                      <ul className="space-y-1.5 pt-3 border-t border-border">
-                        {plan.limitations.map((l) => (
-                          <li key={l} className="flex items-start gap-2 opacity-50">
-                            <span className="w-4 h-4 flex items-center justify-center text-muted-foreground text-xs">×</span>
-                            <span className="text-[11px] sm:text-sm text-muted-foreground">{l}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {/* Payment step for this plan */}
                     {isPayingThis && (
-                      <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 space-y-3">
-                        <p className="text-xs font-semibold text-foreground">Choisir le moyen de paiement</p>
-                        <div className="grid grid-cols-3 gap-1.5">
+                      <div className="rounded-xl border-2 border-primary bg-primary/5 p-2.5 space-y-2">
+                        <p className="text-[10px] font-semibold text-foreground">Moyen de paiement</p>
+                        <div className="grid grid-cols-3 gap-1">
                           {networks.map((n) => (
                             <button
                               key={n.id}
                               type="button"
                               onClick={() => !pollingEnabled && setSelectedNetwork(n.id)}
-                              className={`rounded-lg bg-background border-2 p-1.5 text-center transition-all ${selectedNetwork === n.id ? "border-primary" : "border-border"} ${pollingEnabled ? "opacity-50" : ""}`}
+                              className={`rounded-lg bg-background border-2 p-1 text-center transition-all ${selectedNetwork === n.id ? "border-primary" : "border-border"} ${pollingEnabled ? "opacity-50" : ""}`}
                             >
-                              <img src={n.logo} alt={n.label} className="h-6 mx-auto object-contain" />
-                              <p className="text-[8px] font-medium text-foreground mt-0.5">{n.label}</p>
+                              <img src={n.logo} alt={n.label} className="h-5 mx-auto object-contain" />
+                              <p className="text-[7px] font-medium text-foreground mt-0.5">{n.label}</p>
                             </button>
                           ))}
                         </div>
 
                         {selectedNetwork && selectedNetwork !== "CARD" && !pollingEnabled && (
                           <div className="space-y-1">
-                            <Label className="text-[10px] flex items-center gap-1">
-                              <Phone className="w-3 h-3" />
-                              Numéro {selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}
+                            <Label className="text-[9px] flex items-center gap-1">
+                              <Phone className="w-2.5 h-2.5" />Numéro
                             </Label>
-                            <Input
-                              type="tel"
-                              placeholder="+228 XX XX XX XX"
-                              value={phoneNumber}
-                              onChange={(e) => setPhoneNumber(e.target.value)}
-                              className="h-8 text-xs"
-                              disabled={pollingEnabled}
-                            />
+                            <Input type="tel" placeholder="+228..." value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-7 text-[10px]" disabled={pollingEnabled} />
                           </div>
                         )}
 
                         {pollingEnabled && (
-                          <div className="rounded-lg bg-muted/50 p-2 flex items-center gap-2">
-                            {pollingStatus === "pending" && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
-                            {pollingStatus === "completed" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
-                            {(pollingStatus === "failed" || pollingStatus === "expired") && <XCircle className="w-3.5 h-3.5 text-destructive" />}
-                            <span className="text-[10px] font-medium">
-                              {pollingStatus === "pending" ? `Vérification... (${attempts}/60)` : pollingStatus === "completed" ? "Confirmé !" : "Échoué"}
+                          <div className="rounded-lg bg-muted/50 p-1.5 flex items-center gap-1.5">
+                            {pollingStatus === "pending" && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                            {pollingStatus === "completed" && <CheckCircle2 className="w-3 h-3 text-primary" />}
+                            {(pollingStatus === "failed" || pollingStatus === "expired") && <XCircle className="w-3 h-3 text-destructive" />}
+                            <span className="text-[9px] font-medium">
+                              {pollingStatus === "pending" ? `Vérification (${attempts}/60)` : pollingStatus === "completed" ? "Confirmé !" : "Échoué"}
                             </span>
                           </div>
                         )}
 
                         {selectedNetwork && !pollingEnabled && (
-                          <Button
-                            variant="hero"
-                            size="sm"
-                            className="w-full gap-1.5 text-xs h-8"
-                            disabled={!!subscribing}
-                            onClick={() => initiatePayment(plan.id)}
-                          >
-                            {subscribing === plan.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                          <Button variant="hero" size="sm" className="w-full gap-1 text-[10px] h-7" disabled={!!subscribing} onClick={() => initiatePayment(plan.id)}>
+                            {subscribing === plan.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
                             Payer {price.toLocaleString()} FCFA
                           </Button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => { setPaymentStep(null); setSubscribing(null); setPollingEnabled(false); }}
-                          className="text-[10px] text-muted-foreground underline w-full text-center"
-                        >
+                        <button type="button" onClick={() => { setPaymentStep(null); setSubscribing(null); setPollingEnabled(false); }} className="text-[9px] text-muted-foreground underline w-full text-center">
                           Annuler
                         </button>
                       </div>
@@ -389,14 +393,14 @@ const Plans = () => {
                     {!isPayingThis && (
                       <Button
                         variant={plan.popular ? "hero" : "outline"}
-                        className="w-full gap-2 text-xs sm:text-sm h-9 sm:h-10"
+                        className="w-full gap-1.5 text-[11px] sm:text-xs h-8 sm:h-9 mt-auto"
                         disabled={isCurrent || !!subscribing}
                         onClick={() => handleSubscribe(plan.id)}
                       >
                         {subscribing === plan.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : isCurrent ? "Plan actuel" : plan.id === "enterprise" ? "Nous contacter" : (
-                          <>{plan.id === "free" ? "Commencer" : "Choisir ce plan"}<ArrowRight className="w-3.5 h-3.5" /></>
+                          <>{plan.id === "free" ? "Commencer" : "Choisir"}<ArrowRight className="w-3 h-3" /></>
                         )}
                       </Button>
                     )}
@@ -405,27 +409,30 @@ const Plans = () => {
               );
             })}
           </div>
+
+          <div className="mt-8 max-w-3xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 text-center">
+            <p className="text-xs sm:text-sm font-medium text-foreground">
+              💡 Tous les packs payants sont valables <strong>12 mois</strong>. Annonces, badge vérifié, traçabilité, NukuAI et boosts inclus selon le plan choisi.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-8 sm:py-16 bg-muted/30">
+      <section className="py-6 sm:py-12 bg-muted/30">
         <div className="container mx-auto px-3 sm:px-4">
-          <h2 className="font-heading text-lg sm:text-2xl font-bold text-center mb-6 sm:mb-12">Questions fréquentes</h2>
-          <div className="max-w-3xl mx-auto space-y-3 sm:space-y-6">
+          <h2 className="font-heading text-base sm:text-2xl font-bold text-center mb-4 sm:mb-8">Questions fréquentes</h2>
+          <div className="max-w-3xl mx-auto space-y-2 sm:space-y-4">
             {[
-              { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader ou downgrader votre plan à tout moment. Les changements prennent effet immédiatement." },
-              { q: "Quelle est la différence entre mensuel et annuel ?", a: "Le plan annuel vous offre 2 mois gratuits soit environ 17% d'économie." },
-              { q: "Comment fonctionne le paiement ?", a: "Nous acceptons Mobile Money (Flooz, T-Money) et cartes bancaires (Visa, Mastercard) via Paygate Global." },
-              { q: "Puis-je annuler mon abonnement ?", a: "Oui, vous pouvez annuler à tout moment. Votre compte reste actif jusqu'à la fin de la période payée." },
-              { q: "Le plan gratuit est-il vraiment limité à 3 produits ?", a: "Oui. Pour plus d'annonces, passez au plan Pro." },
-              { q: "Comment fonctionnent les commissions ?", a: "NUKUCONNECT prélève une commission par vente: 8% Gratuit, 5% Pro, 3% Business, 2%+ Entreprise." },
-              { q: "Dois-je m'abonner pour acheter ?", a: "Non ! Les acheteurs n'ont pas besoin d'abonnement. Les plans sont pour les fournisseurs." },
-            ].map((faq) => (
-              <div key={faq.q} className="bg-card rounded-xl p-4 sm:p-6 shadow-soft">
-                <h3 className="font-heading font-semibold text-foreground mb-1 text-sm sm:text-base">{faq.q}</h3>
-                <p className="text-muted-foreground text-xs sm:text-sm">{faq.a}</p>
-              </div>
+              { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader à tout moment. Les nouveaux avantages s'appliquent immédiatement." },
+              { q: "Combien de temps les avantages durent-ils ?", a: "Tous les packs payants (Starter, Standard, Premium) sont valables 12 mois à compter de l'activation." },
+              { q: "Comment fonctionne le badge vérifié ?", a: "Tous les fournisseurs (gratuit ou payant) peuvent passer le KYC. Le badge vérifié apparaît dès validation par notre équipe." },
+              { q: "Quelle est la commission sur les ventes ?", a: "8% pour les plans Gratuit, Starter et Standard. 5% pour Premium. Négociable pour Entreprise." },
+              { q: "Que se passe-t-il à la fin des 12 mois ?", a: "Vos boosts inutilisés expirent. Vous repassez automatiquement au plan Gratuit sauf renouvellement." },
+            ].map((f, i) => (
+              <Card key={i}><CardContent className="p-3 sm:p-4">
+                <h3 className="font-semibold text-foreground mb-1 text-xs sm:text-sm">{f.q}</h3>
+                <p className="text-muted-foreground text-[11px] sm:text-sm">{f.a}</p>
+              </CardContent></Card>
             ))}
           </div>
         </div>

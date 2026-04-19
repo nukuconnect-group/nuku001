@@ -4,8 +4,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Star, TrendingUp, Crown } from "lucide-react";
+import { ShieldCheck, Star, TrendingUp, Crown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import SupplierKYCForm from "./SupplierKYCForm";
 
@@ -22,7 +21,6 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
 
   useEffect(() => {
     if (!userId || isVerified) return;
-    // Check if user already has a KYC submission
     supabase
       .from("supplier_kyc_submissions")
       .select("id, status")
@@ -34,7 +32,6 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
           setHasKyc(true);
         } else {
           setHasKyc(false);
-          // Check if popup was already dismissed this session
           const dismissed = sessionStorage.getItem(`supplier_kyc_popup_${userId}`);
           if (!dismissed) {
             setTimeout(() => setOpen(true), 2000);
@@ -57,23 +54,23 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck className="w-5 h-5 text-primary" />
-            Devenez fournisseur vérifié !
+            <Sparkles className="w-5 h-5 text-primary" />
+            Devenez Premium pour vendre plus !
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Augmentez vos ventes et gagnez la confiance des acheteurs avec le badge vérifié
+            Débloquez le badge vérifié, boostez vos produits et gagnez la confiance des acheteurs.
           </DialogDescription>
         </DialogHeader>
 
-        {showForm && !isFree ? (
+        {showForm ? (
           <SupplierKYCForm userId={userId} onSubmitted={() => { setOpen(false); setHasKyc(true); }} />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="grid grid-cols-1 gap-2">
               {[
-                { icon: ShieldCheck, text: "Badge vérifié visible sur votre profil", color: "text-green-600" },
+                { icon: ShieldCheck, text: "Badge Vérifié animé sur votre profil et vos produits", color: "text-emerald-600" },
                 { icon: Star, text: "Vos produits mis en avant dans les recherches", color: "text-yellow-500" },
-                { icon: TrendingUp, text: "Jusqu'à 3x plus de ventes", color: "text-blue-600" },
+                { icon: TrendingUp, text: "Jusqu'à 3x plus de ventes & d'opportunités", color: "text-blue-600" },
               ].map(({ icon: Icon, text, color }) => (
                 <div key={text} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
                   <Icon className={`w-4 h-4 ${color} flex-shrink-0`} />
@@ -82,27 +79,36 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
               ))}
             </div>
 
-            {isFree ? (
-              <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold">Vérification KYC gratuite pour tous</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Soumettez votre dossier KYC dès maintenant pour obtenir le badge vérifié — c'est gratuit, indépendant de votre plan.
+              </p>
+              <Button variant="hero" size="sm" className="w-full text-xs gap-1" onClick={() => setShowForm(true)}>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Commencer ma vérification
+              </Button>
+            </div>
+
+            {isFree && (
+              <div className="space-y-2 p-3 rounded-lg bg-accent/5 border border-accent/20">
                 <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold">Passez au plan Pro pour être vérifié</span>
+                  <Crown className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-semibold">Devenez Premium pour vendre plus</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Le badge vérifié est réservé aux comptes Pro et Business. Profitez aussi de commissions réduites et plus de produits.
+                  Débloquez la traçabilité, NukuAI, boosts et commission réduite à partir de 2 500 FCFA.
                 </p>
                 <Link to="/plans">
-                  <Button variant="hero" size="sm" className="w-full text-xs gap-1">
+                  <Button variant="outline" size="sm" className="w-full text-xs gap-1">
                     <Crown className="w-3.5 h-3.5" />
-                    Voir les plans Pro
+                    Voir les plans Premium
                   </Button>
                 </Link>
               </div>
-            ) : (
-              <Button variant="hero" size="sm" className="w-full text-xs gap-1" onClick={() => setShowForm(true)}>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Commencer la vérification
-              </Button>
             )}
 
             <Button variant="ghost" size="sm" className="w-full text-[10px] text-muted-foreground" onClick={handleDismiss}>
