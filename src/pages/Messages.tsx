@@ -137,20 +137,20 @@ const Messages = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-background flex flex-col ${effectiveFullscreen ? "" : "pb-14 lg:pb-0"}`}>
+    <div className={`bg-background flex flex-col ${effectiveFullscreen ? "fixed inset-0 z-50 h-[100dvh]" : "min-h-screen pb-14 lg:pb-0"}`}>
       {!effectiveFullscreen && <Header />}
-      <main className="flex-1 flex overflow-hidden">
-        <div className={`w-full flex ${effectiveFullscreen ? "h-screen" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4rem)]"}`}>
+      <main className="flex-1 flex overflow-hidden min-h-0">
+        <div className={`w-full flex min-h-0 ${effectiveFullscreen ? "h-full" : "h-[calc(100vh-7.5rem)] lg:h-[calc(100vh-4rem)]"}`}>
           <ConversationList
             conversations={conversations}
             selectedId={selectedConversation?.id || null}
             onSelect={(conv) => { setShowWelcome(false); setSelectedConversation(conv); }}
             hidden={effectiveFullscreen || (!!selectedConversation || showWelcome)}
           />
-          <div className={`flex-1 flex flex-col min-w-0 ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
+          <div className={`flex-1 flex flex-col min-w-0 min-h-0 ${(selectedConversation || showWelcome) ? "flex" : "hidden lg:flex"}`}>
             {showWelcome && !selectedConversation ? (
-              <div className="flex-1 flex flex-col">
-                <div className="border-b border-border p-3 flex items-center gap-3 bg-card">
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="border-b border-border p-3 flex items-center gap-3 bg-card flex-shrink-0">
                   <div className="w-9 h-9 rounded-full bg-gradient-hero flex items-center justify-center">
                     <Bot className="w-5 h-5 text-primary-foreground" />
                   </div>
@@ -161,14 +161,14 @@ const Messages = () => {
                     </h3>
                     <p className="text-[10px] text-muted-foreground">Message de bienvenue</p>
                   </div>
-                  <button 
+                  <button
                     className="ml-auto text-xs text-primary hover:underline"
                     onClick={() => setShowWelcome(false)}
                   >
                     Fermer
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-4 min-h-0">
                   <div className="flex gap-2 max-w-lg">
                     <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center flex-shrink-0">
                       <Bot className="w-3.5 h-3.5 text-primary-foreground" />
