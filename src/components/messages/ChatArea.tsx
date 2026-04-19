@@ -230,12 +230,12 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex-1 flex flex-col bg-background min-h-0 h-full">
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
 
       {/* Header */}
-      <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card">
+      <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card flex-shrink-0 sticky top-0 z-10">
         <button onClick={onBack} className="p-1.5 hover:bg-muted rounded-lg lg:hidden">
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
