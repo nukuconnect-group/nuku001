@@ -1266,6 +1266,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          business_name: string | null
           cover_images: string[] | null
           cover_url: string | null
           created_at: string
@@ -1273,13 +1274,16 @@ export type Database = {
           id: string
           is_verified: boolean
           location: string | null
+          response_rate: number | null
           updated_at: string
           user_id: string
           user_type: string
+          years_active: number | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          business_name?: string | null
           cover_images?: string[] | null
           cover_url?: string | null
           created_at?: string
@@ -1287,13 +1291,16 @@ export type Database = {
           id?: string
           is_verified?: boolean
           location?: string | null
+          response_rate?: number | null
           updated_at?: string
           user_id: string
           user_type?: string
+          years_active?: number | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          business_name?: string | null
           cover_images?: string[] | null
           cover_url?: string | null
           created_at?: string
@@ -1301,9 +1308,11 @@ export type Database = {
           id?: string
           is_verified?: boolean
           location?: string | null
+          response_rate?: number | null
           updated_at?: string
           user_id?: string
           user_type?: string
+          years_active?: number | null
         }
         Relationships: []
       }
@@ -1449,6 +1458,7 @@ export type Database = {
       subscriptions: {
         Row: {
           billing_period: string
+          commission_rate: number | null
           created_at: string
           expires_at: string | null
           id: string
@@ -1461,6 +1471,7 @@ export type Database = {
         }
         Insert: {
           billing_period?: string
+          commission_rate?: number | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -1473,6 +1484,7 @@ export type Database = {
         }
         Update: {
           billing_period?: string
+          commission_rate?: number | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -1603,42 +1615,51 @@ export type Database = {
         Row: {
           bonus_tokens: number
           code: string
+          commission_rate: number | null
           created_at: string
           description: string | null
+          features: Json | null
           id: string
           is_active: boolean
           is_popular: boolean
           name: string
           price_fcfa: number
           sort_order: number
+          tier: string | null
           tokens: number
           updated_at: string
         }
         Insert: {
           bonus_tokens?: number
           code: string
+          commission_rate?: number | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           is_active?: boolean
           is_popular?: boolean
           name: string
           price_fcfa: number
           sort_order?: number
+          tier?: string | null
           tokens: number
           updated_at?: string
         }
         Update: {
           bonus_tokens?: number
           code?: string
+          commission_rate?: number | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           is_active?: boolean
           is_popular?: boolean
           name?: string
           price_fcfa?: number
           sort_order?: number
+          tier?: string | null
           tokens?: number
           updated_at?: string
         }
