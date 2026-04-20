@@ -156,7 +156,7 @@ const Dashboard = () => {
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
-                    {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
+                    {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.business_name?.split(' ')[0] || profile?.full_name?.split(' ')[0] || "Fournisseur"} 👋
                   </h1>
                   {profile?.is_verified && (
                     <Badge className="bg-emerald-500 text-white text-[8px] px-1.5 py-0 gap-0.5 flex-shrink-0">
@@ -164,7 +164,9 @@ const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bienvenue dans votre espace fournisseur</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  {profile?.business_name || "Bienvenue dans votre espace fournisseur"}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
