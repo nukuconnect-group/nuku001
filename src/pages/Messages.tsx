@@ -65,23 +65,27 @@ const Messages = () => {
     }
   }, [loading, profileId]);
 
-  // Auto-select conversation from URL params
+  // Auto-select conversation from URL params (incl. contact + prefill from Réseaux)
   useEffect(() => {
     if (!conversations.length) return;
     const convId = searchParams.get("conversation");
     const productId = searchParams.get("product");
     const sellerName = searchParams.get("seller");
-    
+    const contactId = searchParams.get("contact");
+    const prefill = searchParams.get("prefill");
+
     if (convId) {
       const match = conversations.find(c => c.id === convId);
-      if (match && match.id !== selectedConversation?.id) {
-        setSelectedConversation(match);
-      }
+      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
     } else if (searchParams.get("delivery")) {
       const deliveryId = searchParams.get("delivery");
       const match = conversations.find(c => c.deliveryId === deliveryId);
-      if (match && match.id !== selectedConversation?.id) {
-        setSelectedConversation(match);
+      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
+    } else if (contactId) {
+      const match = conversations.find(c => c.participant.id === contactId);
+      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
+      if (prefill) {
+        try { sessionStorage.setItem(`msg-prefill-${contactId}`, decodeURIComponent(prefill)); } catch {}
       }
     } else if (productId || sellerName) {
       const match = conversations.find(
@@ -89,9 +93,7 @@ const Messages = () => {
           c.productId === productId ||
           c.participant.name.toLowerCase() === sellerName?.toLowerCase()
       );
-      if (match && match.id !== selectedConversation?.id) {
-        setSelectedConversation(match);
-      }
+      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
     }
   }, [conversations, searchParams]);
 

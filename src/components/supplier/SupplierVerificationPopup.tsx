@@ -55,10 +55,10 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Sparkles className="w-5 h-5 text-primary" />
-            Devenez Premium pour vendre plus !
+            Devenez Premium pour développer votre réseau pro
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Débloquez le badge vérifié, boostez vos produits et gagnez la confiance des acheteurs.
+            Trouvez des acheteurs rapidement, débloquez le badge vérifié et boostez vos produits.
           </DialogDescription>
         </DialogHeader>
 

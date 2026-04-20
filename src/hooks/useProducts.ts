@@ -31,58 +31,88 @@ export interface DbProduct {
 interface PublicProducerProfile {
   id?: string;
   full_name?: string | null;
+  business_name?: string | null;
   avatar_url?: string | null;
   is_verified?: boolean;
   location?: string | null;
   bio?: string | null;
 }
 
+// Image Unsplash spécifique par catégorie quand le produit n'a pas d'image valide
 const categoryFallbackImages: Record<string, string> = {
-  céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
-  légumes: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400",
-  fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400",
-  tubercules: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400",
-  élevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400",
-  aviculture: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400",
-  pisciculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400",
-  aquaculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400",
-  agrobusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400",
-  équipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400",
+  cereales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+  céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+  legumes: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600&q=80",
+  légumes: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600&q=80",
+  fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&q=80",
+  tubercules: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=600&q=80",
+  elevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&q=80",
+  élevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&q=80",
+  aviculture: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80",
+  volailles: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80",
+  pisciculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=600&q=80",
+  aquaculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=600&q=80",
+  poisson: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=600&q=80",
+  agriculture: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+  agribusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+  agrobusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+  equipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80",
+  équipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80",
+  tomate: "https://images.unsplash.com/photo-1546470427-227df1b44d44?w=600&q=80",
+  mais: "https://images.unsplash.com/photo-1601593768799-76d3ca2fbd58?w=600&q=80",
+  maïs: "https://images.unsplash.com/photo-1601593768799-76d3ca2fbd58?w=600&q=80",
+  riz: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80",
+  manioc: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&q=80",
 };
 
-const getProductImage = (images: string[] | null, category: string): string => {
-  if (images?.[0]) return images[0];
-  const key = category.toLowerCase().trim();
+const isValidImageUrl = (url: string | undefined | null): boolean => {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === "null" || trimmed === "undefined") return false;
+  return /^https?:\/\//i.test(trimmed) || trimmed.startsWith("/");
+};
+
+const getProductImage = (images: string[] | null, category: string, name?: string): string => {
+  if (images && images.length > 0 && isValidImageUrl(images[0])) return images[0]!;
+  const haystack = `${(name || "").toLowerCase()} ${category.toLowerCase()}`.trim();
   for (const [k, v] of Object.entries(categoryFallbackImages)) {
-    if (key.includes(k)) return v;
+    if (haystack.includes(k)) return v;
   }
-  return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400";
+  return "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&q=80";
 };
 
-const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | null): Product => ({
-  id: p.id,
-  slug: (p as any).slug || undefined,
-  name: p.name,
-  category: p.category,
-  price: p.price,
-  unit: p.unit,
-  quantity: p.quantity_available,
-  location: p.location || "Togo",
-  description: p.description || "",
-  isOrganic: p.is_organic,
-  image: getProductImage(p.images, p.category),
-  images: p.images || [],
-  createdAt: p.created_at,
-  producer: {
-    id: p.producer_id,
-    name: publicProducer?.full_name || p.producer?.full_name || "Producteur",
-    avatar: publicProducer?.avatar_url || p.producer?.avatar_url || defaultAvatar,
-    rating: 4.5,
-    verified: Boolean(publicProducer?.is_verified ?? p.producer?.is_verified),
-    bio: publicProducer?.bio || p.producer?.bio || "",
-    phone: "",
-  },
-});
+const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | null): Product => {
+  // Affiche EN PRIORITÉ le nom d'entreprise (style Alibaba)
+  const displayName =
+    publicProducer?.business_name?.trim() ||
+    publicProducer?.full_name?.trim() ||
+    p.producer?.full_name?.trim() ||
+    "Fournisseur";
+  return {
+    id: p.id,
+    slug: (p as any).slug || undefined,
+    name: p.name,
+    category: p.category,
+    price: p.price,
+    unit: p.unit,
+    quantity: p.quantity_available,
+    location: p.location || "Togo",
+    description: p.description || "",
+    isOrganic: p.is_organic,
+    image: getProductImage(p.images, p.category, p.name),
+    images: p.images || [],
+    createdAt: p.created_at,
+    producer: {
+      id: p.producer_id,
+      name: displayName,
+      avatar: publicProducer?.avatar_url || p.producer?.avatar_url || defaultAvatar,
+      rating: 4.5,
+      verified: Boolean(publicProducer?.is_verified ?? p.producer?.is_verified),
+      bio: publicProducer?.bio || p.producer?.bio || "",
+      phone: "",
+    },
+  };
+};
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
