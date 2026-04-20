@@ -81,7 +81,8 @@ const Producers = () => {
       return profiles.map((p) => ({
         id: p.id,
         user_id: p.user_id,
-        name: p.full_name || t("net.suppliers"),
+        // Affiche en priorité le nom d'entreprise (style Alibaba), sinon nom complet, sinon fallback
+        name: p.business_name?.trim() || p.full_name?.trim() || t("net.suppliers"),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
         location: p.location || "Non spécifié",
@@ -280,14 +281,19 @@ const Producers = () => {
                         </div>
                       </div>
 
-                      {/* Avatar overlapping cover */}
+                      {/* Avatar overlapping cover - utilise toujours image du profil ou icône standard */}
                       <div className="flex justify-center -mt-8 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-muted">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-gradient-to-br from-primary/20 to-accent/10">
                           {producer.avatar ? (
-                            <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
+                            <img
+                              src={producer.avatar}
+                              alt={producer.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                            />
                           ) : (
-                            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                              <User className="w-6 h-6 text-primary" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <User className="w-7 h-7 text-primary" />
                             </div>
                           )}
                         </div>
@@ -354,7 +360,9 @@ const Producers = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              navigate(`/messages?contact=${producer.id}`);
+                              if (!user) { navigate("/auth?returnTo=/producteurs"); return; }
+                              const greeting = encodeURIComponent(`Bonjour ${producer.name}, je vous contacte via NukuConnect pour discuter de vos produits.`);
+                              navigate(`/messages?contact=${producer.id}&prefill=${greeting}`);
                             }}
                           >
                             <MessageCircle className="w-3 h-3" />
