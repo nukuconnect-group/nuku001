@@ -228,21 +228,30 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             <span className="text-[8px] text-muted-foreground">{totalSales}+ vendus</span>
           </div>
 
-          {/* Supplier info — Alibaba style */}
+          {/* Supplier info — Alibaba-style "Verified Fournisseur : Nom" */}
           {!hideProducer && (
             <div className="flex items-center gap-1.5 pt-1.5 mt-0.5 border-t border-border/50">
-              <div className="relative flex-shrink-0">
-                <img src={product.producer.avatar || defaultAvatar} alt={product.producer.name} className="w-4 h-4 rounded-full object-cover" />
-                {product.producer.verified && (
-                  <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 rounded-full bg-secondary text-secondary-foreground border border-card flex items-center justify-center shadow-sm">
-                    <ShieldCheck className="w-2 h-2" />
+              <img
+                src={product.producer.avatar || defaultAvatar}
+                alt={product.producer.name}
+                className="w-5 h-5 rounded-sm object-cover border border-border/60 flex-shrink-0"
+              />
+              {product.producer.verified ? (
+                <span className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold text-primary flex-shrink-0">
+                    <ShieldCheck className="w-2.5 h-2.5 fill-primary text-primary-foreground" />
+                    Verified
                   </span>
-                )}
-              </div>
-              <span className="text-[8px] sm:text-[9px] text-muted-foreground truncate flex-1">{product.producer.name}</span>
-              <span className={`text-[7px] font-medium flex-shrink-0 ${product.producer.verified ? "text-secondary" : "text-muted-foreground"}`}>
-                {product.producer.verified ? "Vérifié" : "Non vérifié"}
-              </span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-foreground flex-shrink-0">Fournisseur :</span>
+                  <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground flex-shrink-0">Fournisseur :</span>
+                  <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
+                  <span className="text-[8px] text-muted-foreground/70 italic flex-shrink-0">non vérifié</span>
+                </span>
+              )}
             </div>
           )}
 
