@@ -31,10 +31,11 @@ import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
+import { useTokens } from "@/hooks/useTokens";
 import {
   Package, ShoppingCart, DollarSign, Plus, Edit,
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
-  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard, Sparkles, ChevronDown
+  QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard, Sparkles, ChevronDown, Coins
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
+  const { balance: tokenBalance } = useTokens();
   useSubscriptionExpiry(user?.id);
 
   const fetchProducts = async (profileId: string) => {
