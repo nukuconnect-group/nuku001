@@ -181,13 +181,13 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Wallet / Balance Card */}
+          {/* Wallet / Balance Card with integrated tokens */}
           <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
             <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-5 h-5" />
-                  <span className="text-sm font-semibold">Portefeuille</span>
+                  <span className="text-sm font-semibold">Mon portefeuille</span>
                 </div>
                 {profile?.is_verified && (
                   <Badge className="bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 text-[9px] gap-0.5">
@@ -195,19 +195,30 @@ const Dashboard = () => {
                   </Badge>
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Ventes brutes</p>
-                  <p className="text-lg sm:text-2xl font-bold">{totalSales.toLocaleString()} F</p>
+                  <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString()} F</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Commission ({commissionRate}%)</p>
-                  <p className="text-lg sm:text-2xl font-bold">-{commissionAmount.toLocaleString()} F</p>
+                  <p className="text-base sm:text-2xl font-bold">-{commissionAmount.toLocaleString()} F</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Solde net</p>
-                  <p className="text-lg sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString()} F</p>
+                  <p className="text-base sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString()} F</p>
                 </div>
+                <Link to="/jetons" className="block group">
+                  <div className="rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 p-2 transition-colors h-full">
+                    <p className="text-[10px] text-primary-foreground/70 flex items-center gap-1">
+                      <Coins className="w-3 h-3" /> Jetons restants
+                    </p>
+                    <p className="text-base sm:text-2xl font-bold flex items-center gap-1.5">
+                      {tokenBalance}
+                      <span className="text-[9px] text-primary-foreground/70 font-normal group-hover:underline">→ Acheter</span>
+                    </p>
+                  </div>
+                </Link>
               </div>
             </CardContent>
           </Card>
