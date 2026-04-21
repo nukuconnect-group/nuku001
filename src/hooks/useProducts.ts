@@ -168,6 +168,7 @@ export const useProducts = () => {
               id, full_name, avatar_url, is_verified, location, bio
             )
           `)
+          .eq("moderation_status", "approved")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
