@@ -240,13 +240,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         if (error) throw error;
         toast({ title: "Produit modifié !", description: "Les modifications ont été enregistrées." });
       } else {
-        const { data: insertedProduct, error } = await supabase.from("products").insert(productData).select("id").single();
+        const { error } = await supabase.from("products").insert(productData).select("id").single();
         if (error) throw error;
-        toast({ title: "📤 Produit publié !", description: "Votre produit est en cours de vérification par notre IA. Vous serez notifié dans quelques instants." });
-        // Trigger async AI moderation (non-blocking)
-        if (insertedProduct?.id) {
-          supabase.functions.invoke("moderate-content", { body: { type: "product", id: insertedProduct.id } }).catch(err => console.warn("Moderation check:", err));
-        }
+        toast({
+          title: "📤 Produit soumis pour analyse",
+          description: "Notre IA vérifie la conformité de votre produit. Il sera publié sur la marketplace d'ici environ 20 minutes s'il respecte les normes.",
+        });
+        // Note: AI moderation runs automatically ~20 min after creation via the scheduled cron job.
       }
 
       setNewProduct(defaultProduct);
