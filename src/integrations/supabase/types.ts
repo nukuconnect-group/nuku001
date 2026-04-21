@@ -1181,6 +1181,10 @@ export type Database = {
           is_organic: boolean
           location: string | null
           min_order: number | null
+          moderated_at: string | null
+          moderation_reason: string | null
+          moderation_scheduled_at: string | null
+          moderation_status: string
           name: string
           price: number
           producer_id: string
@@ -1200,6 +1204,10 @@ export type Database = {
           is_organic?: boolean
           location?: string | null
           min_order?: number | null
+          moderated_at?: string | null
+          moderation_reason?: string | null
+          moderation_scheduled_at?: string | null
+          moderation_status?: string
           name: string
           price: number
           producer_id: string
@@ -1219,6 +1227,10 @@ export type Database = {
           is_organic?: boolean
           location?: string | null
           min_order?: number | null
+          moderated_at?: string | null
+          moderation_reason?: string | null
+          moderation_scheduled_at?: string | null
+          moderation_status?: string
           name?: string
           price?: number
           producer_id?: string
@@ -2000,6 +2012,38 @@ export type Database = {
       get_driver_for_delivery: {
         Args: { p_delivery_id: string }
         Returns: Json
+      }
+      get_products_due_for_moderation: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_negotiable: boolean
+          is_organic: boolean
+          location: string | null
+          min_order: number | null
+          moderated_at: string | null
+          moderation_reason: string | null
+          moderation_scheduled_at: string | null
+          moderation_status: string
+          name: string
+          price: number
+          producer_id: string
+          quantity_available: number
+          slug: string | null
+          stock_status: string
+          unit: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
       get_user_subscription: {

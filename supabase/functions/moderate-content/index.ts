@@ -32,18 +32,23 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const isServiceCall = token === SUPABASE_SERVICE_ROLE_KEY;
+
+    let callerUserId = "";
+    if (!isServiceCall) {
+      const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      callerUserId = claimsData.claims.sub as string;
     }
-    const callerUserId = claimsData.claims.sub as string;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -78,23 +83,18 @@ serve(async (req) => {
       itemName = data.title;
     }
 
-    // Verify caller owns the content (or is admin)
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: callerUserId, _role: "admin" });
-    if (!isAdmin && userId !== callerUserId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Verify caller owns the content (or is admin) — service calls bypass ownership
+    if (!isServiceCall) {
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: callerUserId, _role: "admin" });
+      if (!isAdmin && userId !== callerUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
-    if (userId) {
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        type: "system",
-        title: "🔍 Vérification en cours",
-        description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" est en cours de vérification automatique.`,
-      });
-    }
+    // Note: skip the "verification in progress" notification — the user was already informed at submission.
 
     const systemPrompt = `Tu es un modérateur de contenu pour NukuConnect, une marketplace agricole africaine.
 Tu dois vérifier si une publication (produit ou demande d'achat) respecte les normes suivantes :
@@ -138,6 +138,14 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI moderation error:", aiResponse.status, errText);
+      // On AI failure, approve by default to avoid blocking suppliers
+      if (type === "product") {
+        await supabase.from("products").update({
+          moderation_status: "approved",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: "Modération automatique indisponible — approbation par défaut",
+        }).eq("id", id);
+      }
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
@@ -166,12 +174,19 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     const isApproved = modResult.approved !== false;
 
     if (isApproved) {
+      if (type === "product") {
+        await supabase.from("products").update({
+          moderation_status: "approved",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: modResult.reason || null,
+        }).eq("id", id);
+      }
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
           type: "system",
           title: "✅ Publication approuvée !",
-          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et approuvé(e).`,
+          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et est maintenant visible sur la marketplace.`,
         });
       }
     } else {
@@ -197,7 +212,11 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       }
 
       if (type === "product") {
-        await supabase.from("products").delete().eq("id", id);
+        await supabase.from("products").update({
+          moderation_status: "rejected",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: modResult.reason || "Non conforme",
+        }).eq("id", id);
       } else {
         await supabase.from("demands").update({ status: "rejected" }).eq("id", id);
       }
