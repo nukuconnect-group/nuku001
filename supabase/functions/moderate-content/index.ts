@@ -87,14 +87,7 @@ serve(async (req) => {
       });
     }
 
-    if (userId) {
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        type: "system",
-        title: "🔍 Vérification en cours",
-        description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" est en cours de vérification automatique.`,
-      });
-    }
+    // Note: skip the "verification in progress" notification — the user was already informed at submission.
 
     const systemPrompt = `Tu es un modérateur de contenu pour NukuConnect, une marketplace agricole africaine.
 Tu dois vérifier si une publication (produit ou demande d'achat) respecte les normes suivantes :
