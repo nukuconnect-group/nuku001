@@ -19,8 +19,8 @@ interface BoostPlan {
 }
 
 const boostPlans: BoostPlan[] = [
-  { id: "basic",    name: "Boost 7 jours",  days: 7,  tokens: 1, features: ["Mise en avant 7 jours", "Badge « En vedette »", "Position prioritaire dans la catégorie"] },
-  { id: "standard", name: "Boost 30 jours", days: 30, tokens: 4, features: ["Mise en avant 30 jours (4 × 7j)", "Badge « Top Produit »", "Affiché sur l'accueil", "Notification aux acheteurs"], popular: true },
+  { id: "basic",    name: "Boost 7 jours",  days: 7,  tokens: 1, features: ["Mise en avant 7 jours", "Badge « En vedette »", "Position prioritaire dans la catégorie", "1 crédit utilisé"] },
+  { id: "standard", name: "Boost 30 jours", days: 30, tokens: 4, features: ["Mise en avant 30 jours", "Badge « Top Produit »", "Affiché sur l'accueil", "Notification aux acheteurs", "4 crédits utilisés"], popular: true },
 ];
 
 interface ProductBoostModalProps {

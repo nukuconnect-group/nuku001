@@ -1473,6 +1473,7 @@ export type Database = {
           commission_rate: number | null
           created_at: string
           expires_at: string | null
+          free_renewals_used: number
           id: string
           max_products: number
           plan: string
@@ -1486,6 +1487,7 @@ export type Database = {
           commission_rate?: number | null
           created_at?: string
           expires_at?: string | null
+          free_renewals_used?: number
           id?: string
           max_products?: number
           plan?: string
@@ -1499,6 +1501,7 @@ export type Database = {
           commission_rate?: number | null
           created_at?: string
           expires_at?: string | null
+          free_renewals_used?: number
           id?: string
           max_products?: number
           plan?: string

@@ -20,10 +20,8 @@ import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
-import TokenWalletCard from "@/components/dashboard/TokenWalletCard";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
-import FormationsSection from "@/components/dashboard/FormationsSection";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import DemandsList from "@/components/marketplace/DemandsList";
 import CSVProductImport from "@/components/dashboard/CSVProductImport";
@@ -245,7 +243,7 @@ const Dashboard = () => {
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
             <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
@@ -259,6 +257,7 @@ const Dashboard = () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
               }},
+              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
               { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", onClick: () => {
                 const el = document.querySelector('[value="settings"]');
                 if (el instanceof HTMLElement) el.click();
@@ -309,30 +308,10 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Subscription + Token Wallet */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <SubscriptionCard />
-            <TokenWalletCard />
-          </div>
-
-          {/* Formations Section */}
+          {/* Subscription card */}
           <div className="mb-4 sm:mb-6">
-            <FormationsSection />
+            <SubscriptionCard />
           </div>
-
-          {/* Buy/Sell Intent */}
-          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/10">
-            <CardContent className="p-3 sm:p-4">
-              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                <Package className="w-3.5 h-3.5 text-primary" />
-                Que souhaitez-vous vendre ?
-              </h3>
-              <p className="text-[10px] text-muted-foreground mb-2">Décrivez vos produits pour attirer des acheteurs potentiels</p>
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setShowAddProduct(true)}>
-                <Plus className="w-3 h-3" />Publier un produit à vendre
-              </Button>
-            </CardContent>
-          </Card>
 
 
 
