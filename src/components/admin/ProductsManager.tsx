@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid, Trash2 } from "lucide-react";
+import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid, Trash2, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import AddProductModal from "@/components/dashboard/AddProductModal";
 
 const ProductsManager = () => {
   const { formatPrice } = useLanguage();
@@ -18,6 +19,7 @@ const ProductsManager = () => {
   const [filterCategory, setFilterCategory] = useState("all");
   const [showOnlyOrganic, setShowOnlyOrganic] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const loadProducts = async () => {
     const { data } = await supabase
@@ -191,16 +193,26 @@ const ProductsManager = () => {
                     <td className="py-2 px-1.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Link to={`/produit/${p.id}`}>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Voir">
                             <Eye className="w-3 h-3" />
                           </Button>
                         </Link>
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700"
+                          onClick={() => setEditingProduct(p)}
+                          title="Modifier (image, position, infos)"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                           onClick={() => handleDeleteProduct(p.id, p.name)}
                           disabled={deletingId === p.id}
+                          title="Supprimer"
                         >
                           {deletingId === p.id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -218,6 +230,16 @@ const ProductsManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {editingProduct && (
+        <AddProductModal
+          open={!!editingProduct}
+          onOpenChange={(o) => { if (!o) setEditingProduct(null); }}
+          profileId={editingProduct.producer_id}
+          editProduct={editingProduct}
+          onProductAdded={() => { setEditingProduct(null); loadProducts(); }}
+        />
+      )}
     </div>
   );
 };
