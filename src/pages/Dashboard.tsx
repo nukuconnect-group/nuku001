@@ -310,30 +310,10 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Subscription + Token Wallet */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <SubscriptionCard />
-            <TokenWalletCard />
-          </div>
-
-          {/* Formations Section */}
+          {/* Subscription card */}
           <div className="mb-4 sm:mb-6">
-            <FormationsSection />
+            <SubscriptionCard />
           </div>
-
-          {/* Buy/Sell Intent */}
-          <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/10">
-            <CardContent className="p-3 sm:p-4">
-              <h3 className="font-heading text-xs sm:text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                <Package className="w-3.5 h-3.5 text-primary" />
-                Que souhaitez-vous vendre ?
-              </h3>
-              <p className="text-[10px] text-muted-foreground mb-2">Décrivez vos produits pour attirer des acheteurs potentiels</p>
-              <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setShowAddProduct(true)}>
-                <Plus className="w-3 h-3" />Publier un produit à vendre
-              </Button>
-            </CardContent>
-          </Card>
 
 
 
