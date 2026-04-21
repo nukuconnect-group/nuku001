@@ -245,7 +245,7 @@ const Dashboard = () => {
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
             <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
@@ -259,6 +259,7 @@ const Dashboard = () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
               }},
+              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
               { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", onClick: () => {
                 const el = document.querySelector('[value="settings"]');
                 if (el instanceof HTMLElement) el.click();
