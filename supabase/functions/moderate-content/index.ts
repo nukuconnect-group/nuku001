@@ -166,12 +166,19 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     const isApproved = modResult.approved !== false;
 
     if (isApproved) {
+      if (type === "product") {
+        await supabase.from("products").update({
+          moderation_status: "approved",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: modResult.reason || null,
+        }).eq("id", id);
+      }
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
           type: "system",
           title: "✅ Publication approuvée !",
-          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et approuvé(e).`,
+          description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et est maintenant visible sur la marketplace.`,
         });
       }
     } else {
@@ -197,7 +204,11 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       }
 
       if (type === "product") {
-        await supabase.from("products").delete().eq("id", id);
+        await supabase.from("products").update({
+          moderation_status: "rejected",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: modResult.reason || "Non conforme",
+        }).eq("id", id);
       } else {
         await supabase.from("demands").update({ status: "rejected" }).eq("id", id);
       }
