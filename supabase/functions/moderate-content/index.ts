@@ -131,6 +131,14 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI moderation error:", aiResponse.status, errText);
+      // On AI failure, approve by default to avoid blocking suppliers
+      if (type === "product") {
+        await supabase.from("products").update({
+          moderation_status: "approved",
+          moderated_at: new Date().toISOString(),
+          moderation_reason: "Modération automatique indisponible — approbation par défaut",
+        }).eq("id", id);
+      }
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
