@@ -83,13 +83,15 @@ serve(async (req) => {
       itemName = data.title;
     }
 
-    // Verify caller owns the content (or is admin)
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: callerUserId, _role: "admin" });
-    if (!isAdmin && userId !== callerUserId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Verify caller owns the content (or is admin) — service calls bypass ownership
+    if (!isServiceCall) {
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: callerUserId, _role: "admin" });
+      if (!isAdmin && userId !== callerUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Note: skip the "verification in progress" notification — the user was already informed at submission.
