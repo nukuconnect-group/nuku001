@@ -225,9 +225,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* KYC Status Banner - only show if NOT verified */}
-          {!profile?.is_verified && (
-            <>
           {/* Free plan renewal banner */}
           <FreePlanRenewalBanner userId={user?.id} />
 
