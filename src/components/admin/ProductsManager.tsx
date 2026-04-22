@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid, Trash2, Edit } from "lucide-react";
+import { Package, Search, Loader2, ShieldCheck, MapPin, Leaf, Eye, Star, LayoutGrid, Trash2, Edit, AlertCircle, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddProductModal from "@/components/dashboard/AddProductModal";
 
@@ -18,6 +18,7 @@ const ProductsManager = () => {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [showOnlyOrganic, setShowOnlyOrganic] = useState(false);
+  const [showRejectedOnly, setShowRejectedOnly] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
@@ -55,8 +56,11 @@ const ProductsManager = () => {
       p.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
     const matchCategory = filterCategory === "all" || p.category === filterCategory;
     const matchOrganic = !showOnlyOrganic || p.is_organic;
-    return matchSearch && matchCategory && matchOrganic;
+    const matchRejected = !showRejectedOnly || p.moderation_status === "rejected";
+    return matchSearch && matchCategory && matchOrganic && matchRejected;
   });
+
+  const rejectedCount = products.filter(p => p.moderation_status === "rejected").length;
 
   const totalValue = products.reduce((s, p) => s + (p.price * p.quantity_available), 0);
   const organicCount = products.filter(p => p.is_organic).length;
@@ -125,8 +129,26 @@ const ProductsManager = () => {
               >
                 <Leaf className="w-3 h-3" />Bio
               </Button>
+              <Button
+                variant={showRejectedOnly ? "destructive" : "outline"}
+                size="sm"
+                className="h-8 text-[10px] gap-1"
+                onClick={() => setShowRejectedOnly(!showRejectedOnly)}
+                title="Voir uniquement les produits rejetés par l'IA"
+              >
+                <XCircle className="w-3 h-3" />Rejetés ({rejectedCount})
+              </Button>
             </div>
           </div>
+          {/* Rejection reason banner when filter active */}
+          {showRejectedOnly && (
+            <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-md flex items-start gap-2">
+              <AlertCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0 mt-0.5" />
+              <p className="text-[10px] text-destructive">
+                Modifiez un produit rejeté puis enregistrez : il sera automatiquement réapprouvé et publié sur la marketplace, et le vendeur recevra une notification.
+              </p>
+            </div>
+          )}
           {/* Category chips */}
           <div className="flex flex-wrap gap-1.5 mt-2">
             <Button variant={filterCategory === "all" ? "default" : "outline"} size="sm" className="h-6 text-[9px] px-2" onClick={() => setFilterCategory("all")}>
