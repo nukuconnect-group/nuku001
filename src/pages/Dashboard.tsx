@@ -228,6 +228,12 @@ const Dashboard = () => {
           {/* KYC Status Banner - only show if NOT verified */}
           {!profile?.is_verified && (
             <>
+          {/* Free plan renewal banner */}
+          <FreePlanRenewalBanner userId={user?.id} />
+
+          {/* KYC Status Banner - only show if NOT verified */}
+          {!profile?.is_verified && (
+            <>
               <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
               <div className="mb-4 sm:mb-6" />
             </>
@@ -248,13 +254,10 @@ const Dashboard = () => {
           <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
+              { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: BarChart3, label: "Ventes", color: "bg-purple-500/10 text-purple-600", onClick: () => {
-                const el = document.querySelector('[value="analytics"]');
-                if (el instanceof HTMLElement) el.click();
-              }},
               { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
