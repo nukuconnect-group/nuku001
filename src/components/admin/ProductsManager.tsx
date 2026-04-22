@@ -237,7 +237,33 @@ const ProductsManager = () => {
           onOpenChange={(o) => { if (!o) setEditingProduct(null); }}
           profileId={editingProduct.producer_id}
           editProduct={editingProduct}
-          onProductAdded={() => { setEditingProduct(null); loadProducts(); }}
+          onProductAdded={async () => {
+            // Admin edits force-approve and notify the producer
+            const { data: prod } = await supabase
+              .from("products")
+              .select("id, name, producer_id, profiles:producer_id(user_id)")
+              .eq("id", editingProduct.id)
+              .single();
+            if (prod) {
+              await supabase.from("products").update({
+                moderation_status: "approved",
+                moderation_reason: null,
+                moderated_at: new Date().toISOString(),
+              }).eq("id", prod.id);
+              const ownerUserId = (prod as any).profiles?.user_id;
+              if (ownerUserId) {
+                await supabase.from("notifications").insert({
+                  user_id: ownerUserId,
+                  type: "product",
+                  title: "✅ Produit modéré par Nukuconnect IA",
+                  description: `Votre produit "${prod.name}" a été modifié et republié sur la marketplace par notre équipe.`,
+                  product_id: prod.id,
+                });
+              }
+            }
+            setEditingProduct(null);
+            loadProducts();
+          }}
         />
       )}
     </div>

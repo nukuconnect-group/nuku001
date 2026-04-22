@@ -213,11 +213,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     setIsLoading(true);
 
     try {
-      let imageUrls: string[] = editProduct?.images || [];
+      // imagePreviews est la source de vérité (gère ajouts ET suppressions en mode édition)
+      const existingUrls = imagePreviews.filter(p => /^https?:\/\//.test(p));
+      let uploadedUrls: string[] = [];
       if (imageFiles.length > 0) {
-        const uploaded = await uploadImages(imageFiles);
-        imageUrls = [...imageUrls, ...uploaded];
+        uploadedUrls = await uploadImages(imageFiles);
       }
+      const imageUrls = [...existingUrls, ...uploadedUrls];
 
       const productData: any = {
         name: newProduct.name,
@@ -246,7 +248,6 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
           title: "📤 Produit soumis pour analyse",
           description: "Notre IA vérifie la conformité de votre produit. Il sera publié sur la marketplace d'ici environ 20 minutes s'il respecte les normes.",
         });
-        // Note: AI moderation runs automatically ~20 min after creation via the scheduled cron job.
       }
 
       setNewProduct(defaultProduct);
