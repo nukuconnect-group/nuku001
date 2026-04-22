@@ -375,10 +375,15 @@ const Dashboard = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="absolute top-2 right-2 flex gap-1">
+                          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                             <Badge variant="secondary" className="text-[9px] bg-card/90">
                               {product.quantity_available} {product.unit}
                             </Badge>
+                            <ProductStatusBadge
+                              status={product.moderation_status || "pending"}
+                              reason={product.moderation_reason}
+                              scheduledAt={product.moderation_scheduled_at}
+                            />
                           </div>
                         </div>
                         <CardContent className="p-2.5 sm:p-3">

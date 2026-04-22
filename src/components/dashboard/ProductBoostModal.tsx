@@ -72,7 +72,20 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
       });
       if (error) throw error;
 
-      toast({ title: "🚀 Produit boosté !", description: `"${product.name}" en vedette pour ${plan.days} jours. ${plan.tokens} jeton consommé.` });
+      toast({ title: "🚀 Produit boosté !", description: `"${product.name}" en vedette pour ${plan.days} jours. ${plan.tokens} crédit${plan.tokens > 1 ? "s" : ""} utilisé${plan.tokens > 1 ? "s" : ""}.` });
+
+      // Notification persistante in-app pour confirmer la consommation de crédits
+      const { data: { session: sess2 } } = await supabase.auth.getSession();
+      if (sess2) {
+        await supabase.from("notifications").insert({
+          user_id: sess2.user.id,
+          type: "tokens",
+          title: `💎 ${plan.tokens} crédit${plan.tokens > 1 ? "s" : ""} utilisé${plan.tokens > 1 ? "s" : ""}`,
+          description: `Boost activé pour "${product.name}" pendant ${plan.days} jours. Solde restant : ${balance - plan.tokens} crédit${(balance - plan.tokens) > 1 ? "s" : ""}.`,
+          product_id: product.id,
+        });
+      }
+
       onOpenChange(false);
       onBoostSuccess?.();
     } catch (err: any) {
