@@ -28,6 +28,8 @@ import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
+import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner";
+import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
