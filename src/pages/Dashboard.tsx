@@ -256,14 +256,11 @@ const Dashboard = () => {
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
               { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                const el = document.querySelector('[value="withdrawals"]');
-                if (el instanceof HTMLElement) el.click();
+                document.getElementById("withdrawals-section")?.setAttribute("open", "true");
+                document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
               }},
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
-              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", onClick: () => {
-                const el = document.querySelector('[value="settings"]');
-                if (el instanceof HTMLElement) el.click();
-              }},
+              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", href: "/settings" },
             ].map((action, i) => {
               const content = (
                 <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group">
