@@ -952,6 +952,56 @@ export type Database = {
           },
         ]
       }
+      moderation_logs: {
+        Row: {
+          attempt_number: number
+          category_check: string | null
+          confidence: number | null
+          content_safety: string | null
+          created_at: string
+          decision: string
+          id: string
+          product_id: string | null
+          prompt_summary: string | null
+          raw_response: Json | null
+          reason: string | null
+        }
+        Insert: {
+          attempt_number?: number
+          category_check?: string | null
+          confidence?: number | null
+          content_safety?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          product_id?: string | null
+          prompt_summary?: string | null
+          raw_response?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          attempt_number?: number
+          category_check?: string | null
+          confidence?: number | null
+          content_safety?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          product_id?: string | null
+          prompt_summary?: string | null
+          raw_response?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2016,6 +2066,7 @@ export type Database = {
         Args: { p_delivery_id: string }
         Returns: Json
       }
+      get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
       get_products_due_for_moderation: {
         Args: { p_limit?: number }
         Returns: {
@@ -2081,6 +2132,11 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      renew_free_subscription: { Args: never; Returns: Json }
+      resubmit_product_moderation: {
+        Args: { p_product_id: string }
+        Returns: Json
       }
       spend_user_tokens: {
         Args: {

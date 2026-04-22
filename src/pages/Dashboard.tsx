@@ -28,6 +28,8 @@ import CSVProductImport from "@/components/dashboard/CSVProductImport";
 import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
+import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner";
+import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
@@ -223,6 +225,9 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+          {/* Free plan renewal banner */}
+          <FreePlanRenewalBanner userId={user?.id} />
+
           {/* KYC Status Banner - only show if NOT verified */}
           {!profile?.is_verified && (
             <>
@@ -246,13 +251,10 @@ const Dashboard = () => {
           <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
+              { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: BarChart3, label: "Ventes", color: "bg-purple-500/10 text-purple-600", onClick: () => {
-                const el = document.querySelector('[value="analytics"]');
-                if (el instanceof HTMLElement) el.click();
-              }},
               { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.querySelector('[value="withdrawals"]');
                 if (el instanceof HTMLElement) el.click();
@@ -373,10 +375,15 @@ const Dashboard = () => {
                               </Badge>
                             )}
                           </div>
-                          <div className="absolute top-2 right-2 flex gap-1">
+                          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                             <Badge variant="secondary" className="text-[9px] bg-card/90">
                               {product.quantity_available} {product.unit}
                             </Badge>
+                            <ProductStatusBadge
+                              status={product.moderation_status || "pending"}
+                              reason={product.moderation_reason}
+                              scheduledAt={product.moderation_scheduled_at}
+                            />
                           </div>
                         </div>
                         <CardContent className="p-2.5 sm:p-3">
