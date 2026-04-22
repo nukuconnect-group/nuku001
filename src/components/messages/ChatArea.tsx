@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, MoreVertical, Send, Paperclip, Mic, MicOff,
   Image as ImageIcon, Sparkles, X, CheckCheck, Check, Clock, MessageCircle,
-  Loader2, Reply, Maximize2, Minimize2, Phone, Ban, Flag, AlertTriangle,
+  Loader2, Reply, Maximize2, Minimize2, Phone, Ban, Flag, AlertTriangle, Trash2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -53,6 +53,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(() => {
+    if (!conversation) return false;
+    const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
+    return blocked.includes(conversation.participant.id);
+  });
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingUserIdRef = useRef<string>(crypto.randomUUID());
@@ -64,6 +69,47 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     () => (conversation?.isDelivery ? DELIVERY_QUICK_REPLIES : AI_QUICK_REPLIES),
     [conversation?.isDelivery]
   );
+
+  // Sync block state when conversation changes
+  useEffect(() => {
+    if (!conversation) return;
+    const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
+    setIsBlocked(blocked.includes(conversation.participant.id));
+  }, [conversation?.participant.id]);
+
+  const toggleBlock = () => {
+    if (!conversation) return;
+    const blocked: string[] = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
+    const next = isBlocked ? blocked.filter(id => id !== conversation.participant.id) : [...blocked, conversation.participant.id];
+    localStorage.setItem("nuku_blocked_users", JSON.stringify(next));
+    setIsBlocked(!isBlocked);
+    toast({
+      title: isBlocked ? "✓ Utilisateur débloqué" : "🚫 Utilisateur bloqué",
+      description: `${conversation.participant.name} ${isBlocked ? "a été débloqué" : "a été bloqué. Vous ne recevrez plus de messages."}`,
+    });
+  };
+
+  const clearConversation = async () => {
+    if (!conversation || !confirm(`Vider toute la conversation avec ${conversation.participant.name} ?`)) return;
+    const { error } = await supabase.from("messages").delete().eq("conversation_id", conversation.id);
+    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "🧹 Conversation vidée", description: "Tous les messages ont été supprimés." });
+  };
+
+  const deleteEntireBox = async () => {
+    if (!conversation || !confirm(`Supprimer définitivement la boîte de message avec ${conversation.participant.name} ? Cette action est irréversible.`)) return;
+    await supabase.from("messages").delete().eq("conversation_id", conversation.id);
+    const { error } = await supabase.from("conversations").delete().eq("id", conversation.id);
+    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "🗑️ Boîte supprimée" });
+    onBack();
+  };
+
+  const deleteSingleMessage = async (msgId: string) => {
+    if (msgId.startsWith("local-")) return;
+    const { error } = await supabase.from("messages").delete().eq("id", msgId);
+    if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
+  };
 
   // Typing indicator: listen to realtime presence
   useEffect(() => {
@@ -289,10 +335,13 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
                 {isFullscreen ? "Quitter plein écran" : "Plein écran"}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => toast({ title: "Conversation vidée" })}>Vider la conversation</DropdownMenuItem>
+            <DropdownMenuItem onClick={clearConversation}>🧹 Vider la conversation</DropdownMenuItem>
+            <DropdownMenuItem onClick={deleteEntireBox} className="text-destructive gap-2">
+              <Trash2 className="w-3.5 h-3.5" />Supprimer la boîte
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => toast({ title: "🚫 Utilisateur bloqué", description: `${conversation.participant.name} a été bloqué. Vous ne recevrez plus de messages.` })} className="text-destructive gap-2">
-              <Ban className="w-3.5 h-3.5" />Bloquer
+            <DropdownMenuItem onClick={toggleBlock} className={isBlocked ? "" : "text-destructive gap-2"}>
+              <Ban className="w-3.5 h-3.5" />{isBlocked ? "Débloquer" : "Bloquer"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => toast({ title: "🚩 Signalement envoyé", description: `${conversation.participant.name} a été signalé à notre équipe.` })} className="text-destructive gap-2">
               <Flag className="w-3.5 h-3.5" />Signaler
