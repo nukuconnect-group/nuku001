@@ -228,30 +228,27 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             <span className="text-[8px] text-muted-foreground">{totalSales}+ vendus</span>
           </div>
 
-          {/* Supplier info — Alibaba-style "Verified Fournisseur : Nom" */}
+          {/* Supplier info — Alibaba-style "Verified Fournisseur : Nom entreprise" */}
           {!hideProducer && (
             <div className="flex items-center gap-1.5 pt-1.5 mt-0.5 border-t border-border/50">
               <img
                 src={product.producer.avatar || defaultAvatar}
                 alt={product.producer.name}
                 className="w-5 h-5 rounded-sm object-cover border border-border/60 flex-shrink-0"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
               />
-              {product.producer.verified ? (
-                <span className="flex items-center gap-1 min-w-0 flex-1">
-                  <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold text-primary flex-shrink-0">
-                    <ShieldCheck className="w-2.5 h-2.5 fill-primary text-primary-foreground" />
-                    Verified
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-foreground flex-shrink-0">Fournisseur :</span>
-                  <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 min-w-0 flex-1">
-                  <span className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground flex-shrink-0">Fournisseur :</span>
-                  <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
-                  <span className="text-[8px] text-muted-foreground/70 italic flex-shrink-0">non vérifié</span>
-                </span>
-              )}
+              <span className="flex items-center gap-1 min-w-0 flex-1">
+                {product.producer.verified ? (
+                  <Badge className="bg-emerald-500 text-white gap-0.5 text-[8px] sm:text-[9px] px-1.5 py-0 h-4 flex-shrink-0 shadow-sm">
+                    <ShieldCheck className="w-2 h-2" />Vérifié
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[8px] sm:text-[9px] px-1.5 py-0 h-4 text-muted-foreground border-border flex-shrink-0">
+                    Non vérifié
+                  </Badge>
+                )}
+                <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
+              </span>
             </div>
           )}
 

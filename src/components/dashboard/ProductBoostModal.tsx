@@ -43,7 +43,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
     if (!plan) return;
 
     if (balance < plan.tokens) {
-      toast({ title: "Solde insuffisant", description: `Il vous faut ${plan.tokens} jeton. Achetez-en pour continuer.`, variant: "destructive" });
+      toast({ title: "Solde insuffisant", description: `Il vous faut ${plan.tokens} crédit${plan.tokens > 1 ? "s" : ""}. Achetez un pack pour continuer.`, variant: "destructive" });
       onOpenChange(false);
       navigate("/jetons");
       return;
@@ -104,18 +104,18 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
           </DialogTitle>
           {product && (
             <p className="text-xs text-muted-foreground mt-1">
-              Mettez en avant <span className="font-semibold text-foreground">"{product.name}"</span> avec vos jetons
+              Mettez en avant <span className="font-semibold text-foreground">"{product.name}"</span> avec vos crédits
             </p>
           )}
         </DialogHeader>
 
-        {/* Solde jetons */}
+        {/* Solde crédits */}
         <div className="rounded-xl bg-gradient-hero text-primary-foreground p-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Coins className="w-5 h-5" />
             <div>
               <p className="text-[10px] opacity-90">Votre solde</p>
-              <p className="font-heading text-lg font-bold">{balanceLoading ? "…" : balance} jetons</p>
+              <p className="font-heading text-lg font-bold">{balanceLoading ? "…" : balance} crédit{balance > 1 ? "s" : ""}</p>
             </div>
           </div>
           <Button size="sm" variant="secondary" className="text-xs h-8" onClick={() => { onOpenChange(false); navigate("/jetons"); }}>
@@ -145,7 +145,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
                       <div className="flex items-baseline gap-1 mt-0.5">
                         <Coins className="w-3.5 h-3.5 text-primary" />
                         <span className="font-heading text-lg font-bold text-primary">{plan.tokens}</span>
-                        <span className="text-[10px] text-muted-foreground">jeton{plan.tokens > 1 ? "s" : ""}</span>
+                        <span className="text-[10px] text-muted-foreground">crédit{plan.tokens > 1 ? "s" : ""}</span>
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         <Clock className="w-3 h-3 text-muted-foreground" />
@@ -175,7 +175,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
           <div>
             <p className="text-[10px] text-muted-foreground">Plan sélectionné</p>
             <p className="font-heading text-sm font-bold">
-              {boostPlans.find(p => p.id === selectedPlan)?.name} — {boostPlans.find(p => p.id === selectedPlan)?.tokens} jeton
+              {boostPlans.find(p => p.id === selectedPlan)?.name} — {boostPlans.find(p => p.id === selectedPlan)?.tokens} crédit{(boostPlans.find(p => p.id === selectedPlan)?.tokens || 1) > 1 ? "s" : ""}
             </p>
           </div>
           <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={handleBoost} disabled={isLoading}>

@@ -256,14 +256,11 @@ const Dashboard = () => {
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
               { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                const el = document.querySelector('[value="withdrawals"]');
-                if (el instanceof HTMLElement) el.click();
+                document.getElementById("withdrawals-section")?.setAttribute("open", "true");
+                document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
               }},
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
-              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", onClick: () => {
-                const el = document.querySelector('[value="settings"]');
-                if (el instanceof HTMLElement) el.click();
-              }},
+              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", href: "/settings" },
             ].map((action, i) => {
               const content = (
                 <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group">
@@ -317,33 +314,20 @@ const Dashboard = () => {
 
 
 
-          {/* Tabs */}
-          <Tabs defaultValue="products" className="space-y-3 sm:space-y-4">
-            <TabsList className="bg-muted p-0.5 sm:p-1 w-full overflow-x-auto flex">
-              <TabsTrigger value="products" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Produits ({products.length})
-              </TabsTrigger>
-              <TabsTrigger value="orders" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Commandes ({orders.length})
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <BarChart3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Stats
-              </TabsTrigger>
-              <TabsTrigger value="traceability" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <QrCode className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Traçabilité
-              </TabsTrigger>
-              <TabsTrigger value="withdrawals" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <Wallet className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Retraits
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1">
-                <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Paramètres
-              </TabsTrigger>
-              <TabsTrigger value="affiliation" className="gap-1 data-[state=active]:bg-background text-[10px] sm:text-xs flex-1" onClick={() => window.location.href = '/affiliation'}>
-                <Gift className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Affiliation
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="products" className="space-y-3">
+          {/* Products list — Quick Actions cover other sections */}
+          <Card className="mb-4">
+            <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Package className="w-4 h-4 text-primary" /> Mes produits ({products.length})
+                </CardTitle>
+                <CardDescription className="text-[10px]">Gérez et boostez votre catalogue</CardDescription>
+              </div>
+              <Button variant="hero" size="sm" className="text-xs h-8 gap-1" onClick={() => setShowAddProduct(true)}>
+                <Plus className="w-3.5 h-3.5" /> Publier
+              </Button>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
               {products.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                   {products.map((product) => {
@@ -360,11 +344,6 @@ const Dashboard = () => {
                               <Package className="w-8 h-8 text-muted-foreground/30" />
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <Badge className="bg-card/90 text-foreground gap-1 text-[10px]">
-                              <Eye className="w-3 h-3" />Voir le produit
-                            </Badge>
-                          </div>
                           <div className="absolute top-2 left-2 flex gap-1">
                             {product.is_organic && (
                               <Badge className="bg-green-500 text-white text-[9px] px-1.5">BIO</Badge>
@@ -398,7 +377,6 @@ const Dashboard = () => {
                             </span>
                             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
                           </div>
-                          {/* Per-product stats */}
                           <div className="grid grid-cols-2 gap-1 mb-2">
                             <div className="bg-muted/50 rounded-md p-1.5 text-center">
                               <p className="text-[9px] text-muted-foreground">Vendus</p>
@@ -433,202 +411,50 @@ const Dashboard = () => {
                   })}
                 </div>
               ) : (
-                <Card className="border-dashed">
-                  <CardContent className="text-center py-6 sm:py-10">
-                    <Package className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
-                    <h3 className="font-heading font-semibold text-sm sm:text-base mb-1.5">Aucun produit</h3>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">Publiez votre premier produit</p>
-                    <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={() => setShowAddProduct(true)}>
-                      <Plus className="w-3.5 h-3.5" />Publier un produit
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="text-center py-6 sm:py-10 border border-dashed border-border rounded-xl">
+                  <Package className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                  <h3 className="font-heading font-semibold text-sm sm:text-base mb-1.5">Aucun produit</h3>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">Publiez votre premier produit</p>
+                  <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={() => setShowAddProduct(true)}>
+                    <Plus className="w-3.5 h-3.5" />Publier un produit
+                  </Button>
+                </div>
               )}
 
-              {/* CSV Import */}
-              <CSVProductImport
-                profileId={profile?.id}
-                onImportComplete={() => profile && fetchProducts(profile.id)}
-              />
-            </TabsContent>
-
-            <TabsContent value="orders">
-              <Card>
-                <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-xs sm:text-sm">Commandes récentes</CardTitle>
-                  <CardDescription className="text-[10px] sm:text-xs">
-                    {completedOrders} terminées • {pendingOrders} en attente
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 pt-0">
-                  {orders.length === 0 ? (
-                    <div className="text-center py-6">
-                      <ShoppingCart className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-xs text-muted-foreground">Aucune commande</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {orders.map((order) => (
-                        <div key={order.id} className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl gap-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Package className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-[10px] sm:text-xs truncate">{order.products?.name}</p>
-                              <p className="text-[9px] sm:text-[10px] text-muted-foreground">{order.quantity} × {Number(order.products?.price).toLocaleString()} F</p>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <Badge variant={order.status === "completed" ? "default" : "secondary"} className="text-[9px]">
-                              {order.status === "pending" ? "En attente" : order.status === "completed" ? "Terminée" : order.status}
-                            </Badge>
-                            <p className="text-[10px] font-medium text-primary mt-0.5">{Number(order.total_price).toLocaleString()} F</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="analytics">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <OrdersBarChart />
-                <Card>
-                  <CardHeader className="p-3 sm:p-4">
-                    <CardTitle className="flex items-center gap-2 text-xs sm:text-sm">
-                      <Users className="w-4 h-4 text-primary" />Visiteurs
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-                    {[
-                      { label: "Aujourd'hui", value: "127", trend: "+12%" },
-                      { label: "Cette semaine", value: "892", trend: "+8%" },
-                      { label: "Ce mois", value: "2,456", trend: "+23%" },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-semibold">{item.value}</span>
-                          <Badge variant="secondary" className="text-[9px] text-primary">{item.trend}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="p-3 sm:p-4">
-                    <CardTitle className="flex items-center gap-2 text-xs sm:text-sm">
-                      <TrendingUp className="w-4 h-4 text-primary" />Performance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-                    {[
-                      { label: "Taux de conversion", value: "4.2%" },
-                      { label: "Panier moyen", value: "35,000 F" },
-                      { label: "Taux de retour", value: "2.1%" },
-                      { label: "Satisfaction client", value: "4.8/5" },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                        <span className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</span>
-                        <span className="text-xs font-semibold">{item.value}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="p-3 sm:p-4">
-                    <CardTitle className="flex items-center gap-2 text-xs sm:text-sm">
-                      <MapPin className="w-4 h-4 text-primary" />Top Régions
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-                    {[
-                      { label: "Lomé", value: "45%", color: "bg-primary" },
-                      { label: "Kara", value: "22%", color: "bg-blue-500" },
-                      { label: "Sokodé", value: "15%", color: "bg-accent" },
-                      { label: "Kpalimé", value: "18%", color: "bg-green-500" },
-                    ].map(item => (
-                      <div key={item.label} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</span>
-                          <span className="text-[10px] font-semibold">{item.value}</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${item.color} rounded-full`} style={{ width: item.value }} />
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+              <div className="mt-3">
+                <CSVProductImport
+                  profileId={profile?.id}
+                  onImportComplete={() => profile && fetchProducts(profile.id)}
+                />
               </div>
-            </TabsContent>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="traceability">
-              <Card>
-                <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="flex items-center gap-2 text-xs sm:text-sm">
-                    <QrCode className="w-4 h-4 text-primary" />Traçabilité de vos produits
-                  </CardTitle>
-                  <CardDescription className="text-[10px] sm:text-xs">
-                    Ajoutez des informations de traçabilité pour rassurer vos clients
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4 pt-0">
-                  {products.length > 0 ? (
-                    <div className="space-y-2">
-                      {products.map((product) => (
-                        <div key={product.id} className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl gap-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {product.images?.[0] && (
-                              <img src={product.images[0]} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-medium text-xs truncate">{product.name}</p>
-                              <p className="text-[9px] text-muted-foreground flex items-center gap-1">
-                                <Calendar className="w-2.5 h-2.5" />
-                                {new Date(product.created_at).toLocaleDateString("fr-FR")}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Badge variant="secondary" className="text-[9px]">
-                              {product.is_organic ? "Bio" : "Standard"}
-                            </Badge>
-                            <Link to="/tracabilite">
-                              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1">
-                                <QrCode className="w-3 h-3" />Tracer
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <QrCode className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-xs text-muted-foreground">Publiez d'abord un produit</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+          {/* Settings collapsible (was tab) */}
+          <details className="mb-4">
+            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
+              <Settings className="w-4 h-4 text-primary" />
+              <span className="text-xs sm:text-sm font-semibold text-foreground">Paramètres du compte</span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+            </summary>
+            <div className="mt-2 space-y-3">
+              <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+            </div>
+          </details>
 
-            {/* Withdrawals Tab */}
-            <TabsContent value="withdrawals">
+          {/* Withdrawals collapsible */}
+          <details className="mb-4" id="withdrawals-section">
+            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
+              <Wallet className="w-4 h-4 text-primary" />
+              <span className="text-xs sm:text-sm font-semibold text-foreground">Retraits & paiements</span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+            </summary>
+            <div className="mt-2">
               <WithdrawalPanel />
-            </TabsContent>
+            </div>
+          </details>
 
-            {/* Settings Tab */}
-            <TabsContent value="settings">
-              <div className="space-y-4">
-                <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
-              </div>
-            </TabsContent>
-          </Tabs>
         </div>
       </main>
 

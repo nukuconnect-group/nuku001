@@ -107,7 +107,8 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
       name: displayName,
       avatar: publicProducer?.avatar_url || p.producer?.avatar_url || defaultAvatar,
       rating: 4.5,
-      verified: Boolean(publicProducer?.is_verified ?? p.producer?.is_verified),
+      // Priority to public RPC (always returns latest) then producer join
+      verified: Boolean(publicProducer?.is_verified ?? p.producer?.is_verified ?? false),
       bio: publicProducer?.bio || p.producer?.bio || "",
       phone: "",
     },

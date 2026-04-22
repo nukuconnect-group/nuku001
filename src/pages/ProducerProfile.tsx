@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
   Package, ShoppingBag, Truck, User
@@ -278,12 +279,13 @@ const ProducerProfile = () => {
           <Card className="mb-4 sm:mb-6 shadow-elevated overflow-hidden">
             <CardContent className="p-3 sm:p-5 lg:p-6">
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-5">
-                {/* Logo entreprise */}
+                {/* Logo entreprise — toujours avatar réel ou défaut, jamais image aléatoire */}
                 <div className="relative flex-shrink-0">
                   <img
-                    src={producer.avatar_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200"}
+                    src={producer.avatar_url || defaultAvatar}
                     alt={(producer as any).business_name || producer.full_name || ""}
                     className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border-2 border-card shadow-md bg-card"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
                   />
                   {producer.is_verified && (
                     <span className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-600 border-2 border-card flex items-center justify-center shadow-lg animate-pulse">
@@ -298,9 +300,13 @@ const ProducerProfile = () => {
                     <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">
                       {(producer as any).business_name || producer.full_name}
                     </h1>
-                    {producer.is_verified && (
-                      <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white gap-1 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm animate-pulse">
-                        <ShieldCheck className="w-3 h-3" />Pro Vérifié
+                    {producer.is_verified ? (
+                      <Badge className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white gap-1 text-[10px] sm:text-xs px-2 py-0.5 shadow-sm">
+                        <ShieldCheck className="w-3 h-3" />Vérifié
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] sm:text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/40">
+                        Non vérifié
                       </Badge>
                     )}
                   </div>
@@ -442,7 +448,7 @@ const ProducerProfile = () => {
 
           <div>
             <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
-              Produits de {producer.full_name} ({products.length})
+              Produits de {(producer as any).business_name || producer.full_name} ({products.length})
             </h2>
             {mappedProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
