@@ -48,12 +48,22 @@ const Messages = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // On mobile, opening a conversation auto-fullscreens
   const effectiveFullscreen = isFullscreen || (isMobile && !!selectedConversation);
-  const { conversations, loading, profileId, userId } = useConversations();
+  const { conversations, loading, profileId, userId, refetch } = useConversations();
   const { messages, setMessages, sendMessage } = useMessages(
     selectedConversation?.id || null,
     profileId,
     userId
   );
+
+  // When opening a conversation, optimistically zero its unread counter and refetch
+  useEffect(() => {
+    if (!selectedConversation) return;
+    if (selectedConversation.unread > 0) {
+      setSelectedConversation({ ...selectedConversation, unread: 0 });
+    }
+    const t = setTimeout(() => refetch(), 600);
+    return () => clearTimeout(t);
+  }, [selectedConversation?.id]);
 
   // Show welcome message for new users
   useEffect(() => {

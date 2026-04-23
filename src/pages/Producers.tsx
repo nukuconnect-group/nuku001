@@ -22,6 +22,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import networkHeroImg from "@/assets/network-hero.jpg";
+import defaultAvatar from "@/assets/default-producer-avatar.png";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -281,21 +282,15 @@ const Producers = () => {
                         </div>
                       </div>
 
-                      {/* Avatar overlapping cover - utilise toujours image du profil ou icône standard */}
+                      {/* Avatar overlapping cover - toujours avatar réel ou défaut, jamais image aléatoire */}
                       <div className="flex justify-center -mt-8 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-gradient-to-br from-primary/20 to-accent/10">
-                          {producer.avatar ? (
-                            <img
-                              src={producer.avatar}
-                              alt={producer.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <User className="w-7 h-7 text-primary" />
-                            </div>
-                          )}
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-card">
+                          <img
+                            src={producer.avatar || defaultAvatar}
+                            alt={producer.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
+                          />
                         </div>
                       </div>
 
