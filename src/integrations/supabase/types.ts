@@ -2029,6 +2029,10 @@ export type Database = {
         Returns: undefined
       }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
+      clear_conversation_messages: {
+        Args: { p_conversation_id: string }
+        Returns: Json
+      }
       complete_token_purchase: {
         Args: { p_payment_reference?: string; p_purchase_id: string }
         Returns: Json
@@ -2037,6 +2041,10 @@ export type Database = {
       create_token_purchase: {
         Args: { p_pack_code: string; p_payment_identifier: string }
         Returns: string
+      }
+      delete_conversation_thread: {
+        Args: { p_conversation_id: string }
+        Returns: Json
       }
       delete_email: {
         Args: { message_id: number; queue_name: string }
