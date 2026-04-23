@@ -90,16 +90,23 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   };
 
   const clearConversation = async () => {
-    if (!conversation || !confirm(`Vider toute la conversation avec ${conversation.participant.name} ?`)) return;
-    const { error } = await supabase.from("messages").delete().eq("conversation_id", conversation.id);
+    if (!conversation || conversation.isDelivery) {
+      if (conversation?.isDelivery) toast({ title: "Action indisponible", description: "Les chats de livraison ne peuvent pas être vidés.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Vider toute la conversation avec ${conversation.participant.name} ?\n\nTous les messages seront supprimés définitivement.`)) return;
+    const { data, error } = await supabase.rpc("clear_conversation_messages", { p_conversation_id: conversation.id });
     if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "🧹 Conversation vidée", description: "Tous les messages ont été supprimés." });
+    toast({ title: "🧹 Conversation vidée", description: `${(data as any)?.deleted_count || 0} messages supprimés.` });
   };
 
   const deleteEntireBox = async () => {
-    if (!conversation || !confirm(`Supprimer définitivement la boîte de message avec ${conversation.participant.name} ? Cette action est irréversible.`)) return;
-    await supabase.from("messages").delete().eq("conversation_id", conversation.id);
-    const { error } = await supabase.from("conversations").delete().eq("id", conversation.id);
+    if (!conversation || conversation.isDelivery) {
+      if (conversation?.isDelivery) toast({ title: "Action indisponible", description: "Les chats de livraison ne peuvent pas être supprimés.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Supprimer définitivement la boîte de message avec ${conversation.participant.name} ?\n\nCette action est irréversible.`)) return;
+    const { error } = await supabase.rpc("delete_conversation_thread", { p_conversation_id: conversation.id });
     if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
     toast({ title: "🗑️ Boîte supprimée" });
     onBack();
