@@ -128,7 +128,7 @@ const App = () => {
                   <Route path="/commande/:id" element={<OrderDetail />} />
                   <Route path="/driver-dashboard" element={<DriverDashboard />} />
                   <Route path="/learner-dashboard" element={<LearnerDashboard />} />
-                  <Route path="/plans" element={<Tokens />} />
+                  <Route path="/plans" element={<Plans />} />
                   <Route path="/jetons" element={<Tokens />} />
                   <Route path="/tokens" element={<Tokens />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
