@@ -19,6 +19,7 @@ import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin }
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/contexts/ProfileContext";
+import PriceTiersEditor, { type TierDraft } from "@/components/dashboard/PriceTiersEditor";
 
 const LocationSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [addresses, setAddresses] = useState<{ id: string; label: string; city: string | null; quarter: string | null; country: string | null }[]>([]);
@@ -131,6 +132,24 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
+  const [priceTiers, setPriceTiers] = useState<TierDraft[]>([]);
+
+  // Load existing price tiers in edit mode
+  useEffect(() => {
+    if (!editProduct?.id) { setPriceTiers([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("product_price_tiers" as any)
+        .select("min_quantity,max_quantity,price")
+        .eq("product_id", editProduct.id)
+        .order("sort_order", { ascending: true });
+      setPriceTiers(((data as any[]) || []).map(t => ({
+        min_quantity: String(t.min_quantity ?? ""),
+        max_quantity: t.max_quantity != null ? String(t.max_quantity) : "",
+        price: String(t.price ?? ""),
+      })));
+    })();
+  }, [editProduct?.id]);
 
   // Populate form when editing
   useEffect(() => {
@@ -237,17 +256,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         images: imageUrls.length > 0 ? imageUrls : null,
       };
 
+      let savedProductId: string | null = null;
       if (editProduct) {
         const { error } = await supabase.from("products").update(productData).eq("id", editProduct.id);
         if (error) throw error;
+        savedProductId = editProduct.id;
         toast({ title: "Produit modifié !", description: "Les modifications ont été enregistrées." });
       } else {
-        const { error } = await supabase.from("products").insert(productData).select("id").single();
+        const { data, error } = await supabase.from("products").insert(productData).select("id").single();
         if (error) throw error;
+        savedProductId = (data as any)?.id || null;
         toast({
           title: "📤 Produit soumis pour analyse",
           description: "Notre IA vérifie la conformité de votre produit. Il sera publié sur la marketplace d'ici environ 20 minutes s'il respecte les normes.",
         });
+      }
+
+      // Sync price tiers (replace strategy)
+      if (savedProductId) {
+        await supabase.from("product_price_tiers" as any).delete().eq("product_id", savedProductId);
+        const validTiers = priceTiers
+          .filter(t => t.min_quantity && t.price)
+          .map((t, idx) => ({
+            product_id: savedProductId,
+            min_quantity: parseFloat(t.min_quantity),
+            max_quantity: t.max_quantity ? parseFloat(t.max_quantity) : null,
+            price: parseFloat(t.price),
+            sort_order: idx,
+          }));
+        if (validTiers.length > 0) {
+          await supabase.from("product_price_tiers" as any).insert(validTiers as any);
+        }
       }
 
       setNewProduct(defaultProduct);
@@ -561,6 +600,20 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 onChange={(e) => setNewProduct({ ...newProduct, min_order: e.target.value })}
                 placeholder="Ex: 10"
               />
+            </div>
+          </div>
+
+          {/* Price tiers (style Alibaba) */}
+          <PriceTiersEditor
+            value={priceTiers}
+            onChange={setPriceTiers}
+            unit={newProduct.unit}
+            basePrice={newProduct.price}
+          />
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2 hidden">
+              <Label>placeholder</Label>
             </div>
 
             <div className="space-y-2">

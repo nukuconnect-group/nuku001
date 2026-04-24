@@ -13,6 +13,7 @@ import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
 import ScrollToTop from "./components/ScrollToTop";
 import PresenceTracker from "./components/PresenceTracker";
+import ProfileLeavePopup from "./components/ProfileLeavePopup";
 import { Loader2 } from "lucide-react";
 
 // Lazy load all pages
@@ -108,6 +109,7 @@ const App = () => {
               <AnalyticsTracker />
               <PresenceTracker />
               <RealtimeNotifications />
+              <ProfileLeavePopup />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

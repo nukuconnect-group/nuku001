@@ -12,6 +12,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
 
 interface ProductCardProps {
   product: Product;
@@ -204,6 +205,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             )}
             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
           </div>
+
+          {/* Wholesale tiers (style Alibaba "15 229 / 15 171") */}
+          <PriceTiersDisplay productId={product.id} unit={product.unit} basePrice={product.price} compact />
 
           {/* Title */}
           <h3 className="font-medium text-foreground text-[11px] sm:text-xs leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">

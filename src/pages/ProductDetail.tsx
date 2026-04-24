@@ -29,6 +29,7 @@ import { type CurrencyCode } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
+import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
 
@@ -371,7 +372,13 @@ const ProductDetail = () => {
                   <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
                 )}
                 <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
+                {(product as any).is_negotiable && (
+                  <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
+                )}
               </div>
+
+              {/* Wholesale tiers Alibaba-style */}
+              <PriceTiersDisplay productId={product.id} unit={product.unit} basePrice={product.price} />
 
               {/* Description */}
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.description}</p>
