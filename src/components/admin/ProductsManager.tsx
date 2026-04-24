@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import AddProductModal from "@/components/dashboard/AddProductModal";
 const ProductsManager = () => {
   const { formatPrice } = useLanguage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,12 +40,28 @@ const ProductsManager = () => {
   const handleDeleteProduct = async (productId: string, productName: string) => {
     if (!confirm(`Supprimer le produit "${productName}" ? Cette action est irréversible.`)) return;
     setDeletingId(productId);
+    // Get owner before delete to notify them
+    const owner = products.find(p => p.id === productId);
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Produit supprimé", description: `"${productName}" a été supprimé.` });
+      toast({ title: "Produit supprimé", description: `"${productName}" a été retiré de la marketplace.` });
       setProducts(prev => prev.filter(p => p.id !== productId));
+      // Invalidate marketplace caches so it disappears from public listings
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+      try { localStorage.removeItem("nuku_products_cache"); } catch {}
+      // Notify the owner in-app
+      const ownerUserId = owner?.profiles?.user_id;
+      if (ownerUserId) {
+        await supabase.from("notifications").insert({
+          user_id: ownerUserId,
+          type: "product",
+          title: "🗑️ Produit retiré par l'administration",
+          description: `Votre produit "${productName}" a été retiré de la marketplace par notre équipe. Contactez le support pour plus d'informations.`,
+        });
+      }
     }
     setDeletingId(null);
   };
