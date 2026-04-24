@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, Layers } from "lucide-react";
+import { Plus, Trash2, Layers, AlertCircle } from "lucide-react";
 
 export interface TierDraft {
   min_quantity: string;
@@ -16,9 +16,55 @@ interface Props {
   onChange: (tiers: TierDraft[]) => void;
   unit: string;
   basePrice?: string;
+  onValidityChange?: (valid: boolean, errors: string[]) => void;
 }
 
-export default function PriceTiersEditor({ value, onChange, unit, basePrice }: Props) {
+/**
+ * Validate tier list. Returns array of error messages (empty = valid).
+ * Rules:
+ *  - min_quantity required and > 0
+ *  - if max_quantity provided, must be >= min_quantity
+ *  - price required and > 0
+ *  - no overlap between ranges
+ */
+export function validateTiers(tiers: TierDraft[]): string[] {
+  const errors: string[] = [];
+  if (tiers.length === 0) return errors;
+
+  const parsed = tiers.map((t, i) => ({
+    i,
+    min: parseFloat(t.min_quantity),
+    max: t.max_quantity ? parseFloat(t.max_quantity) : Infinity,
+    price: parseFloat(t.price),
+  }));
+
+  parsed.forEach((p) => {
+    if (!isFinite(p.min) || p.min <= 0) errors.push(`Palier ${p.i + 1} : quantité min invalide.`);
+    if (p.max !== Infinity && (!isFinite(p.max) || p.max < p.min))
+      errors.push(`Palier ${p.i + 1} : quantité max doit être ≥ min.`);
+    if (!isFinite(p.price) || p.price <= 0) errors.push(`Palier ${p.i + 1} : prix invalide.`);
+  });
+
+  // Overlap check
+  const sorted = [...parsed].sort((a, b) => a.min - b.min);
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const curr = sorted[i];
+    if (curr.min <= prev.max) {
+      errors.push(`Chevauchement entre palier ${prev.i + 1} et ${curr.i + 1}.`);
+    }
+  }
+  return errors;
+}
+
+export default function PriceTiersEditor({ value, onChange, unit, basePrice, onValidityChange }: Props) {
+  const errors = useMemo(() => validateTiers(value), [value]);
+
+  // Notify parent of validity
+  useMemo(() => {
+    onValidityChange?.(errors.length === 0, errors);
+  }, [errors, onValidityChange]);
+
   const update = (idx: number, patch: Partial<TierDraft>) => {
     onChange(value.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
   };
@@ -41,7 +87,7 @@ export default function PriceTiersEditor({ value, onChange, unit, basePrice }: P
         </Button>
       </div>
       <p className="text-[10px] text-muted-foreground">
-        Affichez plusieurs prix selon la quantité commandée (style Alibaba). Le prix de base sert pour les commandes ne correspondant à aucun palier.
+        Affichez plusieurs prix selon la quantité commandée (style Alibaba). Le prix de base s'applique aux quantités hors paliers.
       </p>
 
       {value.length === 0 ? (
@@ -54,34 +100,18 @@ export default function PriceTiersEditor({ value, onChange, unit, basePrice }: P
             <Card key={idx} className="p-2 grid grid-cols-12 gap-2 items-end">
               <div className="col-span-3">
                 <Label className="text-[9px] text-muted-foreground">Min ({unit})</Label>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={tier.min_quantity}
-                  onChange={(e) => update(idx, { min_quantity: e.target.value })}
-                  className="h-7 text-xs"
-                />
+                <Input type="number" inputMode="numeric" value={tier.min_quantity}
+                  onChange={(e) => update(idx, { min_quantity: e.target.value })} className="h-7 text-xs" />
               </div>
               <div className="col-span-3">
                 <Label className="text-[9px] text-muted-foreground">Max ({unit})</Label>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={tier.max_quantity}
-                  placeholder="∞"
-                  onChange={(e) => update(idx, { max_quantity: e.target.value })}
-                  className="h-7 text-xs"
-                />
+                <Input type="number" inputMode="numeric" value={tier.max_quantity} placeholder="∞"
+                  onChange={(e) => update(idx, { max_quantity: e.target.value })} className="h-7 text-xs" />
               </div>
               <div className="col-span-5">
                 <Label className="text-[9px] text-muted-foreground">Prix unitaire (FCFA)</Label>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={tier.price}
-                  onChange={(e) => update(idx, { price: e.target.value })}
-                  className="h-7 text-xs"
-                />
+                <Input type="number" inputMode="numeric" value={tier.price}
+                  onChange={(e) => update(idx, { price: e.target.value })} className="h-7 text-xs" />
               </div>
               <div className="col-span-1">
                 <Button type="button" size="sm" variant="ghost" onClick={() => remove(idx)} className="h-7 w-7 p-0 text-destructive">
@@ -89,6 +119,17 @@ export default function PriceTiersEditor({ value, onChange, unit, basePrice }: P
                 </Button>
               </div>
             </Card>
+          ))}
+        </div>
+      )}
+
+      {errors.length > 0 && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2 space-y-1">
+          {errors.map((err, i) => (
+            <div key={i} className="flex items-start gap-1.5 text-[10px] text-destructive">
+              <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>{err}</span>
+            </div>
           ))}
         </div>
       )}
