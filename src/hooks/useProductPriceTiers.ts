@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PriceTier {
@@ -11,6 +12,26 @@ export interface PriceTier {
 }
 
 export const useProductPriceTiers = (productId?: string) => {
+  const queryClient = useQueryClient();
+
+  // Realtime: invalidate cache on any change to this product's tiers
+  useEffect(() => {
+    if (!productId) return;
+    const channel = supabase
+      .channel(`price-tiers-${productId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "product_price_tiers", filter: `product_id=eq.${productId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["price-tiers", productId] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [productId, queryClient]);
+
   return useQuery({
     queryKey: ["price-tiers", productId],
     enabled: !!productId,
