@@ -19,7 +19,7 @@ import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin }
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/contexts/ProfileContext";
-import PriceTiersEditor, { type TierDraft } from "@/components/dashboard/PriceTiersEditor";
+import PriceTiersEditor, { type TierDraft, validateTiers } from "@/components/dashboard/PriceTiersEditor";
 
 const LocationSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [addresses, setAddresses] = useState<{ id: string; label: string; city: string | null; quarter: string | null; country: string | null }[]>([]);
@@ -209,6 +209,17 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate price tiers (block save if invalid)
+    const tierErrors = validateTiers(priceTiers);
+    if (tierErrors.length > 0) {
+      toast({
+        title: "Paliers de prix invalides",
+        description: tierErrors[0],
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Check subscription before publishing
     if (!editProduct) {
