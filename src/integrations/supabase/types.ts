@@ -1151,6 +1151,47 @@ export type Database = {
           },
         ]
       }
+      product_price_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          max_quantity: number | null
+          min_quantity: number
+          price: number
+          product_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_quantity?: number | null
+          min_quantity?: number
+          price: number
+          product_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_quantity?: number | null
+          min_quantity?: number
+          price?: number
+          product_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_price_tiers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_traceability: {
         Row: {
           batch_number: string | null
