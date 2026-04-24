@@ -368,6 +368,20 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
+        {/* Welcome / protection banner — Alibaba-style first-message safety notice */}
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center text-center py-8 px-4 animate-fade-in">
+            <img src={conversation.participant.avatar} alt="" className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-primary/20" />
+            <p className="text-base font-medium text-foreground mb-3">Bienvenue !</p>
+            <div className="flex items-start gap-2 max-w-md p-3 rounded-xl bg-card border border-border shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground text-left leading-relaxed">
+                Discutez et faites vos transactions sur <strong className="text-foreground">NukuConnect</strong> pour bénéficier de la protection des commandes.
+                <Link to="/aide" className="text-primary underline ml-1">En savoir plus</Link>
+              </p>
+            </div>
+          </div>
+        )}
         {/* Product preview card */}
         {conversation.productName && conversation.productImage && (
           <Link to={`/produit/${conversation.productId}`} className="block">

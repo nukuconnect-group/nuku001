@@ -301,6 +301,10 @@ const ProductsManager = () => {
                 });
               }
             }
+            // Invalidate marketplace caches so changes appear immediately
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+            queryClient.invalidateQueries({ queryKey: ["product", editingProduct.id] });
+            try { localStorage.removeItem("nuku_products_cache"); } catch {}
             setEditingProduct(null);
             loadProducts();
           }}
