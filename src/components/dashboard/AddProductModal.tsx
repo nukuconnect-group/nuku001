@@ -601,6 +601,20 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 placeholder="Ex: 10"
               />
             </div>
+          </div>
+
+          {/* Price tiers (style Alibaba) */}
+          <PriceTiersEditor
+            value={priceTiers}
+            onChange={setPriceTiers}
+            unit={newProduct.unit}
+            basePrice={newProduct.price}
+          />
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2 hidden">
+              <Label>placeholder</Label>
+            </div>
 
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5">
