@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
 import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
+import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCalculator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
 
@@ -451,12 +452,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
 
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-muted-foreground">{t("product.estimatedTotal")}</span>
-                    <span className="font-heading text-lg sm:text-xl font-bold text-primary">{formatPrice(totalPrice)}</span>
-                  </div>
-                </div>
+                <EffectivePriceCalculator productId={product.id} unit={product.unit} basePrice={product.price} quantity={quantity} />
 
                 {/* Action buttons — marketplace style */}
                 <div className="grid grid-cols-2 gap-2">
