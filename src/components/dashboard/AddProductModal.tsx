@@ -19,6 +19,7 @@ import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin }
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/contexts/ProfileContext";
+import PriceTiersEditor, { type TierDraft } from "@/components/dashboard/PriceTiersEditor";
 
 const LocationSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
   const [addresses, setAddresses] = useState<{ id: string; label: string; city: string | null; quarter: string | null; country: string | null }[]>([]);
@@ -131,6 +132,24 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
+  const [priceTiers, setPriceTiers] = useState<TierDraft[]>([]);
+
+  // Load existing price tiers in edit mode
+  useEffect(() => {
+    if (!editProduct?.id) { setPriceTiers([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("product_price_tiers" as any)
+        .select("min_quantity,max_quantity,price")
+        .eq("product_id", editProduct.id)
+        .order("sort_order", { ascending: true });
+      setPriceTiers(((data as any[]) || []).map(t => ({
+        min_quantity: String(t.min_quantity ?? ""),
+        max_quantity: t.max_quantity != null ? String(t.max_quantity) : "",
+        price: String(t.price ?? ""),
+      })));
+    })();
+  }, [editProduct?.id]);
 
   // Populate form when editing
   useEffect(() => {
