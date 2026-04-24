@@ -27,7 +27,7 @@ const ProductsManager = () => {
   const loadProducts = async () => {
     const { data } = await supabase
       .from("products")
-      .select("*, profiles:producer_id(full_name, avatar_url, is_verified, location)")
+      .select("*, profiles:producer_id(user_id, full_name, avatar_url, is_verified, location)")
       .order("created_at", { ascending: false });
     setProducts(data || []);
     setLoading(false);
