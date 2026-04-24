@@ -256,17 +256,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         images: imageUrls.length > 0 ? imageUrls : null,
       };
 
+      let savedProductId: string | null = null;
       if (editProduct) {
         const { error } = await supabase.from("products").update(productData).eq("id", editProduct.id);
         if (error) throw error;
+        savedProductId = editProduct.id;
         toast({ title: "Produit modifié !", description: "Les modifications ont été enregistrées." });
       } else {
-        const { error } = await supabase.from("products").insert(productData).select("id").single();
+        const { data, error } = await supabase.from("products").insert(productData).select("id").single();
         if (error) throw error;
+        savedProductId = (data as any)?.id || null;
         toast({
           title: "📤 Produit soumis pour analyse",
           description: "Notre IA vérifie la conformité de votre produit. Il sera publié sur la marketplace d'ici environ 20 minutes s'il respecte les normes.",
         });
+      }
+
+      // Sync price tiers (replace strategy)
+      if (savedProductId) {
+        await supabase.from("product_price_tiers" as any).delete().eq("product_id", savedProductId);
+        const validTiers = priceTiers
+          .filter(t => t.min_quantity && t.price)
+          .map((t, idx) => ({
+            product_id: savedProductId,
+            min_quantity: parseFloat(t.min_quantity),
+            max_quantity: t.max_quantity ? parseFloat(t.max_quantity) : null,
+            price: parseFloat(t.price),
+            sort_order: idx,
+          }));
+        if (validTiers.length > 0) {
+          await supabase.from("product_price_tiers" as any).insert(validTiers as any);
+        }
       }
 
       setNewProduct(defaultProduct);
