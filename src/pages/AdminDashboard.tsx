@@ -34,6 +34,9 @@ import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
 import EmailStatsManager from "@/components/admin/EmailStatsManager";
 import KYCManager from "@/components/admin/KYCManager";
+import AIModerationHistory from "@/components/admin/AIModerationHistory";
+import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
+import { Sparkles as SparklesIcon, Bot as BotIcon } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -276,6 +279,8 @@ const AdminDashboard = () => {
     { id: "support", label: "Support", icon: MessageCircle },
     { id: "broadcast", label: "Notifications", icon: Megaphone },
     { id: "emails", label: "Emails", icon: Send },
+    { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
+    { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
   ];
 
   return (
@@ -1051,6 +1056,12 @@ const AdminDashboard = () => {
             {activeTab === "kyc" && (
               <KYCManager />
             )}
+
+            {/* AI moderation history + email validation log */}
+            {activeTab === "ai-history" && <AIModerationHistory />}
+
+            {/* Nuku AI analytics */}
+            {activeTab === "nuku-ai" && <NukuAIAnalytics />}
         </main>
       </div>
       <Footer />

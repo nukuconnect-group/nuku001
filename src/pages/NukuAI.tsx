@@ -163,6 +163,32 @@ const NukuAI = () => {
     setIsStreaming(true);
     setResponseStartTime(Date.now());
 
+    // Fire-and-forget analytics: log question for admin dashboard
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        let userName: string | null = null;
+        if (session?.user?.id) {
+          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", session.user.id).maybeSingle();
+          userName = p?.full_name || session.user.email || null;
+        }
+        let country: string | null = null;
+        let city: string | null = null;
+        try {
+          const geo = await supabase.functions.invoke("geolocate-ip");
+          country = (geo.data as any)?.country || null;
+          city = (geo.data as any)?.city || null;
+        } catch {}
+        await supabase.from("nuku_ai_questions" as any).insert({
+          user_id: session?.user?.id || null,
+          user_name: userName,
+          question: messageText.slice(0, 1000),
+          country, city,
+          session_id: typeof window !== "undefined" ? (sessionStorage.getItem("nuku_session") || (() => { const s = crypto.randomUUID(); sessionStorage.setItem("nuku_session", s); return s; })()) : null,
+        });
+      } catch {}
+    })();
+
     try {
       const chatMessages = newMessages.filter(m => m.id !== "welcome").map(m => ({ role: m.role, content: m.content }));
       const body = await streamChat(chatMessages);

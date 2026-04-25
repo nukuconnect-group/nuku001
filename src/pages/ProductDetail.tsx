@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
 import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
 import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCalculator";
+import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
 
@@ -611,6 +612,9 @@ const ProductDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Owner: Batch QR generator (only visible to product owner) */}
+              <OwnerBatchQRGenerator productId={product.id} producerId={product.producer.id} productName={product.name} />
 
               {/* QR Code — Traçabilité */}
               <Card className="border-primary/30">
