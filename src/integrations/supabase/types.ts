@@ -1043,6 +1043,39 @@ export type Database = {
           },
         ]
       }
+      nuku_ai_questions: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          question: string
+          session_id: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          session_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          session_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           buyer_id: string
