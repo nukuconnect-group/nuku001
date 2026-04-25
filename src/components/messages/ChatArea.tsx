@@ -543,21 +543,21 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
       )}
 
-      {/* Input - responsive, never hidden behind bottom nav */}
-      <div className="p-2 sm:p-3 border-t border-border bg-card pb-[env(safe-area-inset-bottom,0px)] mb-[60px] lg:mb-0">
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5">
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
-            <ImageIcon className="w-4 h-4 text-muted-foreground" />
+      {/* Input - responsive, fully aligned on mobile, no bottom-nav overlap */}
+      <div className="px-2 sm:px-3 pt-2 pb-2 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 w-full">
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
           </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
+            <Paperclip className="w-5 h-5 text-muted-foreground" />
           </Button>
-          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Message..." className="flex-1 min-w-0 h-9 text-sm" />
-          <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
+          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
+          <Button type="button" variant="ghost" size="icon" className={`h-10 w-10 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
           </Button>
-          <Button type="submit" size="icon" className="h-8 w-8 flex-shrink-0 bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
-            {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          <Button type="submit" size="icon" className="h-11 w-11 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
+            {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </Button>
         </form>
       </div>
