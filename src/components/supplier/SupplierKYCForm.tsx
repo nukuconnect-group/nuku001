@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Loader2, CheckCircle2, Clock, AlertCircle, Camera } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SupplierKYCFormProps {
   userId?: string;
@@ -223,39 +224,87 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
     url: string,
     setter: (v: string) => void,
     path: string,
+    required = false,
   ) => (
-    <div>
-      <Label className="text-[10px]">{label}</Label>
-      <label className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors relative">
-        {uploading === path ? (
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
-        ) : url ? (
-          <img src={url} alt={label} className="w-full h-full object-cover rounded-lg" />
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium">
+        {label}{required && <span className="text-destructive ml-0.5">*</span>}
+      </Label>
+      <div className="relative">
+        {url ? (
+          <div className="relative h-36 sm:h-44 rounded-lg overflow-hidden border-2 border-emerald-300 group">
+            <img src={url} alt={label} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => setter("")}
+                className="px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium"
+              >
+                Remplacer
+              </button>
+            </div>
+            <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px]">
+              <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> OK
+            </Badge>
+          </div>
         ) : (
-          <Upload className="w-4 h-4 text-muted-foreground" />
+          <div className="grid grid-cols-2 gap-2">
+            {/* Galerie */}
+            <label className="flex flex-col items-center justify-center h-36 sm:h-44 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary/40 transition-colors">
+              {uploading === path ? (
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              ) : (
+                <>
+                  <Upload className="w-7 h-7 text-muted-foreground mb-1.5" />
+                  <span className="text-[10px] font-medium text-foreground">Galerie</span>
+                  <span className="text-[9px] text-muted-foreground">Choisir une photo</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={!!uploading}
+                onChange={(e) => handleFileUpload(e, setter, path)}
+              />
+            </label>
+            {/* Caméra */}
+            <label className="flex flex-col items-center justify-center h-36 sm:h-44 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary/40 transition-colors">
+              {uploading === `${path}-cam` ? (
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              ) : (
+                <>
+                  <Camera className="w-7 h-7 text-muted-foreground mb-1.5" />
+                  <span className="text-[10px] font-medium text-foreground">Caméra</span>
+                  <span className="text-[9px] text-muted-foreground">Prendre maintenant</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                disabled={!!uploading}
+                onChange={(e) => handleFileUpload(e, setter, path)}
+              />
+            </label>
+          </div>
         )}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          disabled={!!uploading}
-          onChange={(e) => handleFileUpload(e, setter, path)}
-        />
-      </label>
+      </div>
     </div>
   );
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[10px]">Nom entreprise / activité</Label>
-          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex: Ferme Kokoe" className="h-8 text-xs" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Nom entreprise / activité</Label>
+          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex: Ferme Kokoe" className="h-9 text-sm" />
         </div>
-        <div className="space-y-1">
-          <Label className="text-[10px]">Type d'activité</Label>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Type d'activité</Label>
           <Select value={businessType} onValueChange={setBusinessType}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="individual">Individuel</SelectItem>
               <SelectItem value="cooperative">Coopérative</SelectItem>
@@ -265,66 +314,87 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-[10px]">Type de pièce d'identité</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Type de pièce d'identité</Label>
           <Select value={idType} onValueChange={setIdType}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="cni">CNI</SelectItem>
+              <SelectItem value="cni">Carte Nationale (CNI)</SelectItem>
               <SelectItem value="passport">Passeport</SelectItem>
               <SelectItem value="permis">Permis de conduire</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <Label className="text-[10px]">Numéro de pièce *</Label>
-          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="N° de pièce" className="h-8 text-xs" />
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Numéro de pièce <span className="text-destructive">*</span></Label>
+          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="N° de la pièce" className="h-9 text-sm" />
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {renderUploadBox("Recto pièce *", idFrontUrl, setIdFrontUrl, "supplier-id-front")}
-        {renderUploadBox("Verso pièce", idBackUrl, setIdBackUrl, "supplier-id-back")}
-        
-        {/* Selfie with camera */}
-        <div>
-          <Label className="text-[10px]">Photo portrait *</Label>
+      <div className="space-y-3">
+        {renderUploadBox("Recto de la pièce", idFrontUrl, setIdFrontUrl, "supplier-id-front", true)}
+        {renderUploadBox("Verso de la pièce", idBackUrl, setIdBackUrl, "supplier-id-back", false)}
+
+        {/* Selfie */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Photo portrait (selfie) <span className="text-destructive">*</span></Label>
           {showCamera ? (
-            <div className="relative h-16 rounded-lg overflow-hidden border-2 border-primary">
+            <div className="relative h-44 sm:h-56 rounded-lg overflow-hidden border-2 border-primary">
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              <div className="absolute bottom-0 inset-x-0 flex justify-center gap-1 p-0.5 bg-black/40">
-                <Button size="sm" variant="ghost" className="h-5 text-[8px] text-white" onClick={capturePhoto}>
+              <div className="absolute bottom-0 inset-x-0 flex justify-center gap-2 p-2 bg-black/50">
+                <Button size="sm" variant="hero" className="h-8 text-xs gap-1" onClick={capturePhoto}>
                   📸 Capturer
                 </Button>
-                <Button size="sm" variant="ghost" className="h-5 text-[8px] text-white" onClick={stopCamera}>
-                  ✕
+                <Button size="sm" variant="ghost" className="h-8 text-xs text-white hover:text-white hover:bg-white/20" onClick={stopCamera}>
+                  ✕ Annuler
                 </Button>
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <div 
-                className="flex items-center justify-center h-16 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={startCamera}
-              >
-                {uploading === "selfie" ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                ) : selfieUrl ? (
-                  <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover rounded-lg" />
-                ) : (
-                  <Camera className="w-4 h-4 text-muted-foreground" />
-                )}
+          ) : selfieUrl ? (
+            <div className="relative h-36 sm:h-44 rounded-lg overflow-hidden border-2 border-emerald-300 group">
+              <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => setSelfieUrl("")}
+                  className="px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium"
+                >
+                  Reprendre
+                </button>
               </div>
+              <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px]">
+                <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> OK
+              </Badge>
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={startCamera}
+              disabled={!!uploading}
+              className="w-full flex flex-col items-center justify-center h-36 sm:h-44 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary/40 transition-colors"
+            >
+              {uploading === "selfie" ? (
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              ) : (
+                <>
+                  <Camera className="w-8 h-8 text-muted-foreground mb-2" />
+                  <span className="text-xs font-medium text-foreground">Activer la caméra</span>
+                  <span className="text-[10px] text-muted-foreground">Selfie en direct (sécurité)</span>
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>
 
-      <Button variant="hero" size="sm" className="w-full gap-1.5" onClick={handleSubmit} disabled={submitting || !!uploading}>
+      <Button variant="hero" size="lg" className="w-full gap-2" onClick={handleSubmit} disabled={submitting || !!uploading}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
         Soumettre pour vérification
       </Button>
+      <p className="text-[10px] text-muted-foreground text-center">
+        🔒 Vos données sont chiffrées et utilisées uniquement pour la vérification. Réponse sous 24-48h.
+      </p>
     </div>
   );
 };

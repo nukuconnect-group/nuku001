@@ -58,6 +58,21 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
     return blocked.includes(conversation.participant.id);
   });
+  // Welcome banner: persistent per conversation, dismissible by user
+  const welcomeKey = conversation ? `nuku_welcome_dismissed_${conversation.id}` : null;
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() => {
+    if (!welcomeKey) return false;
+    return localStorage.getItem(welcomeKey) === "1";
+  });
+  useEffect(() => {
+    if (!welcomeKey) return;
+    setWelcomeDismissed(localStorage.getItem(welcomeKey) === "1");
+  }, [welcomeKey]);
+  const dismissWelcome = () => {
+    if (!welcomeKey) return;
+    localStorage.setItem(welcomeKey, "1");
+    setWelcomeDismissed(true);
+  };
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingUserIdRef = useRef<string>(crypto.randomUUID());
@@ -368,18 +383,22 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
-        {/* Welcome / protection banner — Alibaba-style first-message safety notice */}
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center text-center py-8 px-4 animate-fade-in">
-            <img src={conversation.participant.avatar} alt="" className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-primary/20" />
-            <p className="text-base font-medium text-foreground mb-3">Bienvenue !</p>
-            <div className="flex items-start gap-2 max-w-md p-3 rounded-xl bg-card border border-border shadow-sm">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-muted-foreground text-left leading-relaxed">
-                Discutez et faites vos transactions sur <strong className="text-foreground">NukuConnect</strong> pour bénéficier de la protection des commandes.
+        {/* Welcome / protection banner — persistent until user dismisses */}
+        {!welcomeDismissed && (
+          <div className="relative flex items-start gap-2 mx-auto max-w-md p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 shadow-sm animate-fade-in">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0 pr-5">
+              <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 mb-0.5">
+                Achetez en toute sécurité
+              </p>
+              <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
+                Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des commandes.
                 <Link to="/aide" className="text-primary underline ml-1">En savoir plus</Link>
               </p>
             </div>
+            <button onClick={dismissWelcome} className="absolute top-1.5 right-1.5 p-1 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900" aria-label="Fermer">
+              <X className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" />
+            </button>
           </div>
         )}
         {/* Product preview card */}
@@ -524,21 +543,21 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
       )}
 
-      {/* Input - responsive, never hidden behind bottom nav */}
-      <div className="p-2 sm:p-3 border-t border-border bg-card pb-[env(safe-area-inset-bottom,0px)] mb-[60px] lg:mb-0">
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5">
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
-            <ImageIcon className="w-4 h-4 text-muted-foreground" />
+      {/* Input - responsive, fully aligned on mobile, no bottom-nav overlap */}
+      <div className="px-2 sm:px-3 pt-2 pb-2 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 w-full">
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
           </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="w-4 h-4 text-muted-foreground" />
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
+            <Paperclip className="w-5 h-5 text-muted-foreground" />
           </Button>
-          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Message..." className="flex-1 min-w-0 h-9 text-sm" />
-          <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
+          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
+          <Button type="button" variant="ghost" size="icon" className={`h-10 w-10 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
+            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
           </Button>
-          <Button type="submit" size="icon" className="h-8 w-8 flex-shrink-0 bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
-            {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          <Button type="submit" size="icon" className="h-11 w-11 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
+            {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
           </Button>
         </form>
       </div>

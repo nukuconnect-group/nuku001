@@ -156,6 +156,15 @@ async function fetchProductsDirect(): Promise<Product[]> {
   return enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
 }
 
+// Detect formation/training-related products to exclude from marketplace
+const isFormationProduct = (p: { name?: string; category?: string; description?: string | null }) => {
+  const haystack = `${p.name || ""} ${p.category || ""} ${p.description || ""}`.toLowerCase();
+  return /\b(formation|formations|cours|tutoriel|tutoriels|module pédagogique|e-learning|elearning|training|learning)\b/.test(haystack);
+};
+
+const filterOutFormations = (products: Product[]) =>
+  products.filter((p) => !isFormationProduct({ name: p.name, category: p.category, description: p.description }));
+
 export const useProducts = () => {
   return useQuery({
     queryKey: ["products"],
@@ -173,21 +182,23 @@ export const useProducts = () => {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-        const products = await enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
+        const allProducts = await enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
+        const products = filterOutFormations(allProducts);
         // Cache for offline use
         try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
         return products;
       } catch (e) {
         console.warn("Supabase client failed, trying direct fetch:", e);
         try {
-          const products = await fetchProductsDirect();
+          const allProducts = await fetchProductsDirect();
+          const products = filterOutFormations(allProducts);
           try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
           return products;
         } catch (fetchErr) {
           // Offline fallback
           console.warn("Network unavailable, using cached products");
           const cached = localStorage.getItem("nuku_products_cache");
-          if (cached) return JSON.parse(cached) as Product[];
+          if (cached) return filterOutFormations(JSON.parse(cached) as Product[]);
           return [];
         }
       }

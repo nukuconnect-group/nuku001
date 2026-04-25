@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { TrendingUp, BarChart3 } from "lucide-react";
+import { TrendingUp, BarChart3, Info } from "lucide-react";
 
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -28,7 +28,7 @@ const buildSalesData = (orders: any[]) => {
   });
 
   return Object.entries(monthMap).map(([key, val]) => {
-    const [year, month] = key.split('-').map(Number);
+    const [, month] = key.split('-').map(Number);
     return { name: monthNames[month], ...val };
   });
 };
@@ -47,44 +47,66 @@ const buildCategoryData = (orders: any[]) => {
     .map(([name, value]) => ({ name, value: Math.round((value / total) * 100) }));
 };
 
+// Neutral placeholder data — shows chart structure even with no sales
+const neutralCategories = [
+  { name: "Légumes", value: 0 },
+  { name: "Céréales", value: 0 },
+  { name: "Fruits", value: 0 },
+  { name: "Élevage", value: 0 },
+];
+
 export const SalesAreaChart = ({ orders = [] }: SalesChartProps) => {
   const data = buildSalesData(orders);
+  const isEmpty = orders.length === 0;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <TrendingUp className="w-5 h-5 text-primary" />
           Évolution des ventes (FCFA)
+          {isEmpty && (
+            <span className="ml-auto text-[10px] font-normal text-muted-foreground flex items-center gap-1">
+              <Info className="w-3 h-3" /> Aperçu
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {orders.length === 0 ? (
-          <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-            Aucune vente enregistrée pour le moment
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={data}>
-              <defs>
-                <linearGradient id="colorVentes" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v/1000}K`} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }}
-                formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Ventes']}
-              />
-              <Area type="monotone" dataKey="ventes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorVentes)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height={240}>
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorVentes" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={isEmpty ? 0.1 : 0.3}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v/1000}K`} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+              formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Ventes']}
+            />
+            <Area
+              type="monotone"
+              dataKey="ventes"
+              stroke={isEmpty ? "hsl(var(--muted-foreground))" : "hsl(var(--primary))"}
+              fillOpacity={1}
+              fill="url(#colorVentes)"
+              strokeWidth={2}
+              strokeDasharray={isEmpty ? "4 4" : undefined}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+        {isEmpty && (
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
+            Vos ventes s'afficheront ici dès vos premières commandes
+          </p>
         )}
       </CardContent>
     </Card>
@@ -93,36 +115,36 @@ export const SalesAreaChart = ({ orders = [] }: SalesChartProps) => {
 
 export const OrdersBarChart = ({ orders = [] }: SalesChartProps) => {
   const data = buildSalesData(orders);
+  const isEmpty = orders.length === 0;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <BarChart3 className="w-5 h-5 text-primary" />
           Commandes par mois
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {orders.length === 0 ? (
-          <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
-            Aucune commande pour le moment
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }}
-              />
-              <Bar dataKey="commandes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+            />
+            <Bar
+              dataKey="commandes"
+              fill={isEmpty ? "hsl(var(--muted))" : "hsl(var(--primary))"}
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );
@@ -130,30 +152,51 @@ export const OrdersBarChart = ({ orders = [] }: SalesChartProps) => {
 
 export const CategoryPieInfo = ({ orders = [] }: SalesChartProps) => {
   const data = buildCategoryData(orders);
+  const displayData = data.length > 0 ? data : neutralCategories;
+  const isEmpty = data.length === 0;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Répartition par catégorie</CardTitle>
+        <CardTitle className="text-base flex items-center gap-2">
+          Répartition par catégorie
+          {isEmpty && (
+            <span className="ml-auto text-[10px] font-normal text-muted-foreground flex items-center gap-1">
+              <Info className="w-3 h-3" /> Aperçu
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {data.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground text-sm">
-            Aucune donnée disponible
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {data.map((cat, index) => (
-              <div key={cat.name} className="flex items-center gap-3">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: `hsl(${120 + index * 30}, 70%, 50%)` }}
+        <div className="space-y-3">
+          {displayData.map((cat, index) => (
+            <div key={cat.name} className="flex items-center gap-3">
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{
+                  backgroundColor: isEmpty
+                    ? `hsl(var(--muted-foreground) / ${0.4 - index * 0.08})`
+                    : `hsl(${120 + index * 30}, 70%, 50%)`,
+                }}
+              />
+              <span className="flex-1 text-sm text-muted-foreground">{cat.name}</span>
+              <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${cat.value}%`,
+                    backgroundColor: isEmpty ? "hsl(var(--muted-foreground) / 0.3)" : "hsl(var(--primary))",
+                  }}
                 />
-                <span className="flex-1 text-sm text-muted-foreground">{cat.name}</span>
-                <span className="text-sm font-medium text-foreground">{cat.value}%</span>
               </div>
-            ))}
-          </div>
-        )}
+              <span className="text-xs font-medium text-foreground w-10 text-right">{cat.value}%</span>
+            </div>
+          ))}
+          {isEmpty && (
+            <p className="text-[10px] text-muted-foreground text-center pt-2 border-t border-border">
+              Données disponibles dès vos premières ventes
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
