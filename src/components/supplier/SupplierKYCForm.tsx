@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Loader2, CheckCircle2, Clock, AlertCircle, Camera } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SupplierKYCFormProps {
   userId?: string;
