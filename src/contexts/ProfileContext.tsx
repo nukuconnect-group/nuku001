@@ -107,6 +107,23 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     fetchProfile(currentUserId);
   }, [user?.id, isReady, fetchProfile]);
 
+  // Realtime sync: when admin verifies / changes the profile, propagate to all
+  // pages (dashboard, networks, supplier card) without manual refresh.
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`profile-self-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setProfile((prev: any) => prev ? { ...prev, ...(payload.new as any) } : (payload.new as any));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
   return (
     <ProfileContext.Provider value={{ user, profile, isLoading, isReady, refreshProfile, updateProfile }}>
       {children}
