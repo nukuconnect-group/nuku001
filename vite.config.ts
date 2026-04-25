@@ -34,6 +34,11 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       devOptions: { enabled: false },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      } as any,
       includeAssets: ["favicon.ico", "logo-192.png", "logo-512.png"],
       manifest: {
         name: "NUKUCONNECT - Marketplace Agricole",
