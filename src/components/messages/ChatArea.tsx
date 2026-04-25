@@ -58,6 +58,21 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
     return blocked.includes(conversation.participant.id);
   });
+  // Welcome banner: persistent per conversation, dismissible by user
+  const welcomeKey = conversation ? `nuku_welcome_dismissed_${conversation.id}` : null;
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() => {
+    if (!welcomeKey) return false;
+    return localStorage.getItem(welcomeKey) === "1";
+  });
+  useEffect(() => {
+    if (!welcomeKey) return;
+    setWelcomeDismissed(localStorage.getItem(welcomeKey) === "1");
+  }, [welcomeKey]);
+  const dismissWelcome = () => {
+    if (!welcomeKey) return;
+    localStorage.setItem(welcomeKey, "1");
+    setWelcomeDismissed(true);
+  };
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingUserIdRef = useRef<string>(crypto.randomUUID());
