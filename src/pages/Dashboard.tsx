@@ -29,6 +29,7 @@ import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner";
+import FreePlanQuotaCard from "@/components/dashboard/FreePlanQuotaCard";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
@@ -227,6 +228,15 @@ const Dashboard = () => {
 
           {/* Free plan renewal banner */}
           <FreePlanRenewalBanner userId={user?.id} />
+
+          {/* Free plan quota visual (5 products max) */}
+          <div className="mb-4 sm:mb-6">
+            <FreePlanQuotaCard
+              productsCount={products.length}
+              maxProducts={subscription?.max_products || 5}
+              plan={subscription?.plan}
+            />
+          </div>
 
           {/* KYC Status Banner - only show if NOT verified */}
           {!profile?.is_verified && (
