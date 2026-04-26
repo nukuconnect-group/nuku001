@@ -33,6 +33,7 @@ import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner"
 import ProductQuotaCard from "@/components/dashboard/ProductQuotaCard";
 import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
@@ -143,11 +144,34 @@ const Dashboard = () => {
     );
   }
 
+  const supplierSidebar: DashboardSidebarItem[] = [
+    { label: "Tableau de bord", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Mes produits", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
+    { label: "Publier", icon: Plus, onClick: openPublishFlow },
+    { label: "Modération", icon: ShieldCheck, href: "/moderation" },
+    { label: "Commandes", icon: ShoppingCart, href: "/suivi-livraison" },
+    { label: "Traçabilité", icon: QrCode, href: "/tracabilite" },
+    { label: "Messages", icon: MessageCircle, href: "/messages" },
+    { label: "Formations", icon: Calendar, href: "/formations" },
+    { label: "Mon abonnement", icon: Sparkles, href: "/plans" },
+    { label: "Jetons", icon: Coins, href: "/jetons" },
+    { label: "Retraits", icon: Wallet, onClick: () => {
+      document.getElementById("withdrawals-section")?.setAttribute("open", "true");
+      document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
+    }},
+    { label: "Paramètres", icon: Settings, href: "/settings" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
+      <DashboardLayout
+        sidebarTitle="Espace Fournisseur"
+        sidebarSubtitle={profile?.business_name || profile?.full_name || "Mon compte"}
+        items={supplierSidebar}
+      >
       <main className="py-3 sm:py-6">
-        <div className="container mx-auto px-3 sm:px-4">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Welcome */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="flex items-center gap-3 min-w-0">
