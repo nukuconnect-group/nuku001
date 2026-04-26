@@ -360,6 +360,41 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* Appearance — Theme */}
+          <Card className="mb-5">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sun className="w-4 h-4 text-primary" />
+                Apparence
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Choisissez le thème clair, sombre, ou suivez votre système.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: "light", label: "Clair", Icon: Sun },
+                  { value: "dark", label: "Sombre", Icon: Moon },
+                  { value: "system", label: "Système", Icon: Monitor },
+                ] as { value: ThemeMode; label: string; Icon: any }[]).map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTheme(value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors ${
+                      theme === value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-xs font-medium">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Become Producer (only for buyers) */}
           {resolvedUserType === "buyer" && (
             <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
