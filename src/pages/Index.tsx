@@ -53,8 +53,8 @@ const Index = () => {
         <SolutionsSection />
         <PromoBannerSlider />
         <CategoriesSection />
-        <FeaturedProducts />
         <VerifiedSuppliersSection />
+        <FeaturedProducts />
         <HomeDemandsSection />
         <FeaturesSection />
         <HowItWorksSection />
