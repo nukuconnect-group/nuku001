@@ -19,7 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
-import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import AddFormationModal from "@/components/dashboard/AddFormationModal";
+import PublishChoiceModal from "@/components/dashboard/PublishChoiceModal";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
@@ -29,7 +30,8 @@ import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner";
-import FreePlanQuotaCard from "@/components/dashboard/FreePlanQuotaCard";
+import ProductQuotaCard from "@/components/dashboard/ProductQuotaCard";
+import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
@@ -47,12 +49,17 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showPublishChoice, setShowPublishChoice] = useState(false);
+  const [showAddFormation, setShowAddFormation] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
   const { balance: tokenBalance } = useTokens();
   useSubscriptionExpiry(user?.id);
+
+  // Helper : ouvre le sélecteur Produit/Formation
+  const openPublishFlow = () => setShowPublishChoice(true);
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
