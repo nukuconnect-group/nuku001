@@ -1,0 +1,25 @@
+name: Edge Functions Type Check
+
+on:
+  push:
+    paths:
+      - 'supabase/functions/**'
+      - 'src/integrations/supabase/types.ts'
+      - 'scripts/check-edge-functions.sh'
+  pull_request:
+    paths:
+      - 'supabase/functions/**'
+      - 'src/integrations/supabase/types.ts'
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Run edge function type check
+        run: |
+          chmod +x scripts/check-edge-functions.sh
+          ./scripts/check-edge-functions.sh
