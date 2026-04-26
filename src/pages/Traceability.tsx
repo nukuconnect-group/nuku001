@@ -21,7 +21,7 @@ import {
   CheckCircle2, Clock, Package, Shield, Camera, FileText,
   Scan, ArrowRight, Star, Crown, Zap, Lock, Loader2,
   Factory, Store, Eye, Sprout, Warehouse, ShoppingCart, MessageCircle,
-  Plus, Rocket
+  Plus, Rocket, History, Trash2
 } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
 
