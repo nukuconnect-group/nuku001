@@ -110,15 +110,23 @@ const PremiumDashboard = () => {
     load();
   }, [isReady, user, profile, navigate]);
 
-  // Realtime support thread + subscription updates
+  // Realtime support thread + subscription/tokens/api updates (instant after admin grant or payment)
   useEffect(() => {
     if (!user) return;
+    const reloadApiUsage = async () => {
+      const { data } = await supabase.from("api_key_usage" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
+      setApiUsage((data as any[]) || []);
+    };
     const ch = supabase
       .channel("premium-realtime-" + user.id)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `user_id=eq.${user.id}` },
         (payload) => setSupportThread((prev) => [...prev, payload.new]))
       .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
         () => refreshSubscription())
+      .on("postgres_changes", { event: "*", schema: "public", table: "token_transactions", filter: `user_id=eq.${user.id}` },
+        () => { /* tokens hook handles via own channel */ })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "api_key_usage", filter: `user_id=eq.${user.id}` },
+        () => reloadApiUsage())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, refreshSubscription]);
