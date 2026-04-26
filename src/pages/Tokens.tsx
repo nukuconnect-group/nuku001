@@ -184,6 +184,90 @@ const Tokens = () => {
                 </CardContent>
               </Card>
             )}
+
+            <div className="flex justify-center mt-4">
+              <AskAdvisorButton context="tokens" variant="outline" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Plans d'abonnement (vue compacte, identique à /plans) */}
+      <section className="py-8 sm:py-12 bg-muted/20">
+        <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+          <div className="text-center mb-6">
+            <Badge variant="secondary" className="mb-2 text-[11px]"><Crown className="w-3 h-3 mr-1" /> Abonnements</Badge>
+            <h2 className="font-heading text-lg sm:text-2xl font-bold">Choisissez aussi un plan d'abonnement</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Les jetons servent à booster ; l'abonnement débloque les fonctionnalités premium.
+            </p>
+            {subscription?.plan && (
+              <Badge className="mt-2 bg-primary text-primary-foreground text-xs">
+                Plan actuel : {subscription.plan}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {subscriptionPlans.map((p) => {
+              const isCurrent = subscription?.plan === p.id;
+              return (
+                <Card
+                  key={p.id}
+                  className={`flex flex-col ${p.popular ? "border-primary shadow-elevated" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}
+                >
+                  <CardHeader className="p-3 sm:p-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-8 h-8 rounded-lg ${p.popular ? "bg-primary" : "bg-muted"} flex items-center justify-center`}>
+                        <p.icon className={`w-4 h-4 ${p.popular ? "text-primary-foreground" : "text-foreground"}`} />
+                      </div>
+                      {p.popular && <Badge className="text-[9px]">⭐ Top</Badge>}
+                      {isCurrent && <Badge variant="outline" className="text-[9px]">Actuel</Badge>}
+                    </div>
+                    <CardTitle className="text-sm mt-2">{p.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 sm:p-4 pt-0 flex-1 flex flex-col">
+                    <div className="mb-2">
+                      {p.price === 0 ? (
+                        <span className="font-heading text-lg font-bold">Gratuit</span>
+                      ) : (
+                        <>
+                          <span className="font-heading text-lg sm:text-xl font-bold">{p.price.toLocaleString()}</span>
+                          <span className="text-[10px] text-muted-foreground"> FCFA/an</span>
+                        </>
+                      )}
+                    </div>
+                    <ul className="space-y-1 text-[10px] sm:text-[11px] text-muted-foreground flex-1">
+                      {p.perks.map((perk) => (
+                        <li key={perk} className="flex items-start gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                          <span>{perk}</span>
+                        </li>
+                      ))}
+                      {p.credits > 0 && (
+                        <li className="flex items-start gap-1 text-primary font-medium">
+                          <Gift className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                          <span>+{p.credits} crédits inclus</span>
+                        </li>
+                      )}
+                    </ul>
+                    <Button
+                      variant={p.popular ? "hero" : "outline"}
+                      size="sm"
+                      className="w-full mt-3 gap-1 h-8 text-xs"
+                      onClick={() => navigate(`/plans#${p.id}`)}
+                      disabled={isCurrent}
+                    >
+                      {isCurrent ? "Plan actif" : <>Choisir <ArrowRight className="w-3 h-3" /></>}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="text-center mt-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/plans")} className="text-xs gap-1">
+              Voir tous les plans détaillés <ArrowRight className="w-3 h-3" />
+            </Button>
           </div>
         </div>
       </section>
@@ -191,6 +275,10 @@ const Tokens = () => {
       {/* Packs */}
       <section className="py-8 sm:py-14">
         <div className="container mx-auto px-3 sm:px-4">
+          <div className="text-center mb-6">
+            <Badge variant="secondary" className="mb-2 text-[11px]"><Coins className="w-3 h-3 mr-1" /> Recharger des jetons</Badge>
+            <h2 className="font-heading text-lg sm:text-2xl font-bold">Packs de jetons</h2>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {packs.map((pack) => {
               const isPaying = paymentStep === pack.code;
