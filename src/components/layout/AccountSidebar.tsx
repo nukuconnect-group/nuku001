@@ -29,9 +29,11 @@ import {
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
-  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
+  Sun, Moon, Monitor
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
 interface AccountSidebarProps {
   isOpen: boolean;
