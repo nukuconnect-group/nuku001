@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * Checks subscription expiry and shows warnings/blocks when needed.
- * - 7 days before: warning notification
- * - 3 days before: urgent warning
- * - Expired: toast + redirect suggestion
+ * Notifications informatives sur l'état de l'abonnement.
+ * IMPORTANT — Politique non-bloquante :
+ *   - Aucun compte n'est jamais désactivé.
+ *   - Les produits restent visibles, peu importe le plan.
+ *   - Le plan gratuit est valable indéfiniment ; on rappelle juste l'option premium.
+ *   - Les packs payants : on rappelle de recharger ses crédits si épuisés.
  */
 export const useSubscriptionExpiry = (userId?: string) => {
   const { toast } = useToast();
@@ -23,64 +25,32 @@ export const useSubscriptionExpiry = (userId?: string) => {
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (!sub || !(sub as any).expires_at) return;
-
-      const expiresAt = new Date((sub as any).expires_at);
-      const now = new Date();
-      const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (!sub) return;
       const plan = (sub as any).plan;
+      const expiresAt = (sub as any).expires_at ? new Date((sub as any).expires_at) : null;
 
-      if (daysLeft <= 0) {
-        // Expired
-        if (plan === "free") {
+      // Plan gratuit : juste un rappel doux pour devenir premium (jamais bloquant, jamais d'expiration)
+      if (plan === "free") {
+        // Pas de toast forcé, l'UI affiche déjà la carte quota avec CTA "Devenir premium".
+        return;
+      }
+
+      // Plans payants : si expiration proche, suggérer une recharge (jamais bloquant)
+      if (expiresAt) {
+        const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 0) {
           toast({
-            title: "⏰ Votre période gratuite a expiré",
-            description: "Passez au pack Pro pour continuer à publier vos produits.",
-            duration: 10000,
+            title: "💡 Pensez à recharger vos crédits",
+            description: `Votre pack ${plan} a atteint son terme. Vos produits restent en ligne — rechargez pour continuer à booster.`,
+            duration: 8000,
           });
-          // Mark as expired
-          await supabase
-            .from("subscriptions" as any)
-            .update({ status: "expired" })
-            .eq("user_id", userId);
-        } else {
+        } else if (daysLeft <= 3) {
           toast({
-            title: "⏰ Votre abonnement a expiré",
-            description: `Renouvelez votre pack ${plan} pour continuer.`,
-            duration: 10000,
+            title: `⏳ Votre pack ${plan} arrive à terme dans ${daysLeft}j`,
+            description: "Vos produits restent visibles. Rechargez vos crédits pour conserver les avantages.",
+            duration: 6000,
           });
-          await supabase
-            .from("subscriptions" as any)
-            .update({ status: "expired" })
-            .eq("user_id", userId);
         }
-      } else if (daysLeft <= 3) {
-        toast({
-          title: "⚠️ Abonnement expire dans " + daysLeft + " jour" + (daysLeft > 1 ? "s" : ""),
-          description: plan === "free"
-            ? "Pensez à passer au pack Pro avant l'expiration."
-            : "Renouvelez votre abonnement pour éviter l'interruption.",
-          duration: 8000,
-        });
-        // Insert notification if not already notified recently
-        await supabase.from("notifications").insert({
-          user_id: userId,
-          type: "subscription",
-          title: `⚠️ Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? "s" : ""}`,
-          description: plan === "free"
-            ? "Votre période gratuite se termine bientôt. Passez au pack Pro pour continuer."
-            : `Votre pack ${plan} expire bientôt. Renouvelez-le pour éviter toute interruption.`,
-        });
-      } else if (daysLeft <= 7) {
-        // Gentle reminder
-        await supabase.from("notifications").insert({
-          user_id: userId,
-          type: "subscription",
-          title: `📋 Votre abonnement expire dans ${daysLeft} jours`,
-          description: plan === "free"
-            ? "Préparez votre transition vers le pack Pro."
-            : `Pensez à renouveler votre pack ${plan}.`,
-        });
       }
     };
 
