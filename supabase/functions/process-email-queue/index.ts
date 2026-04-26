@@ -75,7 +75,7 @@ async function moveToDlq(
     source_queue: queue,
     dlq_name: `${queue}_dlq`,
     message_id: msg.msg_id,
-    payload: msg.message as Database['public']['Tables']['email_send_log']['Row'] extends never ? never : Record<string, unknown> as never,
+    payload: msg.message as DB['public']['Functions']['move_to_dlq']['Args']['payload'],
   })
   if (error) {
     console.error('Failed to move message to DLQ', { queue, msg_id: msg.msg_id, reason, error })
