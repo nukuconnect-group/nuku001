@@ -652,6 +652,10 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= API ======================= */}
           <TabsContent value="api" className="space-y-4">
+            <SummaryCard which="api" title="Résumé actionnable — API" />
+            <div className="flex justify-end">
+              <AskAdvisorButton context="api" prefill="J'ai une question sur l'intégration de l'API NukuConnect (clé, code erreur, endpoint). Pouvez-vous m'aider ?" />
+            </div>
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2 flex flex-row items-center justify-between gap-2">
                 <div className="min-w-0">
