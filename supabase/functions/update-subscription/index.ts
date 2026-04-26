@@ -219,6 +219,38 @@ serve(async (req) => {
       });
     }
 
+    // Send subscription confirmation email (non-blocking, idempotent per activation)
+    try {
+      const { data: authUser } = await adminClient.auth.admin.getUserById(userId);
+      const recipientEmail = authUser?.user?.email;
+      if (recipientEmail) {
+        const { data: profile } = await adminClient
+          .from("profiles")
+          .select("full_name, business_name")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const recipientName =
+          profile?.business_name?.trim() || profile?.full_name?.trim() || undefined;
+        const idempotencyKey = `subscription-${userId}-${plan}-${expiresAt.toISOString().slice(0, 10)}`;
+        adminClient.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "subscription",
+            recipientEmail,
+            idempotencyKey,
+            templateData: {
+              recipientName,
+              plan,
+              billingPeriod: billing_period,
+              expiresAt: expiresAt.toISOString(),
+              event: "activated",
+            },
+          },
+        }).catch((e) => console.error("subscription email invoke failed", e));
+      }
+    } catch (e) {
+      console.error("subscription email prep failed", e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
