@@ -16,14 +16,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor
 } from "lucide-react";
+import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile: ctxProfile, isLoading, isReady, updateProfile } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const resolvedUserType = useResolvedUserType(user?.id, ctxProfile?.user_type);
 
   // Form state
