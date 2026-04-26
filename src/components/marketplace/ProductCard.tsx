@@ -212,19 +212,23 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
           </div>
 
-          {/* Wholesale tiers (style Alibaba "15 229 / 15 171") */}
-          <PriceTiersDisplay productId={product.id} unit={product.unit} basePrice={product.price} compact />
+          {/* Wholesale hint — discret, en une ligne */}
+          {lowestTierPrice !== null && lowestTierPrice < product.price && (
+            <div className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+              Dès {formatPrice(lowestTierPrice)}/{product.unit} en gros
+            </div>
+          )}
 
           {/* Title */}
           <h3 className="font-medium text-foreground text-[11px] sm:text-xs leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {product.name}
           </h3>
 
-          {/* Min order + delivery */}
-          <div className="flex items-center gap-2 text-[8px] sm:text-[9px] text-muted-foreground">
+          {/* Min order + shipping delay */}
+          <div className="flex items-center gap-2 text-[8px] sm:text-[9px] text-muted-foreground flex-wrap">
             <span>Min. 1 {product.unit}</span>
             <span className="text-border">•</span>
-            <span className="flex items-center gap-0.5"><Truck className="w-2.5 h-2.5" />Livraison</span>
+            <ShippingDelayBadge days={shippingDays} />
           </div>
 
           {/* Reviews + Sales */}
