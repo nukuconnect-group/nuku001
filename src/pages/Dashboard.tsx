@@ -476,11 +476,28 @@ const Dashboard = () => {
         </div>
       </main>
 
+      {/* Choix Produit / Formation */}
+      <PublishChoiceModal
+        open={showPublishChoice}
+        onOpenChange={setShowPublishChoice}
+        onChoose={(type) => {
+          setShowPublishChoice(false);
+          if (type === "product") setShowAddProduct(true);
+          else setShowAddFormation(true);
+        }}
+      />
+
       {profile && (
         <AddProductModal open={showAddProduct} onOpenChange={(open) => { setShowAddProduct(open); if (!open) setEditingProduct(null); }}
           profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
           editProduct={editingProduct} />
       )}
+
+      <AddFormationModal
+        open={showAddFormation}
+        onOpenChange={setShowAddFormation}
+        instructorName={profile?.business_name || profile?.full_name || "Formateur"}
+      />
 
       <ProductBoostModal
         open={!!boostProduct}
