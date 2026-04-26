@@ -65,6 +65,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const { toast } = useToast();
   const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const { canInstall, isInstalled, install, showInstallOption } = usePWAInstall();
   const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
   const [isAdmin, setIsAdmin] = useState(false);
