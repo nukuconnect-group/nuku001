@@ -357,7 +357,7 @@ const Dashboard = () => {
 
 
           {/* Products list — Quick Actions cover other sections */}
-          <Card className="mb-4">
+          <Card className="mb-4" id="products-section">
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm flex items-center gap-2">
