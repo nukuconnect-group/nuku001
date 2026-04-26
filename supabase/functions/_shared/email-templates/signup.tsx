@@ -54,6 +54,11 @@ export const SignupEmail = ({
         <Button style={button} href={confirmationUrl}>
           Vérifier mon email
         </Button>
+        <Text style={text}>
+          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :
+          <br />
+          <Link href={confirmationUrl} style={link}>{confirmationUrl}</Link>
+        </Text>
         <Text style={footer}>
           Si vous n'avez pas créé de compte, vous pouvez ignorer cet email en toute sécurité.
         </Text>
