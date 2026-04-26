@@ -290,15 +290,15 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
     const items: Item[] = [];
     // Statut commun abonnement
     if (isExpired) {
-      items.push({ icon: "🔴", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
+      items.push({ icon: "🔴", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: `/plans#${planKey}` });
     } else if (daysLeft !== null && daysLeft <= 7) {
-      items.push({ icon: "⏳", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
+      items.push({ icon: "⏳", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: `/plans#${planKey}` });
     }
     // Jetons
     if (tokenBalance === 0) {
-      items.push({ icon: "🪙", text: "Solde de jetons épuisé.", cta: "Recharger", href: "/jetons" });
+      items.push({ icon: "🪙", text: "Solde de jetons épuisé.", cta: "Recharger", href: `/jetons#${planKey}` });
     } else if (tokenBalance <= 5) {
-      items.push({ icon: "💰", text: `Solde faible : ${tokenBalance} jeton${tokenBalance > 1 ? "s" : ""}.`, cta: "Recharger", href: "/jetons" });
+      items.push({ icon: "💰", text: `Solde faible : ${tokenBalance} jeton${tokenBalance > 1 ? "s" : ""}.`, cta: "Recharger", href: `/jetons#${planKey}` });
     }
 
     if (which === "analytics") {
