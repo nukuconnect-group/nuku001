@@ -451,9 +451,11 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= ANALYTICS ======================= */}
           <TabsContent value="analytics" className="space-y-4">
+            <SummaryCard which="analytics" title="Résumé actionnable — Analytique" />
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs text-muted-foreground">Données réelles sur 30 jours.</p>
               <div className="flex gap-2">
+                <AskAdvisorButton context="analytics" prefill="Comment puis-je améliorer mes statistiques de ventes ce mois-ci ?" />
                 <Button onClick={exportAnalyticsCSV} variant="outline" size="sm" className="h-8 text-xs gap-1"><Download className="w-3.5 h-3.5" /> CSV</Button>
                 <Button onClick={exportAnalyticsHTML} variant="outline" size="sm" className="h-8 text-xs gap-1"><Download className="w-3.5 h-3.5" /> Rapport PDF</Button>
               </div>
