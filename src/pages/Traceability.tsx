@@ -496,6 +496,78 @@ const Traceability = () => {
               )}
             </TabsContent>
 
+            {/* TAB: Scan history (BUYER) */}
+            <TabsContent value="history" className="mt-6">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <History className="w-4 h-4 text-primary" />
+                      Mes scans récents
+                    </CardTitle>
+                    {scanHistory.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] h-7 gap-1 text-destructive hover:text-destructive"
+                        onClick={() => persistHistory([])}
+                      >
+                        <Trash2 className="w-3 h-3" /> Vider
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Retrouvez tous les lots dont vous avez vérifié la traçabilité (stockés sur cet appareil).
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {scanHistory.length === 0 ? (
+                    <div className="text-center py-10">
+                      <QrCode className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground mb-1">Aucun scan pour le moment</p>
+                      <p className="text-xs text-muted-foreground/70">
+                        Scannez un QR code de lot ou recherchez par numéro pour démarrer.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {scanHistory.map(h => (
+                        <button
+                          key={h.id}
+                          onClick={() => {
+                            setSearchCode(h.batch_number || h.id);
+                            setActiveTab("trace");
+                            setTimeout(() => handleSearch(), 50);
+                          }}
+                          className="w-full flex items-center gap-3 py-3 hover:bg-muted/50 px-2 rounded-md transition-colors text-left"
+                        >
+                          {h.product_image ? (
+                            <img src={h.product_image} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                              <Package className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {h.product_name || "Produit"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">
+                              {h.batch_number || h.id.slice(0, 12)}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {new Date(h.scanned_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* TAB: Manage (GATED to paid plans) */}
             <TabsContent value="manage" className="mt-6">
               {!user ? (
