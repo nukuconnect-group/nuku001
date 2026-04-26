@@ -163,11 +163,36 @@ const Traceability = () => {
     if (data) {
       setSearchResult(data);
       setActiveTab("trace");
+      recordScan(data);
     } else {
       setSearchResult(null);
       toast({ title: "Produit introuvable", description: "Vérifiez le code de traçabilité et réessayez.", variant: "destructive" });
     }
   };
+
+  // Auto-load from URL ?batch=... or ?product=...
+  useEffect(() => {
+    const batch = searchParams.get("batch");
+    const productParam = searchParams.get("product");
+    const code = batch || productParam;
+    if (code && !searchResult) {
+      setSearchCode(code);
+      (async () => {
+        const { data } = await supabase
+          .from("product_traceability" as any)
+          .select("*, products(name, images, is_organic, category, location)")
+          .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          setSearchResult(data);
+          setActiveTab("trace");
+          recordScan(data);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Create traceability record
   const createTraceMutation = useMutation({
