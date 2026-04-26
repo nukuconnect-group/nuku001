@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/components/cart/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import SplashScreen from "@/components/SplashScreen";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
@@ -96,6 +97,7 @@ const App = () => {
   return (
     <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <LanguageProvider>
         <ProfileProvider>
         <CartProvider>
@@ -164,6 +166,7 @@ const App = () => {
         </CartProvider>
         </ProfileProvider>
       </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
     </HelmetProvider>
   );
