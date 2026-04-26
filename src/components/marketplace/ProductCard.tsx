@@ -36,7 +36,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   // Wholesale tiers : on récupère seulement le prix le plus bas pour afficher "dès X F"
   const { data: tiers = [] } = useProductPriceTiers(product.id);
   const lowestTierPrice = tiers.length > 0 ? Math.min(...tiers.map((t) => t.price)) : null;
-  const shippingDays = (product as any).shipping_delay_days as number | undefined;
+  const shippingDays = product.shippingDelayDays;
 
   const { data: matchingDemands = 0 } = useQuery({
     queryKey: ["demand-count", product.category],

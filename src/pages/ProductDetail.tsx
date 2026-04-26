@@ -385,7 +385,7 @@ const ProductDetail = () => {
                 unit={product.unit}
                 basePrice={product.price}
                 minOrder={(product as any).min_order || 1}
-                shippingDays={(product as any).shipping_delay_days}
+                shippingDays={product.shippingDelayDays}
               />
 
               {/* Description */}
