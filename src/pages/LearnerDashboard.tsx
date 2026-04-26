@@ -15,6 +15,7 @@ import {
   GraduationCap, BookOpen, Award, Clock, Play, Star, User,
   Loader2, Settings, TrendingUp
 } from "lucide-react";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 const LearnerDashboard = () => {
   const navigate = useNavigate();
