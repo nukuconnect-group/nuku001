@@ -394,8 +394,8 @@ const Traceability = () => {
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO url="/tracabilite" title="Traçabilité des Produits" description="Vérifiez l'origine et le parcours de vos produits agricoles." />
       {!isOnline && (
-        <div className="fixed top-16 inset-x-0 z-40 bg-amber-500/95 text-amber-950 text-xs sm:text-sm py-2 px-4 flex items-center justify-center gap-2 shadow-md">
-          <WifiOff className="w-4 h-4 flex-shrink-0" />
+        <div className="fixed top-16 inset-x-0 z-40 bg-secondary text-secondary-foreground border-b border-border text-xs sm:text-sm py-2 px-4 flex items-center justify-center gap-2 shadow-md">
+          <WifiOff className="w-4 h-4 flex-shrink-0 text-primary" />
           <span className="font-medium">Mode hors-ligne — recherche limitée à l'historique mis en cache.</span>
         </div>
       )}
