@@ -29,7 +29,7 @@ import { type CurrencyCode } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
-import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
+import WholesalePricingPanel from "@/components/marketplace/WholesalePricingPanel";
 import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCalculator";
 import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
@@ -379,8 +379,14 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              {/* Wholesale tiers Alibaba-style */}
-              <PriceTiersDisplay productId={product.id} unit={product.unit} basePrice={product.price} />
+              {/* Wholesale pricing — style Aliexpress (Prêt à expédié + tranches de prix) */}
+              <WholesalePricingPanel
+                productId={product.id}
+                unit={product.unit}
+                basePrice={product.price}
+                minOrder={(product as any).min_order || 1}
+                shippingDays={product.shippingDelayDays}
+              />
 
               {/* Description */}
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.description}</p>

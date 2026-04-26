@@ -165,6 +165,11 @@ const Auth = () => {
     e.preventDefault();
     if (signupPassword !== signupConfirmPassword) { toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas.", variant: "destructive" }); return; }
     if (signupPassword.length < 6) { toast({ title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères.", variant: "destructive" }); return; }
+    // Nom d'entreprise OBLIGATOIRE pour fournisseur/formateur
+    if ((userType === "producer" || userType === "trainer") && !producerCompany.trim()) {
+      toast({ title: "Nom d'entreprise requis", description: "Le nom de votre entreprise/exploitation est obligatoire.", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
     try {
       const fullName = (userType === "buyer" || userType === "learner") ? `${buyerFirstName} ${buyerLastName}` : producerName;
@@ -172,12 +177,12 @@ const Auth = () => {
       const location = (userType === "buyer" || userType === "learner") ? `${buyerLocation}, ${buyerCountry}` : producerLocation;
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail, password: signupPassword,
-        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, company: userType === "producer" ? producerCompany : null, sector: userType === "producer" ? producerSector : null } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, sector: userType === "producer" ? producerSector : null } },
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
         const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
-        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
+        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
         // Link referral if present — only remove localStorage AFTER successful claim
         const savedRef = localStorage.getItem("nukuconnect-ref");
@@ -419,8 +424,19 @@ const Auth = () => {
                     </div>
                     <div className="relative">
                       <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input type="text" placeholder={userType === "trainer" ? "Organisme / Institution" : "Entreprise / Exploitation"} value={producerCompany} onChange={(e) => setProducerCompany(e.target.value)} className="pl-10" />
+                      <Input
+                        type="text"
+                        placeholder={userType === "trainer" ? "Organisme / Institution *" : "Nom de l'entreprise / exploitation *"}
+                        value={producerCompany}
+                        onChange={(e) => setProducerCompany(e.target.value)}
+                        className="pl-10"
+                        required
+                        aria-required="true"
+                      />
                     </div>
+                    <p className="text-[10px] text-muted-foreground -mt-1">
+                      Ce nom sera affiché publiquement à la place de votre nom personnel.
+                    </p>
                     <Select value={producerSector} onValueChange={setProducerSector}>
                       <SelectTrigger><Briefcase className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder={userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"} /></SelectTrigger>
                       <SelectContent>{sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>

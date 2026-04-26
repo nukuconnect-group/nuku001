@@ -17,6 +17,7 @@ export interface DbProduct {
   created_at: string;
   producer_id: string;
   min_order: number | null;
+  shipping_delay_days?: number | null;
   producer?: {
     id: string;
     full_name: string | null;
@@ -102,6 +103,7 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
     image: getProductImage(p.images, p.category, p.name),
     images: p.images || [],
     createdAt: p.created_at,
+    shippingDelayDays: (p as any).shipping_delay_days ?? 1,
     producer: {
       id: p.producer_id,
       name: displayName,

@@ -124,6 +124,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     location: "",
     is_organic: false,
     min_order: "1",
+    shipping_delay_days: "1",
     deliveryDelay: "immediate",
     saleMode: "retail",
     negotiable: false,
@@ -167,6 +168,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         location: editProduct.location || "",
         is_organic: editProduct.is_organic || false,
         min_order: String(editProduct.min_order || "1"),
+        shipping_delay_days: String((editProduct as any).shipping_delay_days ?? "1"),
         deliveryDelay: "immediate",
         saleMode: "retail",
         negotiable: editProduct.is_negotiable || false,
@@ -263,6 +265,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         is_negotiable: newProduct.negotiable,
         stock_status: newProduct.stockStatus || (parseFloat(newProduct.quantity_available) > 0 ? 'in_stock' : 'out_of_stock'),
         min_order: parseFloat(newProduct.min_order) || 1,
+        shipping_delay_days: Math.max(0, Math.min(30, parseInt(newProduct.shipping_delay_days || "1", 10) || 1)),
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
       };
@@ -611,6 +614,21 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 onChange={(e) => setNewProduct({ ...newProduct, min_order: e.target.value })}
                 placeholder="Ex: 10"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Délai d'expédition (jours)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="30"
+                value={newProduct.shipping_delay_days}
+                onChange={(e) => setNewProduct({ ...newProduct, shipping_delay_days: e.target.value })}
+                placeholder="0 = immédiate, 1 = 24h"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                0 = expédition immédiate · 1 = sous 24h · 2-15 = sous N jours
+              </p>
             </div>
           </div>
 

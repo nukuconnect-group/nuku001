@@ -1313,6 +1313,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          shipping_delay_days: number
           slug: string | null
           stock_status: string
           unit: string
@@ -1336,6 +1337,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available?: number
+          shipping_delay_days?: number
           slug?: string | null
           stock_status?: string
           unit?: string
@@ -1359,6 +1361,7 @@ export type Database = {
           price?: number
           producer_id?: string
           quantity_available?: number
+          shipping_delay_days?: number
           slug?: string | null
           stock_status?: string
           unit?: string
@@ -2169,6 +2172,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          shipping_delay_days: number
           slug: string | null
           stock_status: string
           unit: string

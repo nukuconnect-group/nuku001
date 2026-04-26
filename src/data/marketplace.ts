@@ -27,6 +27,7 @@ export interface Product {
   description: string;
   isOrganic: boolean;
   createdAt: string;
+  shippingDelayDays?: number | null;
 }
 
 export interface Category {
