@@ -115,9 +115,16 @@ const HomeDemandsSection = () => {
                 className="flex-shrink-0 w-[170px] sm:w-[200px] snap-start group"
               >
                 <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-col h-full">
-                  {/* Image — fallback visuel riche si absente */}
+                  {/* Image avec fallback visuel garanti */}
                   <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
-                    {d.image_url ? (
+                    {/* Fallback en arrière-plan — toujours visible si pas d'image ou image cassée */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-primary/10 to-secondary/15 flex flex-col items-center justify-center gap-1">
+                      <Package className="w-8 h-8 text-accent/60" />
+                      <span className="text-[9px] font-semibold text-foreground/70 uppercase tracking-wide px-2 text-center line-clamp-1">
+                        {d.category}
+                      </span>
+                    </div>
+                    {d.image_url && (
                       <img
                         src={d.image_url}
                         alt={d.title}
@@ -127,14 +134,7 @@ const HomeDemandsSection = () => {
                           (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
                       />
-                    ) : null}
-                    {/* Fallback toujours présent en arrière-plan */}
-                    <div className="absolute inset-0 -z-0 bg-gradient-to-br from-accent/20 via-primary/10 to-secondary/15 flex flex-col items-center justify-center gap-1">
-                      <Package className="w-8 h-8 text-accent/60" />
-                      <span className="text-[9px] font-semibold text-foreground/70 uppercase tracking-wide">
-                        {d.category}
-                      </span>
-                    </div>
+                    )}
                     <span className="absolute top-1.5 left-1.5 bg-accent text-accent-foreground text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">
                       ACHAT
                     </span>
