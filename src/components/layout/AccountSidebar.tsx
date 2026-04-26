@@ -29,9 +29,11 @@ import {
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
-  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones
+  HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
+  Sun, Moon, Monitor
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
 interface AccountSidebarProps {
   isOpen: boolean;
@@ -63,6 +65,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const { toast } = useToast();
   const { user, profile, isLoading: isProfileLoading, isReady } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const { canInstall, isInstalled, install, showInstallOption } = usePWAInstall();
   const resolvedUserType = useResolvedUserType(user?.id, profile?.user_type);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -422,6 +425,36 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <span className="flex-1 text-[13px] font-medium tracking-tight">Paramètres</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
+
+                {/* Theme selector */}
+                <div className="px-4 py-3 border-b border-border/20">
+                  <div className="flex items-center gap-3.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                      {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : theme === "light" ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Monitor className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                    <span className="flex-1 text-[13px] font-medium tracking-tight">Apparence</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 ml-12">
+                    {([
+                      { value: "light", label: "Clair", Icon: Sun },
+                      { value: "dark", label: "Sombre", Icon: Moon },
+                      { value: "system", label: "Auto", Icon: Monitor },
+                    ] as { value: ThemeMode; label: string; Icon: typeof Sun }[]).map(({ value, label, Icon }) => (
+                      <button
+                        key={value}
+                        onClick={() => setTheme(value)}
+                        className={`flex flex-col items-center gap-1 py-2 px-1 rounded-md border text-[10px] transition-colors ${
+                          theme === value
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span className="font-medium">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </nav>
 
