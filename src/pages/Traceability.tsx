@@ -52,10 +52,36 @@ const Traceability = () => {
   const queryClient = useQueryClient();
   const { user, profile, isReady } = useProfile();
   const { subscription, hasActiveSubscription } = useSubscription();
+  const [searchParams] = useSearchParams();
   const [searchCode, setSearchCode] = useState("");
   const [searchResult, setSearchResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [activeTab, setActiveTab] = useState("trace");
+  const SCAN_HISTORY_KEY = "nukuconnect-trace-history";
+  const [scanHistory, setScanHistory] = useState<Array<{ id: string; batch_number: string | null; product_name: string | null; product_image: string | null; scanned_at: string }>>(() => {
+    try {
+      const raw = localStorage.getItem(SCAN_HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+
+  const persistHistory = (next: typeof scanHistory) => {
+    setScanHistory(next);
+    try { localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next.slice(0, 50))); } catch {}
+  };
+
+  const recordScan = (record: any) => {
+    if (!record?.id) return;
+    const entry = {
+      id: record.id,
+      batch_number: record.batch_number || null,
+      product_name: record.products?.name || null,
+      product_image: record.products?.images?.[0] || null,
+      scanned_at: new Date().toISOString(),
+    };
+    const filtered = scanHistory.filter(h => h.id !== entry.id);
+    persistHistory([entry, ...filtered]);
+  };
 
   // New traceability form state
   const [newTrace, setNewTrace] = useState({
