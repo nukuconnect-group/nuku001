@@ -133,7 +133,7 @@ const VerifiedSuppliersSection = () => {
                       </div>
                     )}
                     {s.is_verified && (
-                      <span className="absolute top-1.5 right-1.5 bg-emerald-600 text-white rounded-full p-0.5 shadow-md">
+                      <span className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground rounded-full p-0.5 shadow-md">
                         <ShieldCheck className="w-3 h-3" />
                       </span>
                     )}
