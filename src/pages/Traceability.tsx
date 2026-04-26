@@ -58,12 +58,59 @@ const Traceability = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [activeTab, setActiveTab] = useState("trace");
   const SCAN_HISTORY_KEY = "nukuconnect-trace-history";
+  const OFFLINE_CACHE_KEY = "nukuconnect-trace-offline-cache";
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [scanHistory, setScanHistory] = useState<Array<{ id: string; batch_number: string | null; product_name: string | null; product_image: string | null; scanned_at: string }>>(() => {
     try {
       const raw = localStorage.getItem(SCAN_HISTORY_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   });
+
+  // Listen to connection changes
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  // Offline cache helpers — keep last 30 full trace records for offline viewing
+  const getOfflineCache = (): Record<string, any> => {
+    try { return JSON.parse(localStorage.getItem(OFFLINE_CACHE_KEY) || "{}"); }
+    catch { return {}; }
+  };
+  const cacheTraceRecord = (record: any) => {
+    if (!record?.id) return;
+    try {
+      const cache = getOfflineCache();
+      cache[record.id] = { ...record, _cached_at: Date.now() };
+      if (record.batch_number) cache[`batch:${record.batch_number}`] = record.id;
+      const entries = Object.entries(cache).filter(([k]) => !k.startsWith("batch:"));
+      if (entries.length > 30) {
+        const sorted = entries.sort((a: any, b: any) => (b[1]?._cached_at || 0) - (a[1]?._cached_at || 0)).slice(0, 30);
+        const trimmed: Record<string, any> = {};
+        sorted.forEach(([k, v]) => { trimmed[k] = v; });
+        Object.entries(cache).forEach(([k, v]) => { if (k.startsWith("batch:")) trimmed[k] = v; });
+        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(trimmed));
+      } else {
+        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(cache));
+      }
+    } catch {}
+  };
+  const lookupOffline = (code: string): any | null => {
+    const cache = getOfflineCache();
+    if (cache[code]) return cache[code];
+    const byBatch = cache[`batch:${code}`];
+    if (byBatch && cache[byBatch]) return cache[byBatch];
+    // fuzzy by batch_number
+    const match = Object.values(cache).find((r: any) => r?.batch_number && typeof r.batch_number === "string" && r.batch_number.toLowerCase().includes(code.toLowerCase()));
+    return match || null;
+  };
 
   const persistHistory = (next: typeof scanHistory) => {
     setScanHistory(next);
@@ -81,6 +128,7 @@ const Traceability = () => {
     };
     const filtered = scanHistory.filter(h => h.id !== entry.id);
     persistHistory([entry, ...filtered]);
+    cacheTraceRecord(record);
   };
 
   // New traceability form state
