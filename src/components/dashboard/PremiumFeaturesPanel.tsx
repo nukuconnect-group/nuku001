@@ -20,21 +20,21 @@ const FEATURES = [
     icon: BarChart3,
     title: "Analytics avancées",
     description: "Tableaux de bord détaillés, segmentation acheteurs, prévisions IA",
-    href: "/dashboard?tab=analytics",
+    href: "/premium?tab=analytics",
   },
   {
     key: "manager",
     icon: Headphones,
     title: "Account manager dédié",
     description: "Un conseiller NukuConnect attribué pour vous accompagner",
-    href: "/contact?topic=account-manager",
+    href: "/premium?tab=manager",
   },
   {
     key: "api",
     icon: Code2,
     title: "Intégration API",
     description: "Connectez votre système (ERP, e-commerce) à NukuConnect",
-    href: "/help?section=api",
+    href: "/premium?tab=api",
   },
 ];
 
