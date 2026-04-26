@@ -776,6 +776,7 @@ const BuyerDashboard = () => {
           </Tabs>
         </div>
       </main>
+      </DashboardLayout>
 
       {/* Migration Modal */}
       <Dialog open={showMigrationModal} onOpenChange={setShowMigrationModal}>
