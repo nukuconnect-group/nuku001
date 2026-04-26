@@ -28,6 +28,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 // Lazy load heavy components
 const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
@@ -188,12 +189,32 @@ const BuyerDashboard = () => {
     );
   }
 
+  const buyerSidebar: DashboardSidebarItem[] = [
+    { label: "Mes commandes", icon: Package, tabValue: "orders", badge: pendingOrders > 0 ? pendingOrders : undefined },
+    { label: "Favoris", icon: Heart, tabValue: "favorites" },
+    { label: "Messages", icon: MessageCircle, tabValue: "messages" },
+    { label: "Alertes", icon: Bell, tabValue: "alerts", badge: unreadNotifs > 0 ? unreadNotifs : undefined },
+    { label: "Paiements", icon: Receipt, tabValue: "payments" },
+    { label: "Paramètres", icon: Settings, tabValue: "settings" },
+    { label: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
+    { label: "Suivi livraison", icon: Truck, href: "/suivi-livraison" },
+    { label: "Adresse", icon: MapPin, href: "/adresse-livraison" },
+    { label: "Devenir vendeur", icon: Store, href: "/devenir-fournisseur" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
 
+      <DashboardLayout
+        sidebarTitle="Espace Acheteur"
+        sidebarSubtitle={profile?.full_name || "Mon compte"}
+        items={buyerSidebar}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
       <main className="pt-4 sm:pt-8 pb-8 sm:pb-12">
-        <div className="container mx-auto px-3 sm:px-4">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Welcome - responsive */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
             <div className="flex items-center gap-3 min-w-0">
