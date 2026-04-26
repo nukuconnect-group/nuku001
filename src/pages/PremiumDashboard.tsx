@@ -628,15 +628,95 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2">
-                <CardTitle className="text-sm">Documentation rapide</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2"><Code2 className="w-4 h-4 text-primary" /> Documentation API complète</CardTitle>
+                <CardDescription className="text-[11px]">Intégrez NukuConnect à votre ERP, e-commerce ou outil interne.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0 text-xs space-y-2">
-                <p className="text-muted-foreground">Authentifiez-vous avec un en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer VOTRE_CLE</code>.</p>
-                <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
-{`curl ${apiEndpoint}/products \\
-  -H "Authorization: Bearer nuku_live_XXXX..."`}
-                </pre>
-                <p className="text-muted-foreground">Endpoints : <code>/products</code>, <code>/orders</code>, <code>/inventory</code>.</p>
+              <CardContent className="p-3 sm:p-4 pt-0 text-xs space-y-4">
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🔐 Authentification</h3>
+                  <p className="text-muted-foreground text-[11px]">Toutes les requêtes nécessitent un en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer VOTRE_CLE</code>. Les clés commencent par <code className="bg-muted px-1 rounded">nuku_live_</code>. Conservez-les côté serveur uniquement — jamais dans du code client public.</p>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">📦 Endpoints disponibles</h3>
+                  <div className="space-y-2">
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /products</p>
+                      <p className="text-[10px] text-muted-foreground">Liste vos produits actifs. Paramètres : <code>?limit=20&amp;status=approved</code></p>
+                    </div>
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /orders</p>
+                      <p className="text-[10px] text-muted-foreground">Liste vos commandes reçues. Paramètres : <code>?status=pending&amp;from=2026-01-01</code></p>
+                    </div>
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /inventory</p>
+                      <p className="text-[10px] text-muted-foreground">État de stock par produit (quantité, prix, statut).</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">💻 Exemples d'intégration</h3>
+                  <p className="text-[10px] text-muted-foreground">cURL :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`curl ${apiEndpoint}/products?limit=10 \\
+  -H "Authorization: Bearer nuku_live_XXXX..." \\
+  -H "Content-Type: application/json"`}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2">Node.js / fetch :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`const res = await fetch("${apiEndpoint}/orders?status=pending", {
+  headers: { Authorization: "Bearer " + process.env.NUKU_API_KEY }
+});
+const { data } = await res.json();`}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2">Python / requests :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`import os, requests
+r = requests.get(
+  "${apiEndpoint}/inventory",
+  headers={"Authorization": f"Bearer {os.environ['NUKU_API_KEY']}"}
+)
+print(r.json())`}
+                  </pre>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">📋 Format de réponse</h3>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`{
+  "data": [ /* array of items */ ],
+  "count": 42,
+  "endpoint": "/products"
+}`}
+                  </pre>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">⚠️ Codes d'erreur</h3>
+                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
+                    <li><code>401</code> — Clé absente ou invalide</li>
+                    <li><code>403</code> — Clé révoquée ou abonnement expiré</li>
+                    <li><code>429</code> — Limite de requêtes atteinte (60 req/min)</li>
+                    <li><code>500</code> — Erreur serveur (retry après 2s)</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🛡️ Bonnes pratiques</h3>
+                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
+                    <li>Stockez la clé dans une variable d'environnement, jamais dans le code</li>
+                    <li>Révoquez immédiatement toute clé compromise (bouton 🗑 ci-dessus)</li>
+                    <li>Utilisez une clé différente par environnement (dev / prod)</li>
+                    <li>Surveillez l'historique d'utilisation pour détecter toute anomalie</li>
+                    <li>Implémentez un retry exponentiel sur les erreurs 5xx</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🆘 Support API</h3>
+                  <p className="text-[11px] text-muted-foreground">Une question ? Utilisez l'onglet <button onClick={() => setParams({ tab: "manager" })} className="text-primary underline">Conseiller IA</button> — il connaît votre abonnement et vos quotas.</p>
+                </section>
               </CardContent>
             </Card>
           </TabsContent>
