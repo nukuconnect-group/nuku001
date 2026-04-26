@@ -343,9 +343,15 @@ const Traceability = () => {
       <section className="py-6">
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsList className="grid w-full grid-cols-4 h-auto">
               <TabsTrigger value="trace" className="text-xs sm:text-sm py-2">
                 <Eye className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Tracer
+              </TabsTrigger>
+              <TabsTrigger value="history" className="text-xs sm:text-sm py-2">
+                <History className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Historique
+                {scanHistory.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px]">{scanHistory.length}</Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="manage" className="text-xs sm:text-sm py-2">
                 <Package className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Gérer
