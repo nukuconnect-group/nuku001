@@ -14,12 +14,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, BarChart3, Headphones, Code2, Crown, Loader2, Copy, Plus, Trash2, KeyRound, Send,
-  MessageSquare, Lock, Download, AlertTriangle, Activity, TrendingUp, Sparkles
+  MessageSquare, Lock, Download, AlertTriangle, Activity, TrendingUp, Sparkles, Coins, ShieldAlert
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts";
+import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
+import { useTokens } from "@/hooks/useTokens";
+import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
 
 const PREMIUM_PLANS = ["pro", "premium", "business"];
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--destructive))"];
@@ -52,6 +55,8 @@ const PremiumDashboard = () => {
   const tab = params.get("tab") || "analytics";
   const { user, profile, isReady } = useProfile();
   const { subscription, isLoading: subLoading, refreshSubscription } = useSubscription();
+  const { balance: tokenBalance } = useTokens();
+  usePremiumAlerts(user?.id);
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -65,6 +70,16 @@ const PremiumDashboard = () => {
   const [supportThread, setSupportThread] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
   const [aiThinking, setAiThinking] = useState(false);
+
+  // Pré-remplissage du conseiller depuis sessionStorage (déclenché par AskAdvisorButton)
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("nuku_advisor_prefill");
+    if (prefill && tab === "manager") {
+      setSupportMsg(prefill);
+      sessionStorage.removeItem("nuku_advisor_prefill");
+      sessionStorage.removeItem("nuku_advisor_context");
+    }
+  }, [tab]);
 
   const planKey = (subscription?.plan || "free").toLowerCase();
   const isPremium = PREMIUM_PLANS.includes(planKey);
@@ -269,6 +284,87 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
   const apiEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-public`;
 
+  // ============ Résumé actionnable par onglet ============
+  type Item = { icon: string; text: string; cta?: string; href?: string };
+  const buildSummary = (which: "analytics" | "manager" | "api"): Item[] => {
+    const items: Item[] = [];
+    // Statut commun abonnement
+    if (isExpired) {
+      items.push({ icon: "🔴", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
+    } else if (daysLeft !== null && daysLeft <= 7) {
+      items.push({ icon: "⏳", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
+    }
+    // Jetons
+    if (tokenBalance === 0) {
+      items.push({ icon: "🪙", text: "Solde de jetons épuisé.", cta: "Recharger", href: "/jetons" });
+    } else if (tokenBalance <= 5) {
+      items.push({ icon: "💰", text: `Solde faible : ${tokenBalance} jeton${tokenBalance > 1 ? "s" : ""}.`, cta: "Recharger", href: "/jetons" });
+    }
+
+    if (which === "analytics") {
+      if (analytics.totalOrders === 0) {
+        items.push({ icon: "📊", text: "Aucune commande sur 30j — boostez vos meilleurs produits pour générer du trafic.", cta: "Booster", href: "/dashboard" });
+      } else {
+        items.push({ icon: "💵", text: `Revenu 30j : ${Math.round(analytics.totalRevenue).toLocaleString()} F · Prévision : ${Math.round(analytics.forecast30).toLocaleString()} F.` });
+        if (analytics.cancelRate > 15) items.push({ icon: "⚠️", text: `Annulations élevées (${analytics.cancelRate.toFixed(1)}%) — vérifiez stocks et délais.` });
+        if (analytics.conversionRate > 60) items.push({ icon: "🚀", text: `Excellent taux de conversion (${analytics.conversionRate.toFixed(1)}%) !` });
+        if (analytics.topProducts[0]) items.push({ icon: "🏆", text: `Top produit : "${analytics.topProducts[0].name}" (${analytics.topProducts[0].count} ventes).` });
+      }
+      items.push({ icon: "📥", text: "Exportez votre rapport mensuel pour vos investisseurs ou votre comptabilité." });
+    }
+
+    if (which === "manager") {
+      items.push({ icon: "🤖", text: "Le conseiller IA connaît votre plan, vos jetons et votre activité — posez-lui une question précise." });
+      if (supportThread.length === 0) {
+        items.push({ icon: "💡", text: "Suggestions : « Comment booster ? » · « Quand expire mon plan ? » · « Comment intégrer l'API ? »" });
+      } else {
+        const lastUser = [...supportThread].reverse().find((m) => m.sender_role === "user");
+        if (lastUser) items.push({ icon: "📝", text: `Dernière question : « ${String(lastUser.content).slice(0, 60)}… »` });
+      }
+    }
+
+    if (which === "api") {
+      const active = apiKeys.filter((k) => k.is_active).length;
+      if (active === 0) items.push({ icon: "🔌", text: "Aucune clé API active — créez-en une pour automatiser vos flux." });
+      else items.push({ icon: "✅", text: `${active} clé${active > 1 ? "s" : ""} API active${active > 1 ? "s" : ""}.` });
+      const last24 = apiUsage.filter((u) => Date.now() - new Date(u.created_at).getTime() < 86400000).length;
+      items.push({ icon: "📈", text: `${last24} appel${last24 > 1 ? "s" : ""} API dans les dernières 24h.` });
+      const errors = apiUsage.filter((u) => u.status_code >= 400).length;
+      if (errors > 0) items.push({ icon: "🛑", text: `${errors} erreur${errors > 1 ? "s" : ""} récente${errors > 1 ? "s" : ""} — consultez « Cas d'erreur » ci-dessous.` });
+    }
+    return items;
+  };
+
+  const SummaryCard = ({ which, title }: { which: "analytics" | "manager" | "api"; title: string }) => {
+    const items = buildSummary(which);
+    if (items.length === 0) return null;
+    return (
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="p-3 sm:p-4 pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" /> {title}
+          </CardTitle>
+          <CardDescription className="text-[11px]">Personnalisé selon votre plan, jetons et activité.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-4 pt-0 space-y-1.5">
+          {items.map((it, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs">
+              <span className="flex-shrink-0">{it.icon}</span>
+              <p className="flex-1 text-foreground">{it.text}</p>
+              {it.cta && it.href && (
+                <Link to={it.href}>
+                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-primary hover:text-primary">{it.cta} →</Button>
+                </Link>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  };
+
+
+
   if (subLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -355,9 +451,11 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= ANALYTICS ======================= */}
           <TabsContent value="analytics" className="space-y-4">
+            <SummaryCard which="analytics" title="Résumé actionnable — Analytique" />
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs text-muted-foreground">Données réelles sur 30 jours.</p>
               <div className="flex gap-2">
+                <AskAdvisorButton context="analytics" prefill="Comment puis-je améliorer mes statistiques de ventes ce mois-ci ?" />
                 <Button onClick={exportAnalyticsCSV} variant="outline" size="sm" className="h-8 text-xs gap-1"><Download className="w-3.5 h-3.5" /> CSV</Button>
                 <Button onClick={exportAnalyticsHTML} variant="outline" size="sm" className="h-8 text-xs gap-1"><Download className="w-3.5 h-3.5" /> Rapport PDF</Button>
               </div>
@@ -491,51 +589,7 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= ACCOUNT MANAGER (AI auto-reply) ======================= */}
           <TabsContent value="manager" className="space-y-4">
-            {/* Résumé actionnable IA */}
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardHeader className="p-3 sm:p-4 pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" /> Résumé actionnable
-                </CardTitle>
-                <CardDescription className="text-[11px]">Suggestions personnalisées selon votre abonnement, jetons et activité.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0 space-y-1.5">
-                {(() => {
-                  const items: { icon: string; text: string; href?: string; cta?: string; tone: "info" | "warn" | "ok" }[] = [];
-                  if (isExpired) {
-                    items.push({ icon: "🔴", tone: "warn", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
-                  } else if (daysLeft !== null && daysLeft <= 7) {
-                    items.push({ icon: "⏳", tone: "warn", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
-                  } else {
-                    items.push({ icon: "✅", tone: "ok", text: `Plan ${planKey} actif${daysLeft !== null ? ` (${daysLeft}j restants)` : ""}.` });
-                  }
-                  if (analytics.totalOrders === 0) {
-                    items.push({ icon: "📣", tone: "info", text: "Aucune commande sur 30j — boostez vos meilleurs produits.", cta: "Booster", href: "/dashboard" });
-                  } else if (analytics.cancelRate > 15) {
-                    items.push({ icon: "⚠️", tone: "warn", text: `Taux d'annulation élevé (${analytics.cancelRate.toFixed(1)}%) — vérifiez stocks et délais.` });
-                  } else if (analytics.conversionRate > 60) {
-                    items.push({ icon: "🚀", tone: "ok", text: `Excellent taux de conversion (${analytics.conversionRate.toFixed(1)}%) — maintenez le rythme !` });
-                  }
-                  if (analytics.topProducts.length > 0) {
-                    items.push({ icon: "🏆", tone: "info", text: `Top produit : "${analytics.topProducts[0].name}" (${analytics.topProducts[0].count} ventes).` });
-                  }
-                  if (apiKeys.filter((k) => k.is_active).length === 0) {
-                    items.push({ icon: "🔌", tone: "info", text: "Aucune clé API active — automatisez avec votre ERP.", cta: "Créer une clé", href: "/premium?tab=api" });
-                  }
-                  return items.map((it, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs">
-                      <span className="flex-shrink-0">{it.icon}</span>
-                      <p className="flex-1 text-foreground">{it.text}</p>
-                      {it.cta && it.href && (
-                        <Link to={it.href}>
-                          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-primary hover:text-primary">{it.cta} →</Button>
-                        </Link>
-                      )}
-                    </div>
-                  ));
-                })()}
-              </CardContent>
-            </Card>
+            <SummaryCard which="manager" title="Résumé actionnable — Conseiller" />
 
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2">
@@ -598,6 +652,10 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= API ======================= */}
           <TabsContent value="api" className="space-y-4">
+            <SummaryCard which="api" title="Résumé actionnable — API" />
+            <div className="flex justify-end">
+              <AskAdvisorButton context="api" prefill="J'ai une question sur l'intégration de l'API NukuConnect (clé, code erreur, endpoint). Pouvez-vous m'aider ?" />
+            </div>
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2 flex flex-row items-center justify-between gap-2">
                 <div className="min-w-0">
@@ -745,14 +803,69 @@ print(r.json())`}
                   </pre>
                 </section>
 
-                <section className="space-y-1.5">
-                  <h3 className="text-xs font-semibold text-foreground">⚠️ Codes d'erreur</h3>
-                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
-                    <li><code>401</code> — Clé absente ou invalide</li>
-                    <li><code>403</code> — Clé révoquée ou abonnement expiré</li>
-                    <li><code>429</code> — Limite de requêtes atteinte (60 req/min)</li>
-                    <li><code>500</code> — Erreur serveur (retry après 2s)</li>
-                  </ul>
+                <section className="space-y-2">
+                  <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-destructive" /> Cas d'erreur — que faire ?
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">Chaque erreur est accompagnée d'une réponse JSON et d'une action recommandée.</p>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">401</Badge>
+                      <span className="text-[11px] font-semibold">Unauthorized — Clé absente ou invalide</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Missing or invalid API key", "code": "unauthorized" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> vérifiez l'en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer nuku_live_…</code> Si vous l'avez perdue, créez une nouvelle clé ci-dessus.</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">403</Badge>
+                      <span className="text-[11px] font-semibold">Forbidden — Clé révoquée ou abonnement expiré</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "API key revoked or subscription inactive", "code": "forbidden" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> renouvelez votre abonnement (<Link to="/plans" className="text-primary underline">/plans</Link>) ou recréez une clé active.</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-amber-500/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge className="bg-amber-500 text-amber-50 text-[9px] font-mono">429</Badge>
+                      <span className="text-[11px] font-semibold">Too Many Requests — Limite atteinte</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Rate limit exceeded", "code": "rate_limited", "retry_after": 30 }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> attendez le délai indiqué dans <code>retry_after</code> (en secondes) ou répartissez vos appels (max 60 req/min). Implémentez un backoff exponentiel.</p>
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`// Exemple : retry avec backoff
+async function fetchWithRetry(url, opts, max = 3) {
+  for (let i = 0; i < max; i++) {
+    const r = await fetch(url, opts);
+    if (r.status !== 429) return r;
+    const wait = (Number(r.headers.get("retry-after")) || 2 ** i) * 1000;
+    await new Promise(r => setTimeout(r, wait));
+  }
+}`}</pre>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">500</Badge>
+                      <span className="text-[11px] font-semibold">Server Error — Erreur côté NukuConnect</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Internal server error", "code": "server_error", "request_id": "abc123" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> retentez après 2 secondes. Si l'erreur persiste, contactez le conseiller en mentionnant <code>request_id</code>.</p>
+                      <AskAdvisorButton
+                        context="api"
+                        prefill="J'obtiens une erreur 500 sur l'API NukuConnect. Voici le request_id : [collez ici]. Pouvez-vous m'aider ?"
+                        size="sm"
+                      />
+                    </div>
+                  </div>
                 </section>
 
                 <section className="space-y-1.5">

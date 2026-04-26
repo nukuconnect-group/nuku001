@@ -9,11 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Coins, Sparkles, Gift, Loader2, Phone, ShieldCheck, CheckCircle2, XCircle, Clock, History, TrendingUp, AlertCircle } from "lucide-react";
+import { Coins, Sparkles, Gift, Loader2, Phone, ShieldCheck, CheckCircle2, XCircle, Clock, History, TrendingUp, AlertCircle, Crown, Rocket, Star, ArrowRight, Zap } from "lucide-react";
 import { useTokens, TokenPack } from "@/hooks/useTokens";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { useSubscription } from "@/hooks/useSubscription";
+import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
+import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 import visaMcLogo from "@/assets/visa-mastercard.png";
@@ -24,10 +27,20 @@ const networks = [
   { id: "CARD", label: "Visa / MC", logo: visaMcLogo },
 ];
 
+// Plans alignés sur /plans (compact, redirige vers /plans pour le checkout complet)
+const subscriptionPlans = [
+  { id: "free", name: "Gratuit", price: 0, credits: 0, icon: Zap, popular: false, perks: ["5 produits", "Messagerie", "KYC vérifié"] },
+  { id: "starter", name: "Starter", price: 2500, credits: 4, icon: Sparkles, popular: false, perks: ["15 produits", "4 crédits", "Traçabilité"] },
+  { id: "standard", name: "Standard", price: 5000, credits: 8, icon: Star, popular: true, perks: ["30 produits", "8 crédits", "Stats avancées"] },
+  { id: "premium", name: "Premium", price: 10000, credits: 20, icon: Rocket, popular: false, perks: ["Illimité", "20 crédits", "API + Conseiller"] },
+];
+
 const Tokens = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance, packs, transactions, purchases, loading, userId, refresh } = useTokens();
+  const { subscription } = useSubscription();
+  usePremiumAlerts(userId);
 
   const [paymentStep, setPaymentStep] = useState<string | null>(null);
   const [purchaseId, setPurchaseId] = useState<string | null>(null);
@@ -171,6 +184,90 @@ const Tokens = () => {
                 </CardContent>
               </Card>
             )}
+
+            <div className="flex justify-center mt-4">
+              <AskAdvisorButton context="tokens" variant="outline" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Plans d'abonnement (vue compacte, identique à /plans) */}
+      <section className="py-8 sm:py-12 bg-muted/20">
+        <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+          <div className="text-center mb-6">
+            <Badge variant="secondary" className="mb-2 text-[11px]"><Crown className="w-3 h-3 mr-1" /> Abonnements</Badge>
+            <h2 className="font-heading text-lg sm:text-2xl font-bold">Choisissez aussi un plan d'abonnement</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Les jetons servent à booster ; l'abonnement débloque les fonctionnalités premium.
+            </p>
+            {subscription?.plan && (
+              <Badge className="mt-2 bg-primary text-primary-foreground text-xs">
+                Plan actuel : {subscription.plan}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {subscriptionPlans.map((p) => {
+              const isCurrent = subscription?.plan === p.id;
+              return (
+                <Card
+                  key={p.id}
+                  className={`flex flex-col ${p.popular ? "border-primary shadow-elevated" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}
+                >
+                  <CardHeader className="p-3 sm:p-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-8 h-8 rounded-lg ${p.popular ? "bg-primary" : "bg-muted"} flex items-center justify-center`}>
+                        <p.icon className={`w-4 h-4 ${p.popular ? "text-primary-foreground" : "text-foreground"}`} />
+                      </div>
+                      {p.popular && <Badge className="text-[9px]">⭐ Top</Badge>}
+                      {isCurrent && <Badge variant="outline" className="text-[9px]">Actuel</Badge>}
+                    </div>
+                    <CardTitle className="text-sm mt-2">{p.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 sm:p-4 pt-0 flex-1 flex flex-col">
+                    <div className="mb-2">
+                      {p.price === 0 ? (
+                        <span className="font-heading text-lg font-bold">Gratuit</span>
+                      ) : (
+                        <>
+                          <span className="font-heading text-lg sm:text-xl font-bold">{p.price.toLocaleString()}</span>
+                          <span className="text-[10px] text-muted-foreground"> FCFA/an</span>
+                        </>
+                      )}
+                    </div>
+                    <ul className="space-y-1 text-[10px] sm:text-[11px] text-muted-foreground flex-1">
+                      {p.perks.map((perk) => (
+                        <li key={perk} className="flex items-start gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                          <span>{perk}</span>
+                        </li>
+                      ))}
+                      {p.credits > 0 && (
+                        <li className="flex items-start gap-1 text-primary font-medium">
+                          <Gift className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                          <span>+{p.credits} crédits inclus</span>
+                        </li>
+                      )}
+                    </ul>
+                    <Button
+                      variant={p.popular ? "hero" : "outline"}
+                      size="sm"
+                      className="w-full mt-3 gap-1 h-8 text-xs"
+                      onClick={() => navigate(`/plans#${p.id}`)}
+                      disabled={isCurrent}
+                    >
+                      {isCurrent ? "Plan actif" : <>Choisir <ArrowRight className="w-3 h-3" /></>}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="text-center mt-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/plans")} className="text-xs gap-1">
+              Voir tous les plans détaillés <ArrowRight className="w-3 h-3" />
+            </Button>
           </div>
         </div>
       </section>
@@ -178,6 +275,10 @@ const Tokens = () => {
       {/* Packs */}
       <section className="py-8 sm:py-14">
         <div className="container mx-auto px-3 sm:px-4">
+          <div className="text-center mb-6">
+            <Badge variant="secondary" className="mb-2 text-[11px]"><Coins className="w-3 h-3 mr-1" /> Recharger des jetons</Badge>
+            <h2 className="font-heading text-lg sm:text-2xl font-bold">Packs de jetons</h2>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {packs.map((pack) => {
               const isPaying = paymentStep === pack.code;
