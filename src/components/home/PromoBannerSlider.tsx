@@ -263,44 +263,6 @@ const PromoBannerSlider = () => {
           </div>
         </div>
       )}
-
-      {/* Fournisseurs vérifiés - mobile only */}
-      <div className="md:hidden px-3 py-2">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-heading text-sm font-bold text-foreground flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-primary" />Fournisseurs vérifiés
-            </h3>
-            <Link to="/producteurs" className="text-[10px] text-primary font-medium">Voir tous →</Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide">
-            {displayProducers.map((producer) => (
-              <Link key={producer.id} to={`/producteurs/${producer.id}`}
-                className="flex-shrink-0 flex flex-col items-center gap-1 w-16 group">
-                <div className="relative">
-                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${producer.verified ? 'border-secondary' : 'border-primary/20'} group-hover:border-primary transition-colors bg-muted`}>
-                    {producer.avatar && producer.avatar !== defaultAvatar ? (
-                      <img src={producer.avatar} alt={producer.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                    )}
-                  </div>
-                  {producer.verified && (
-                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-card rounded-full flex items-center justify-center">
-                      <span className="text-[6px] text-white font-bold">✓</span>
-                    </span>
-                  )}
-                </div>
-                <p className="text-[9px] font-medium text-foreground text-center line-clamp-1 w-full">
-                  {producer.name.split(' ')[0]}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
