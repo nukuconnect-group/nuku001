@@ -309,15 +309,16 @@ const Marketplace = () => {
     if (inStockOnly) count++;
     if (discountOnly) count++;
     if (minRating > 0) count++;
+    if (shippingFilter !== "any") count++;
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") count++;
     if (priceRange[0] > 0 || priceRange[1] < 500000) count++;
     return count;
-  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, t]);
+  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, shippingFilter, t]);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    if (query) {
       result = result.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query) || p.producer.name.toLowerCase().includes(query));
     }
     if (selectedCategory !== "all") {
@@ -330,16 +331,46 @@ const Marketplace = () => {
     if (inStockOnly) result = result.filter(p => p.quantity > 0);
     if (discountOnly) result = result.filter(p => p.discount && p.discount > 0);
     if (minRating > 0) result = result.filter(p => p.producer.rating >= minRating);
+    if (shippingFilter !== "any") {
+      const maxDays = shippingFilter === "immediate" ? 0 : shippingFilter === "24h" ? 1 : 7;
+      result = result.filter(p => (p.shippingDelayDays ?? 1) <= maxDays);
+    }
+
+    // Best-match score: relevance to query + verified + organic + in-stock + rating + recency
+    const scoreOf = (p: any) => {
+      let s = 0;
+      if (query) {
+        const name = p.name.toLowerCase();
+        if (name === query) s += 100;
+        else if (name.startsWith(query)) s += 60;
+        else if (name.includes(query)) s += 40;
+        if (p.description?.toLowerCase().includes(query)) s += 10;
+        if (p.producer.name.toLowerCase().includes(query)) s += 15;
+      }
+      if (p.producer.verified) s += 8;
+      if (p.isOrganic) s += 4;
+      if (p.quantity > 0) s += 6;
+      if ((p.shippingDelayDays ?? 1) <= 1) s += 5;
+      s += Math.min(p.producer.rating || 0, 5);
+      // recency boost (newer first within ties)
+      const days = (Date.now() - new Date(p.createdAt).getTime()) / 86400000;
+      s += Math.max(0, 10 - days / 7);
+      return s;
+    };
+
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
       case "rating": result.sort((a, b) => b.producer.rating - a.producer.rating); break;
       case "popular": result.sort((a, b) => (b.producer.totalSales || 0) - (a.producer.totalSales || 0)); break;
       case "discount": result.sort((a, b) => (b.discount || 0) - (a.discount || 0)); break;
-      default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      case "shipping": result.sort((a, b) => (a.shippingDelayDays ?? 1) - (b.shippingDelayDays ?? 1)); break;
+      case "recent": result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
+      default: // best-match
+        result.sort((a, b) => scoreOf(b) - scoreOf(a));
     }
     return result;
-  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, t]);
+  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, shippingFilter, t]);
 
   const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
   const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
