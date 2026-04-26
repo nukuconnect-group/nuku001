@@ -180,7 +180,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap" onClick={() => setShowAddProduct(true)}>
+              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap" onClick={openPublishFlow}>
                 <Plus className="w-3.5 h-3.5" />Ajouter produit
               </Button>
               <Link to="/plans">
@@ -236,12 +236,13 @@ const Dashboard = () => {
           {/* Free plan renewal banner */}
           <FreePlanRenewalBanner userId={user?.id} />
 
-          {/* Free plan quota visual (5 products max) */}
+          {/* Quota produits universel — affiché pour TOUS les plans */}
           <div className="mb-4 sm:mb-6">
-            <FreePlanQuotaCard
+            <ProductQuotaCard
               productsCount={products.length}
               maxProducts={subscription?.max_products || 5}
               plan={subscription?.plan}
+              tokenBalance={tokenBalance}
             />
           </div>
 
@@ -267,7 +268,7 @@ const Dashboard = () => {
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
-              { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
+              { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: openPublishFlow },
               { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
@@ -312,7 +313,7 @@ const Dashboard = () => {
                 <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
               </summary>
               <div className="mt-2">
-                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
+                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={openPublishFlow} />
               </div>
             </details>
           )}
@@ -324,9 +325,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Subscription card */}
+          {/* Premium features — gating selon pack actif (analytics, account manager, API) */}
           <div className="mb-4 sm:mb-6">
-            <SubscriptionCard />
+            <PremiumFeaturesPanel plan={subscription?.plan} tokenBalance={tokenBalance} />
           </div>
 
 
