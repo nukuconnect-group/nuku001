@@ -37,7 +37,8 @@ import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
 import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
-import { Sparkles as SparklesIcon, Bot as BotIcon } from "lucide-react";
+import AdminAuditLog from "@/components/admin/AdminAuditLog";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
