@@ -848,12 +848,14 @@ const Marketplace = () => {
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="best-match" className="text-xs">✨ Meilleure correspondance</SelectItem>
                     <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
                     <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
                     <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
                     <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
                     <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
                     <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
+                    <SelectItem value="shipping" className="text-xs">🚚 Expédition la plus rapide</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
