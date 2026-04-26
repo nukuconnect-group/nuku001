@@ -449,6 +449,32 @@ const Marketplace = () => {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5">
+          <PackageCheck className="w-3.5 h-3.5 text-primary" /> Délai d'expédition
+        </Label>
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            { v: "any", label: "Tous" },
+            { v: "immediate", label: "⚡ Immédiat" },
+            { v: "24h", label: "Sous 24h" },
+            { v: "week", label: "Sous 7j" },
+          ] as const).map(opt => (
+            <button
+              key={opt.v}
+              onClick={() => setShippingFilter(opt.v)}
+              className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                shippingFilter === opt.v
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:border-primary/50 text-muted-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Most appreciated products */}
       {topRatedProducts.length > 0 && (
         <div className="space-y-2">
