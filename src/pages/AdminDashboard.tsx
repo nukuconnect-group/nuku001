@@ -60,6 +60,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptionSearch, setSubscriptionSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
