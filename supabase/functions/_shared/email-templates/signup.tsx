@@ -54,6 +54,11 @@ export const SignupEmail = ({
         <Button style={button} href={confirmationUrl}>
           Vérifier mon email
         </Button>
+        <Text style={text}>
+          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :
+          <br />
+          <Link href={confirmationUrl} style={link}>{confirmationUrl}</Link>
+        </Text>
         <Text style={footer}>
           Si vous n'avez pas créé de compte, vous pouvez ignorer cet email en toute sécurité.
         </Text>
@@ -84,8 +89,12 @@ const button = {
   backgroundColor: 'hsl(120, 100%, 25%)',
   color: '#ffffff',
   fontSize: '14px',
+  fontWeight: 'bold' as const,
   borderRadius: '12px',
-  padding: '12px 24px',
+  padding: '14px 28px',
   textDecoration: 'none',
+  textAlign: 'center' as const,
+  display: 'inline-block',
+  margin: '8px 0 24px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
