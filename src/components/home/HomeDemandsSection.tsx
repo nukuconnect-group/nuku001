@@ -114,7 +114,7 @@ const HomeDemandsSection = () => {
                 to={linkHref}
                 className="flex-shrink-0 w-[170px] sm:w-[200px] snap-start group"
               >
-                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-col h-full">
+                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-col h-[260px] sm:h-[280px]">
                   {/* Image avec fallback visuel garanti */}
                   <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
                     {/* Fallback en arrière-plan — toujours visible si pas d'image ou image cassée */}
