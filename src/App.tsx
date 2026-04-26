@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/components/cart/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import SplashScreen from "@/components/SplashScreen";
 import RealtimeNotifications from "./components/RealtimeNotifications";
 import AnalyticsTracker from "./components/AnalyticsTracker";
@@ -57,6 +58,7 @@ const Affiliation = lazy(() => import("./pages/Affiliation"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Moderation = lazy(() => import("./pages/Moderation"));
+const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +97,7 @@ const App = () => {
   return (
     <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <LanguageProvider>
         <ProfileProvider>
         <CartProvider>
@@ -153,6 +156,8 @@ const App = () => {
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/moderation" element={<Moderation />} />
+                  <Route path="/faq-nuku-ai" element={<FAQNukuAI />} />
+                  <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
@@ -161,6 +166,7 @@ const App = () => {
         </CartProvider>
         </ProfileProvider>
       </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
     </HelmetProvider>
   );

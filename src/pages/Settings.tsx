@@ -16,14 +16,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor
 } from "lucide-react";
+import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile: ctxProfile, isLoading, isReady, updateProfile } = useProfile();
   const { lang, setLang, currency, setCurrency } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const resolvedUserType = useResolvedUserType(user?.id, ctxProfile?.user_type);
 
   // Form state
@@ -354,6 +356,41 @@ const Settings = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Appearance — Theme */}
+          <Card className="mb-5">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sun className="w-4 h-4 text-primary" />
+                Apparence
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Choisissez le thème clair, sombre, ou suivez votre système.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: "light", label: "Clair", Icon: Sun },
+                  { value: "dark", label: "Sombre", Icon: Moon },
+                  { value: "system", label: "Système", Icon: Monitor },
+                ] as { value: ThemeMode; label: string; Icon: any }[]).map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setTheme(value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-colors ${
+                      theme === value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-xs font-medium">{label}</span>
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>

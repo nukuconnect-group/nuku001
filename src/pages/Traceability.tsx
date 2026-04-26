@@ -21,7 +21,7 @@ import {
   CheckCircle2, Clock, Package, Shield, Camera, FileText,
   Scan, ArrowRight, Star, Crown, Zap, Lock, Loader2,
   Factory, Store, Eye, Sprout, Warehouse, ShoppingCart, MessageCircle,
-  Plus, Rocket, History, Trash2
+  Plus, Rocket, History, Trash2, WifiOff
 } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
 
@@ -58,12 +58,59 @@ const Traceability = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [activeTab, setActiveTab] = useState("trace");
   const SCAN_HISTORY_KEY = "nukuconnect-trace-history";
+  const OFFLINE_CACHE_KEY = "nukuconnect-trace-offline-cache";
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [scanHistory, setScanHistory] = useState<Array<{ id: string; batch_number: string | null; product_name: string | null; product_image: string | null; scanned_at: string }>>(() => {
     try {
       const raw = localStorage.getItem(SCAN_HISTORY_KEY);
       return raw ? JSON.parse(raw) : [];
     } catch { return []; }
   });
+
+  // Listen to connection changes
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  // Offline cache helpers — keep last 30 full trace records for offline viewing
+  const getOfflineCache = (): Record<string, any> => {
+    try { return JSON.parse(localStorage.getItem(OFFLINE_CACHE_KEY) || "{}"); }
+    catch { return {}; }
+  };
+  const cacheTraceRecord = (record: any) => {
+    if (!record?.id) return;
+    try {
+      const cache = getOfflineCache();
+      cache[record.id] = { ...record, _cached_at: Date.now() };
+      if (record.batch_number) cache[`batch:${record.batch_number}`] = record.id;
+      const entries = Object.entries(cache).filter(([k]) => !k.startsWith("batch:"));
+      if (entries.length > 30) {
+        const sorted = entries.sort((a: any, b: any) => (b[1]?._cached_at || 0) - (a[1]?._cached_at || 0)).slice(0, 30);
+        const trimmed: Record<string, any> = {};
+        sorted.forEach(([k, v]) => { trimmed[k] = v; });
+        Object.entries(cache).forEach(([k, v]) => { if (k.startsWith("batch:")) trimmed[k] = v; });
+        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(trimmed));
+      } else {
+        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(cache));
+      }
+    } catch {}
+  };
+  const lookupOffline = (code: string): any | null => {
+    const cache = getOfflineCache();
+    if (cache[code]) return cache[code];
+    const byBatch = cache[`batch:${code}`];
+    if (byBatch && cache[byBatch]) return cache[byBatch];
+    // fuzzy by batch_number
+    const match = Object.values(cache).find((r: any) => r?.batch_number && typeof r.batch_number === "string" && r.batch_number.toLowerCase().includes(code.toLowerCase()));
+    return match || null;
+  };
 
   const persistHistory = (next: typeof scanHistory) => {
     setScanHistory(next);
@@ -81,6 +128,7 @@ const Traceability = () => {
     };
     const filtered = scanHistory.filter(h => h.id !== entry.id);
     persistHistory([entry, ...filtered]);
+    cacheTraceRecord(record);
   };
 
   // New traceability form state
@@ -147,30 +195,61 @@ const Traceability = () => {
     enabled: !!searchResult?.id,
   });
 
-  // Search by batch number or traceability ID
+  // Search by batch number or traceability ID — with offline fallback
   const handleSearch = async () => {
     if (!searchCode.trim()) return;
     const code = searchCode.trim();
 
-    // Search by batch_number or id
-    const { data } = await supabase
-      .from("product_traceability" as any)
-      .select("*, products(name, images, is_organic, category, location)")
-      .or(`batch_number.ilike.%${code}%,id.eq.${code.length === 36 ? code : '00000000-0000-0000-0000-000000000000'}`)
-      .limit(1)
-      .maybeSingle();
+    if (!isOnline) {
+      const cached = lookupOffline(code);
+      if (cached) {
+        setSearchResult(cached);
+        setActiveTab("trace");
+        toast({ title: "Mode hors-ligne", description: "Affichage depuis le cache local." });
+        return;
+      }
+      toast({ title: "Hors-ligne", description: "Ce lot n'est pas dans le cache local.", variant: "destructive" });
+      return;
+    }
 
-    if (data) {
-      setSearchResult(data);
-      setActiveTab("trace");
-      recordScan(data);
-    } else {
-      setSearchResult(null);
-      toast({ title: "Produit introuvable", description: "Vérifiez le code de traçabilité et réessayez.", variant: "destructive" });
+    try {
+      const { data, error } = await supabase
+        .from("product_traceability" as any)
+        .select("*, products(name, images, is_organic, category, location)")
+        .or(`batch_number.ilike.%${code}%,id.eq.${code.length === 36 ? code : '00000000-0000-0000-0000-000000000000'}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setSearchResult(data);
+        setActiveTab("trace");
+        recordScan(data);
+      } else {
+        const cached = lookupOffline(code);
+        if (cached) {
+          setSearchResult(cached);
+          setActiveTab("trace");
+          toast({ title: "Affichage en cache", description: "Lot trouvé dans l'historique local." });
+        } else {
+          setSearchResult(null);
+          toast({ title: "Produit introuvable", description: "Vérifiez le code et réessayez.", variant: "destructive" });
+        }
+      }
+    } catch (e: any) {
+      const cached = lookupOffline(code);
+      if (cached) {
+        setSearchResult(cached);
+        setActiveTab("trace");
+        toast({ title: "Connexion limitée", description: "Affichage depuis le cache local." });
+      } else {
+        toast({ title: "Erreur réseau", description: "Veuillez réessayer.", variant: "destructive" });
+      }
     }
   };
 
-  // Auto-load from URL ?batch=... or ?product=...
+  // Auto-load from URL ?batch=... or ?product=... (offline-aware)
   useEffect(() => {
     const batch = searchParams.get("batch");
     const productParam = searchParams.get("product");
@@ -178,16 +257,29 @@ const Traceability = () => {
     if (code && !searchResult) {
       setSearchCode(code);
       (async () => {
-        const { data } = await supabase
-          .from("product_traceability" as any)
-          .select("*, products(name, images, is_organic, category, location)")
-          .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          setSearchResult(data);
-          setActiveTab("trace");
-          recordScan(data);
+        if (!isOnline) {
+          const cached = lookupOffline(code);
+          if (cached) { setSearchResult(cached); setActiveTab("trace"); }
+          return;
+        }
+        try {
+          const { data } = await supabase
+            .from("product_traceability" as any)
+            .select("*, products(name, images, is_organic, category, location)")
+            .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
+            .limit(1)
+            .maybeSingle();
+          if (data) {
+            setSearchResult(data);
+            setActiveTab("trace");
+            recordScan(data);
+          } else {
+            const cached = lookupOffline(code);
+            if (cached) { setSearchResult(cached); setActiveTab("trace"); }
+          }
+        } catch {
+          const cached = lookupOffline(code);
+          if (cached) { setSearchResult(cached); setActiveTab("trace"); }
         }
       })();
     }
@@ -301,6 +393,12 @@ const Traceability = () => {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO url="/tracabilite" title="Traçabilité des Produits" description="Vérifiez l'origine et le parcours de vos produits agricoles." />
+      {!isOnline && (
+        <div className="fixed top-16 inset-x-0 z-40 bg-secondary text-secondary-foreground border-b border-border text-xs sm:text-sm py-2 px-4 flex items-center justify-center gap-2 shadow-md">
+          <WifiOff className="w-4 h-4 flex-shrink-0 text-primary" />
+          <span className="font-medium">Mode hors-ligne — recherche limitée à l'historique mis en cache.</span>
+        </div>
+      )}
       <Header />
 
       {/* Hero */}
