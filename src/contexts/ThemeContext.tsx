@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export type ThemeMode = "light" | "dark" | "system";
 const STORAGE_KEY = "nukuconnect-theme";
+// Mode clair par défaut au premier lancement, sauf si l'utilisateur a explicitement choisi un autre mode.
+const DEFAULT_THEME: ThemeMode = "light";
 
 interface ThemeContextType {
   theme: ThemeMode;
@@ -10,7 +12,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "system",
+  theme: DEFAULT_THEME,
   setTheme: () => {},
   resolvedTheme: "light",
 });
@@ -30,8 +32,9 @@ const applyTheme = (mode: ThemeMode) => {
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "system";
-    return (localStorage.getItem(STORAGE_KEY) as ThemeMode) || "system";
+    if (typeof window === "undefined") return DEFAULT_THEME;
+    const saved = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+    return saved === "light" || saved === "dark" || saved === "system" ? saved : DEFAULT_THEME;
   });
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
