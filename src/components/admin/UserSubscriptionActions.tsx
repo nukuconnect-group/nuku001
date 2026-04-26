@@ -197,7 +197,7 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
               </div>
             </div>
             <div>
-              <Label className="text-xs">Raison (optionnel)</Label>
+              <Label className="text-xs">Raison <span className="text-destructive">*</span></Label>
               <Input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
