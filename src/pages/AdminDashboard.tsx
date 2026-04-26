@@ -1082,6 +1082,9 @@ const AdminDashboard = () => {
 
             {/* Nuku AI analytics */}
             {activeTab === "nuku-ai" && <NukuAIAnalytics />}
+
+            {/* Admin audit log */}
+            {activeTab === "audit" && <AdminAuditLog />}
         </main>
       </div>
       <Footer />
