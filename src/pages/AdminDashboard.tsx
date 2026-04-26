@@ -38,7 +38,7 @@ import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
 import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
-import { Sparkles as SparklesIcon, Bot as BotIcon, FileText } from "lucide-react";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
