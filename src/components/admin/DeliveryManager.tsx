@@ -175,7 +175,7 @@ const DeliveryManager = () => {
               const st = STATUS_MAP[d.status] || STATUS_MAP.pending;
               const driverName = (d.driver_profiles as any)?.profiles?.full_name;
               const buyer = (d.orders as any)?.profiles;
-              const intl = isInternational(d.dropoff_address, buyer?.location);
+              const intl = isInternational(d._buyer_country, d.dropoff_address, buyer?.location);
               return (
                 <div key={d.id} className={`flex items-center gap-3 p-2.5 rounded-xl border ${intl ? "bg-secondary/5 border-secondary/40" : "bg-muted/30 border-border/30"}`}>
                   {intl ? <Globe className="w-5 h-5 flex-shrink-0 text-secondary" /> : <Truck className={`w-5 h-5 flex-shrink-0 ${st.color}`} />}
