@@ -434,8 +434,8 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   Vos produits restent visibles, mais l'accès aux fonctionnalités premium (analytics, conseiller IA, API) est limité. Renouvelez pour réactiver.
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
-                  <Link to="/plans"><Button size="sm" variant="hero" className="gap-1 h-8 text-xs"><Crown className="w-3.5 h-3.5" /> Renouveler</Button></Link>
-                  <Link to="/jetons"><Button size="sm" variant="outline" className="h-8 text-xs">Recharger jetons</Button></Link>
+                  <Link to={`/plans#${planKey}`}><Button size="sm" variant="hero" className="gap-1 h-8 text-xs"><Crown className="w-3.5 h-3.5" /> Renouveler {planKey}</Button></Link>
+                  <Link to={`/jetons#${planKey}`}><Button size="sm" variant="outline" className="h-8 text-xs">Recharger jetons</Button></Link>
                 </div>
               </div>
             </CardContent>
