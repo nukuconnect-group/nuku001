@@ -55,6 +55,8 @@ const PremiumDashboard = () => {
   const tab = params.get("tab") || "analytics";
   const { user, profile, isReady } = useProfile();
   const { subscription, isLoading: subLoading, refreshSubscription } = useSubscription();
+  const { balance: tokenBalance } = useTokens();
+  usePremiumAlerts(user?.id);
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,16 @@ const PremiumDashboard = () => {
   const [supportThread, setSupportThread] = useState<any[]>([]);
   const [sending, setSending] = useState(false);
   const [aiThinking, setAiThinking] = useState(false);
+
+  // Pré-remplissage du conseiller depuis sessionStorage (déclenché par AskAdvisorButton)
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("nuku_advisor_prefill");
+    if (prefill && tab === "manager") {
+      setSupportMsg(prefill);
+      sessionStorage.removeItem("nuku_advisor_prefill");
+      sessionStorage.removeItem("nuku_advisor_context");
+    }
+  }, [tab]);
 
   const planKey = (subscription?.plan || "free").toLowerCase();
   const isPremium = PREMIUM_PLANS.includes(planKey);
