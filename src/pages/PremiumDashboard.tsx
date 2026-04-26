@@ -803,14 +803,69 @@ print(r.json())`}
                   </pre>
                 </section>
 
-                <section className="space-y-1.5">
-                  <h3 className="text-xs font-semibold text-foreground">⚠️ Codes d'erreur</h3>
-                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
-                    <li><code>401</code> — Clé absente ou invalide</li>
-                    <li><code>403</code> — Clé révoquée ou abonnement expiré</li>
-                    <li><code>429</code> — Limite de requêtes atteinte (60 req/min)</li>
-                    <li><code>500</code> — Erreur serveur (retry après 2s)</li>
-                  </ul>
+                <section className="space-y-2">
+                  <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-destructive" /> Cas d'erreur — que faire ?
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">Chaque erreur est accompagnée d'une réponse JSON et d'une action recommandée.</p>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">401</Badge>
+                      <span className="text-[11px] font-semibold">Unauthorized — Clé absente ou invalide</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Missing or invalid API key", "code": "unauthorized" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> vérifiez l'en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer nuku_live_…</code> Si vous l'avez perdue, créez une nouvelle clé ci-dessus.</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">403</Badge>
+                      <span className="text-[11px] font-semibold">Forbidden — Clé révoquée ou abonnement expiré</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "API key revoked or subscription inactive", "code": "forbidden" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> renouvelez votre abonnement (<Link to="/plans" className="text-primary underline">/plans</Link>) ou recréez une clé active.</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-amber-500/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge className="bg-amber-500 text-amber-50 text-[9px] font-mono">429</Badge>
+                      <span className="text-[11px] font-semibold">Too Many Requests — Limite atteinte</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Rate limit exceeded", "code": "rate_limited", "retry_after": 30 }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> attendez le délai indiqué dans <code>retry_after</code> (en secondes) ou répartissez vos appels (max 60 req/min). Implémentez un backoff exponentiel.</p>
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`// Exemple : retry avec backoff
+async function fetchWithRetry(url, opts, max = 3) {
+  for (let i = 0; i < max; i++) {
+    const r = await fetch(url, opts);
+    if (r.status !== 429) return r;
+    const wait = (Number(r.headers.get("retry-after")) || 2 ** i) * 1000;
+    await new Promise(r => setTimeout(r, wait));
+  }
+}`}</pre>
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <div className="bg-destructive/10 px-2 py-1.5 flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[9px] font-mono">500</Badge>
+                      <span className="text-[11px] font-semibold">Server Error — Erreur côté NukuConnect</span>
+                    </div>
+                    <div className="p-2 space-y-1.5">
+                      <pre className="bg-muted/40 p-1.5 rounded text-[10px] overflow-x-auto">{`{ "error": "Internal server error", "code": "server_error", "request_id": "abc123" }`}</pre>
+                      <p className="text-[11px]"><strong>Action :</strong> retentez après 2 secondes. Si l'erreur persiste, contactez le conseiller en mentionnant <code>request_id</code>.</p>
+                      <AskAdvisorButton
+                        context="api"
+                        prefill="J'obtiens une erreur 500 sur l'API NukuConnect. Voici le request_id : [collez ici]. Pouvez-vous m'aider ?"
+                        size="sm"
+                      />
+                    </div>
+                  </div>
                 </section>
 
                 <section className="space-y-1.5">
