@@ -246,7 +246,9 @@ const Marketplace = () => {
   const [discountOnly, setDiscountOnly] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [location, setLocation] = useState(t("mp.allRegions"));
-  const [sortBy, setSortBy] = useState("recent");
+  // shippingFilter: "any" | "immediate" (≤0j) | "24h" (≤1j) | "week" (≤7j)
+  const [shippingFilter, setShippingFilter] = useState<"any" | "immediate" | "24h" | "week">("any");
+  const [sortBy, setSortBy] = useState("best-match");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -265,7 +267,7 @@ const Marketplace = () => {
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [searchQuery, selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, priceRange]);
+  }, [searchQuery, selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, priceRange, shippingFilter]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -307,15 +309,16 @@ const Marketplace = () => {
     if (inStockOnly) count++;
     if (discountOnly) count++;
     if (minRating > 0) count++;
+    if (shippingFilter !== "any") count++;
     if (location !== t("mp.allRegions") && location !== "Toutes les régions") count++;
     if (priceRange[0] > 0 || priceRange[1] < 500000) count++;
     return count;
-  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, t]);
+  }, [selectedCategory, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, priceRange, shippingFilter, t]);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    if (query) {
       result = result.filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query) || p.producer.name.toLowerCase().includes(query));
     }
     if (selectedCategory !== "all") {
@@ -328,16 +331,46 @@ const Marketplace = () => {
     if (inStockOnly) result = result.filter(p => p.quantity > 0);
     if (discountOnly) result = result.filter(p => p.discount && p.discount > 0);
     if (minRating > 0) result = result.filter(p => p.producer.rating >= minRating);
+    if (shippingFilter !== "any") {
+      const maxDays = shippingFilter === "immediate" ? 0 : shippingFilter === "24h" ? 1 : 7;
+      result = result.filter(p => (p.shippingDelayDays ?? 1) <= maxDays);
+    }
+
+    // Best-match score: relevance to query + verified + organic + in-stock + rating + recency
+    const scoreOf = (p: any) => {
+      let s = 0;
+      if (query) {
+        const name = p.name.toLowerCase();
+        if (name === query) s += 100;
+        else if (name.startsWith(query)) s += 60;
+        else if (name.includes(query)) s += 40;
+        if (p.description?.toLowerCase().includes(query)) s += 10;
+        if (p.producer.name.toLowerCase().includes(query)) s += 15;
+      }
+      if (p.producer.verified) s += 8;
+      if (p.isOrganic) s += 4;
+      if (p.quantity > 0) s += 6;
+      if ((p.shippingDelayDays ?? 1) <= 1) s += 5;
+      s += Math.min(p.producer.rating || 0, 5);
+      // recency boost (newer first within ties)
+      const days = (Date.now() - new Date(p.createdAt).getTime()) / 86400000;
+      s += Math.max(0, 10 - days / 7);
+      return s;
+    };
+
     switch (sortBy) {
       case "price-asc": result.sort((a, b) => a.price - b.price); break;
       case "price-desc": result.sort((a, b) => b.price - a.price); break;
       case "rating": result.sort((a, b) => b.producer.rating - a.producer.rating); break;
       case "popular": result.sort((a, b) => (b.producer.totalSales || 0) - (a.producer.totalSales || 0)); break;
       case "discount": result.sort((a, b) => (b.discount || 0) - (a.discount || 0)); break;
-      default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      case "shipping": result.sort((a, b) => (a.shippingDelayDays ?? 1) - (b.shippingDelayDays ?? 1)); break;
+      case "recent": result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
+      default: // best-match
+        result.sort((a, b) => scoreOf(b) - scoreOf(a));
     }
     return result;
-  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, t]);
+  }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, shippingFilter, t]);
 
   const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
   const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
@@ -413,6 +446,32 @@ const Marketplace = () => {
             <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="rounded border-border" />
             <span className="text-xs">En stock</span>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5">
+          <PackageCheck className="w-3.5 h-3.5 text-primary" /> Délai d'expédition
+        </Label>
+        <div className="flex flex-wrap gap-1.5">
+          {([
+            { v: "any", label: "Tous" },
+            { v: "immediate", label: "⚡ Immédiat" },
+            { v: "24h", label: "Sous 24h" },
+            { v: "week", label: "Sous 7j" },
+          ] as const).map(opt => (
+            <button
+              key={opt.v}
+              onClick={() => setShippingFilter(opt.v)}
+              className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                shippingFilter === opt.v
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:border-primary/50 text-muted-foreground"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -789,12 +848,14 @@ const Marketplace = () => {
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-32 sm:w-40 h-8 text-xs"><SelectValue placeholder="Trier" /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="best-match" className="text-xs">✨ Meilleure correspondance</SelectItem>
                     <SelectItem value="recent" className="text-xs">{t("mp.sortRecent")}</SelectItem>
                     <SelectItem value="rating" className="text-xs flex items-center gap-1">⭐ Les mieux notés</SelectItem>
                     <SelectItem value="popular" className="text-xs">🔥 Les plus populaires</SelectItem>
                     <SelectItem value="price-asc" className="text-xs">{t("mp.sortPriceAsc")}</SelectItem>
                     <SelectItem value="price-desc" className="text-xs">{t("mp.sortPriceDesc")}</SelectItem>
                     <SelectItem value="discount" className="text-xs">💰 Meilleures promos</SelectItem>
+                    <SelectItem value="shipping" className="text-xs">🚚 Expédition la plus rapide</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

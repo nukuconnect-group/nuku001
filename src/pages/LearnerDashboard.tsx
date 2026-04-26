@@ -183,21 +183,37 @@ const LearnerDashboard = () => {
               <Award className="w-4 h-4 text-accent" /> Mes certificats
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {certificates.map(cert => (
-                <Card key={cert.id} className="bg-gradient-to-r from-primary/5 to-accent/5">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                      <Award className="w-5 h-5 text-accent" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">Certificat #{cert.certificate_number.slice(0, 8)}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Délivré le {new Date(cert.issued_at).toLocaleDateString("fr-FR")}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {certificates.map(cert => {
+                const formation = formations.find(f => f.id === cert.formation_id);
+                return (
+                  <Card key={cert.id} className="bg-gradient-to-r from-primary/5 to-accent/5">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                        <Award className="w-5 h-5 text-accent" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{formation?.title || "Formation"}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono truncate">N° {cert.certificate_number}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Délivré le {new Date(cert.issued_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-[10px] h-7 gap-1 flex-shrink-0"
+                        onClick={() => {
+                          const html = `<html><head><title>Certificat ${cert.certificate_number}</title><style>body{font-family:Georgia,serif;background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}.cert{background:#fff;border:8px double #16a34a;padding:60px 50px;max-width:720px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.15)}.cert h1{font-size:38px;color:#15803d;margin:0 0 10px;letter-spacing:2px}.cert h2{font-size:22px;color:#1f2937;margin:30px 0 8px}.cert .name{font-size:32px;font-style:italic;color:#16a34a;margin:24px 0}.cert .formation{font-size:20px;font-weight:bold;color:#1f2937;margin:18px 0}.cert .meta{font-size:13px;color:#6b7280;margin-top:30px;border-top:1px solid #e5e7eb;padding-top:18px}@media print{body{background:#fff}}</style></head><body><div class="cert"><h1>CERTIFICAT</h1><p>de réussite</p><h2>Décerné à</h2><p class="name">${profile?.full_name || "Apprenant"}</p><p>pour avoir complété avec succès la formation</p><p class="formation">${formation?.title || "Formation NukuConnect"}</p><p>animée par <strong>${formation?.instructor || "—"}</strong></p><div class="meta"><div>N° ${cert.certificate_number}</div><div>Délivré le ${new Date(cert.issued_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div><div style="margin-top:10px">NukuConnect — Plateforme agricole intelligente</div></div></div><script>setTimeout(()=>window.print(),300)</script></body></html>`;
+                          const w = window.open("", "_blank");
+                          if (w) { w.document.write(html); w.document.close(); }
+                        }}
+                      >
+                        <Award className="w-3 h-3" /> Voir
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

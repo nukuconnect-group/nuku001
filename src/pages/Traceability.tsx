@@ -1,6 +1,6 @@
 import SEO from "@/components/SEO";
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -21,7 +21,7 @@ import {
   CheckCircle2, Clock, Package, Shield, Camera, FileText,
   Scan, ArrowRight, Star, Crown, Zap, Lock, Loader2,
   Factory, Store, Eye, Sprout, Warehouse, ShoppingCart, MessageCircle,
-  Plus, Rocket
+  Plus, Rocket, History, Trash2
 } from "lucide-react";
 import QRScanner from "@/components/QRScanner";
 
@@ -52,10 +52,36 @@ const Traceability = () => {
   const queryClient = useQueryClient();
   const { user, profile, isReady } = useProfile();
   const { subscription, hasActiveSubscription } = useSubscription();
+  const [searchParams] = useSearchParams();
   const [searchCode, setSearchCode] = useState("");
   const [searchResult, setSearchResult] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [activeTab, setActiveTab] = useState("trace");
+  const SCAN_HISTORY_KEY = "nukuconnect-trace-history";
+  const [scanHistory, setScanHistory] = useState<Array<{ id: string; batch_number: string | null; product_name: string | null; product_image: string | null; scanned_at: string }>>(() => {
+    try {
+      const raw = localStorage.getItem(SCAN_HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+
+  const persistHistory = (next: typeof scanHistory) => {
+    setScanHistory(next);
+    try { localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next.slice(0, 50))); } catch {}
+  };
+
+  const recordScan = (record: any) => {
+    if (!record?.id) return;
+    const entry = {
+      id: record.id,
+      batch_number: record.batch_number || null,
+      product_name: record.products?.name || null,
+      product_image: record.products?.images?.[0] || null,
+      scanned_at: new Date().toISOString(),
+    };
+    const filtered = scanHistory.filter(h => h.id !== entry.id);
+    persistHistory([entry, ...filtered]);
+  };
 
   // New traceability form state
   const [newTrace, setNewTrace] = useState({
@@ -137,11 +163,36 @@ const Traceability = () => {
     if (data) {
       setSearchResult(data);
       setActiveTab("trace");
+      recordScan(data);
     } else {
       setSearchResult(null);
       toast({ title: "Produit introuvable", description: "Vérifiez le code de traçabilité et réessayez.", variant: "destructive" });
     }
   };
+
+  // Auto-load from URL ?batch=... or ?product=...
+  useEffect(() => {
+    const batch = searchParams.get("batch");
+    const productParam = searchParams.get("product");
+    const code = batch || productParam;
+    if (code && !searchResult) {
+      setSearchCode(code);
+      (async () => {
+        const { data } = await supabase
+          .from("product_traceability" as any)
+          .select("*, products(name, images, is_organic, category, location)")
+          .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          setSearchResult(data);
+          setActiveTab("trace");
+          recordScan(data);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Create traceability record
   const createTraceMutation = useMutation({
@@ -292,9 +343,15 @@ const Traceability = () => {
       <section className="py-6">
         <div className="container mx-auto px-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsList className="grid w-full grid-cols-4 h-auto">
               <TabsTrigger value="trace" className="text-xs sm:text-sm py-2">
                 <Eye className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Tracer
+              </TabsTrigger>
+              <TabsTrigger value="history" className="text-xs sm:text-sm py-2">
+                <History className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Historique
+                {scanHistory.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px]">{scanHistory.length}</Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="manage" className="text-xs sm:text-sm py-2">
                 <Package className="w-3.5 h-3.5 mr-1 hidden sm:inline" />Gérer
@@ -437,6 +494,78 @@ const Traceability = () => {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* TAB: Scan history (BUYER) */}
+            <TabsContent value="history" className="mt-6">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <History className="w-4 h-4 text-primary" />
+                      Mes scans récents
+                    </CardTitle>
+                    {scanHistory.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] h-7 gap-1 text-destructive hover:text-destructive"
+                        onClick={() => persistHistory([])}
+                      >
+                        <Trash2 className="w-3 h-3" /> Vider
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Retrouvez tous les lots dont vous avez vérifié la traçabilité (stockés sur cet appareil).
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {scanHistory.length === 0 ? (
+                    <div className="text-center py-10">
+                      <QrCode className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground mb-1">Aucun scan pour le moment</p>
+                      <p className="text-xs text-muted-foreground/70">
+                        Scannez un QR code de lot ou recherchez par numéro pour démarrer.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {scanHistory.map(h => (
+                        <button
+                          key={h.id}
+                          onClick={() => {
+                            setSearchCode(h.batch_number || h.id);
+                            setActiveTab("trace");
+                            setTimeout(() => handleSearch(), 50);
+                          }}
+                          className="w-full flex items-center gap-3 py-3 hover:bg-muted/50 px-2 rounded-md transition-colors text-left"
+                        >
+                          {h.product_image ? (
+                            <img src={h.product_image} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                              <Package className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {h.product_name || "Produit"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">
+                              {h.batch_number || h.id.slice(0, 12)}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {new Date(h.scanned_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* TAB: Manage (GATED to paid plans) */}

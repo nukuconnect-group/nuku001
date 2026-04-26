@@ -96,6 +96,24 @@ const FormationDetail = () => {
         progress_percent: pct,
         completed_at: pct === 100 ? new Date().toISOString() : null,
       } as any, { onConflict: "user_id,formation_id,module_id" });
+
+      // Auto-issue certificate when 100% reached
+      if (pct === 100) {
+        const { data: existing } = await supabase
+          .from("certificates")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("formation_id", formationId)
+          .maybeSingle();
+        if (!existing) {
+          const number = `NUKU-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+          await supabase.from("certificates").insert({
+            user_id: userId,
+            formation_id: formationId,
+            certificate_number: number,
+          });
+        }
+      }
     }
   };
 
@@ -266,11 +284,13 @@ const FormationDetail = () => {
                 <Award className="w-10 h-10 flex-shrink-0" />
                 <div>
                   <h3 className="font-heading font-bold text-base sm:text-lg">Félicitations ! 🎉</h3>
-                  <p className="text-xs sm:text-sm opacity-90">Vous avez terminé cette formation. Votre certificat est disponible.</p>
+                  <p className="text-xs sm:text-sm opacity-90">Votre certificat a été généré et est disponible dans votre profil.</p>
                 </div>
-                <Button variant="secondary" size="sm" className="ml-auto flex-shrink-0 text-xs">
-                  <Award className="w-3.5 h-3.5 mr-1" />Certificat
-                </Button>
+                <Link to="/learner-dashboard" className="ml-auto flex-shrink-0">
+                  <Button variant="secondary" size="sm" className="text-xs">
+                    <Award className="w-3.5 h-3.5 mr-1" />Voir mon certificat
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           )}
