@@ -14,12 +14,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, BarChart3, Headphones, Code2, Crown, Loader2, Copy, Plus, Trash2, KeyRound, Send,
-  MessageSquare, Lock, Download, AlertTriangle, Activity, TrendingUp, Sparkles
+  MessageSquare, Lock, Download, AlertTriangle, Activity, TrendingUp, Sparkles, Coins, ShieldAlert
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts";
+import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
+import { useTokens } from "@/hooks/useTokens";
+import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
 
 const PREMIUM_PLANS = ["pro", "premium", "business"];
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--destructive))"];
