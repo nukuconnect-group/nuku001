@@ -499,6 +499,7 @@ const Dashboard = () => {
 
         </div>
       </main>
+      </DashboardLayout>
 
       {/* Choix Produit / Formation */}
       <PublishChoiceModal
