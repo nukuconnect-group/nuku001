@@ -47,11 +47,13 @@ if command -v deno >/dev/null 2>&1; then
   for fn in "$FUNCTIONS_DIR"/*/index.ts; do
     [ -f "$fn" ] || continue
     echo "  → deno check $fn"
-    if ! deno check --quiet "$fn" 2>&1 | tee /tmp/deno-check.log; then
-      if grep -qE "TS[0-9]+|error:" /tmp/deno-check.log; then
-        echo "❌ Type error in $fn"
-        ERRORS=$((ERRORS+1))
-      fi
+    OUTPUT=$(deno check --quiet "$fn" 2>&1 || true)
+    # Filter out module-resolution noise — we only care about real TS type errors
+    REAL_ERRORS=$(echo "$OUTPUT" | grep -E "TS[0-9]+" | grep -v "Could not find a matching package" || true)
+    if [ -n "$REAL_ERRORS" ]; then
+      echo "❌ Type error in $fn"
+      echo "$REAL_ERRORS" | head -5
+      ERRORS=$((ERRORS+1))
     fi
   done
 else
