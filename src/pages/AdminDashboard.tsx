@@ -882,16 +882,25 @@ const AdminDashboard = () => {
             {activeTab === "subscriptions" && (
               <Card>
                 <CardHeader className="p-3 sm:p-4 pb-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div>
-                      <CardTitle className="text-sm">Abonnements</CardTitle>
+                      <CardTitle className="text-sm">Abonnements attribués</CardTitle>
                       <CardDescription className="text-[11px]">
-                        {stats?.pro_subscriptions || 0} Pro • {stats?.free_subscriptions || 0} Gratuit
+                        {stats?.pro_subscriptions || 0} Pro • {stats?.free_subscriptions || 0} Gratuit • {filteredSubscriptions.length} affichés
                       </CardDescription>
                     </div>
                     <Badge className="bg-secondary/15 text-secondary border-secondary/20">
                       <Crown className="w-3 h-3 mr-1" />{stats?.pro_subscriptions || 0} Pro
                     </Badge>
+                  </div>
+                  <div className="relative mt-2">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par nom, email ou téléphone..."
+                      value={subscriptionSearch}
+                      onChange={(e) => setSubscriptionSearch(e.target.value)}
+                      className="pl-7 h-8 text-xs"
+                    />
                   </div>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4 pt-0">
@@ -900,49 +909,56 @@ const AdminDashboard = () => {
                       <thead>
                         <tr className="border-b border-border">
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground">Utilisateur</th>
+                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Email</th>
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Plan</th>
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground">Statut</th>
+                          <th className="text-center py-2 px-2 font-medium text-muted-foreground">Crédits</th>
                           <th className="text-center py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Max produits</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Période</th>
-                          <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Début</th>
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Expiration</th>
                           <th className="text-right py-2 px-2 font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {subscriptions.map((s: any) => (
-                          <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                            <td className="py-2.5 px-2">
-                              <p className="font-medium">{s.user_name || "Sans nom"}</p>
-                              <p className="text-[10px] text-muted-foreground">{s.user_phone || "—"}</p>
-                            </td>
-                            <td className="py-2.5 px-2 text-center">
-                              <Badge variant={s.plan === "pro" ? "default" : "secondary"} className="text-[9px] capitalize">{s.plan}</Badge>
-                            </td>
-                            <td className="py-2.5 px-2 text-center">
-                              <Badge variant={s.status === "active" ? "default" : "destructive"} className="text-[9px]">{s.status === "active" ? "Actif" : s.status}</Badge>
-                            </td>
-                            <td className="py-2.5 px-2 text-center hidden sm:table-cell">{s.max_products}</td>
-                            <td className="py-2.5 px-2 hidden sm:table-cell text-muted-foreground capitalize">{s.billing_period}</td>
-                            <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
-                              {new Date(s.started_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                            </td>
-                            <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
-                              {s.expires_at ? new Date(s.expires_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                            </td>
-                            <td className="py-2.5 px-2">
-                              <UserSubscriptionActions
-                                userId={s.user_id}
-                                userName={s.user_name}
-                                currentPlan={s.plan}
-                                onUpdated={refreshData}
-                              />
-                            </td>
-                          </tr>
-                        ))}
+                        {filteredSubscriptions.map((s: any) => {
+                          const expired = s.expires_at && new Date(s.expires_at) < new Date();
+                          return (
+                            <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                              <td className="py-2.5 px-2">
+                                <p className="font-medium">{s.user_name || "Sans nom"}</p>
+                                <p className="text-[10px] text-muted-foreground">{s.user_phone || "—"}</p>
+                              </td>
+                              <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground truncate max-w-[180px]">{s.user_email || "—"}</td>
+                              <td className="py-2.5 px-2 text-center">
+                                <Badge variant={s.plan === "pro" ? "default" : "secondary"} className="text-[9px] capitalize">{s.plan}</Badge>
+                              </td>
+                              <td className="py-2.5 px-2 text-center">
+                                <Badge variant={s.status === "active" && !expired ? "default" : "destructive"} className="text-[9px]">
+                                  {expired ? "Expiré" : s.status === "active" ? "Actif" : s.status}
+                                </Badge>
+                              </td>
+                              <td className="py-2.5 px-2 text-center">
+                                <Badge variant="outline" className="text-[9px] gap-1">
+                                  <Coins className="w-2.5 h-2.5" />{Number(s.token_balance || 0).toLocaleString("fr-FR")}
+                                </Badge>
+                              </td>
+                              <td className="py-2.5 px-2 text-center hidden sm:table-cell">{s.max_products}</td>
+                              <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
+                                {s.expires_at ? new Date(s.expires_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                              </td>
+                              <td className="py-2.5 px-2">
+                                <UserSubscriptionActions
+                                  userId={s.user_id}
+                                  userName={s.user_name}
+                                  currentPlan={s.plan}
+                                  onUpdated={refreshData}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
-                    {subscriptions.length === 0 && <p className="text-xs text-muted-foreground text-center py-8">Aucun abonnement</p>}
+                    {filteredSubscriptions.length === 0 && <p className="text-xs text-muted-foreground text-center py-8">Aucun abonnement</p>}
                   </div>
                 </CardContent>
               </Card>
