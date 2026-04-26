@@ -196,16 +196,16 @@ Deno.serve(async (req) => {
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i] as { msg_id: number; read_ct: number; message: Record<string, unknown> }
       const payload = msg.message as {
-        message_id?: string
-        label?: string
-        to?: string
-        from?: string
-        sender_domain?: string
-        subject?: string
-        html?: string
-        text?: string
-        purpose?: string
-        idempotency_key?: string
+        message_id: string
+        label: string
+        to: string
+        from: string
+        sender_domain: string
+        subject: string
+        html: string
+        text: string
+        purpose: string
+        idempotency_key: string
         unsubscribe_token?: string
         run_id?: string
         queued_at?: string
