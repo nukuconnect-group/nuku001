@@ -12,7 +12,8 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
-import PriceTiersDisplay from "@/components/marketplace/PriceTiersDisplay";
+import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
+import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 
 interface ProductCardProps {
   product: Product;
