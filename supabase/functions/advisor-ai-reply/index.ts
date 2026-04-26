@@ -32,17 +32,41 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Last 8 turns for context
-    const { data: history } = await admin
-      .from("support_messages")
-      .select("content, sender_role, created_at")
-      .eq("user_id", user_id)
-      .order("created_at", { ascending: true })
-      .limit(8);
+    // Fetch user context: subscription, tokens, recent activity
+    const [historyRes, subRes, tokenRes, profileRes, productsRes, ordersRes] = await Promise.all([
+      admin.from("support_messages").select("content, sender_role, created_at").eq("user_id", user_id).order("created_at", { ascending: true }).limit(10),
+      admin.from("subscriptions").select("plan, status, expires_at, max_products").eq("user_id", user_id).maybeSingle(),
+      admin.rpc("get_user_token_balance", { p_user_id: user_id }),
+      admin.from("profiles").select("id, full_name, business_name, user_type").eq("user_id", user_id).maybeSingle(),
+      admin.from("products").select("id, moderation_status").eq("producer_id", (await admin.from("profiles").select("id").eq("user_id", user_id).maybeSingle()).data?.id || ""),
+      admin.from("orders").select("id, status, total_price, created_at").order("created_at", { ascending: false }).limit(5),
+    ]);
+
+    const history = historyRes.data || [];
+    const sub = subRes.data as any;
+    const tokenBalance = typeof tokenRes.data === "number" ? tokenRes.data : 0;
+    const profile = profileRes.data as any;
+    const products = (productsRes.data as any[]) || [];
+    const recentOrders = (ordersRes.data as any[]) || [];
+
+    const expiresAt = sub?.expires_at ? new Date(sub.expires_at) : null;
+    const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86400000) : null;
+    const isExpired = expiresAt ? expiresAt.getTime() < Date.now() : false;
+    const activeProducts = products.filter((p) => p.moderation_status === "approved").length;
+    const pendingProducts = products.filter((p) => p.moderation_status === "pending").length;
+
+    const userContext = `CONTEXTE UTILISATEUR (à utiliser pour personnaliser ta réponse) :
+- Nom : ${profile?.full_name || "Non renseigné"}${profile?.business_name ? " (" + profile.business_name + ")" : ""}
+- Type de compte : ${profile?.user_type || "buyer"}
+- Plan d'abonnement : ${sub?.plan || "free"} (${sub?.status || "n/a"})${expiresAt ? ` — ${isExpired ? "EXPIRÉ depuis " + Math.abs(daysLeft!) + "j" : "expire dans " + daysLeft + "j"}` : ""}
+- Quota produits : ${activeProducts}/${sub?.max_products || "—"} actifs${pendingProducts ? `, ${pendingProducts} en modération` : ""}
+- Solde jetons : ${tokenBalance} ${tokenBalance < 5 ? "⚠️ FAIBLE" : ""}
+- Commandes récentes : ${recentOrders.length} (${recentOrders.filter((o) => o.status === "completed").length} complétées)`;
 
     const messages = [
       { role: "system", content: SYSTEM },
-      ...(history || []).map((m: any) => ({
+      { role: "system", content: userContext },
+      ...history.map((m: any) => ({
         role: m.sender_role === "admin" ? "assistant" : "user",
         content: m.content,
       })),
