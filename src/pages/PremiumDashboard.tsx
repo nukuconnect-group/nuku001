@@ -491,13 +491,59 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= ACCOUNT MANAGER (AI auto-reply) ======================= */}
           <TabsContent value="manager" className="space-y-4">
+            {/* Résumé actionnable IA */}
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="p-3 sm:p-4 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" /> Résumé actionnable
+                </CardTitle>
+                <CardDescription className="text-[11px]">Suggestions personnalisées selon votre abonnement, jetons et activité.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 pt-0 space-y-1.5">
+                {(() => {
+                  const items: { icon: string; text: string; href?: string; cta?: string; tone: "info" | "warn" | "ok" }[] = [];
+                  if (isExpired) {
+                    items.push({ icon: "🔴", tone: "warn", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
+                  } else if (daysLeft !== null && daysLeft <= 7) {
+                    items.push({ icon: "⏳", tone: "warn", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
+                  } else {
+                    items.push({ icon: "✅", tone: "ok", text: `Plan ${planKey} actif${daysLeft !== null ? ` (${daysLeft}j restants)` : ""}.` });
+                  }
+                  if (analytics.totalOrders === 0) {
+                    items.push({ icon: "📣", tone: "info", text: "Aucune commande sur 30j — boostez vos meilleurs produits.", cta: "Booster", href: "/dashboard" });
+                  } else if (analytics.cancelRate > 15) {
+                    items.push({ icon: "⚠️", tone: "warn", text: `Taux d'annulation élevé (${analytics.cancelRate.toFixed(1)}%) — vérifiez stocks et délais.` });
+                  } else if (analytics.conversionRate > 60) {
+                    items.push({ icon: "🚀", tone: "ok", text: `Excellent taux de conversion (${analytics.conversionRate.toFixed(1)}%) — maintenez le rythme !` });
+                  }
+                  if (analytics.topProducts.length > 0) {
+                    items.push({ icon: "🏆", tone: "info", text: `Top produit : "${analytics.topProducts[0].name}" (${analytics.topProducts[0].count} ventes).` });
+                  }
+                  if (apiKeys.filter((k) => k.is_active).length === 0) {
+                    items.push({ icon: "🔌", tone: "info", text: "Aucune clé API active — automatisez avec votre ERP.", cta: "Créer une clé", href: "/premium?tab=api" });
+                  }
+                  return items.map((it, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <span className="flex-shrink-0">{it.icon}</span>
+                      <p className="flex-1 text-foreground">{it.text}</p>
+                      {it.cta && it.href && (
+                        <Link to={it.href}>
+                          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-primary hover:text-primary">{it.cta} →</Button>
+                        </Link>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" /> Nuku Conseiller (réponses IA instantanées)
                 </CardTitle>
                 <CardDescription className="text-[11px]">
-                  Réponses automatiques sous quelques secondes, propulsées par Nuku AI. Un humain reprend la main si besoin.
+                  Réponses automatiques contextuelles (votre plan, jetons et activité sont pris en compte). Un humain reprend la main si besoin.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
@@ -505,7 +551,14 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   {supportThread.length === 0 ? (
                     <div className="text-center py-8">
                       <MessageSquare className="w-8 h-8 mx-auto text-muted-foreground/40 mb-2" />
-                      <p className="text-xs text-muted-foreground">Démarrez la conversation. L'IA répond instantanément.</p>
+                      <p className="text-xs text-muted-foreground">Démarrez la conversation. L'IA répond instantanément avec votre contexte.</p>
+                      <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
+                        {["Comment booster un produit ?", "Mon abonnement expire quand ?", "Comment utiliser l'API ?"].map((q) => (
+                          <button key={q} onClick={() => setSupportMsg(q)} className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                            {q}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     supportThread.map((m) => (
@@ -521,7 +574,7 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   {aiThinking && (
                     <div className="flex justify-start">
                       <div className="bg-primary/10 rounded-2xl px-3 py-2 text-xs flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Nuku Conseiller réfléchit…
+                        <Loader2 className="w-3 h-3 animate-spin" /> Nuku Conseiller analyse votre contexte…
                       </div>
                     </div>
                   )}
@@ -628,15 +681,95 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2">
-                <CardTitle className="text-sm">Documentation rapide</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2"><Code2 className="w-4 h-4 text-primary" /> Documentation API complète</CardTitle>
+                <CardDescription className="text-[11px]">Intégrez NukuConnect à votre ERP, e-commerce ou outil interne.</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0 text-xs space-y-2">
-                <p className="text-muted-foreground">Authentifiez-vous avec un en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer VOTRE_CLE</code>.</p>
-                <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
-{`curl ${apiEndpoint}/products \\
-  -H "Authorization: Bearer nuku_live_XXXX..."`}
-                </pre>
-                <p className="text-muted-foreground">Endpoints : <code>/products</code>, <code>/orders</code>, <code>/inventory</code>.</p>
+              <CardContent className="p-3 sm:p-4 pt-0 text-xs space-y-4">
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🔐 Authentification</h3>
+                  <p className="text-muted-foreground text-[11px]">Toutes les requêtes nécessitent un en-tête <code className="bg-muted px-1 rounded">Authorization: Bearer VOTRE_CLE</code>. Les clés commencent par <code className="bg-muted px-1 rounded">nuku_live_</code>. Conservez-les côté serveur uniquement — jamais dans du code client public.</p>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">📦 Endpoints disponibles</h3>
+                  <div className="space-y-2">
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /products</p>
+                      <p className="text-[10px] text-muted-foreground">Liste vos produits actifs. Paramètres : <code>?limit=20&amp;status=approved</code></p>
+                    </div>
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /orders</p>
+                      <p className="text-[10px] text-muted-foreground">Liste vos commandes reçues. Paramètres : <code>?status=pending&amp;from=2026-01-01</code></p>
+                    </div>
+                    <div className="border border-border rounded p-2 space-y-1">
+                      <p className="font-mono text-[11px]"><Badge variant="outline" className="text-[9px] mr-1">GET</Badge> /inventory</p>
+                      <p className="text-[10px] text-muted-foreground">État de stock par produit (quantité, prix, statut).</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">💻 Exemples d'intégration</h3>
+                  <p className="text-[10px] text-muted-foreground">cURL :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`curl ${apiEndpoint}/products?limit=10 \\
+  -H "Authorization: Bearer nuku_live_XXXX..." \\
+  -H "Content-Type: application/json"`}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2">Node.js / fetch :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`const res = await fetch("${apiEndpoint}/orders?status=pending", {
+  headers: { Authorization: "Bearer " + process.env.NUKU_API_KEY }
+});
+const { data } = await res.json();`}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2">Python / requests :</p>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`import os, requests
+r = requests.get(
+  "${apiEndpoint}/inventory",
+  headers={"Authorization": f"Bearer {os.environ['NUKU_API_KEY']}"}
+)
+print(r.json())`}
+                  </pre>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">📋 Format de réponse</h3>
+                  <pre className="bg-muted/40 border border-border p-2 rounded text-[10px] overflow-x-auto">
+{`{
+  "data": [ /* array of items */ ],
+  "count": 42,
+  "endpoint": "/products"
+}`}
+                  </pre>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">⚠️ Codes d'erreur</h3>
+                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
+                    <li><code>401</code> — Clé absente ou invalide</li>
+                    <li><code>403</code> — Clé révoquée ou abonnement expiré</li>
+                    <li><code>429</code> — Limite de requêtes atteinte (60 req/min)</li>
+                    <li><code>500</code> — Erreur serveur (retry après 2s)</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🛡️ Bonnes pratiques</h3>
+                  <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-4">
+                    <li>Stockez la clé dans une variable d'environnement, jamais dans le code</li>
+                    <li>Révoquez immédiatement toute clé compromise (bouton 🗑 ci-dessus)</li>
+                    <li>Utilisez une clé différente par environnement (dev / prod)</li>
+                    <li>Surveillez l'historique d'utilisation pour détecter toute anomalie</li>
+                    <li>Implémentez un retry exponentiel sur les erreurs 5xx</li>
+                  </ul>
+                </section>
+
+                <section className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-foreground">🆘 Support API</h3>
+                  <p className="text-[11px] text-muted-foreground">Une question ? Utilisez l'onglet <button onClick={() => setParams({ tab: "manager" })} className="text-primary underline">Conseiller IA</button> — il connaît votre abonnement et vos quotas.</p>
+                </section>
               </CardContent>
             </Card>
           </TabsContent>
