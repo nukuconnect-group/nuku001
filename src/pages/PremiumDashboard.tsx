@@ -491,13 +491,59 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
           {/* ======================= ACCOUNT MANAGER (AI auto-reply) ======================= */}
           <TabsContent value="manager" className="space-y-4">
+            {/* Résumé actionnable IA */}
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="p-3 sm:p-4 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" /> Résumé actionnable
+                </CardTitle>
+                <CardDescription className="text-[11px]">Suggestions personnalisées selon votre abonnement, jetons et activité.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 pt-0 space-y-1.5">
+                {(() => {
+                  const items: { icon: string; text: string; href?: string; cta?: string; tone: "info" | "warn" | "ok" }[] = [];
+                  if (isExpired) {
+                    items.push({ icon: "🔴", tone: "warn", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
+                  } else if (daysLeft !== null && daysLeft <= 7) {
+                    items.push({ icon: "⏳", tone: "warn", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
+                  } else {
+                    items.push({ icon: "✅", tone: "ok", text: `Plan ${planKey} actif${daysLeft !== null ? ` (${daysLeft}j restants)` : ""}.` });
+                  }
+                  if (analytics.totalOrders === 0) {
+                    items.push({ icon: "📣", tone: "info", text: "Aucune commande sur 30j — boostez vos meilleurs produits.", cta: "Booster", href: "/dashboard" });
+                  } else if (analytics.cancelRate > 15) {
+                    items.push({ icon: "⚠️", tone: "warn", text: `Taux d'annulation élevé (${analytics.cancelRate.toFixed(1)}%) — vérifiez stocks et délais.` });
+                  } else if (analytics.conversionRate > 60) {
+                    items.push({ icon: "🚀", tone: "ok", text: `Excellent taux de conversion (${analytics.conversionRate.toFixed(1)}%) — maintenez le rythme !` });
+                  }
+                  if (analytics.topProducts.length > 0) {
+                    items.push({ icon: "🏆", tone: "info", text: `Top produit : "${analytics.topProducts[0].name}" (${analytics.topProducts[0].count} ventes).` });
+                  }
+                  if (apiKeys.filter((k) => k.is_active).length === 0) {
+                    items.push({ icon: "🔌", tone: "info", text: "Aucune clé API active — automatisez avec votre ERP.", cta: "Créer une clé", href: "/premium?tab=api" });
+                  }
+                  return items.map((it, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <span className="flex-shrink-0">{it.icon}</span>
+                      <p className="flex-1 text-foreground">{it.text}</p>
+                      {it.cta && it.href && (
+                        <Link to={it.href}>
+                          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-primary hover:text-primary">{it.cta} →</Button>
+                        </Link>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="p-3 sm:p-4 pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" /> Nuku Conseiller (réponses IA instantanées)
                 </CardTitle>
                 <CardDescription className="text-[11px]">
-                  Réponses automatiques sous quelques secondes, propulsées par Nuku AI. Un humain reprend la main si besoin.
+                  Réponses automatiques contextuelles (votre plan, jetons et activité sont pris en compte). Un humain reprend la main si besoin.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
@@ -505,7 +551,14 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   {supportThread.length === 0 ? (
                     <div className="text-center py-8">
                       <MessageSquare className="w-8 h-8 mx-auto text-muted-foreground/40 mb-2" />
-                      <p className="text-xs text-muted-foreground">Démarrez la conversation. L'IA répond instantanément.</p>
+                      <p className="text-xs text-muted-foreground">Démarrez la conversation. L'IA répond instantanément avec votre contexte.</p>
+                      <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
+                        {["Comment booster un produit ?", "Mon abonnement expire quand ?", "Comment utiliser l'API ?"].map((q) => (
+                          <button key={q} onClick={() => setSupportMsg(q)} className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                            {q}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     supportThread.map((m) => (
@@ -521,7 +574,7 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   {aiThinking && (
                     <div className="flex justify-start">
                       <div className="bg-primary/10 rounded-2xl px-3 py-2 text-xs flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Nuku Conseiller réfléchit…
+                        <Loader2 className="w-3 h-3 animate-spin" /> Nuku Conseiller analyse votre contexte…
                       </div>
                     </div>
                   )}
