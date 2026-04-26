@@ -765,9 +765,15 @@ ${apiUsage.map((u) => `<tr class="${(u.status_code ?? 0) >= 400 ? "err" : "ok"}"
 
             {/* API Usage History */}
             <Card>
-              <CardHeader className="p-3 sm:p-4 pb-2">
-                <CardTitle className="text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> Historique d'utilisation</CardTitle>
-                <CardDescription className="text-[11px]">100 derniers appels.</CardDescription>
+              <CardHeader className="p-3 sm:p-4 pb-2 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <CardTitle className="text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> Historique d'utilisation</CardTitle>
+                  <CardDescription className="text-[11px]">100 derniers appels — {apiUsage.length} entrées · {apiUsage.filter((u) => (u.status_code ?? 0) >= 400).length} erreurs.</CardDescription>
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <Button onClick={exportApiUsageCSV} variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2"><Download className="w-3 h-3" /> CSV</Button>
+                  <Button onClick={exportApiUsageHTML} variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2"><Download className="w-3 h-3" /> PDF</Button>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {apiUsage.length === 0 ? (
