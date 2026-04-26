@@ -20,6 +20,7 @@ const Footer = () => {
       { label: t("nav.formations"), href: "/formations" },
       { label: t("nav.traceability"), href: "/tracabilite" },
       { label: t("nav.plans"), href: "/plans" },
+      { label: "FAQ Nuku AI", href: "/faq-nuku-ai" },
       { label: t("nav.help"), href: "/aide" },
     ],
     company: [
