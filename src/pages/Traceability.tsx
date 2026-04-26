@@ -195,30 +195,61 @@ const Traceability = () => {
     enabled: !!searchResult?.id,
   });
 
-  // Search by batch number or traceability ID
+  // Search by batch number or traceability ID — with offline fallback
   const handleSearch = async () => {
     if (!searchCode.trim()) return;
     const code = searchCode.trim();
 
-    // Search by batch_number or id
-    const { data } = await supabase
-      .from("product_traceability" as any)
-      .select("*, products(name, images, is_organic, category, location)")
-      .or(`batch_number.ilike.%${code}%,id.eq.${code.length === 36 ? code : '00000000-0000-0000-0000-000000000000'}`)
-      .limit(1)
-      .maybeSingle();
+    if (!isOnline) {
+      const cached = lookupOffline(code);
+      if (cached) {
+        setSearchResult(cached);
+        setActiveTab("trace");
+        toast({ title: "Mode hors-ligne", description: "Affichage depuis le cache local." });
+        return;
+      }
+      toast({ title: "Hors-ligne", description: "Ce lot n'est pas dans le cache local.", variant: "destructive" });
+      return;
+    }
 
-    if (data) {
-      setSearchResult(data);
-      setActiveTab("trace");
-      recordScan(data);
-    } else {
-      setSearchResult(null);
-      toast({ title: "Produit introuvable", description: "Vérifiez le code de traçabilité et réessayez.", variant: "destructive" });
+    try {
+      const { data, error } = await supabase
+        .from("product_traceability" as any)
+        .select("*, products(name, images, is_organic, category, location)")
+        .or(`batch_number.ilike.%${code}%,id.eq.${code.length === 36 ? code : '00000000-0000-0000-0000-000000000000'}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setSearchResult(data);
+        setActiveTab("trace");
+        recordScan(data);
+      } else {
+        const cached = lookupOffline(code);
+        if (cached) {
+          setSearchResult(cached);
+          setActiveTab("trace");
+          toast({ title: "Affichage en cache", description: "Lot trouvé dans l'historique local." });
+        } else {
+          setSearchResult(null);
+          toast({ title: "Produit introuvable", description: "Vérifiez le code et réessayez.", variant: "destructive" });
+        }
+      }
+    } catch (e: any) {
+      const cached = lookupOffline(code);
+      if (cached) {
+        setSearchResult(cached);
+        setActiveTab("trace");
+        toast({ title: "Connexion limitée", description: "Affichage depuis le cache local." });
+      } else {
+        toast({ title: "Erreur réseau", description: "Veuillez réessayer.", variant: "destructive" });
+      }
     }
   };
 
-  // Auto-load from URL ?batch=... or ?product=...
+  // Auto-load from URL ?batch=... or ?product=... (offline-aware)
   useEffect(() => {
     const batch = searchParams.get("batch");
     const productParam = searchParams.get("product");
@@ -226,16 +257,29 @@ const Traceability = () => {
     if (code && !searchResult) {
       setSearchCode(code);
       (async () => {
-        const { data } = await supabase
-          .from("product_traceability" as any)
-          .select("*, products(name, images, is_organic, category, location)")
-          .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          setSearchResult(data);
-          setActiveTab("trace");
-          recordScan(data);
+        if (!isOnline) {
+          const cached = lookupOffline(code);
+          if (cached) { setSearchResult(cached); setActiveTab("trace"); }
+          return;
+        }
+        try {
+          const { data } = await supabase
+            .from("product_traceability" as any)
+            .select("*, products(name, images, is_organic, category, location)")
+            .or(`batch_number.ilike.%${code}%,product_id.eq.${productParam || '00000000-0000-0000-0000-000000000000'}`)
+            .limit(1)
+            .maybeSingle();
+          if (data) {
+            setSearchResult(data);
+            setActiveTab("trace");
+            recordScan(data);
+          } else {
+            const cached = lookupOffline(code);
+            if (cached) { setSearchResult(cached); setActiveTab("trace"); }
+          }
+        } catch {
+          const cached = lookupOffline(code);
+          if (cached) { setSearchResult(cached); setActiveTab("trace"); }
         }
       })();
     }
