@@ -363,7 +363,57 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
     );
   };
 
+  const exportApiUsageCSV = () => {
+    if (apiUsage.length === 0) {
+      toast({ title: "Rien à exporter", description: "Aucun appel API enregistré.", variant: "destructive" });
+      return;
+    }
+    const rows = [
+      ["Date", "Méthode", "Endpoint", "Code", "IP"],
+      ...apiUsage.map((u) => [
+        new Date(u.created_at).toLocaleString("fr-FR"),
+        u.method || "GET",
+        u.endpoint || "",
+        String(u.status_code ?? ""),
+        u.ip_address || "",
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${(c || "").toString().replace(/"/g, '""')}"`).join(",")).join("\n");
+    downloadFile(`nukuconnect-api-usage-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    toast({ title: "Export CSV", description: `${apiUsage.length} appels exportés.` });
+  };
 
+  const exportApiUsageHTML = () => {
+    if (apiUsage.length === 0) {
+      toast({ title: "Rien à exporter", description: "Aucun appel API enregistré.", variant: "destructive" });
+      return;
+    }
+    const errors = apiUsage.filter((u) => (u.status_code ?? 0) >= 400);
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport API NukuConnect</title>
+<style>body{font-family:system-ui;padding:40px;color:#222}h1{color:#0f5132}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:12px}th{background:#f4f4f4}.err{background:#fee}.ok{background:#efe}.kpi{display:inline-block;margin:8px 16px 8px 0;padding:12px 16px;background:#f9f9f9;border-radius:8px}.kpi b{display:block;font-size:18px;color:#0f5132}</style></head>
+<body>
+<h1>Rapport API — NukuConnect Premium</h1>
+<p>Plan : <strong>${planKey}</strong> · Généré le ${new Date().toLocaleString("fr-FR")}</p>
+<div>
+  <div class="kpi"><b>${apiUsage.length}</b>Appels totaux</div>
+  <div class="kpi"><b>${errors.length}</b>Erreurs (≥400)</div>
+  <div class="kpi"><b>${apiKeys.filter((k) => k.is_active).length}</b>Clés actives</div>
+</div>
+<h2>Erreurs récentes</h2>
+${errors.length === 0 ? "<p>Aucune erreur. ✅</p>" : `<table><thead><tr><th>Date</th><th>Méthode</th><th>Endpoint</th><th>Code</th></tr></thead><tbody>
+${errors.slice(0, 50).map((u) => `<tr class="err"><td>${new Date(u.created_at).toLocaleString("fr-FR")}</td><td>${u.method || "GET"}</td><td>${u.endpoint}</td><td>${u.status_code}</td></tr>`).join("")}
+</tbody></table>`}
+<h2>Historique complet (100 derniers)</h2>
+<table><thead><tr><th>Date</th><th>Méthode</th><th>Endpoint</th><th>Code</th><th>IP</th></tr></thead><tbody>
+${apiUsage.map((u) => `<tr class="${(u.status_code ?? 0) >= 400 ? "err" : "ok"}"><td>${new Date(u.created_at).toLocaleString("fr-FR")}</td><td>${u.method || "GET"}</td><td>${u.endpoint}</td><td>${u.status_code ?? ""}</td><td>${u.ip_address || "—"}</td></tr>`).join("")}
+</tbody></table>
+<p style="margin-top:32px;font-size:11px;color:#888">© NukuConnect — Rapport confidentiel.</p>
+<script>window.print()</script>
+</body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
+    toast({ title: "Rapport API prêt", description: "Imprimez ou enregistrez en PDF." });
+  };
 
   if (subLoading || loading) {
     return (
