@@ -63,11 +63,11 @@ async function moveToDlq(
   msg: { msg_id: number; message: Record<string, unknown> },
   reason: string
 ): Promise<void> {
-  const payload = msg.message
+  const payload = msg.message as { message_id?: string; label?: string; to?: string }
   await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: (payload.label || queue) as string,
-    recipient_email: payload.to,
+    message_id: payload.message_id ?? null,
+    template_name: payload.label || queue,
+    recipient_email: payload.to ?? '',
     status: 'dlq',
     error_message: reason,
   })
@@ -75,7 +75,7 @@ async function moveToDlq(
     source_queue: queue,
     dlq_name: `${queue}_dlq`,
     message_id: msg.msg_id,
-    payload,
+    payload: msg.message as Database['public']['Tables']['email_send_log']['Row'] extends never ? never : Record<string, unknown> as never,
   })
   if (error) {
     console.error('Failed to move message to DLQ', { queue, msg_id: msg.msg_id, reason, error })
