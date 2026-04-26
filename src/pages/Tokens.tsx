@@ -27,10 +27,20 @@ const networks = [
   { id: "CARD", label: "Visa / MC", logo: visaMcLogo },
 ];
 
+// Plans alignés sur /plans (compact, redirige vers /plans pour le checkout complet)
+const subscriptionPlans = [
+  { id: "free", name: "Gratuit", price: 0, credits: 0, icon: Zap, popular: false, perks: ["5 produits", "Messagerie", "KYC vérifié"] },
+  { id: "starter", name: "Starter", price: 2500, credits: 4, icon: Sparkles, popular: false, perks: ["15 produits", "4 crédits", "Traçabilité"] },
+  { id: "standard", name: "Standard", price: 5000, credits: 8, icon: Star, popular: true, perks: ["30 produits", "8 crédits", "Stats avancées"] },
+  { id: "premium", name: "Premium", price: 10000, credits: 20, icon: Rocket, popular: false, perks: ["Illimité", "20 crédits", "API + Conseiller"] },
+];
+
 const Tokens = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { balance, packs, transactions, purchases, loading, userId, refresh } = useTokens();
+  const { subscription } = useSubscription();
+  usePremiumAlerts(userId);
 
   const [paymentStep, setPaymentStep] = useState<string | null>(null);
   const [purchaseId, setPurchaseId] = useState<string | null>(null);
