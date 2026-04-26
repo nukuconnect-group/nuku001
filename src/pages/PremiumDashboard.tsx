@@ -110,15 +110,23 @@ const PremiumDashboard = () => {
     load();
   }, [isReady, user, profile, navigate]);
 
-  // Realtime support thread + subscription updates
+  // Realtime support thread + subscription/tokens/api updates (instant after admin grant or payment)
   useEffect(() => {
     if (!user) return;
+    const reloadApiUsage = async () => {
+      const { data } = await supabase.from("api_key_usage" as any).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
+      setApiUsage((data as any[]) || []);
+    };
     const ch = supabase
       .channel("premium-realtime-" + user.id)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_messages", filter: `user_id=eq.${user.id}` },
         (payload) => setSupportThread((prev) => [...prev, payload.new]))
       .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
         () => refreshSubscription())
+      .on("postgres_changes", { event: "*", schema: "public", table: "token_transactions", filter: `user_id=eq.${user.id}` },
+        () => { /* tokens hook handles via own channel */ })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "api_key_usage", filter: `user_id=eq.${user.id}` },
+        () => reloadApiUsage())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, refreshSubscription]);
@@ -290,15 +298,15 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
     const items: Item[] = [];
     // Statut commun abonnement
     if (isExpired) {
-      items.push({ icon: "🔴", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: "/plans" });
+      items.push({ icon: "🔴", text: `Abonnement ${planKey} expiré.`, cta: "Renouveler", href: `/plans#${planKey}` });
     } else if (daysLeft !== null && daysLeft <= 7) {
-      items.push({ icon: "⏳", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: "/plans" });
+      items.push({ icon: "⏳", text: `Abonnement expire dans ${daysLeft}j.`, cta: "Renouveler", href: `/plans#${planKey}` });
     }
     // Jetons
     if (tokenBalance === 0) {
-      items.push({ icon: "🪙", text: "Solde de jetons épuisé.", cta: "Recharger", href: "/jetons" });
+      items.push({ icon: "🪙", text: "Solde de jetons épuisé.", cta: "Recharger", href: `/jetons#${planKey}` });
     } else if (tokenBalance <= 5) {
-      items.push({ icon: "💰", text: `Solde faible : ${tokenBalance} jeton${tokenBalance > 1 ? "s" : ""}.`, cta: "Recharger", href: "/jetons" });
+      items.push({ icon: "💰", text: `Solde faible : ${tokenBalance} jeton${tokenBalance > 1 ? "s" : ""}.`, cta: "Recharger", href: `/jetons#${planKey}` });
     }
 
     if (which === "analytics") {
@@ -363,7 +371,57 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
     );
   };
 
+  const exportApiUsageCSV = () => {
+    if (apiUsage.length === 0) {
+      toast({ title: "Rien à exporter", description: "Aucun appel API enregistré.", variant: "destructive" });
+      return;
+    }
+    const rows = [
+      ["Date", "Méthode", "Endpoint", "Code", "IP"],
+      ...apiUsage.map((u) => [
+        new Date(u.created_at).toLocaleString("fr-FR"),
+        u.method || "GET",
+        u.endpoint || "",
+        String(u.status_code ?? ""),
+        u.ip_address || "",
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${(c || "").toString().replace(/"/g, '""')}"`).join(",")).join("\n");
+    downloadFile(`nukuconnect-api-usage-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    toast({ title: "Export CSV", description: `${apiUsage.length} appels exportés.` });
+  };
 
+  const exportApiUsageHTML = () => {
+    if (apiUsage.length === 0) {
+      toast({ title: "Rien à exporter", description: "Aucun appel API enregistré.", variant: "destructive" });
+      return;
+    }
+    const errors = apiUsage.filter((u) => (u.status_code ?? 0) >= 400);
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Rapport API NukuConnect</title>
+<style>body{font-family:system-ui;padding:40px;color:#222}h1{color:#0f5132}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:12px}th{background:#f4f4f4}.err{background:#fee}.ok{background:#efe}.kpi{display:inline-block;margin:8px 16px 8px 0;padding:12px 16px;background:#f9f9f9;border-radius:8px}.kpi b{display:block;font-size:18px;color:#0f5132}</style></head>
+<body>
+<h1>Rapport API — NukuConnect Premium</h1>
+<p>Plan : <strong>${planKey}</strong> · Généré le ${new Date().toLocaleString("fr-FR")}</p>
+<div>
+  <div class="kpi"><b>${apiUsage.length}</b>Appels totaux</div>
+  <div class="kpi"><b>${errors.length}</b>Erreurs (≥400)</div>
+  <div class="kpi"><b>${apiKeys.filter((k) => k.is_active).length}</b>Clés actives</div>
+</div>
+<h2>Erreurs récentes</h2>
+${errors.length === 0 ? "<p>Aucune erreur. ✅</p>" : `<table><thead><tr><th>Date</th><th>Méthode</th><th>Endpoint</th><th>Code</th></tr></thead><tbody>
+${errors.slice(0, 50).map((u) => `<tr class="err"><td>${new Date(u.created_at).toLocaleString("fr-FR")}</td><td>${u.method || "GET"}</td><td>${u.endpoint}</td><td>${u.status_code}</td></tr>`).join("")}
+</tbody></table>`}
+<h2>Historique complet (100 derniers)</h2>
+<table><thead><tr><th>Date</th><th>Méthode</th><th>Endpoint</th><th>Code</th><th>IP</th></tr></thead><tbody>
+${apiUsage.map((u) => `<tr class="${(u.status_code ?? 0) >= 400 ? "err" : "ok"}"><td>${new Date(u.created_at).toLocaleString("fr-FR")}</td><td>${u.method || "GET"}</td><td>${u.endpoint}</td><td>${u.status_code ?? ""}</td><td>${u.ip_address || "—"}</td></tr>`).join("")}
+</tbody></table>
+<p style="margin-top:32px;font-size:11px;color:#888">© NukuConnect — Rapport confidentiel.</p>
+<script>window.print()</script>
+</body></html>`;
+    const w = window.open("", "_blank");
+    if (w) { w.document.write(html); w.document.close(); }
+    toast({ title: "Rapport API prêt", description: "Imprimez ou enregistrez en PDF." });
+  };
 
   if (subLoading || loading) {
     return (
@@ -434,8 +492,8 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
                   Vos produits restent visibles, mais l'accès aux fonctionnalités premium (analytics, conseiller IA, API) est limité. Renouvelez pour réactiver.
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
-                  <Link to="/plans"><Button size="sm" variant="hero" className="gap-1 h-8 text-xs"><Crown className="w-3.5 h-3.5" /> Renouveler</Button></Link>
-                  <Link to="/jetons"><Button size="sm" variant="outline" className="h-8 text-xs">Recharger jetons</Button></Link>
+                  <Link to={`/plans#${planKey}`}><Button size="sm" variant="hero" className="gap-1 h-8 text-xs"><Crown className="w-3.5 h-3.5" /> Renouveler {planKey}</Button></Link>
+                  <Link to={`/jetons#${planKey}`}><Button size="sm" variant="outline" className="h-8 text-xs">Recharger jetons</Button></Link>
                 </div>
               </div>
             </CardContent>
@@ -715,9 +773,15 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
 
             {/* API Usage History */}
             <Card>
-              <CardHeader className="p-3 sm:p-4 pb-2">
-                <CardTitle className="text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> Historique d'utilisation</CardTitle>
-                <CardDescription className="text-[11px]">100 derniers appels.</CardDescription>
+              <CardHeader className="p-3 sm:p-4 pb-2 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <CardTitle className="text-sm flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> Historique d'utilisation</CardTitle>
+                  <CardDescription className="text-[11px]">100 derniers appels — {apiUsage.length} entrées · {apiUsage.filter((u) => (u.status_code ?? 0) >= 400).length} erreurs.</CardDescription>
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <Button onClick={exportApiUsageCSV} variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2"><Download className="w-3 h-3" /> CSV</Button>
+                  <Button onClick={exportApiUsageHTML} variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2"><Download className="w-3 h-3" /> PDF</Button>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {apiUsage.length === 0 ? (

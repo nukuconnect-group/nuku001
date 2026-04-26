@@ -65,6 +65,19 @@ export const useTokens = () => {
     refresh();
   }, [refresh]);
 
+  // Realtime: instant refresh after admin credit, payment completion, or any token mutation
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel("tokens-realtime-" + userId)
+      .on("postgres_changes", { event: "*", schema: "public", table: "token_transactions", filter: `user_id=eq.${userId}` },
+        () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "token_purchases", filter: `user_id=eq.${userId}` },
+        () => refresh())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId, refresh]);
+
   const spendTokens = useCallback(async (amount: number, reason: string, referenceId?: string, referenceType?: string) => {
     if (!userId) return { success: false, error: "not_authenticated" as const };
     const { data, error } = await supabase.rpc("spend_user_tokens", {

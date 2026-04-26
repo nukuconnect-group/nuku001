@@ -37,7 +37,8 @@ import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
 import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
-import { Sparkles as SparklesIcon, Bot as BotIcon } from "lucide-react";
+import AdminAuditLog from "@/components/admin/AdminAuditLog";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -282,6 +283,7 @@ const AdminDashboard = () => {
     { id: "emails", label: "Emails", icon: Send },
     { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
+    { id: "audit", label: "Journal admin", icon: FileText },
   ];
 
   return (
@@ -1080,6 +1082,9 @@ const AdminDashboard = () => {
 
             {/* Nuku AI analytics */}
             {activeTab === "nuku-ai" && <NukuAIAnalytics />}
+
+            {/* Admin audit log */}
+            {activeTab === "audit" && <AdminAuditLog />}
         </main>
       </div>
       <Footer />

@@ -39,7 +39,21 @@ export const useSubscription = () => {
       fetchSubscription();
     });
 
-    return () => authSub.unsubscribe();
+    // Realtime: instant refresh after admin grant, renewal, or payment
+    let realtimeCh: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) return;
+      realtimeCh = supabase
+        .channel("subscription-realtime-" + session.user.id)
+        .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${session.user.id}` },
+          () => fetchSubscription())
+        .subscribe();
+    });
+
+    return () => {
+      authSub.unsubscribe();
+      if (realtimeCh) supabase.removeChannel(realtimeCh);
+    };
   }, []);
 
   const hasActiveSubscription = !!subscription && subscription.status === "active";
