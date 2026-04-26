@@ -152,6 +152,15 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
                 />
               </div>
             </div>
+            <div>
+              <Label className="text-xs">Raison / commentaire (audit log)</Label>
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Ex: compensation client, offre promo..."
+                className="h-9 text-xs"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpenSub(false)} disabled={busy}>Annuler</Button>
