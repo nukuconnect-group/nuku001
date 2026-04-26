@@ -27,9 +27,11 @@ REQUIRED_RPCS=(
 )
 
 for t in "${REQUIRED_TYPES[@]}"; do
-  if ! grep -q "\"$t\":" "$TYPES_FILE"; then
+  if ! grep -qE "(^|[[:space:]])${t}: \{" "$TYPES_FILE"; then
     echo "❌ Missing required table type: $t"
     ERRORS=$((ERRORS+1))
+  else
+    echo "  ✓ table type: $t"
   fi
 done
 
