@@ -222,15 +222,12 @@ const AdminDashboard = () => {
     { name: "Gratuit", value: Number(stats?.free_subscriptions || 0) },
   ];
 
-  const filteredSubscriptions = useMemo(() => {
-    const q = subscriptionSearch.trim().toLowerCase();
-    if (!q) return subscriptions;
-    return subscriptions.filter((s: any) =>
-      (s.user_name || "").toLowerCase().includes(q) ||
-      (s.user_email || "").toLowerCase().includes(q) ||
-      (s.user_phone || "").toLowerCase().includes(q)
-    );
-  }, [subscriptions, subscriptionSearch]);
+  const subSearchQ = subscriptionSearch.trim().toLowerCase();
+  const filteredSubscriptions = !subSearchQ ? subscriptions : subscriptions.filter((s: any) =>
+    (s.user_name || "").toLowerCase().includes(subSearchQ) ||
+    (s.user_email || "").toLowerCase().includes(subSearchQ) ||
+    (s.user_phone || "").toLowerCase().includes(subSearchQ)
+  );
 
   const orderStatusData = [
     { name: "En attente", value: Number(stats?.pending_orders || 0) },
