@@ -246,7 +246,9 @@ const Marketplace = () => {
   const [discountOnly, setDiscountOnly] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [location, setLocation] = useState(t("mp.allRegions"));
-  const [sortBy, setSortBy] = useState("recent");
+  // shippingFilter: "any" | "immediate" (≤0j) | "24h" (≤1j) | "week" (≤7j)
+  const [shippingFilter, setShippingFilter] = useState<"any" | "immediate" | "24h" | "week">("any");
+  const [sortBy, setSortBy] = useState("best-match");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
