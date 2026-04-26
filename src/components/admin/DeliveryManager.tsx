@@ -18,10 +18,25 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 // Reference local country (Togo) — anything else is treated as international
 const LOCAL_COUNTRY_KEYWORDS = ["togo", "lome", "lomé"];
 
-const isInternational = (address?: string | null, country?: string | null) => {
-  const addr = `${address || ""} ${country || ""}`.toLowerCase();
-  if (!addr.trim()) return false;
-  return !LOCAL_COUNTRY_KEYWORDS.some(k => addr.includes(k));
+const isCountryLocal = (country?: string | null) => {
+  if (!country) return null; // unknown — fall back
+  const c = country.trim().toLowerCase();
+  if (!c) return null;
+  return LOCAL_COUNTRY_KEYWORDS.some(k => c.includes(k));
+};
+
+// Primary signal: explicit country from buyer's saved address.
+// Fallbacks: dropoff_address text, then buyer profile location.
+const isInternational = (
+  buyerCountry?: string | null,
+  dropoffAddress?: string | null,
+  buyerLocation?: string | null,
+) => {
+  const fromCountry = isCountryLocal(buyerCountry);
+  if (fromCountry !== null) return !fromCountry;
+  const text = `${dropoffAddress || ""} ${buyerLocation || ""}`.toLowerCase().trim();
+  if (!text) return false;
+  return !LOCAL_COUNTRY_KEYWORDS.some(k => text.includes(k));
 };
 
 const DeliveryManager = () => {
@@ -34,10 +49,35 @@ const DeliveryManager = () => {
     const load = async () => {
       const { data } = await supabase
         .from("deliveries")
-        .select("*, driver_profiles:driver_id(id, vehicle_type, zone, profiles:profile_id(full_name)), orders:order_id(buyer_id, profiles:buyer_id(full_name, location))")
+        .select("*, driver_profiles:driver_id(id, vehicle_type, zone, profiles:profile_id(full_name)), orders:order_id(buyer_id, profiles:buyer_id(full_name, location, user_id))")
         .order("created_at", { ascending: false })
         .limit(100);
-      setDeliveries(data || []);
+
+      const rows = data || [];
+
+      // Enrich with buyer's default delivery address country (primary signal)
+      const buyerUserIds = Array.from(new Set(
+        rows.map(r => (r.orders as any)?.profiles?.user_id).filter(Boolean)
+      ));
+      let countryByUser = new Map<string, string>();
+      if (buyerUserIds.length > 0) {
+        const { data: addrs } = await supabase
+          .from("delivery_addresses")
+          .select("user_id, country, is_default")
+          .in("user_id", buyerUserIds);
+        (addrs || []).forEach((a: any) => {
+          // prefer default; otherwise first seen
+          if (a.country && (a.is_default || !countryByUser.has(a.user_id))) {
+            countryByUser.set(a.user_id, a.country);
+          }
+        });
+      }
+      rows.forEach((r: any) => {
+        const uid = r.orders?.profiles?.user_id;
+        r._buyer_country = uid ? countryByUser.get(uid) || null : null;
+      });
+
+      setDeliveries(rows);
       setLoading(false);
     };
     load();
@@ -47,7 +87,7 @@ const DeliveryManager = () => {
     if (scopeFilter === "all") return deliveries;
     return deliveries.filter(d => {
       const buyerLoc = (d.orders as any)?.profiles?.location || "";
-      const intl = isInternational(d.dropoff_address, buyerLoc);
+      const intl = isInternational(d._buyer_country, d.dropoff_address, buyerLoc);
       return scopeFilter === "international" ? intl : !intl;
     });
   }, [deliveries, scopeFilter]);
@@ -60,7 +100,7 @@ const DeliveryManager = () => {
   const inTransit = deliveries.filter(d => d.status === "in_transit" || d.status === "accepted" || d.status === "picked_up").length;
   const delivered = deliveries.filter(d => d.status === "delivered").length;
   const totalFees = deliveries.reduce((s, d) => s + Number(d.delivery_fee || 0), 0);
-  const intlCount = deliveries.filter(d => isInternational(d.dropoff_address, (d.orders as any)?.profiles?.location)).length;
+  const intlCount = deliveries.filter(d => isInternational(d._buyer_country, d.dropoff_address, (d.orders as any)?.profiles?.location)).length;
 
   return (
     <div className="space-y-4">
@@ -135,7 +175,7 @@ const DeliveryManager = () => {
               const st = STATUS_MAP[d.status] || STATUS_MAP.pending;
               const driverName = (d.driver_profiles as any)?.profiles?.full_name;
               const buyer = (d.orders as any)?.profiles;
-              const intl = isInternational(d.dropoff_address, buyer?.location);
+              const intl = isInternational(d._buyer_country, d.dropoff_address, buyer?.location);
               return (
                 <div key={d.id} className={`flex items-center gap-3 p-2.5 rounded-xl border ${intl ? "bg-secondary/5 border-secondary/40" : "bg-muted/30 border-border/30"}`}>
                   {intl ? <Globe className="w-5 h-5 flex-shrink-0 text-secondary" /> : <Truck className={`w-5 h-5 flex-shrink-0 ${st.color}`} />}
