@@ -40,10 +40,20 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
       p_plan: plan,
       p_billing_period: billing,
       p_duration_days: duration,
+      p_reason: reason || null,
     });
     setBusy(false);
     if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      const msg = error.message || "";
+      if (msg.includes("duplicate_subscription")) {
+        toast({
+          title: "Abonnement déjà identique",
+          description: "Cet utilisateur possède déjà ce plan avec une durée équivalente. Modifiez la durée ou choisissez un autre plan.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erreur", description: msg, variant: "destructive" });
+      }
       return;
     }
     toast({
@@ -51,16 +61,21 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
       description: `Plan ${plan} attribué à ${userName || "l'utilisateur"}.`,
     });
     setOpenSub(false);
+    setReason("");
     onUpdated?.();
   };
 
   const applyCredit = async () => {
     if (credit <= 0) return;
+    if (!reason.trim()) {
+      toast({ title: "Raison requise", description: "Indiquez une raison pour le crédit (audit log).", variant: "destructive" });
+      return;
+    }
     setBusy(true);
     const { data, error } = await supabase.rpc("admin_credit_tokens" as any, {
       p_user_id: userId,
       p_amount: credit,
-      p_reason: reason || "admin_grant",
+      p_reason: reason,
     });
     setBusy(false);
     if (error) {
@@ -69,6 +84,7 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
     }
     toast({ title: "Jetons crédités", description: `+${credit} jetons attribués.` });
     setOpenCredit(false);
+    setReason("");
     onUpdated?.();
   };
 
@@ -136,6 +152,15 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
                 />
               </div>
             </div>
+            <div>
+              <Label className="text-xs">Raison / commentaire (audit log)</Label>
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Ex: compensation client, offre promo..."
+                className="h-9 text-xs"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpenSub(false)} disabled={busy}>Annuler</Button>
@@ -172,7 +197,7 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
               </div>
             </div>
             <div>
-              <Label className="text-xs">Raison (optionnel)</Label>
+              <Label className="text-xs">Raison <span className="text-destructive">*</span></Label>
               <Input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}

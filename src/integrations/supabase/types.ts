@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          reason: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       analytics_visits: {
         Row: {
           browser: string | null
@@ -64,6 +94,47 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      api_key_usage: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: string | null
+          method: string
+          status_code: number | null
+          user_id: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          status_code?: number | null
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          status_code?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_usage_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       api_keys: {
         Row: {
@@ -2145,15 +2216,26 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      admin_set_user_subscription: {
-        Args: {
-          p_billing_period?: string
-          p_duration_days?: number
-          p_plan: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      admin_set_user_subscription:
+        | {
+            Args: {
+              p_billing_period?: string
+              p_duration_days?: number
+              p_plan: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_billing_period?: string
+              p_duration_days?: number
+              p_plan: string
+              p_reason?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
       clear_conversation_messages: {
         Args: { p_conversation_id: string }
@@ -2251,6 +2333,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_api_call: {
+        Args: {
+          p_api_key_id: string
+          p_endpoint: string
+          p_ip: string
+          p_method: string
+          p_status: number
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -2293,6 +2386,13 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      validate_api_key: {
+        Args: { p_key_hash: string }
+        Returns: {
+          api_key_id: string
+          user_id: string
+        }[]
       }
     }
     Enums: {

@@ -15,3 +15,7 @@ project_id = "fpnhdihvnfsiymopbjgt"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.api-public]
+    verify_jwt = false
+  [functions.advisor-ai-reply]
+    verify_jwt = true
