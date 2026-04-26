@@ -36,6 +36,7 @@ import EmailStatsManager from "@/components/admin/EmailStatsManager";
 import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
+import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
 import { Sparkles as SparklesIcon, Bot as BotIcon } from "lucide-react";
 
 const COLORS = [
@@ -814,20 +815,28 @@ const AdminDashboard = () => {
                             <td className="py-2.5 px-2 hidden lg:table-cell text-muted-foreground">
                               {new Date(u.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                             </td>
-                            <td className="py-2.5 px-2 text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleDeleteUser(u.user_id, u.full_name || "Sans nom")}
-                                disabled={deletingUserId === u.user_id}
-                              >
-                                {deletingUserId === u.user_id ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-3 h-3" />
-                                )}
-                              </Button>
+                            <td className="py-2.5 px-2">
+                              <div className="flex items-center justify-end gap-1">
+                                <UserSubscriptionActions
+                                  userId={u.user_id}
+                                  userName={u.full_name}
+                                  currentPlan={u.subscription?.plan}
+                                  onUpdated={refreshData}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDeleteUser(u.user_id, u.full_name || "Sans nom")}
+                                  disabled={deletingUserId === u.user_id}
+                                >
+                                  {deletingUserId === u.user_id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -887,6 +896,7 @@ const AdminDashboard = () => {
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Période</th>
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Début</th>
                           <th className="text-left py-2 px-2 font-medium text-muted-foreground hidden md:table-cell">Expiration</th>
+                          <th className="text-right py-2 px-2 font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -897,7 +907,7 @@ const AdminDashboard = () => {
                               <p className="text-[10px] text-muted-foreground">{s.user_phone || "—"}</p>
                             </td>
                             <td className="py-2.5 px-2 text-center">
-                              <Badge variant={s.plan === "pro" ? "default" : "secondary"} className="text-[9px]">{s.plan === "pro" ? "Pro" : "Gratuit"}</Badge>
+                              <Badge variant={s.plan === "pro" ? "default" : "secondary"} className="text-[9px] capitalize">{s.plan}</Badge>
                             </td>
                             <td className="py-2.5 px-2 text-center">
                               <Badge variant={s.status === "active" ? "default" : "destructive"} className="text-[9px]">{s.status === "active" ? "Actif" : s.status}</Badge>
@@ -909,6 +919,14 @@ const AdminDashboard = () => {
                             </td>
                             <td className="py-2.5 px-2 hidden md:table-cell text-muted-foreground">
                               {s.expires_at ? new Date(s.expires_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                            </td>
+                            <td className="py-2.5 px-2">
+                              <UserSubscriptionActions
+                                userId={s.user_id}
+                                userName={s.user_name}
+                                currentPlan={s.plan}
+                                onUpdated={refreshData}
+                              />
                             </td>
                           </tr>
                         ))}

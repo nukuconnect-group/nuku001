@@ -65,6 +65,42 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_comment_likes: {
         Row: {
           comment_id: string
@@ -2101,9 +2137,22 @@ export type Database = {
       }
     }
     Functions: {
+      admin_credit_tokens: {
+        Args: { p_amount: number; p_reason?: string; p_user_id: string }
+        Returns: Json
+      }
       admin_delete_user_data: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      admin_set_user_subscription: {
+        Args: {
+          p_billing_period?: string
+          p_duration_days?: number
+          p_plan: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
       clear_conversation_messages: {

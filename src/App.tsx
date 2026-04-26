@@ -59,6 +59,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Moderation = lazy(() => import("./pages/Moderation"));
 const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
+const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,6 +129,7 @@ const App = () => {
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/premium" element={<PremiumDashboard />} />
                   <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                   <Route path="/panier" element={<Cart />} />
                   <Route path="/commande/:id" element={<OrderDetail />} />
