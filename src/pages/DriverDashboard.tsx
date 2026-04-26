@@ -23,6 +23,7 @@ import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
 import DriverEarningsPanel from "@/components/driver/DriverEarningsPanel";
 import DriverStatsCharts from "@/components/driver/DriverStatsCharts";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
@@ -316,10 +317,26 @@ const DriverDashboard = () => {
 
   const needsAvatar = !profile?.avatar_url;
 
+  const driverSidebar: DashboardSidebarItem[] = [
+    { label: "Nouvelles missions", icon: Bell, tabValue: "missions", badge: newMissions.length > 0 ? newMissions.length : undefined },
+    { label: "En cours", icon: Truck, tabValue: "active", badge: activeDeliveries.length > 0 ? activeDeliveries.length : undefined },
+    { label: "Mes gains", icon: Wallet, tabValue: "earnings" },
+    { label: "Historique", icon: Clock, tabValue: "history" },
+    { label: "Messages", icon: Bell, href: "/messages" },
+    { label: "Paramètres", icon: Settings, href: "/settings" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-16 lg:pb-0">
       <SEO url="/driver-dashboard" title="Tableau de bord Livreur" description="Gérez vos livraisons et suivez vos gains." noIndex />
       <Header />
+      <DashboardLayout
+        sidebarTitle="Espace Livreur"
+        sidebarSubtitle={profile?.full_name || "Mon compte"}
+        items={driverSidebar}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
         {/* Wallet Card */}
         <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
@@ -537,6 +554,7 @@ const DriverDashboard = () => {
           </Tabs>
         )}
       </main>
+      </DashboardLayout>
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
