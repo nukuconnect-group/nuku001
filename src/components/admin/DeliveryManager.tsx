@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Truck, Clock, CheckCircle, MapPin, Loader2, Package, User } from "lucide-react";
+import { Truck, Clock, CheckCircle, MapPin, Loader2, Package, Globe, Filter } from "lucide-react";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; color: string }> = {
   pending: { label: "En attente", variant: "secondary", color: "text-yellow-600" },
@@ -14,16 +15,26 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
   cancelled: { label: "Annulée", variant: "destructive", color: "text-destructive" },
 };
 
+// Reference local country (Togo) — anything else is treated as international
+const LOCAL_COUNTRY_KEYWORDS = ["togo", "lome", "lomé"];
+
+const isInternational = (address?: string | null, country?: string | null) => {
+  const addr = `${address || ""} ${country || ""}`.toLowerCase();
+  if (!addr.trim()) return false;
+  return !LOCAL_COUNTRY_KEYWORDS.some(k => addr.includes(k));
+};
+
 const DeliveryManager = () => {
   const { formatPrice } = useLanguage();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scopeFilter, setScopeFilter] = useState<"all" | "local" | "international">("all");
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from("deliveries")
-        .select("*, driver_profiles:driver_id(id, vehicle_type, zone, profiles:profile_id(full_name))")
+        .select("*, driver_profiles:driver_id(id, vehicle_type, zone, profiles:profile_id(full_name)), orders:order_id(buyer_id, profiles:buyer_id(full_name, location))")
         .order("created_at", { ascending: false })
         .limit(100);
       setDeliveries(data || []);
@@ -31,6 +42,15 @@ const DeliveryManager = () => {
     };
     load();
   }, []);
+
+  const filtered = useMemo(() => {
+    if (scopeFilter === "all") return deliveries;
+    return deliveries.filter(d => {
+      const buyerLoc = (d.orders as any)?.profiles?.location || "";
+      const intl = isInternational(d.dropoff_address, buyerLoc);
+      return scopeFilter === "international" ? intl : !intl;
+    });
+  }, [deliveries, scopeFilter]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -40,10 +60,11 @@ const DeliveryManager = () => {
   const inTransit = deliveries.filter(d => d.status === "in_transit" || d.status === "accepted" || d.status === "picked_up").length;
   const delivered = deliveries.filter(d => d.status === "delivered").length;
   const totalFees = deliveries.reduce((s, d) => s + Number(d.delivery_fee || 0), 0);
+  const intlCount = deliveries.filter(d => isInternational(d.dropoff_address, (d.orders as any)?.profiles?.location)).length;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <Card>
           <CardContent className="p-3 text-center">
             <Clock className="w-5 h-5 mx-auto text-yellow-600 mb-1" />
@@ -72,24 +93,54 @@ const DeliveryManager = () => {
             <p className="text-[10px] text-muted-foreground">Frais totaux</p>
           </CardContent>
         </Card>
+        <Card className="border-secondary/40">
+          <CardContent className="p-3 text-center">
+            <Globe className="w-5 h-5 mx-auto text-secondary mb-1" />
+            <p className="text-lg font-bold">{intlCount}</p>
+            <p className="text-[10px] text-muted-foreground">International</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader className="p-3 sm:p-4 pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Truck className="w-4 h-4 text-primary" />Livraisons ({deliveries.length})
-          </CardTitle>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Truck className="w-4 h-4 text-primary" />Demandes de livraison ({filtered.length})
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Inclut les demandes nationales et internationales (acheteurs hors-Togo).
+              </CardDescription>
+            </div>
+            <div className="flex gap-1 items-center">
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              {(["all", "local", "international"] as const).map(s => (
+                <Button
+                  key={s}
+                  variant={scopeFilter === s ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setScopeFilter(s)}
+                  className="h-7 text-[10px] px-2"
+                >
+                  {s === "all" ? "Toutes" : s === "local" ? "Local" : "International"}
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0">
           <div className="space-y-2">
-            {deliveries.map(d => {
+            {filtered.map(d => {
               const st = STATUS_MAP[d.status] || STATUS_MAP.pending;
               const driverName = (d.driver_profiles as any)?.profiles?.full_name;
+              const buyer = (d.orders as any)?.profiles;
+              const intl = isInternational(d.dropoff_address, buyer?.location);
               return (
-                <div key={d.id} className="flex items-center gap-3 p-2.5 bg-muted/30 rounded-xl border border-border/30">
-                  <Truck className={`w-5 h-5 flex-shrink-0 ${st.color}`} />
+                <div key={d.id} className={`flex items-center gap-3 p-2.5 rounded-xl border ${intl ? "bg-secondary/5 border-secondary/40" : "bg-muted/30 border-border/30"}`}>
+                  {intl ? <Globe className="w-5 h-5 flex-shrink-0 text-secondary" /> : <Truck className={`w-5 h-5 flex-shrink-0 ${st.color}`} />}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-xs">
+                    <div className="flex items-center gap-1.5 text-xs flex-wrap">
                       {driverName ? (
                         <span className="font-medium">{driverName}</span>
                       ) : (
@@ -98,9 +149,16 @@ const DeliveryManager = () => {
                       {(d.driver_profiles as any)?.vehicle_type && (
                         <Badge variant="outline" className="text-[8px]">{(d.driver_profiles as any).vehicle_type}</Badge>
                       )}
+                      {intl && <Badge className="text-[8px] bg-secondary/15 text-secondary border-secondary/30">🌍 International</Badge>}
                     </div>
                     <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
-                      {d.pickup_address && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{d.pickup_address}</span>}
+                      {buyer?.full_name && <span>👤 {buyer.full_name}</span>}
+                      {(d.dropoff_address || buyer?.location) && (
+                        <span className="flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" />
+                          {d.dropoff_address || buyer?.location}
+                        </span>
+                      )}
                       {d.distance_km && <span>{Number(d.distance_km).toFixed(1)} km</span>}
                       <span>{new Date(d.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>
                     </div>
@@ -112,10 +170,10 @@ const DeliveryManager = () => {
                 </div>
               );
             })}
-            {deliveries.length === 0 && (
+            {filtered.length === 0 && (
               <div className="text-center py-8">
                 <Truck className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-                <p className="text-xs text-muted-foreground">Aucune livraison enregistrée</p>
+                <p className="text-xs text-muted-foreground">Aucune demande de livraison pour ce filtre</p>
               </div>
             )}
           </div>
