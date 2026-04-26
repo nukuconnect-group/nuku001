@@ -19,7 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { StatsGrid } from "@/components/dashboard/DashboardStats";
 import { SalesAreaChart, OrdersBarChart, CategoryPieInfo } from "@/components/dashboard/SalesChart";
 import AddProductModal from "@/components/dashboard/AddProductModal";
-import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import AddFormationModal from "@/components/dashboard/AddFormationModal";
+import PublishChoiceModal from "@/components/dashboard/PublishChoiceModal";
 import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import WithdrawalPanel from "@/components/dashboard/WithdrawalPanel";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
@@ -29,7 +30,8 @@ import ProductBoostModal from "@/components/dashboard/ProductBoostModal";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import SupplierAIRecommendations from "@/components/dashboard/SupplierAIRecommendations";
 import FreePlanRenewalBanner from "@/components/dashboard/FreePlanRenewalBanner";
-import FreePlanQuotaCard from "@/components/dashboard/FreePlanQuotaCard";
+import ProductQuotaCard from "@/components/dashboard/ProductQuotaCard";
+import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
@@ -47,12 +49,17 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showPublishChoice, setShowPublishChoice] = useState(false);
+  const [showAddFormation, setShowAddFormation] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
   const { balance: tokenBalance } = useTokens();
   useSubscriptionExpiry(user?.id);
+
+  // Helper : ouvre le sélecteur Produit/Formation
+  const openPublishFlow = () => setShowPublishChoice(true);
 
   const fetchProducts = async (profileId: string) => {
     const { data } = await supabase.from("products").select("*").eq("producer_id", profileId).order("created_at", { ascending: false });
@@ -173,7 +180,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap" onClick={() => setShowAddProduct(true)}>
+              <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8 whitespace-nowrap" onClick={openPublishFlow}>
                 <Plus className="w-3.5 h-3.5" />Ajouter produit
               </Button>
               <Link to="/plans">
@@ -229,12 +236,13 @@ const Dashboard = () => {
           {/* Free plan renewal banner */}
           <FreePlanRenewalBanner userId={user?.id} />
 
-          {/* Free plan quota visual (5 products max) */}
+          {/* Quota produits universel — affiché pour TOUS les plans */}
           <div className="mb-4 sm:mb-6">
-            <FreePlanQuotaCard
+            <ProductQuotaCard
               productsCount={products.length}
               maxProducts={subscription?.max_products || 5}
               plan={subscription?.plan}
+              tokenBalance={tokenBalance}
             />
           </div>
 
@@ -260,7 +268,7 @@ const Dashboard = () => {
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-8 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {[
-              { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: () => setShowAddProduct(true) },
+              { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: openPublishFlow },
               { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
@@ -305,7 +313,7 @@ const Dashboard = () => {
                 <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
               </summary>
               <div className="mt-2">
-                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={() => setShowAddProduct(true)} />
+                <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={openPublishFlow} />
               </div>
             </details>
           )}
@@ -317,9 +325,9 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Subscription card */}
+          {/* Premium features — gating selon pack actif (analytics, account manager, API) */}
           <div className="mb-4 sm:mb-6">
-            <SubscriptionCard />
+            <PremiumFeaturesPanel plan={subscription?.plan} tokenBalance={tokenBalance} />
           </div>
 
 
@@ -468,11 +476,28 @@ const Dashboard = () => {
         </div>
       </main>
 
+      {/* Choix Produit / Formation */}
+      <PublishChoiceModal
+        open={showPublishChoice}
+        onOpenChange={setShowPublishChoice}
+        onChoose={(type) => {
+          setShowPublishChoice(false);
+          if (type === "product") setShowAddProduct(true);
+          else setShowAddFormation(true);
+        }}
+      />
+
       {profile && (
         <AddProductModal open={showAddProduct} onOpenChange={(open) => { setShowAddProduct(open); if (!open) setEditingProduct(null); }}
           profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
           editProduct={editingProduct} />
       )}
+
+      <AddFormationModal
+        open={showAddFormation}
+        onOpenChange={setShowAddFormation}
+        instructorName={profile?.business_name || profile?.full_name || "Formateur"}
+      />
 
       <ProductBoostModal
         open={!!boostProduct}

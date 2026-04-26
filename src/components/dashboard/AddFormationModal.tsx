@@ -1,0 +1,203 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, GraduationCap, Upload, X } from "lucide-react";
+import { useImageUpload } from "@/hooks/useImageUpload";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  instructorName: string;
+  onCreated?: () => void;
+}
+
+const FORMATION_CATEGORIES = [
+  "Agriculture", "Élevage", "Aquaculture", "Aviculture",
+  "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général",
+];
+
+const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Props) => {
+  const { toast } = useToast();
+  const { uploadImages, uploading } = useImageUpload();
+  const [isLoading, setIsLoading] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string>("");
+
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "Général",
+    level: "beginner",
+    duration_minutes: "60",
+    is_paid: false,
+    price: "0",
+  });
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setCoverFile(f);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCoverPreview(ev.target?.result as string);
+    reader.readAsDataURL(f);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) {
+      toast({ title: "Titre requis", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      let imageUrl: string | null = null;
+      if (coverFile) {
+        const urls = await uploadImages([coverFile]);
+        imageUrl = urls[0] || null;
+      }
+
+      const { error } = await supabase.from("formations").insert({
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        level: form.level,
+        instructor: instructorName || "Formateur",
+        duration_minutes: parseInt(form.duration_minutes) || 60,
+        is_paid: form.is_paid,
+        price: form.is_paid ? parseFloat(form.price) || 0 : 0,
+        image_url: imageUrl,
+        is_published: true,
+      } as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ Formation publiée",
+        description: "Votre formation est désormais visible dans le module Formations.",
+      });
+      setForm({ title: "", description: "", category: "Général", level: "beginner", duration_minutes: "60", is_paid: false, price: "0" });
+      setCoverFile(null);
+      setCoverPreview("");
+      onOpenChange(false);
+      onCreated?.();
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-accent" />
+            Publier une formation
+          </DialogTitle>
+          <DialogDescription>
+            Partagez vos connaissances agricoles avec la communauté NukuConnect.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Cover */}
+          <div className="space-y-2">
+            <Label>Image de couverture</Label>
+            <input id="cover" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+            {coverPreview ? (
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
+                <img src={coverPreview} alt="" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(""); }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label htmlFor="cover" className="block border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 cursor-pointer">
+                <Upload className="w-7 h-7 mx-auto text-muted-foreground mb-1" />
+                <p className="text-xs text-muted-foreground">Cliquez pour ajouter une image</p>
+              </label>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Titre *</Label>
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Cultiver le maïs en saison sèche" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} placeholder="Décrivez ce que les apprenants vont apprendre..." />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Catégorie</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {FORMATION_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Niveau</Label>
+              <Select value={form.level} onValueChange={(v) => setForm({ ...form, level: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Débutant</SelectItem>
+                  <SelectItem value="intermediate">Intermédiaire</SelectItem>
+                  <SelectItem value="advanced">Avancé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Durée (minutes)</Label>
+              <Input type="number" min="1" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} />
+            </div>
+            <div className="space-y-2 flex items-end">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-xl w-full">
+                <div>
+                  <Label className="text-sm">Formation payante</Label>
+                  <p className="text-[10px] text-muted-foreground">Sinon gratuite</p>
+                </div>
+                <Switch checked={form.is_paid} onCheckedChange={(v) => setForm({ ...form, is_paid: v })} />
+              </div>
+            </div>
+          </div>
+
+          {form.is_paid && (
+            <div className="space-y-2">
+              <Label>Prix (FCFA)</Label>
+              <Input type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Ex: 5000" />
+            </div>
+          )}
+
+          <div className="p-3 bg-accent/5 border border-accent/20 rounded-xl">
+            <p className="text-[11px] text-muted-foreground">
+              📚 Après publication, vous pourrez ajouter des modules vidéo et des chapitres dans la section <strong>Formations</strong>.
+              Le module IA pour générer automatiquement les chapitres à partir d'un PDF arrive bientôt.
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading}>
+              {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Publication...</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default AddFormationModal;

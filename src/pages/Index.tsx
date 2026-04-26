@@ -12,6 +12,7 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
+import HomeDemandsSection from "@/components/home/HomeDemandsSection";
 import { useProfile } from "@/contexts/ProfileContext";
 
 const Index = () => {
@@ -52,6 +53,7 @@ const Index = () => {
         <PromoBannerSlider />
         <CategoriesSection />
         <FeaturedProducts />
+        <HomeDemandsSection />
         <FeaturesSection />
         <HowItWorksSection />
         <NukuAISection />
