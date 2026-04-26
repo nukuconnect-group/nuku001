@@ -76,14 +76,16 @@ Deno.serve(async (req) => {
     }
 
     // Log usage (fire and forget)
-    admin.rpc("log_api_call", {
-      p_api_key_id: api_key_id,
-      p_user_id: user_id,
-      p_endpoint: path,
-      p_method: req.method,
-      p_status: status,
-      p_ip: ip,
-    }).then(() => {}).catch(() => {});
+    try {
+      await admin.rpc("log_api_call", {
+        p_api_key_id: api_key_id,
+        p_user_id: user_id,
+        p_endpoint: path,
+        p_method: req.method,
+        p_status: status,
+        p_ip: ip,
+      });
+    } catch { /* ignore */ }
 
     return new Response(JSON.stringify(body), {
       status, headers: { ...corsHeaders, "Content-Type": "application/json" },
