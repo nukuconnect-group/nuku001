@@ -79,9 +79,23 @@ const LearnerDashboard = () => {
     );
   }
 
+  const learnerSidebar: DashboardSidebarItem[] = [
+    { label: "Mes formations", icon: GraduationCap, href: "/formations" },
+    { label: "En cours", icon: BookOpen, onClick: () => window.scrollTo({ top: 400, behavior: "smooth" }) },
+    { label: "Certificats", icon: Award, onClick: () => window.scrollTo({ top: 800, behavior: "smooth" }) },
+    { label: "Catalogue", icon: TrendingUp, href: "/formations" },
+    { label: "Messages", icon: Star, href: "/messages" },
+    { label: "Paramètres", icon: Settings, href: "/settings" },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <Header />
+      <DashboardLayout
+        sidebarTitle="Espace Apprenant"
+        sidebarSubtitle={profile?.full_name || "Mon compte"}
+        items={learnerSidebar}
+      >
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -268,6 +282,7 @@ const LearnerDashboard = () => {
           )}
         </div>
       </main>
+      </DashboardLayout>
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       <MobileBottomNav />
