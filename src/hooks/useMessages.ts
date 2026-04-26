@@ -173,6 +173,12 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
       if (!isDeliveryConversation) {
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
+        // Notify recipient by email (throttled server-side per 5 min)
+        supabase.functions
+          .invoke("notify-message-recipient", {
+            body: { conversationId, preview: content },
+          })
+          .catch(() => {});
       }
     },
     [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
