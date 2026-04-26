@@ -100,7 +100,7 @@ const DeliveryManager = () => {
   const inTransit = deliveries.filter(d => d.status === "in_transit" || d.status === "accepted" || d.status === "picked_up").length;
   const delivered = deliveries.filter(d => d.status === "delivered").length;
   const totalFees = deliveries.reduce((s, d) => s + Number(d.delivery_fee || 0), 0);
-  const intlCount = deliveries.filter(d => isInternational(d.dropoff_address, (d.orders as any)?.profiles?.location)).length;
+  const intlCount = deliveries.filter(d => isInternational(d._buyer_country, d.dropoff_address, (d.orders as any)?.profiles?.location)).length;
 
   return (
     <div className="space-y-4">
