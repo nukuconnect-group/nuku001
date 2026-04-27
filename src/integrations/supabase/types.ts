@@ -1567,6 +1567,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          availability_end: string | null
+          availability_start: string | null
           avatar_url: string | null
           bio: string | null
           business_name: string | null
@@ -1578,12 +1580,15 @@ export type Database = {
           is_verified: boolean
           location: string | null
           response_rate: number | null
+          timezone: string | null
           updated_at: string
           user_id: string
           user_type: string
           years_active: number | null
         }
         Insert: {
+          availability_end?: string | null
+          availability_start?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_name?: string | null
@@ -1595,12 +1600,15 @@ export type Database = {
           is_verified?: boolean
           location?: string | null
           response_rate?: number | null
+          timezone?: string | null
           updated_at?: string
           user_id: string
           user_type?: string
           years_active?: number | null
         }
         Update: {
+          availability_end?: string | null
+          availability_start?: string | null
           avatar_url?: string | null
           bio?: string | null
           business_name?: string | null
@@ -1612,6 +1620,7 @@ export type Database = {
           is_verified?: boolean
           location?: string | null
           response_rate?: number | null
+          timezone?: string | null
           updated_at?: string
           user_id?: string
           user_type?: string
