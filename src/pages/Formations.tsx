@@ -99,8 +99,18 @@ const Formations = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-24 pb-12 bg-gradient-earth">
-        <div className="container mx-auto px-4">
+      <section className="relative pt-24 pb-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={heroFormations}
+            alt="Apprenants africains suivant une formation agricole digitale"
+            className="w-full h-full object-cover"
+            width={1536}
+            height={768}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
+        </div>
+        <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl mx-auto text-center">
             <Badge variant="secondary" className="mb-4">
               <GraduationCap className="w-3 h-3 mr-1" />
@@ -114,7 +124,7 @@ const Formations = () => {
             </p>
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input placeholder="Rechercher une formation..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 text-base" />
+              <Input placeholder="Rechercher une formation..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 text-base bg-background/95 backdrop-blur" />
             </div>
           </div>
         </div>
