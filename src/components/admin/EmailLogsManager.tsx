@@ -19,7 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, CheckCircle2, XCircle, Ban, Loader2, RefreshCw } from "lucide-react";
+import { Mail, CheckCircle2, XCircle, Ban, Loader2, RefreshCw, Download } from "lucide-react";
+import { toast } from "sonner";
 
 type LogRow = {
   id: string;
