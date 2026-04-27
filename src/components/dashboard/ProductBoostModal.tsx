@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTokens } from "@/hooks/useTokens";
 import { Rocket, Coins, Check, Loader2, Clock, Sparkles } from "lucide-react";
+import ProductBoostStats from "./ProductBoostStats";
 
 interface BoostPlan {
   id: string;
