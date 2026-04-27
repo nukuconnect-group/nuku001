@@ -428,23 +428,55 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Subscriptions Pie */}
+                {/* Visiteurs par pays — vraie carte détaillée */}
                 <Card>
-                  <CardHeader className="p-3 sm:p-4 pb-0">
+                  <CardHeader className="p-3 sm:p-4 pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Crown className="w-4 h-4 text-primary" />Abonnements
+                      <Globe className="w-4 h-4 text-primary" />Visiteurs par pays
                     </CardTitle>
+                    <CardDescription className="text-[11px]">
+                      Détail des visites, part de couverture et ville principale
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="p-3 sm:p-4">
-                    <ResponsiveContainer width="100%" height={180}>
-                      <PieChart>
-                        <Pie data={subscriptionPieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={5} dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}>
-                          {subscriptionPieData.map((_, idx) => <Cell key={idx} fill={COLORS[idx + 2]} />)}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <CardContent className="p-3 sm:p-4 pt-0">
+                    {countryData.length > 0 ? (
+                      <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                        {(() => {
+                          const total = countryData.reduce((s: number, c: any) => s + Number(c.count || 0), 0);
+                          return countryData.slice(0, 8).map((c: any, i: number) => {
+                            const pct = total > 0 ? Math.round((Number(c.count) / total) * 100) : 0;
+                            const topCity = (cityData || [])
+                              .filter((ci: any) => !c.country_code || ci.country_code === c.country_code)
+                              .sort((a: any, b: any) => Number(b.count) - Number(a.count))[0];
+                            return (
+                              <div key={i} className="p-2 rounded-lg bg-muted/40 border border-border/40">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="text-xs font-medium flex items-center gap-1.5 min-w-0">
+                                    <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{c.country || "Inconnu"}</span>
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-primary flex-shrink-0">
+                                    {c.count} ({pct}%)
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-1">
+                                  <div className="h-full rounded-full bg-primary/70 transition-all" style={{ width: `${pct}%` }} />
+                                </div>
+                                {topCity && (
+                                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                    <MapPin className="w-2.5 h-2.5" />Top ville: <span className="font-medium">{topCity.city}</span>
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-6">
+                        Les données par pays apparaîtront après quelques visites
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
 
