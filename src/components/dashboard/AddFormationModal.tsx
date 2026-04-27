@@ -20,7 +20,7 @@ interface Props {
 
 type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
 interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
-type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean };
+type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean; editing?: boolean };
 
 // Traduit un message technique en message clair pour l'utilisateur
 const friendlyError = (err: any): { title: string; description: string; code: string } => {
@@ -47,6 +47,15 @@ const FORMATION_CATEGORIES = [
 
 const DRAFT_KEY = "nukuconnect_formation_ai_draft";
 
+const getStoredDraftSavedAt = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw)?.savedAt || "" : "";
+  } catch {
+    return "";
+  }
+};
+
 const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Props) => {
   const { toast } = useToast();
   const { uploadImages, uploading } = useImageUpload();
@@ -65,7 +74,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [chapterPreview, setChapterPreview] = useState<ChapterDraft[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
-  const [draftSavedAt, setDraftSavedAt] = useState<string>("");
+  const [draftSavedAt, setDraftSavedAt] = useState<string>(() => getStoredDraftSavedAt());
   const [hasSavedDraft, setHasSavedDraft] = useState(() => Boolean(localStorage.getItem(DRAFT_KEY)));
   const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
   const resetDiag = () => setDiagnostics([]);
@@ -280,7 +289,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         body: { document_text: aiContent, preview_only: true },
       });
       if (error) throw error;
-      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false }));
+      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false, editing: false }));
       if (!chs.length) {
         pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
@@ -308,7 +317,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   };
 
   const approveChapter = (idx: number) => {
-    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true } : c));
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true, editing: false } : c));
+  };
+
+  const editChapter = (idx: number) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: false, editing: true } : c));
   };
 
   const removeChapter = (idx: number) => {
@@ -371,7 +384,6 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         return;
       }
       const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
-      const savedAt = new Date().toISOString();
       const nextForm = {
         ...form,
         title: meta.title?.toString().slice(0, 120) || form.title,
@@ -379,9 +391,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         category: safeCategory,
       };
       setForm(nextForm);
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt }));
-      setDraftSavedAt(savedAt);
-      setHasSavedDraft(true);
+      saveDraft({ form: nextForm });
       pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
       toast({ title: "✨ Champs remplis", description: "Brouillon sauvegardé automatiquement. Vous pouvez reprendre plus tard." });
     } catch (err: any) {
@@ -590,9 +600,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
           {hasSavedDraft && (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5">
-              <p className="text-[11px] text-foreground">
-                Brouillon disponible{draftSavedAt ? ` — ${new Date(draftSavedAt).toLocaleString("fr-FR")}` : ""}
-              </p>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-foreground">Brouillon disponible</p>
+                  {draftSavedAt && (
+                    <p className="text-[10px] text-muted-foreground">Sauvegardé le {new Date(draftSavedAt).toLocaleString("fr-FR")}</p>
+                  )}
+                </div>
               <Button type="button" variant="outline" size="sm" onClick={resumeDraft} className="h-8 text-[11px] gap-1">
                 <Save className="w-3 h-3" /> Reprendre le brouillon
               </Button>
@@ -865,39 +878,56 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                   </span>
                 </div>
                 {chapterPreview.map((ch, idx) => (
-                  <div key={idx} className={`space-y-1.5 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
-                      <Input
-                        value={ch.title}
-                        onChange={(e) => updateChapterField(idx, "title", e.target.value)}
-                        placeholder="Titre du chapitre"
-                        className="text-xs h-8 flex-1"
-                      />
-                      <Input
-                        type="number"
-                        min={1}
-                        value={ch.duration_minutes}
-                        onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
-                        className="text-xs h-8 w-16"
-                        title="Durée (min)"
-                      />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeChapter(idx)} className="h-8 w-8 shrink-0">
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
+                  <div key={idx} className={`space-y-2 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold text-primary">Chapitre {idx + 1}</p>
+                        <h4 className="text-sm font-semibold text-foreground break-words">{ch.title || "Titre à compléter"}</h4>
+                        <p className="text-[11px] text-muted-foreground break-words line-clamp-2">{ch.description || "Description à compléter"}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Durée estimée : {ch.duration_minutes || 1} min</p>
+                      </div>
+                      {ch.approved && <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-1" />}
                     </div>
-                    <Textarea
-                      value={ch.description}
-                      onChange={(e) => updateChapterField(idx, "description", e.target.value)}
-                      rows={2}
-                      placeholder="Description du chapitre"
-                      className="text-[11px]"
-                    />
-                    <div className="flex justify-end">
-                      <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        {ch.approved ? "Approuvé" : "Approuver ce chapitre"}
+
+                    {ch.editing && (
+                      <div className="space-y-1.5 rounded-md border border-border bg-background p-2">
+                        <Input
+                          value={ch.title}
+                          onChange={(e) => updateChapterField(idx, "title", e.target.value)}
+                          placeholder="Titre du chapitre"
+                          className="text-xs h-8"
+                        />
+                        <Textarea
+                          value={ch.description}
+                          onChange={(e) => updateChapterField(idx, "description", e.target.value)}
+                          rows={2}
+                          placeholder="Description du chapitre"
+                          className="text-[11px]"
+                        />
+                        <Input
+                          type="number"
+                          min={1}
+                          value={ch.duration_minutes}
+                          onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
+                          className="text-xs h-8 w-28"
+                          title="Durée (min)"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex justify-between gap-2 flex-wrap">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeChapter(idx)} className="h-7 text-[11px] gap-1 text-destructive hover:text-destructive">
+                        <Trash2 className="w-3 h-3" /> Retirer
                       </Button>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => editChapter(idx)} className="h-7 text-[11px] gap-1">
+                          <Edit3 className="w-3 h-3" /> Modifier
+                        </Button>
+                        <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          {ch.approved ? "Approuvé" : "Approuver"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
