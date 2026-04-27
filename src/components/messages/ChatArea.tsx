@@ -66,6 +66,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [callSheetOpen, setCallSheetOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(() => {
     if (!conversation) return false;
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
