@@ -32,6 +32,12 @@ const DeliveryTracking = () => {
   const [searchMode, setSearchMode] = useState<"list" | "search">("list");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  // Public tracking (no login required) — order ID + buyer email
+  const [publicOrderId, setPublicOrderId] = useState("");
+  const [publicEmail, setPublicEmail] = useState("");
+  const [publicLoading, setPublicLoading] = useState(false);
+  const [publicError, setPublicError] = useState("");
+  const [publicResult, setPublicResult] = useState<any>(null);
 
   const fetchOrders = async (prof: any) => {
     const { data } = await supabase
