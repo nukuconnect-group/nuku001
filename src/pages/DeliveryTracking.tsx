@@ -16,7 +16,7 @@ import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import DriverRatingModal from "@/components/delivery/DriverRatingModal";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, Star,
-  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
+  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash, Mail
 } from "lucide-react";
 
 const DeliveryTracking = () => {
@@ -32,6 +32,12 @@ const DeliveryTracking = () => {
   const [searchMode, setSearchMode] = useState<"list" | "search">("list");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  // Public tracking (no login required) — order ID + buyer email
+  const [publicOrderId, setPublicOrderId] = useState("");
+  const [publicEmail, setPublicEmail] = useState("");
+  const [publicLoading, setPublicLoading] = useState(false);
+  const [publicError, setPublicError] = useState("");
+  const [publicResult, setPublicResult] = useState<any>(null);
 
   const fetchOrders = async (prof: any) => {
     const { data } = await supabase
@@ -165,6 +171,53 @@ const DeliveryTracking = () => {
     setSearchMode("list");
     setSelectedOrder(null);
     if (profile) await fetchOrders(profile);
+  };
+
+  // UUID v4-ish validation (8-4-4-4-12)
+  const looksLikeUuid = (v: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim());
+
+  const handlePublicTrack = async () => {
+    setPublicError("");
+    setPublicResult(null);
+    const id = publicOrderId.trim();
+    const email = publicEmail.trim();
+    if (!id || !email) {
+      setPublicError("Veuillez saisir l'ID de commande et votre email.");
+      return;
+    }
+    if (!looksLikeUuid(id)) {
+      setPublicError("L'ID de commande semble invalide. Vérifiez sur votre facture ou email de confirmation.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setPublicError("Adresse email invalide.");
+      return;
+    }
+    setPublicLoading(true);
+    const { data, error } = await supabase.rpc("track_order_public" as any, {
+      p_order_id: id,
+      p_email: email,
+    });
+    setPublicLoading(false);
+    if (error) {
+      setPublicError("Erreur de connexion. Réessayez dans un instant.");
+      return;
+    }
+    const res = data as any;
+    if (res?.error === "not_found") {
+      setPublicError("Aucune commande trouvée avec cet identifiant.");
+      return;
+    }
+    if (res?.error === "email_mismatch") {
+      setPublicError("L'email ne correspond pas à cette commande. Utilisez l'email lié au compte qui a passé la commande.");
+      return;
+    }
+    if (res?.error) {
+      setPublicError("Impossible de récupérer cette commande.");
+      return;
+    }
+    setPublicResult(res);
   };
 
   const getStatusColor = (status: string) => {
@@ -345,18 +398,129 @@ const DeliveryTracking = () => {
               )}
             </div>
           )}
+
+          {/* Public tracking — no login required */}
+          <div className="max-w-lg mx-auto mt-4 p-3 sm:p-4 bg-card border border-border rounded-xl text-left">
+            <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-primary" />
+              Suivre une commande sans se connecter
+            </p>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Saisissez l'<strong>ID de commande</strong> reçu par email ou sur la facture, puis votre <strong>email</strong> pour voir le parcours en temps réel.
+            </p>
+            <div className="space-y-2">
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="ID de commande (ex: 8a1f...)"
+                  value={publicOrderId}
+                  onChange={(e) => setPublicOrderId(e.target.value)}
+                  className="pl-9 h-10 text-sm font-mono"
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="Email lié à la commande"
+                  value={publicEmail}
+                  onChange={(e) => setPublicEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handlePublicTrack()}
+                  className="pl-9 h-10 text-sm"
+                />
+              </div>
+              <Button variant="hero" size="sm" onClick={handlePublicTrack} disabled={publicLoading} className="w-full gap-1.5 h-10">
+                {publicLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                Suivre la commande
+              </Button>
+              {publicError && (
+                <p className="text-xs text-destructive flex items-start gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span>{publicError}</span>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Public tracking result */}
+      {publicResult && (
+        <section className="py-5">
+          <div className="container mx-auto px-3 sm:px-4 max-w-2xl">
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">{publicResult.product?.name || "Commande"}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {publicResult.order?.quantity} {publicResult.product?.unit || "unités"} • {formatPrice(Number(publicResult.order?.total_price || 0))}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                      Réf: {publicResult.order?.id}
+                    </p>
+                  </div>
+                  <Badge className={`${getStatusColor(publicResult.order?.status)} self-start gap-1`}>
+                    {getStatusIcon(publicResult.order?.status)}
+                    {getStatusLabel(publicResult.order?.status)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                {publicResult.seller_name && (
+                  <div className="p-3 bg-muted/50 rounded-xl mb-4 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Vendeur</p>
+                      <p className="text-sm font-medium">{publicResult.seller_name}</p>
+                    </div>
+                  </div>
+                )}
+                <h3 className="font-heading font-semibold text-sm mb-3">Parcours en temps réel</h3>
+                <div className="space-y-0">
+                  {getOrderSteps({
+                    status: publicResult.order?.status,
+                    created_at: publicResult.order?.created_at,
+                    updated_at: publicResult.order?.updated_at,
+                  }).map((step, i, arr) => (
+                    <div key={i} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          step.status === "done" ? "bg-primary text-primary-foreground" :
+                          step.status === "current" ? "bg-blue-500 text-white animate-pulse" :
+                          "bg-muted text-muted-foreground"
+                        }`}>
+                          {step.icon}
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className={`w-0.5 h-8 ${step.status === "done" ? "bg-primary" : "bg-border"}`} />
+                        )}
+                      </div>
+                      <div className="pb-4">
+                        <p className={`text-sm font-medium ${step.status === "pending" ? "text-muted-foreground" : "text-foreground"}`}>{step.title}</p>
+                        {step.desc && <p className="text-xs text-muted-foreground">{step.desc}</p>}
+                        {step.time && <p className="text-[10px] text-primary font-medium">{step.time}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section className="py-6">
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
           {!user ? (
             <Card>
-              <CardContent className="p-8 text-center">
-                <LogIn className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-heading font-bold text-lg mb-2">Connexion requise</h3>
-                <p className="text-sm text-muted-foreground mb-4">Connectez-vous pour voir vos commandes</p>
-                <Button variant="hero" onClick={() => navigate("/auth")}>Se connecter</Button>
+              <CardContent className="p-6 text-center">
+                <LogIn className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="font-heading font-bold text-sm mb-1">Connectez-vous pour voir vos commandes</h3>
+                <p className="text-xs text-muted-foreground mb-3">Vous pouvez aussi suivre une commande en haut de page avec son ID + email.</p>
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>Se connecter</Button>
               </CardContent>
             </Card>
           ) : orders.length === 0 && searchMode === "list" ? (

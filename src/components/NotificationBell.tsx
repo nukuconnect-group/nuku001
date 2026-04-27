@@ -94,6 +94,7 @@ const NotificationBell = () => {
     if (!notif.is_read && user?.id) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+      window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
     }
     setOpen(false);
     navigate(getNotifRoute(notif));
@@ -116,6 +117,7 @@ const NotificationBell = () => {
     if (!user?.id) return;
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
   const timeAgo = (dateStr: string) => {

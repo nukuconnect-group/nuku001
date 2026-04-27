@@ -2385,6 +2385,10 @@ export type Database = {
         }
         Returns: Json
       }
+      track_order_public: {
+        Args: { p_email: string; p_order_id: string }
+        Returns: Json
+      }
       unaccent: { Args: { "": string }; Returns: string }
       update_user_subscription: {
         Args: {

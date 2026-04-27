@@ -253,20 +253,34 @@ const Header = () => {
     if (data) setNotifications(data);
   }, []);
 
-  // Realtime notifications subscription
+  // Realtime notifications subscription — INSERT/UPDATE/DELETE
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel("header-notifications")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+      .channel(`header-notifications-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
         const n = payload.new as any;
-        if (n.user_id === user.id) {
-          setNotifications(prev => [n, ...prev.slice(0, 9)]);
-        }
+        setNotifications(prev => [n, ...prev.filter(x => x.id !== n.id)].slice(0, 10));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
+        const n = payload.new as any;
+        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, ...n } : x));
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
+        const id = (payload.old as any)?.id;
+        setNotifications(prev => prev.filter(x => x.id !== id));
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+
+    // Cross-component sync: refetch when other components update notifications
+    const onChanged = () => fetchNotifications(user.id);
+    window.addEventListener("nuku:notifications-updated", onChanged);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("nuku:notifications-updated", onChanged);
+    };
+  }, [user, fetchNotifications]);
 
   const navLinks = [
     { label: t("nav.home"), href: "/" },
