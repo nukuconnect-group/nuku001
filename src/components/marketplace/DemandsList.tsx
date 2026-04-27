@@ -29,6 +29,28 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
   const [boostDemand, setBoostDemand] = useState<{ id: string; title: string; category: string } | null>(null);
+  const [boostHistory, setBoostHistory] = useState<Array<{ id: string; created_at: string; amount: number; reason: string | null }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Charge l'historique des boosts quand on ouvre le détail d'une demande dont on est le propriétaire
+  useEffect(() => {
+    if (!selectedDemand || !profile || selectedDemand.profile_id !== profile.id) {
+      setBoostHistory([]);
+      return;
+    }
+    setHistoryLoading(true);
+    supabase
+      .from("token_transactions")
+      .select("id,created_at,amount,reason")
+      .eq("reference_id", selectedDemand.id)
+      .eq("reference_type", "demand_boost")
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        setBoostHistory((data || []) as any);
+        setHistoryLoading(false);
+      });
+  }, [selectedDemand?.id, profile?.id]);
 
   const openDemandConversation = async (demand: Demand, mode: "chat" | "offer") => {
     const offerQuantity = offerValues[demand.id]?.trim();
