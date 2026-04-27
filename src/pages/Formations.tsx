@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import heroFormations from "@/assets/hero-formations.jpg";
 import { 
   Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2
 } from "lucide-react";
