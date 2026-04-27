@@ -212,11 +212,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate price tiers (block save if invalid)
-    const tierErrors = validateTiers(priceTiers);
+    // Validate price tiers — au moins un palier de gros est obligatoire
+    const tierErrors = validateTiers(priceTiers, { required: true });
     if (tierErrors.length > 0) {
       toast({
-        title: "Paliers de prix invalides",
+        title: "Prix de gros requis",
         description: tierErrors[0],
         variant: "destructive",
       });
