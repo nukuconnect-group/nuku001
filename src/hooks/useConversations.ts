@@ -5,7 +5,7 @@ export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
 
 export interface ConversationItem {
   id: string;
-  participant: { id: string; name: string; avatar: string; isOnline: boolean };
+  participant: { id: string; name: string; avatar: string; isOnline: boolean; userId?: string };
   lastMessage: string;
   timestamp: string;
   unread: number;
@@ -121,6 +121,7 @@ export function useConversations() {
         id: c.id,
         participant: {
           id: other?.id || "",
+          userId: other?.user_id,
           name: other?.full_name || "Utilisateur",
           avatar: other?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(other?.full_name || "U")}&background=1c98ed&color=fff`,
           isOnline,
