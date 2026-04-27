@@ -528,7 +528,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
         {messages.map((msg) => {
-          const { text, imageUrl } = parseMessage(msg.content);
+          const { text, imageUrl, voiceUrl } = parseMessage(msg.content);
           const repliedMsg = findReplyMessage(msg.replyToId);
           return (
             <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
