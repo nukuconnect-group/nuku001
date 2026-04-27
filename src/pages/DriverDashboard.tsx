@@ -309,8 +309,20 @@ const DriverDashboard = () => {
 
   if (profileLoading || (isLoading && !initialLoadDone)) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-20 lg:pb-0">
+        <div className="container mx-auto px-3 sm:px-4 py-4 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-muted animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 w-40 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[1,2,3,4].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
+          </div>
+          <div className="h-48 bg-muted animate-pulse rounded-xl" />
+        </div>
       </div>
     );
   }
