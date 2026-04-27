@@ -87,13 +87,18 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
         });
       }
 
-      onOpenChange(false);
+      setBoostedSuccess(true);
       onBoostSuccess?.();
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClose = (next: boolean) => {
+    if (!next) setBoostedSuccess(false);
+    onOpenChange(next);
   };
 
   return (
