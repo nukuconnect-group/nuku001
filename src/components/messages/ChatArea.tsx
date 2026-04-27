@@ -562,7 +562,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
                   {msg.type === "image" && msg.fileUrl && !imageUrl && (
                     <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
                   )}
-                  {msg.type === "voice" && msg.fileUrl && (
+                  {voiceUrl && (
+                    <audio controls src={voiceUrl} className="max-w-full h-8 mb-1" />
+                  )}
+                  {msg.type === "voice" && msg.fileUrl && !voiceUrl && (
                     <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
                   )}
                   {msg.type === "file" && (
