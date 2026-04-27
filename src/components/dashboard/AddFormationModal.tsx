@@ -600,9 +600,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
           {hasSavedDraft && (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5">
-              <p className="text-[11px] text-foreground">
-                Brouillon disponible{draftSavedAt ? ` — ${new Date(draftSavedAt).toLocaleString("fr-FR")}` : ""}
-              </p>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-medium text-foreground">Brouillon disponible</p>
+                  {draftSavedAt && (
+                    <p className="text-[10px] text-muted-foreground">Sauvegardé le {new Date(draftSavedAt).toLocaleString("fr-FR")}</p>
+                  )}
+                </div>
               <Button type="button" variant="outline" size="sm" onClick={resumeDraft} className="h-8 text-[11px] gap-1">
                 <Save className="w-3 h-3" /> Reprendre le brouillon
               </Button>
