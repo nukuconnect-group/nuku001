@@ -32,6 +32,7 @@ const friendlyError = (err: any): { title: string; description: string; code: st
   if (/missing_content/i.test(raw)) return { title: "Contenu manquant", description: "Importez un document ou ajoutez au moins une vidéo.", code: "NO_CONTENT" };
   if (/missing_formation_id/i.test(raw)) return { title: "Formation introuvable", description: "Veuillez réessayer la publication.", code: "NO_FORMATION_ID" };
   if (/unauthenticated|401/i.test(raw)) return { title: "Session expirée", description: "Reconnectez-vous puis réessayez.", code: code || "401" };
+  if (/violates row-level security|new row violates/i.test(raw)) return { title: "Droit de publication manquant", description: "Reconnectez-vous puis réessayez. Votre formation doit être rattachée à votre compte.", code: "RLS_FORMATION" };
   if (/Failed to fetch|NetworkError|network/i.test(raw)) return { title: "Connexion instable", description: "Vérifiez votre internet puis réessayez.", code: "NETWORK" };
   if (/ai_failed/i.test(raw)) return { title: "L'IA n'a pas pu structurer le document", description: "Essayez avec un texte plus clair ou plus structuré.", code: "AI_FAIL" };
   if (/InvalidPDFException|password|encrypt/i.test(raw)) return { title: "PDF protégé ou corrompu", description: "Ce PDF est protégé par mot de passe ou endommagé.", code: "PDF_PROTECTED" };
@@ -437,6 +438,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setIsLoading(true);
     pushDiag({ step: "publishing", label: "Création de la formation", status: "pending" });
     try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error("unauthenticated");
       let imageUrl: string | null = null;
       if (coverFile) {
         const urls = await uploadImages([coverFile]);
@@ -454,6 +457,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         price: form.is_paid ? parseFloat(form.price) || 0 : 0,
         image_url: imageUrl,
         is_published: true,
+        author_user_id: authData.user.id,
       } as any).select("id").single();
 
       if (error) throw error;
