@@ -21,7 +21,8 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
   Heart, Share2, Truck, Package, Send, User, ChevronLeft, ChevronRight,
-  Loader2, DollarSign, CreditCard, ZoomIn, X, QrCode, Download, Copy
+  Loader2, DollarSign, CreditCard, ZoomIn, X, QrCode, Download, Copy,
+  Building2, Award, Clock, TrendingUp,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -531,55 +532,95 @@ const ProductDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Seller card — Alibaba-style */}
+              {/* Seller card — pro style (Alibaba/AliExpress inspired) */}
               <Card className="border-primary/20 overflow-hidden">
-                <div className="bg-gradient-to-r from-primary/10 to-secondary/5 p-3 sm:p-4">
+                {/* Header band */}
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border">
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-primary">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Fournisseur
+                  </div>
+                  {product.producer.verified ? (
+                    <Badge className="bg-emerald-500 text-white text-[9px] gap-0.5 px-1.5 py-0">
+                      <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 text-muted-foreground border-muted-foreground/30">
+                      Non vérifié
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="p-3 sm:p-4">
                   <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
-                      <img src={product.producer.avatar} alt={product.producer.name} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-card shadow-soft" />
-                      {product.producer.verified ? (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card shadow-md">
-                          <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                        </div>
-                      ) : (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-muted rounded-full flex items-center justify-center border-2 border-card">
-                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                      <img
+                        src={product.producer.avatar}
+                        alt={product.producer.name}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-card shadow-soft"
+                      />
+                      {product.producer.verified && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-card shadow-md">
+                          <ShieldCheck className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-heading text-sm sm:text-base font-bold text-foreground truncate">
-                          {product.producer.name}
-                        </h3>
-                        {product.producer.verified ? (
-                          <Badge className="bg-emerald-500 text-white text-[9px] gap-0.5 px-1.5 py-0">
-                            <ShieldCheck className="w-2.5 h-2.5" /> Fournisseur Vérifié
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[9px] gap-0.5 px-1.5 py-0 text-muted-foreground border-muted-foreground/30">
-                            Non vérifié
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1 text-[10px] sm:text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-0.5"><Star className="w-3 h-3 text-accent fill-accent" /><span className="font-semibold text-foreground">{product.producer.rating}</span></span>
-                        <span>•</span>
-                        <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{product.location}</span>
-                        <span>•</span>
-                        <span className="text-primary font-medium">Réponse rapide</span>
-                      </div>
-                      <div className="flex gap-1.5 mt-2">
-                        <Link to={`/producteurs/${product.producer.name}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full gap-1 text-[10px] h-7">
-                            <User className="w-3 h-3" /> Voir le profil
-                          </Button>
-                        </Link>
-                        <Button variant="hero" size="sm" className="flex-1 gap-1 text-[10px] h-7" onClick={handleOpenChat}>
-                          <MessageCircle className="w-3 h-3" /> Contacter
-                        </Button>
+                      {/* Label "Fournisseur" + business name */}
+                      <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">
+                        Nom de l'entreprise
+                      </p>
+                      <h3 className="font-heading text-sm sm:text-base font-bold text-foreground truncate leading-tight">
+                        {product.producer.name}
+                      </h3>
+
+                      {/* Stats row — Alibaba-style trust signals */}
+                      <div className="flex items-center gap-2 mt-1.5 text-[10px] sm:text-[11px] text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-0.5">
+                          <Star className="w-3 h-3 text-accent fill-accent" />
+                          <span className="font-semibold text-foreground">{product.producer.rating}</span>
+                          <span className="text-muted-foreground">/5</span>
+                        </span>
+                        <span className="text-border">|</span>
+                        <span className="flex items-center gap-0.5">
+                          <MapPin className="w-3 h-3" />
+                          {product.location}
+                        </span>
+                        <span className="text-border">|</span>
+                        <span className="flex items-center gap-0.5 text-primary font-medium">
+                          <Clock className="w-3 h-3" /> Réponse rapide
+                        </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Trust badges grid */}
+                  <div className="grid grid-cols-3 gap-1.5 mt-3 pt-3 border-t border-border">
+                    <div className="flex flex-col items-center text-center p-1.5 rounded-md bg-muted/40">
+                      <Award className="w-3.5 h-3.5 text-primary mb-0.5" />
+                      <span className="text-[9px] font-semibold text-foreground leading-tight">Qualité contrôlée</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-1.5 rounded-md bg-muted/40">
+                      <Truck className="w-3.5 h-3.5 text-primary mb-0.5" />
+                      <span className="text-[9px] font-semibold text-foreground leading-tight">Livraison interne</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-1.5 rounded-md bg-muted/40">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary mb-0.5" />
+                      <span className="text-[9px] font-semibold text-foreground leading-tight">Transactions sûres</span>
+                    </div>
+                  </div>
+
+                  {/* CTA buttons */}
+                  <div className="flex gap-1.5 mt-3">
+                    <Link to={`/producteurs/${product.producer.name}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full gap-1 text-[10px] h-8">
+                        <User className="w-3 h-3" /> Voir la boutique
+                      </Button>
+                    </Link>
+                    <Button variant="hero" size="sm" className="flex-1 gap-1 text-[10px] h-8" onClick={handleOpenChat}>
+                      <MessageCircle className="w-3 h-3" /> Contacter
+                    </Button>
                   </div>
                 </div>
               </Card>
