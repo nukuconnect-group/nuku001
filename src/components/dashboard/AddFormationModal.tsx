@@ -243,6 +243,54 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setChapterPreview(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Auto-remplissage IA du titre/description/catégorie à partir du document
+  const [metaLoading, setMetaLoading] = useState(false);
+  const handleAutoFillMetadata = async () => {
+    if (aiContent.trim().length < 50) {
+      toast({ title: "Contenu trop court", description: "Importez un document ou collez ≥50 caractères de contenu.", variant: "destructive" });
+      return;
+    }
+    setMetaLoading(true);
+    pushDiag({ step: "ai_preview", label: "Auto-remplissage IA (titre, description, catégorie)", status: "pending" });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { document_text: aiContent, metadata_only: true, categories: FORMATION_CATEGORIES },
+      });
+      if (error) throw error;
+      const meta = data?.metadata || {};
+      if (!meta.title) {
+        pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "warn", code: "NO_META", detail: "Aucune métadonnée renvoyée." });
+        toast({ title: "Aucune suggestion", description: "L'IA n'a pas pu proposer de titre. Réessayez.", variant: "destructive" });
+        return;
+      }
+      const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
+      setForm((f) => ({
+        ...f,
+        title: meta.title?.toString().slice(0, 120) || f.title,
+        description: meta.description?.toString().slice(0, 500) || f.description,
+        category: safeCategory,
+      }));
+      pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
+      toast({ title: "✨ Champs remplis", description: "Titre, description et catégorie suggérés par l'IA — modifiez si besoin." });
+    } catch (err: any) {
+      console.error("Auto-fill metadata error", err);
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
+    } finally {
+      setMetaLoading(false);
+    }
+  };
+
+  // Pré-validation : bloque la publication si le flux IA est incomplet
+  const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
+  const extractionFailed = diagnostics.some((d) => (d.step === "extracted" && (d.status === "ko" || d.status === "warn")) || (d.step === "extracting" && d.status === "ko") || (d.step === "error" && d.status === "ko"));
+  const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
+  // Si l'utilisateur a fourni un contenu IA, on exige une prévisualisation de chapitres validée
+  const aiBlocksPublish = aiUsed && chapterPreview.length === 0 && cleanVideosCount === 0;
+  const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
+  const lastAiError = [...diagnostics].reverse().find((d) => d.status === "ko" && (d.step === "ai_preview" || d.step === "ai_modules" || d.step === "extracted" || d.step === "error"));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
