@@ -230,9 +230,73 @@ const DeliveryTracking = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-      <SEO url="/suivi-livraison" title="Suivi de Livraison" description="Suivez vos livraisons en temps réel avec le GPS intégré." noIndex />
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-14 lg:pb-0">
+        <SEO url="/suivi-livraison" title="Suivi de Livraison" description="Suivez vos livraisons en temps réel avec le GPS intégré." noIndex />
+        <Header />
+
+        {/* Hero skeleton */}
+        <section className="py-6 sm:py-8 bg-muted/30 border-b border-border">
+          <div className="container mx-auto px-3 sm:px-4 flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-muted animate-pulse mb-3" />
+            <div className="h-5 w-56 bg-muted animate-pulse rounded mb-2" />
+            <div className="h-3 w-72 bg-muted animate-pulse rounded mb-4" />
+            <div className="max-w-lg w-full flex gap-2">
+              <div className="h-10 flex-1 bg-muted animate-pulse rounded-md" />
+              <div className="h-10 w-24 bg-muted animate-pulse rounded-md" />
+            </div>
+          </div>
+        </section>
+
+        {/* Content skeleton: list + detail */}
+        <section className="py-5 sm:py-8">
+          <div className="container mx-auto px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Orders list */}
+            <div className="lg:col-span-1 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="p-3 sm:p-4 bg-card border border-border rounded-xl flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-muted animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
+                    <div className="h-2.5 w-1/2 bg-muted animate-pulse rounded" />
+                    <div className="h-2.5 w-1/3 bg-muted animate-pulse rounded" />
+                  </div>
+                  <div className="h-5 w-14 bg-muted animate-pulse rounded-full flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+
+            {/* Detail panel */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="p-4 sm:p-5 bg-card border border-border rounded-xl space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-lg bg-muted animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-1/3 bg-muted animate-pulse rounded" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="h-16 bg-muted animate-pulse rounded-lg" />
+                  <div className="h-16 bg-muted animate-pulse rounded-lg" />
+                </div>
+              </div>
+              <div className="p-4 sm:p-5 bg-card border border-border rounded-xl space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-1/2 bg-muted animate-pulse rounded" />
+                      <div className="h-2.5 w-3/4 bg-muted animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <Footer />
+        <MobileBottomNav />
       </div>
     );
   }
