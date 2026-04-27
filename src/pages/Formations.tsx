@@ -69,8 +69,9 @@ const Formations = () => {
   const filteredCourses = formations.filter((course) => {
     const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase()) || course.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "Tous" || course.category === selectedCategory;
+    const matchesAuthor = selectedAuthor === "Tous" || course.instructor === selectedAuthor;
     const matchesFree = !showFreeOnly || !course.is_paid;
-    return matchesSearch && matchesCategory && matchesFree;
+    return matchesSearch && matchesCategory && matchesAuthor && matchesFree;
   });
 
   const formatPrice = (price: number) => new Intl.NumberFormat("fr-FR").format(price);
