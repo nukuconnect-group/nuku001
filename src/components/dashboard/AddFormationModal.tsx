@@ -595,6 +595,88 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
               </div>
             )}
 
+            {/* Corrective actions when AI failed or extraction is incomplete */}
+            {(lastAiError || aiBlocksPublish || extractionFailed || aiContentTooShort) && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-destructive" />
+                  <Label className="text-xs font-semibold text-destructive">
+                    {lastAiError ? `Action requise — ${lastAiError.label}` : "Action requise avant publication"}
+                  </Label>
+                </div>
+                {lastAiError?.detail && (
+                  <p className="text-[11px] text-foreground">{lastAiError.detail}</p>
+                )}
+                <ul className="space-y-1.5 text-[11px]">
+                  {(lastAiError?.code === "EMPTY_DOC" || lastAiError?.code === "PDF_SCAN" || lastAiError?.code === "EMPTY_TEXT" || aiContentTooShort) && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("ai-doc")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                        className="text-left underline hover:text-primary"
+                      >
+                        Collez le texte du document manuellement (zone IA ci-dessus, min. 50 caractères).
+                      </button>
+                    </li>
+                  )}
+                  {(lastAiError?.code === "FILE_TOO_LARGE" || lastAiError?.code === "AI_FAIL") && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Raccourcissez le document à <strong>≤10 Mo</strong> et conservez les passages clés (titres, étapes, conseils).</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "BAD_FORMAT" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Convertissez votre fichier en <strong>.pdf</strong>, <strong>.docx</strong>, <strong>.txt</strong> ou <strong>.md</strong> avant import.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "PDF_PROTECTED" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Retirez le mot de passe du PDF puis réimportez.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "429" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Attendez 60 secondes puis cliquez à nouveau sur « Prévisualiser les chapitres IA ».</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "402" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Crédits IA épuisés — rechargez dans <strong>Paramètres &gt; Espace de travail &gt; Utilisation</strong>.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "NETWORK" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Vérifiez votre connexion internet puis réessayez.</span>
+                    </li>
+                  )}
+                  {aiBlocksPublish && !lastAiError && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <button
+                        type="button"
+                        onClick={handlePreviewChapters}
+                        disabled={previewLoading || aiBusy}
+                        className="text-left underline hover:text-primary disabled:opacity-50"
+                      >
+                        Cliquez pour générer la prévisualisation des chapitres IA maintenant.
+                      </button>
+                    </li>
+                  )}
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">→</span>
+                    <span>Ou ajoutez au moins une <strong>vidéo</strong> ci-dessous pour publier sans IA.</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
                 <div className="flex items-center gap-1.5">
