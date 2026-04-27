@@ -39,6 +39,7 @@ import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCal
 import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
+import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 
 const ProductDetail = () => {
   const { id } = useParams();
