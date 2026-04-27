@@ -219,8 +219,10 @@ const Help = () => {
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
           <div className="space-y-6 sm:space-y-8">
             {filteredCategories.map((category, catIdx) => (
-              <div key={catIdx}>
+              <div key={catIdx} id={category.slug} className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-4">
+                  <a href={`#${category.slug}`} className="contents" aria-label={`Lien vers ${category.title}`}>
+                  </a>
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <category.icon className="w-5 h-5 text-primary" />
                   </div>
