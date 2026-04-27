@@ -297,6 +297,23 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       toast({ title: "Titre requis", variant: "destructive" });
       return;
     }
+    // Pré-validation IA : si un document a été importé, exige une prévisualisation des chapitres validée
+    if (aiBlocksPublish) {
+      toast({
+        title: "Chapitres IA manquants",
+        description: "Cliquez sur « Prévisualiser les chapitres IA » avant de publier (ou ajoutez au moins une vidéo).",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0) {
+      toast({
+        title: "Extraction du document échouée",
+        description: "Corrigez le problème d'extraction (voir Diagnostic) ou collez le contenu manuellement avant de publier.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsLoading(true);
     pushDiag({ step: "publishing", label: "Création de la formation", status: "pending" });
     try {
