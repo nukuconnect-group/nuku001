@@ -330,8 +330,8 @@ const BuyerDashboard = () => {
             <CardContent className="p-3 sm:p-5 pt-0">
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
                 {[
-                  // Commandes : redirige vers la page dédiée /suivi-livraison (factures, paiements, traçabilité)
-                  { label: "Commandes", icon: Package, href: "/suivi-livraison", badge: pendingOrders },
+                  // Commandes : page dédiée listant toutes les commandes (factures, paiements, traçabilité)
+                  { label: "Commandes", icon: Package, href: "/mes-commandes", badge: pendingOrders },
                   { label: "Favoris", icon: Heart, tab: "favorites" },
                   { label: "Messages", icon: MessageCircle, tab: "messages" },
                   { label: "Alertes", icon: Bell, tab: "alerts", badge: unreadNotifs },
