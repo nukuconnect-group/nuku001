@@ -55,6 +55,7 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Legal = lazy(() => import("./pages/Legal"));
+const PurchasePolicy = lazy(() => import("./pages/PurchasePolicy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Help = lazy(() => import("./pages/Help"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -206,7 +207,9 @@ const App = () => {
                   <Route path="/favoris" element={<Favorites />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/legal" element={<Legal />} />
+                 <Route path="/legal" element={<Legal />} />
+                 <Route path="/politique-achat" element={<PurchasePolicy />} />
+                 <Route path="/politique-remboursement" element={<PurchasePolicy />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
