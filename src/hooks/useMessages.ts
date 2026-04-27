@@ -78,7 +78,9 @@ export function useMessages(conversationId: string | null, profileId: string | n
         if (!upErr) didMarkRead = true;
       }
       if (didMarkRead) {
-        try { window.dispatchEvent(new CustomEvent("nuku:messages-read")); } catch {}
+        try {
+          window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } }));
+        } catch {}
       }
     }
 
