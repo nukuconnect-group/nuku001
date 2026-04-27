@@ -58,10 +58,10 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   };
 
   const extractTextFromPdf = async (file: File): Promise<string> => {
-    const pdfjs: any = await import("pdfjs-dist");
-    // Worker via CDN to avoid bundling issues
-    const workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+    // pdfjs-dist v4 utilise des modules .mjs (et non .min.js)
+    const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+    const version = pdfjs.version || "4.7.76";
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
     const buf = await file.arrayBuffer();
     const doc = await pdfjs.getDocument({ data: buf }).promise;
     let text = "";
@@ -75,7 +75,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   };
 
   const extractTextFromDocx = async (file: File): Promise<string> => {
-    const mammoth: any = await import("mammoth/mammoth.browser");
+    // Import direct du build navigateur (le sous-chemin "mammoth/mammoth.browser" n'est pas exporté)
+    const mod: any = await import("mammoth");
+    const mammoth = mod.default || mod;
     const buf = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer: buf });
     return (result.value || "").trim();
