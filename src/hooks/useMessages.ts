@@ -141,11 +141,11 @@ export function useMessages(conversationId: string | null, profileId: string | n
           // Auto-mark as read if from other
           if (isDeliveryConversation && m.sender_id !== userId && userId) {
             supabase.from("delivery_messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              try { window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } })); } catch {}
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
             });
           } else if (m.sender_id !== profileId && profileId) {
             supabase.from("messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              try { window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } })); } catch {}
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
             });
           }
         }
