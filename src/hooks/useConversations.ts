@@ -169,13 +169,14 @@ export function useConversations() {
 
     if (deliveries.length === 0) return [];
 
-    // Batch fetch delivery messages
+    // Batch fetch delivery messages (cap at 500)
     const deliveryIds = deliveries.map(d => d.id);
     const { data: allDeliveryMsgs } = await supabase
       .from("delivery_messages")
       .select("delivery_id, content, created_at, sender_id, is_read")
       .in("delivery_id", deliveryIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     const lastDeliveryMsgMap = new Map<string, any>();
     const unreadDeliveryMap = new Map<string, number>();
