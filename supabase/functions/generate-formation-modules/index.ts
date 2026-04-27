@@ -34,8 +34,59 @@ serve(async (req) => {
       document_text,
       video_urls = [],
       preview_only = false,
+      metadata_only = false,
+      categories: allowedCategories = [],
       chapters: providedChapters,
     } = body || {};
+
+    // Mode metadata : génère titre/description/catégorie à partir du document
+    if (metadata_only) {
+      if (!document_text || String(document_text).trim().length < 50) {
+        return new Response(JSON.stringify({ error: "missing_document_text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const sourceText = String(document_text).slice(0, 12000);
+      const cats: string[] = Array.isArray(allowedCategories) && allowedCategories.length ? allowedCategories : ["Agriculture", "Élevage", "Aquaculture", "Aviculture", "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général"];
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: "Tu es un expert en formation agricole. À partir d'un document, tu proposes un titre accrocheur (max 80 caractères), une description claire (max 300 caractères) et une catégorie. Réponds en français." },
+            { role: "user", content: `Document:\n${sourceText}\n\nGénère les métadonnées de la formation.` },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "generate_metadata",
+              description: "Renvoie le titre, description et catégorie de la formation",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", maxLength: 100 },
+                  description: { type: "string", maxLength: 400 },
+                  category: { type: "string", enum: cats },
+                },
+                required: ["title", "description", "category"],
+                additionalProperties: false,
+              },
+            },
+          }],
+          tool_choice: { type: "function", function: { name: "generate_metadata" } },
+        }),
+      });
+      if (!aiResp.ok) {
+        const t = await aiResp.text();
+        console.error("AI metadata error", aiResp.status, t);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "credits_required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`ai_failed:${aiResp.status}`);
+      }
+      const aiJson = await aiResp.json();
+      const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
+      const meta = toolCall ? JSON.parse(toolCall.function.arguments) : {};
+      return new Response(JSON.stringify({ success: true, metadata: meta }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Mode preview : pas besoin de formation_id, juste générer les chapitres
     if (preview_only) {

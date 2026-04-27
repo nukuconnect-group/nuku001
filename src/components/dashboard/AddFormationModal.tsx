@@ -243,10 +243,75 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setChapterPreview(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Auto-remplissage IA du titre/description/catégorie à partir du document
+  const [metaLoading, setMetaLoading] = useState(false);
+  const handleAutoFillMetadata = async () => {
+    if (aiContent.trim().length < 50) {
+      toast({ title: "Contenu trop court", description: "Importez un document ou collez ≥50 caractères de contenu.", variant: "destructive" });
+      return;
+    }
+    setMetaLoading(true);
+    pushDiag({ step: "ai_preview", label: "Auto-remplissage IA (titre, description, catégorie)", status: "pending" });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { document_text: aiContent, metadata_only: true, categories: FORMATION_CATEGORIES },
+      });
+      if (error) throw error;
+      const meta = data?.metadata || {};
+      if (!meta.title) {
+        pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "warn", code: "NO_META", detail: "Aucune métadonnée renvoyée." });
+        toast({ title: "Aucune suggestion", description: "L'IA n'a pas pu proposer de titre. Réessayez.", variant: "destructive" });
+        return;
+      }
+      const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
+      setForm((f) => ({
+        ...f,
+        title: meta.title?.toString().slice(0, 120) || f.title,
+        description: meta.description?.toString().slice(0, 500) || f.description,
+        category: safeCategory,
+      }));
+      pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
+      toast({ title: "✨ Champs remplis", description: "Titre, description et catégorie suggérés par l'IA — modifiez si besoin." });
+    } catch (err: any) {
+      console.error("Auto-fill metadata error", err);
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
+    } finally {
+      setMetaLoading(false);
+    }
+  };
+
+  // Pré-validation : bloque la publication si le flux IA est incomplet
+  const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
+  const extractionFailed = diagnostics.some((d) => (d.step === "extracted" && (d.status === "ko" || d.status === "warn")) || (d.step === "extracting" && d.status === "ko") || (d.step === "error" && d.status === "ko"));
+  const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
+  // Si l'utilisateur a fourni un contenu IA, on exige une prévisualisation de chapitres validée
+  const aiBlocksPublish = aiUsed && chapterPreview.length === 0 && cleanVideosCount === 0;
+  const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
+  const lastAiError = [...diagnostics].reverse().find((d) => d.status === "ko" && (d.step === "ai_preview" || d.step === "ai_modules" || d.step === "extracted" || d.step === "error"));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
       toast({ title: "Titre requis", variant: "destructive" });
+      return;
+    }
+    // Pré-validation IA : si un document a été importé, exige une prévisualisation des chapitres validée
+    if (aiBlocksPublish) {
+      toast({
+        title: "Chapitres IA manquants",
+        description: "Cliquez sur « Prévisualiser les chapitres IA » avant de publier (ou ajoutez au moins une vidéo).",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0) {
+      toast({
+        title: "Extraction du document échouée",
+        description: "Corrigez le problème d'extraction (voir Diagnostic) ou collez le contenu manuellement avant de publier.",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -374,8 +439,28 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           </div>
 
           <div className="space-y-2">
-            <Label>Titre *</Label>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <Label>Titre *</Label>
+              {aiContent.trim().length >= 50 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoFillMetadata}
+                  disabled={metaLoading || aiBusy}
+                  className="gap-1.5 text-[11px] h-7"
+                >
+                  {metaLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                  Auto-remplir avec l'IA
+                </Button>
+              )}
+            </div>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Cultiver le maïs en saison sèche" required />
+            {aiContent.trim().length >= 50 && !form.title.trim() && (
+              <p className="text-[10px] text-muted-foreground">
+                Astuce : cliquez sur « Auto-remplir avec l'IA » pour générer titre, description et catégorie depuis votre document.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -510,6 +595,88 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
               </div>
             )}
 
+            {/* Corrective actions when AI failed or extraction is incomplete */}
+            {(lastAiError || aiBlocksPublish || extractionFailed || aiContentTooShort) && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <X className="w-3.5 h-3.5 text-destructive" />
+                  <Label className="text-xs font-semibold text-destructive">
+                    {lastAiError ? `Action requise — ${lastAiError.label}` : "Action requise avant publication"}
+                  </Label>
+                </div>
+                {lastAiError?.detail && (
+                  <p className="text-[11px] text-foreground">{lastAiError.detail}</p>
+                )}
+                <ul className="space-y-1.5 text-[11px]">
+                  {(lastAiError?.code === "EMPTY_DOC" || lastAiError?.code === "PDF_SCAN" || lastAiError?.code === "EMPTY_TEXT" || aiContentTooShort) && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("ai-doc")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                        className="text-left underline hover:text-primary"
+                      >
+                        Collez le texte du document manuellement (zone IA ci-dessus, min. 50 caractères).
+                      </button>
+                    </li>
+                  )}
+                  {(lastAiError?.code === "FILE_TOO_LARGE" || lastAiError?.code === "AI_FAIL") && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Raccourcissez le document à <strong>≤10 Mo</strong> et conservez les passages clés (titres, étapes, conseils).</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "BAD_FORMAT" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Convertissez votre fichier en <strong>.pdf</strong>, <strong>.docx</strong>, <strong>.txt</strong> ou <strong>.md</strong> avant import.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "PDF_PROTECTED" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Retirez le mot de passe du PDF puis réimportez.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "429" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Attendez 60 secondes puis cliquez à nouveau sur « Prévisualiser les chapitres IA ».</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "402" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Crédits IA épuisés — rechargez dans <strong>Paramètres &gt; Espace de travail &gt; Utilisation</strong>.</span>
+                    </li>
+                  )}
+                  {lastAiError?.code === "NETWORK" && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <span>Vérifiez votre connexion internet puis réessayez.</span>
+                    </li>
+                  )}
+                  {aiBlocksPublish && !lastAiError && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">→</span>
+                      <button
+                        type="button"
+                        onClick={handlePreviewChapters}
+                        disabled={previewLoading || aiBusy}
+                        className="text-left underline hover:text-primary disabled:opacity-50"
+                      >
+                        Cliquez pour générer la prévisualisation des chapitres IA maintenant.
+                      </button>
+                    </li>
+                  )}
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">→</span>
+                    <span>Ou ajoutez au moins une <strong>vidéo</strong> ci-dessous pour publier sans IA.</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
                 <div className="flex items-center gap-1.5">
@@ -579,7 +746,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
           <div className="flex gap-3 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy}>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || aiBlocksPublish || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>
