@@ -78,14 +78,17 @@ const MobileBottomNav = () => {
     const onVisibility = () => {
       if (document.visibilityState === "visible") refresh();
     };
+    const onOnline = () => refresh();
     window.addEventListener("nuku:messages-read", onRead as EventListener);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener("nuku:messages-read", onRead as EventListener);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [profile?.id, user?.id, fetchUnreadMessages]);

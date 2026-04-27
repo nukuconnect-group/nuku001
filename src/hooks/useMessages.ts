@@ -66,16 +66,25 @@ export function useMessages(conversationId: string | null, profileId: string | n
       // Count "other"-authored unread messages BEFORE marking them read,
       // so we can decrement the global counter instantly in the UI.
       const myId = isDeliveryConversation ? userId : profileId;
-      const decrement = data.filter(
+      const otherUnread = data.filter(
         (m: any) => m.sender_id !== myId && m.is_read === false
-      ).length;
+      );
+      const decrement = otherUnread.length;
+      // Deterministic eventId: based on the latest unread "other" message id.
+      // → Re-opening the same conversation without any new incoming message
+      //   produces the SAME eventId, so dedupe blocks the second decrement.
+      const lastUnreadId = otherUnread.length
+        ? otherUnread[otherUnread.length - 1].id
+        : null;
+      const eventId = lastUnreadId
+        ? `${conversationId}:lastSeen:${lastUnreadId}`
+        : `${conversationId}:empty`;
 
       // Mark unread messages as read (offline-aware)
       let didMarkRead = false;
       const isOnline = typeof navigator === "undefined" ? true : navigator.onLine;
       if (!isOnline && decrement > 0) {
-        // Queue for replay when back online; still update UI optimistically
-        queueOfflineRead({ conversationId: conversationId!, decrement });
+        queueOfflineRead({ conversationId: conversationId!, decrement, eventId });
         didMarkRead = true;
       } else if (isDeliveryConversation && userId) {
         const { error: upErr } = await supabase
@@ -85,7 +94,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", userId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
-        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement, eventId }); didMarkRead = true; }
       } else if (profileId) {
         const { error: upErr } = await supabase
           .from("messages")
@@ -94,10 +103,10 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", profileId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
-        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement, eventId }); didMarkRead = true; }
       }
       if (didMarkRead) {
-        emitMessagesRead({ conversationId: conversationId!, decrement });
+        emitMessagesRead({ conversationId: conversationId!, decrement, eventId });
       }
     }
 
@@ -138,14 +147,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
             return [...prev, newMsg];
           });
 
-          // Auto-mark as read if from other
+          // Auto-mark as read if from other (deterministic eventId per message)
           if (isDeliveryConversation && m.sender_id !== userId && userId) {
             supabase.from("delivery_messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1, eventId: `${conversationId}:msg:${m.id}` });
             });
           } else if (m.sender_id !== profileId && profileId) {
             supabase.from("messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1, eventId: `${conversationId}:msg:${m.id}` });
             });
           }
         }
