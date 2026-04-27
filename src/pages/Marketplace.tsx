@@ -216,7 +216,7 @@ const Marketplace = () => {
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { toast } = useToast();
   const { user, profile } = useProfile();
-  const { data: dbProducts, isLoading } = useProducts();
+  const { data: dbProducts, isLoading, isError, refetch } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { data: allDemands } = useDemands();
