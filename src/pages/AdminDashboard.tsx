@@ -1175,6 +1175,12 @@ const AdminDashboard = () => {
         </main>
       </div>
       <Footer />
+      <AdminUserDetailsModal
+        user={detailUser}
+        open={!!detailUser}
+        onClose={() => setDetailUser(null)}
+        onUpdated={() => { refreshData(); }}
+      />
     </div>
   );
 };
