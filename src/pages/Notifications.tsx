@@ -132,6 +132,7 @@ const Notifications = () => {
     if (!notif.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
       setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
+      window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
     }
     const link = getNotifLink(notif);
     if (link) navigate(link);
@@ -152,11 +153,13 @@ const Notifications = () => {
     if (!userId) return;
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
+    window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
   const deleteNotification = async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
   const deleteAllInCategory = async () => {
@@ -167,6 +170,7 @@ const Notifications = () => {
       await supabase.from("notifications").delete().eq("id", id);
     }
     setNotifications(prev => prev.filter(n => !ids.includes(n.id)));
+    window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
   return (
