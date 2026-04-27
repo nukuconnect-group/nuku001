@@ -746,7 +746,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
           <div className="flex gap-3 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy}>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || aiBlocksPublish || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>
