@@ -134,9 +134,18 @@ const Settings = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-      <SEO url="/settings" title="Paramètres du Profil" description="Gérez vos informations personnelles et les paramètres de votre compte." noIndex />
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-20 lg:pb-0">
+        <SEO url="/settings" title="Paramètres du Profil" description="Gérez vos informations personnelles et les paramètres de votre compte." noIndex />
+        <Header />
+        <main className="pt-4 sm:pt-8 pb-8 sm:pb-12">
+          <div className="container mx-auto px-3 sm:px-4 max-w-3xl space-y-5">
+            <div className="h-7 w-48 rounded bg-muted animate-pulse" />
+            <div className="h-44 rounded-xl bg-muted animate-pulse" />
+            <div className="h-32 rounded-xl bg-muted animate-pulse" />
+            <div className="h-56 rounded-xl bg-muted animate-pulse" />
+            <div className="h-40 rounded-xl bg-muted animate-pulse" />
+          </div>
+        </main>
       </div>
     );
   }
