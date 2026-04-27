@@ -290,6 +290,7 @@ const AdminDashboard = () => {
     { id: "support", label: "Support", icon: MessageCircle },
     { id: "broadcast", label: "Notifications", icon: Megaphone },
     { id: "emails", label: "Emails", icon: Send },
+    { id: "email-logs", label: "Logs Emails", icon: FileText },
     { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
