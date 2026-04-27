@@ -445,7 +445,19 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => toast({ title: "📞 Appel", description: `Appel en cours vers ${conversation.participant.name}...` })}
+          onClick={() => {
+            if (!conversation.participant.userId) {
+              toast({ title: "Appel impossible", description: "Cet utilisateur n'est pas joignable.", variant: "destructive" });
+              return;
+            }
+            startCall({
+              conversationId: conversation.id,
+              peerUserId: conversation.participant.userId,
+              peerName: conversation.participant.name,
+              peerAvatar: conversation.participant.avatar,
+            });
+          }}
+          title="Appeler"
         >
           <Phone className="w-4 h-4" />
         </Button>
