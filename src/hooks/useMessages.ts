@@ -59,20 +59,26 @@ export function useMessages(conversationId: string | null, profileId: string | n
       );
 
       // Mark unread messages as read
+      let didMarkRead = false;
       if (isDeliveryConversation && userId) {
-        await supabase
+        const { error: upErr } = await supabase
           .from("delivery_messages")
           .update({ is_read: true })
           .eq("delivery_id", deliveryId)
           .neq("sender_id", userId)
           .eq("is_read", false);
+        if (!upErr) didMarkRead = true;
       } else if (profileId) {
-        await supabase
+        const { error: upErr } = await supabase
           .from("messages")
           .update({ is_read: true })
           .eq("conversation_id", conversationId)
           .neq("sender_id", profileId)
           .eq("is_read", false);
+        if (!upErr) didMarkRead = true;
+      }
+      if (didMarkRead) {
+        try { window.dispatchEvent(new CustomEvent("nuku:messages-read")); } catch {}
       }
     }
 
