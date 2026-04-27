@@ -35,9 +35,42 @@ serve(async (req) => {
       video_urls = [],
       preview_only = false,
       metadata_only = false,
+      cover_only = false,
       categories: allowedCategories = [],
       chapters: providedChapters,
+      title: coverTitle,
+      description: coverDescription,
     } = body || {};
+
+    // Mode cover : génère une image de couverture à partir du titre + description
+    if (cover_only) {
+      if (!coverTitle || String(coverTitle).trim().length < 3) {
+        return new Response(JSON.stringify({ error: "missing_title" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-image-preview",
+          modalities: ["image", "text"],
+          messages: [{
+            role: "user",
+            content: `Génère une image de couverture professionnelle 16:9 pour une formation agricole africaine. Titre: ${String(coverTitle).slice(0, 120)}. Description: ${String(coverDescription || "").slice(0, 500)}. Style: photo réaliste, lumineux, pédagogique, sans texte incrusté, sans logo, adaptée à NukuConnect.`,
+          }],
+        }),
+      });
+      if (!aiResp.ok) {
+        const t = await aiResp.text();
+        console.error("AI cover error", aiResp.status, t);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "credits_required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`ai_failed:${aiResp.status}`);
+      }
+      const aiJson = await aiResp.json();
+      const imageUrl = aiJson.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!imageUrl) throw new Error("cover_generation_failed");
+      return new Response(JSON.stringify({ success: true, image_url: imageUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Mode metadata : génère titre/description/catégorie à partir du document
     if (metadata_only) {

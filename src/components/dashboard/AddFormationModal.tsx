@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3 } from "lucide-react";
+import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3, CheckCircle, Image as ImageIcon, RotateCcw, Save } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
 
 type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
 interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
+type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean };
 
 // Traduit un message technique en message clair pour l'utilisateur
 const friendlyError = (err: any): { title: string; description: string; code: string } => {
@@ -43,21 +44,28 @@ const FORMATION_CATEGORIES = [
   "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général",
 ];
 
+const DRAFT_KEY = "nukuconnect_formation_ai_draft";
+
 const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Props) => {
   const { toast } = useToast();
   const { uploadImages, uploading } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
+  const [generatedCoverUrl, setGeneratedCoverUrl] = useState<string>("");
+  const [coverGenerating, setCoverGenerating] = useState(false);
 
   // IA: contenu source + vidéos
   const [aiContent, setAiContent] = useState<string>("");
   const [aiFileName, setAiFileName] = useState<string>("");
+  const [aiSourceFile, setAiSourceFile] = useState<File | null>(null);
   const [videoUrls, setVideoUrls] = useState<string[]>([""]);
   const [aiBusy, setAiBusy] = useState(false);
-  const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
+  const [chapterPreview, setChapterPreview] = useState<ChapterDraft[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
+  const [draftSavedAt, setDraftSavedAt] = useState<string>("");
+  const [hasSavedDraft, setHasSavedDraft] = useState(() => Boolean(localStorage.getItem(DRAFT_KEY)));
   const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
   const resetDiag = () => setDiagnostics([]);
 
@@ -71,10 +79,48 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     price: "0",
   });
 
+  const saveDraft = (next?: { form?: typeof form; chapters?: ChapterDraft[] }) => {
+    const payload = {
+      form: next?.form || form,
+      aiContent,
+      aiFileName,
+      videoUrls,
+      chapterPreview: next?.chapters || chapterPreview,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    setDraftSavedAt(payload.savedAt);
+    setHasSavedDraft(true);
+  };
+
+  const resumeDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.form) setForm(draft.form);
+      if (typeof draft.aiContent === "string") setAiContent(draft.aiContent);
+      if (typeof draft.aiFileName === "string") setAiFileName(draft.aiFileName);
+      if (Array.isArray(draft.videoUrls)) setVideoUrls(draft.videoUrls.length ? draft.videoUrls : [""]);
+      if (Array.isArray(draft.chapterPreview)) setChapterPreview(draft.chapterPreview);
+      setDraftSavedAt(draft.savedAt || "");
+      toast({ title: "Brouillon repris", description: "Les informations sauvegardées ont été restaurées." });
+    } catch {
+      toast({ title: "Brouillon illisible", description: "Impossible de restaurer ce brouillon.", variant: "destructive" });
+    }
+  };
+
+  const closeAndKeepDraft = () => {
+    saveDraft();
+    onOpenChange(false);
+    toast({ title: "Brouillon conservé", description: "Vous pourrez reprendre cette formation plus tard." });
+  };
+
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setCoverFile(f);
+    setGeneratedCoverUrl("");
     const reader = new FileReader();
     reader.onload = (ev) => setCoverPreview(ev.target?.result as string);
     reader.readAsDataURL(f);
@@ -109,11 +155,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const MAX_DOC_SIZE_MB = 10;
   const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
 
-  const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-
-    resetDiag();
+  const extractAndSetDocumentText = async (f: File, reset = true) => {
+    if (reset) resetDiag();
     pushDiag({ step: "size_check", label: `Taille du fichier (${(f.size/1024/1024).toFixed(2)} Mo)`, status: "pending" });
 
     if (f.size > MAX_DOC_SIZE_BYTES) {
@@ -124,11 +167,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
         variant: "destructive",
       });
-      e.target.value = "";
-      return;
+      throw new Error("FILE_TOO_LARGE");
     }
     pushDiag({ step: "size_check", label: "Taille du fichier", status: "ok", detail: `${(f.size/1024/1024).toFixed(2)} Mo` });
 
+    setAiSourceFile(f);
     setAiFileName(f.name);
     setChapterPreview([]);
     const lower = f.name.toLowerCase();
@@ -144,26 +187,22 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         description: "Formats acceptés : .txt, .md, .pdf, .docx",
         variant: "destructive",
       });
-      e.target.value = "";
       setAiFileName("");
-      return;
+      setAiSourceFile(null);
+      throw new Error("BAD_FORMAT");
     }
     const fmt = isPdf ? "PDF" : isDocx ? "DOCX" : "TEXT";
     pushDiag({ step: "format_check", label: "Format du fichier", status: "ok", detail: fmt });
 
     try {
+      setAiBusy(true);
       if (isText) {
         pushDiag({ step: "extracting", label: "Lecture du fichier texte", status: "pending" });
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const txt = String(ev.target?.result || "");
-          setAiContent(txt);
-          pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
-        };
-        reader.readAsText(f);
-        return;
+        const txt = await f.text();
+        setAiContent(txt);
+        pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
+        return txt;
       }
-      setAiBusy(true);
       pushDiag({ step: "extracting", label: `Extraction du texte (${fmt})`, status: "pending" });
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
@@ -176,18 +215,45 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
           variant: "destructive",
         });
+        return "";
       } else {
         setAiContent(text);
         pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "ok", detail: `${text.length} caractères extraits` });
         toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
+        return text;
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
       const fe = friendlyError(err);
       pushDiag({ step: "error", label: "Extraction du texte", status: "ko", code: fe.code, detail: fe.description });
       toast({ title: fe.title, description: fe.description, variant: "destructive" });
+      throw err;
     } finally {
       setAiBusy(false);
+    }
+  };
+
+  const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      await extractAndSetDocumentText(f, true);
+    } catch {
+      e.target.value = "";
+    }
+  };
+
+  const handleRetestExtraction = async () => {
+    if (!aiSourceFile) {
+      toast({ title: "Aucun document", description: "Importez d'abord un PDF/DOCX/TXT à tester.", variant: "destructive" });
+      return;
+    }
+    setChapterPreview([]);
+    try {
+      await extractAndSetDocumentText(aiSourceFile, true);
+      toast({ title: "Extraction re-testée", description: "Le diagnostic a été mis à jour sans relancer la génération des chapitres." });
+    } catch {
+      // Le détail est déjà affiché dans le diagnostic et le toast d'erreur.
     }
   };
 
@@ -213,7 +279,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         body: { document_text: aiContent, preview_only: true },
       });
       if (error) throw error;
-      const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
+      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false }));
       if (!chs.length) {
         pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
@@ -236,11 +302,51 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setChapterPreview(prev => prev.map((c, i) => i === idx ? {
       ...c,
       [field]: field === "duration_minutes" ? Math.max(1, parseInt(value) || 1) : value,
+      approved: false,
     } : c));
+  };
+
+  const approveChapter = (idx: number) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true } : c));
   };
 
   const removeChapter = (idx: number) => {
     setChapterPreview(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const dataUrlToFile = async (dataUrl: string, fileName: string) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return new File([blob], fileName, { type: blob.type || "image/png" });
+  };
+
+  const handleGenerateCover = async () => {
+    if (!form.title.trim() || !form.description.trim()) {
+      toast({ title: "Titre et description requis", description: "Remplissez le titre et la description avant de générer l'image.", variant: "destructive" });
+      return;
+    }
+    setCoverGenerating(true);
+    pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "pending" });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { cover_only: true, title: form.title, description: form.description },
+      });
+      if (error) throw error;
+      const imageUrl = data?.image_url;
+      if (!imageUrl) throw new Error("cover_generation_failed");
+      const file = await dataUrlToFile(imageUrl, `couverture-formation-${Date.now()}.png`);
+      setCoverFile(file);
+      setCoverPreview(imageUrl);
+      setGeneratedCoverUrl(imageUrl);
+      pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "ok", detail: "Image prête, remplaçable avant publication." });
+      toast({ title: "Image générée", description: "Vous pouvez la remplacer avec votre propre image avant de publier." });
+    } catch (err: any) {
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
+    } finally {
+      setCoverGenerating(false);
+    }
   };
 
   // Auto-remplissage IA du titre/description/catégorie à partir du document
@@ -264,14 +370,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         return;
       }
       const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
-      setForm((f) => ({
-        ...f,
-        title: meta.title?.toString().slice(0, 120) || f.title,
-        description: meta.description?.toString().slice(0, 500) || f.description,
+      const savedAt = new Date().toISOString();
+      const nextForm = {
+        ...form,
+        title: meta.title?.toString().slice(0, 120) || form.title,
+        description: meta.description?.toString().slice(0, 500) || form.description,
         category: safeCategory,
-      }));
+      };
+      setForm(nextForm);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt }));
+      setDraftSavedAt(savedAt);
+      setHasSavedDraft(true);
       pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
-      toast({ title: "✨ Champs remplis", description: "Titre, description et catégorie suggérés par l'IA — modifiez si besoin." });
+      toast({ title: "✨ Champs remplis", description: "Brouillon sauvegardé automatiquement. Vous pouvez reprendre plus tard." });
     } catch (err: any) {
       console.error("Auto-fill metadata error", err);
       const fe = friendlyError(err);
@@ -286,6 +397,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
   const extractionFailed = diagnostics.some((d) => (d.step === "extracted" && (d.status === "ko" || d.status === "warn")) || (d.step === "extracting" && d.status === "ko") || (d.step === "error" && d.status === "ko"));
   const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
+  const hasUnapprovedChapters = chapterPreview.some((c) => !c.approved);
   // Si l'utilisateur a fourni un contenu IA, on exige une prévisualisation de chapitres validée
   const aiBlocksPublish = aiUsed && chapterPreview.length === 0 && cleanVideosCount === 0;
   const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
@@ -310,6 +422,14 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       toast({
         title: "Extraction du document échouée",
         description: "Corrigez le problème d'extraction (voir Diagnostic) ou collez le contenu manuellement avant de publier.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (chapterPreview.length > 0 && hasUnapprovedChapters) {
+      toast({
+        title: "Chapitres à valider",
+        description: "Approuvez chaque chapitre ou modifiez-le avant de publier.",
         variant: "destructive",
       });
       return;
@@ -392,6 +512,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       setVideoUrls([""]);
       setChapterPreview([]);
+      setAiSourceFile(null);
+      setGeneratedCoverUrl("");
+      localStorage.removeItem(DRAFT_KEY);
+      setHasSavedDraft(false);
+      setDraftSavedAt("");
       resetDiag();
       onOpenChange(false);
       onCreated?.();
@@ -420,12 +545,33 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Cover */}
           <div className="space-y-2">
-            <Label>Image de couverture</Label>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <Label>Image de couverture</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateCover}
+                disabled={coverGenerating || !form.title.trim() || !form.description.trim()}
+                className="gap-1.5 text-[11px] h-8"
+              >
+                {coverGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5 text-primary" />}
+                Générer une image de couverture
+              </Button>
+            </div>
             <input id="cover" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
             {coverPreview ? (
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-                <img src={coverPreview} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(""); }}
+                <img src={coverPreview} alt="Couverture de la formation" className="w-full h-full object-cover" />
+                {generatedCoverUrl && (
+                  <span className="absolute left-2 top-2 px-2 py-1 rounded-md bg-background/85 text-[10px] text-foreground border border-border">
+                    Image IA générée
+                  </span>
+                )}
+                <label htmlFor="cover" className="absolute left-2 bottom-2 px-2 py-1 rounded-md bg-background/90 text-[10px] text-foreground border border-border cursor-pointer hover:bg-background">
+                  Remplacer l'image
+                </label>
+                <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(""); setGeneratedCoverUrl(""); }}
                   className="absolute top-2 right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                   <X className="w-4 h-4" />
                 </button>
@@ -437,6 +583,17 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
               </label>
             )}
           </div>
+
+          {hasSavedDraft && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5">
+              <p className="text-[11px] text-foreground">
+                Brouillon disponible{draftSavedAt ? ` — ${new Date(draftSavedAt).toLocaleString("fr-FR")}` : ""}
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={resumeDraft} className="h-8 text-[11px] gap-1">
+                <Save className="w-3 h-3" /> Reprendre le brouillon
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -530,6 +687,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                 <FileText className="w-3.5 h-3.5 text-primary" />
                 {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx) — max 10 Mo"}
               </label>
+              {aiSourceFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetestExtraction}
+                  disabled={aiBusy}
+                  className="ml-0 sm:ml-2 mt-2 sm:mt-0 gap-1.5 text-[11px] h-8"
+                >
+                  {aiBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                  Re-tester l'extraction
+                </Button>
+              )}
               <Textarea
                 value={aiContent}
                 onChange={(e) => { setAiContent(e.target.value); if (chapterPreview.length) setChapterPreview([]); }}
@@ -679,14 +849,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
                   <Edit3 className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {chapterPreview.length} chapitre(s) — modifiez avant publication
+                    Prévisualisation — {chapterPreview.length} chapitre(s) à approuver
                   </Label>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {chapterPreview.filter((c) => c.approved).length}/{chapterPreview.length} approuvé(s)
+                  </span>
                 </div>
                 {chapterPreview.map((ch, idx) => (
-                  <div key={idx} className="space-y-1.5 p-2.5 rounded-md bg-muted/40 border border-border">
+                  <div key={idx} className={`space-y-1.5 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
                       <Input
@@ -714,10 +889,16 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                       placeholder="Description du chapitre"
                       className="text-[11px]"
                     />
+                    <div className="flex justify-end">
+                      <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        {ch.approved ? "Approuvé" : "Approuver ce chapitre"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <p className="text-[10px] text-muted-foreground italic">
-                  ✓ Les chapitres ci-dessus seront utilisés tels quels (l'IA ne sera pas relancée).
+                  ✓ Les chapitres approuvés seront publiés tels quels. Une modification retire l'approbation.
                 </p>
               </div>
             )}
@@ -745,8 +926,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           </div>
 
           <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || aiBlocksPublish || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
+            <Button type="button" variant="outline" onClick={closeAndKeepDraft}>Reprendre plus tard</Button>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating || aiBlocksPublish || hasUnapprovedChapters || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>

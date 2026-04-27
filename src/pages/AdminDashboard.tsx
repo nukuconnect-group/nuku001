@@ -113,13 +113,18 @@ const AdminDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth", { replace: true }); return; }
 
-      const { data: roleData } = await supabase
-        .from("user_roles").select("role")
-        .eq("user_id", session.user.id).eq("role", "admin").maybeSingle();
+      const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
+        _user_id: session.user.id,
+        _role: "admin",
+      } as any);
 
-      if (!roleData) {
+      if (roleError || !hasAdminRole) {
         if (isMounted) {
-          toast({ title: "Accès refusé", description: "Vous n'êtes pas administrateur.", variant: "destructive" });
+          toast({
+            title: "Accès refusé",
+            description: roleError?.message || "Vous n'êtes pas administrateur.",
+            variant: "destructive",
+          });
           navigate("/", { replace: true });
         }
         return;

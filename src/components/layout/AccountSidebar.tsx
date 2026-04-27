@@ -98,13 +98,9 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     let active = true;
 
     supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (active) setIsAdmin(!!data);
+      .rpc("has_role", { _user_id: user.id, _role: "admin" } as any)
+      .then(({ data, error }) => {
+        if (active) setIsAdmin(!error && !!data);
       });
 
     return () => {
