@@ -98,7 +98,7 @@ const Moderation = () => {
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {p.category} • {Number(p.price).toLocaleString()} F/{p.unit}
+            {p.category} • {Number(p.price).toLocaleString("fr-FR")} F/{p.unit}
           </p>
 
           {p.moderation_status === "pending" && p.moderation_scheduled_at && (

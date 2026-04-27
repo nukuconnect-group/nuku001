@@ -46,7 +46,7 @@ const MissionCard = ({ delivery, type, onAccept, onReject, onSelect }: MissionCa
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString()} F</p>
+            <p className="text-sm font-bold text-emerald-600">{(delivery.driver_fee || 0).toLocaleString("fr-FR")} F</p>
             <Badge className={`${status.color} text-[9px] px-1.5 py-0`}>{status.label}</Badge>
           </div>
         </div>
@@ -120,7 +120,7 @@ const MissionCard = ({ delivery, type, onAccept, onReject, onSelect }: MissionCa
                 ? new Date(delivery.delivered_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })
                 : "—"}
             </span>
-            <span className="text-xs font-bold text-emerald-600">+{(delivery.driver_fee || 0).toLocaleString()} F</span>
+            <span className="text-xs font-bold text-emerald-600">+{(delivery.driver_fee || 0).toLocaleString("fr-FR")} F</span>
           </div>
         )}
       </CardContent>

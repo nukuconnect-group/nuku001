@@ -263,7 +263,7 @@ const DriverDashboard = () => {
 
       toast({ title: `Statut mis à jour` });
       if (newStatus === "delivered") {
-        toast({ title: `💰 +${(delivery?.driver_fee || 0).toLocaleString()} F crédités !` });
+        toast({ title: `💰 +${(delivery?.driver_fee || 0).toLocaleString("fr-FR")} F crédités !` });
         setSelectedMission(null);
       }
       fetchDriverData();
@@ -367,15 +367,15 @@ const DriverDashboard = () => {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <p className="text-[10px] text-primary-foreground/70">Gains totaux</p>
-                <p className="text-lg sm:text-2xl font-bold">{totalEarnings.toLocaleString()} F</p>
+                <p className="text-lg sm:text-2xl font-bold">{totalEarnings.toLocaleString("fr-FR")} F</p>
               </div>
               <div>
                 <p className="text-[10px] text-primary-foreground/70">Retiré</p>
-                <p className="text-lg sm:text-2xl font-bold">-{totalWithdrawn.toLocaleString()} F</p>
+                <p className="text-lg sm:text-2xl font-bold">-{totalWithdrawn.toLocaleString("fr-FR")} F</p>
               </div>
               <div>
                 <p className="text-[10px] text-primary-foreground/70">Disponible</p>
-                <p className="text-lg sm:text-2xl font-bold text-accent">{availableBalance.toLocaleString()} F</p>
+                <p className="text-lg sm:text-2xl font-bold text-accent">{availableBalance.toLocaleString("fr-FR")} F</p>
               </div>
             </div>
           </CardContent>

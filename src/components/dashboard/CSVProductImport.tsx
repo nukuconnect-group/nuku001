@@ -275,7 +275,7 @@ const CSVProductImport = ({ profileId, onImportComplete }: CSVProductImportProps
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
                         {!isEditing && (
-                          <p className="text-[10px] text-muted-foreground">{p.category} • {p.price.toLocaleString()} FCFA</p>
+                          <p className="text-[10px] text-muted-foreground">{p.category} • {p.price.toLocaleString("fr-FR")} FCFA</p>
                         )}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">

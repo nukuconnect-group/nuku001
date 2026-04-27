@@ -141,7 +141,7 @@ const Formations = () => {
             </div>
             <div className="text-center p-4">
               <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">
-                {formations.reduce((s, f) => s + (f.students_count || 0), 0).toLocaleString()}+
+                {formations.reduce((s, f) => s + (f.students_count || 0), 0).toLocaleString("fr-FR")}+
               </div>
               <div className="text-sm text-muted-foreground">Étudiants inscrits</div>
             </div>

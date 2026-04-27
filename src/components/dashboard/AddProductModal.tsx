@@ -779,7 +779,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                     )}
                     <div className="flex items-baseline gap-1.5 mt-1.5">
                       <span className="font-heading text-base font-bold text-primary">
-                        {newProduct.price ? Number(newProduct.price).toLocaleString() : "0"} FCFA
+                        {newProduct.price ? Number(newProduct.price).toLocaleString("fr-FR") : "0"} FCFA
                       </span>
                       <span className="text-[10px] text-muted-foreground">/{newProduct.unit}</span>
                     </div>

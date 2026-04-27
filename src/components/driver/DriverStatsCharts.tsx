@@ -60,7 +60,7 @@ const DriverStatsCharts = ({ completedDeliveries }: DriverStatsChartsProps) => {
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={(v) => `${v/1000}K`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                  formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Gains']}
+                  formatter={(value: number) => [`${value.toLocaleString("fr-FR")} FCFA`, 'Gains']}
                 />
                 <Area type="monotone" dataKey="gains" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorGains)" strokeWidth={2} />
               </AreaChart>

@@ -63,7 +63,7 @@ const DriverStatusHeader = ({
           <p className="text-[10px] text-muted-foreground">Missions actives</p>
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">
-          <p className="text-lg font-bold text-emerald-600">{todayEarnings.toLocaleString()} F</p>
+          <p className="text-lg font-bold text-emerald-600">{todayEarnings.toLocaleString("fr-FR")} F</p>
           <p className="text-[10px] text-muted-foreground">Gains du jour</p>
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">

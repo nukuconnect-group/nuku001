@@ -277,7 +277,7 @@ const LearnerDashboard = () => {
                         <span className="flex items-center gap-0.5"><Star className="w-3 h-3 text-accent fill-accent" />{f.rating}</span>
                       </div>
                       <Badge className="text-[9px] mt-1.5" variant={f.is_paid ? "default" : "secondary"}>
-                        {f.is_paid ? `${f.price?.toLocaleString()} F` : "Gratuit"}
+                        {f.is_paid ? `${f.price?.toLocaleString("fr-FR")} F` : "Gratuit"}
                       </Badge>
                       <Button variant="hero" size="sm" className="mt-2 gap-1 text-xs h-7 w-full">
                         <GraduationCap className="w-3 h-3" /> Commencer
