@@ -760,6 +760,28 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           </form>
         )}
       </div>
+
+      <CallOptionsSheet
+        open={callSheetOpen}
+        onClose={() => setCallSheetOpen(false)}
+        peerName={conversation.participant.name}
+        peerAvatar={conversation.participant.avatar}
+        peerLocation={conversation.participant.location}
+        peerTimezone={conversation.participant.timezone}
+        availabilityStart={conversation.participant.availabilityStart}
+        availabilityEnd={conversation.participant.availabilityEnd}
+        isVerified={conversation.participant.isVerified}
+        yearsActive={conversation.participant.yearsActive}
+        onVoiceCall={() => {
+          if (!conversation.participant.userId) return;
+          startCall({
+            conversationId: conversation.id,
+            peerUserId: conversation.participant.userId,
+            peerName: conversation.participant.name,
+            peerAvatar: conversation.participant.avatar,
+          });
+        }}
+      />
     </div>
   );
 }
