@@ -226,8 +226,10 @@ const App = () => {
                 </Routes>
               </SmartSuspense>
             </BrowserRouter>
+            <CallModal />
           </TooltipProvider>
         </CartProvider>
+        </CallProvider>
         </ProfileProvider>
       </LanguageProvider>
       </ThemeProvider>
