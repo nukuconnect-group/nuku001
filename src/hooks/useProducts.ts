@@ -210,6 +210,13 @@ export const useProducts = () => {
     gcTime: 1000 * 60 * 5,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 5000),
+    placeholderData: () => {
+      try {
+        const cached = localStorage.getItem("nuku_products_cache");
+        if (cached) return filterOutFormations(JSON.parse(cached) as Product[]);
+      } catch {}
+      return undefined;
+    },
   });
 };
 
