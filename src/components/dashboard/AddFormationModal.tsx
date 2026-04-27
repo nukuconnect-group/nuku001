@@ -687,6 +687,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                 <FileText className="w-3.5 h-3.5 text-primary" />
                 {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx) — max 10 Mo"}
               </label>
+              {aiSourceFile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetestExtraction}
+                  disabled={aiBusy}
+                  className="ml-0 sm:ml-2 mt-2 sm:mt-0 gap-1.5 text-[11px] h-8"
+                >
+                  {aiBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                  Re-tester l'extraction
+                </Button>
+              )}
               <Textarea
                 value={aiContent}
                 onChange={(e) => { setAiContent(e.target.value); if (chapterPreview.length) setChapterPreview([]); }}
@@ -836,14 +849,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
                   <Edit3 className="w-3.5 h-3.5 text-primary" />
                   <Label className="text-xs font-semibold">
-                    {chapterPreview.length} chapitre(s) — modifiez avant publication
+                    Prévisualisation — {chapterPreview.length} chapitre(s) à approuver
                   </Label>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {chapterPreview.filter((c) => c.approved).length}/{chapterPreview.length} approuvé(s)
+                  </span>
                 </div>
                 {chapterPreview.map((ch, idx) => (
-                  <div key={idx} className="space-y-1.5 p-2.5 rounded-md bg-muted/40 border border-border">
+                  <div key={idx} className={`space-y-1.5 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
                       <Input
@@ -871,10 +889,16 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                       placeholder="Description du chapitre"
                       className="text-[11px]"
                     />
+                    <div className="flex justify-end">
+                      <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        {ch.approved ? "Approuvé" : "Approuver ce chapitre"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <p className="text-[10px] text-muted-foreground italic">
-                  ✓ Les chapitres ci-dessus seront utilisés tels quels (l'IA ne sera pas relancée).
+                  ✓ Les chapitres approuvés seront publiés tels quels. Une modification retire l'approbation.
                 </p>
               </div>
             )}
