@@ -535,15 +535,6 @@ const ProductDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Seller card — standardised reusable component */}
-              <SellerCard
-                businessName={product.producer.name}
-                avatarUrl={product.producer.avatar}
-                verified={product.producer.verified}
-                rating={product.producer.rating}
-                location={product.location}
-                onContact={handleOpenChat}
-              />
 
               {/* Characteristics - Alibaba inspired */}
               <Card>
