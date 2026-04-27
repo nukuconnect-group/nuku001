@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,7 +16,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import PresenceTracker from "./components/PresenceTracker";
 import ProfileLeavePopup from "./components/ProfileLeavePopup";
 import RouteProgress from "./components/layout/RouteProgress";
-import { Loader2 } from "lucide-react";
+import SmartSuspense from "./components/layout/SmartSuspense";
 
 // Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
@@ -74,18 +74,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 animate-in fade-in duration-200">
-    <div className="fixed top-0 left-0 right-0 h-[3px] z-[9999] overflow-hidden">
-      <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent animate-[shimmer_1.2s_ease-in-out_infinite]" />
-    </div>
-    <div className="relative">
-      <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      <div className="absolute inset-0 w-10 h-10 rounded-full border-2 border-primary/20 animate-ping" />
-    </div>
-    <p className="text-sm text-muted-foreground animate-pulse">Chargement…</p>
-  </div>
-);
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -124,7 +112,7 @@ const App = () => {
               <PresenceTracker />
               <RealtimeNotifications />
               <ProfileLeavePopup />
-              <Suspense fallback={<PageLoader />}>
+              <SmartSuspense>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/marketplace" element={<Marketplace />} />
@@ -173,7 +161,7 @@ const App = () => {
                   <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </Suspense>
+              </SmartSuspense>
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
