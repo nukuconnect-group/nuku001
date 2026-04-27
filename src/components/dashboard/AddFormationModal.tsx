@@ -314,6 +314,41 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setChapterPreview(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const dataUrlToFile = async (dataUrl: string, fileName: string) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return new File([blob], fileName, { type: blob.type || "image/png" });
+  };
+
+  const handleGenerateCover = async () => {
+    if (!form.title.trim() || !form.description.trim()) {
+      toast({ title: "Titre et description requis", description: "Remplissez le titre et la description avant de générer l'image.", variant: "destructive" });
+      return;
+    }
+    setCoverGenerating(true);
+    pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "pending" });
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { cover_only: true, title: form.title, description: form.description },
+      });
+      if (error) throw error;
+      const imageUrl = data?.image_url;
+      if (!imageUrl) throw new Error("cover_generation_failed");
+      const file = await dataUrlToFile(imageUrl, `couverture-formation-${Date.now()}.png`);
+      setCoverFile(file);
+      setCoverPreview(imageUrl);
+      setGeneratedCoverUrl(imageUrl);
+      pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "ok", detail: "Image prête, remplaçable avant publication." });
+      toast({ title: "Image générée", description: "Vous pouvez la remplacer avec votre propre image avant de publier." });
+    } catch (err: any) {
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Génération image de couverture", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
+    } finally {
+      setCoverGenerating(false);
+    }
+  };
+
   // Auto-remplissage IA du titre/description/catégorie à partir du document
   const [metaLoading, setMetaLoading] = useState(false);
   const handleAutoFillMetadata = async () => {
