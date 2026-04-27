@@ -55,21 +55,63 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     reader.readAsDataURL(f);
   };
 
-  const handleAiFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    const pdfjs: any = await import("pdfjs-dist");
+    // Worker via CDN to avoid bundling issues
+    const workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+    const buf = await file.arrayBuffer();
+    const doc = await pdfjs.getDocument({ data: buf }).promise;
+    let text = "";
+    const max = Math.min(doc.numPages, 50);
+    for (let i = 1; i <= max; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((it: any) => it.str).join(" ") + "\n\n";
+    }
+    return text.trim();
+  };
+
+  const extractTextFromDocx = async (file: File): Promise<string> => {
+    const mammoth: any = await import("mammoth/mammoth.browser");
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    return (result.value || "").trim();
+  };
+
+  const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setAiFileName(f.name);
-    // Pour .txt on lit directement; pour PDF/DOCX on demande à l'utilisateur de coller le texte (extraction côté client lourde évitée)
-    const isText = f.type.startsWith("text/") || f.name.toLowerCase().endsWith(".txt") || f.name.toLowerCase().endsWith(".md");
-    if (isText) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setAiContent(String(ev.target?.result || ""));
-      reader.readAsText(f);
-    } else {
-      toast({
-        title: "Document détecté",
-        description: "Pour un PDF/DOCX, copiez-collez le contenu dans le champ ci-dessous. L'IA générera automatiquement les chapitres.",
-      });
+    const lower = f.name.toLowerCase();
+    const isText = f.type.startsWith("text/") || lower.endsWith(".txt") || lower.endsWith(".md");
+    const isPdf = f.type === "application/pdf" || lower.endsWith(".pdf");
+    const isDocx = lower.endsWith(".docx") || f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    try {
+      if (isText) {
+        const reader = new FileReader();
+        reader.onload = (ev) => setAiContent(String(ev.target?.result || ""));
+        reader.readAsText(f);
+        return;
+      }
+      setAiBusy(true);
+      let text = "";
+      if (isPdf) text = await extractTextFromPdf(f);
+      else if (isDocx) text = await extractTextFromDocx(f);
+      else throw new Error("Format non supporté. Utilisez .txt, .md, .pdf ou .docx");
+
+      if (!text || text.length < 30) {
+        toast({ title: "Document peu lisible", description: "Aucun texte exploitable trouvé. Vous pouvez coller le contenu manuellement.", variant: "destructive" });
+      } else {
+        setAiContent(text);
+        toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur Publier pour générer les chapitres IA.` });
+      }
+    } catch (err: any) {
+      console.error("Doc parse error", err);
+      toast({ title: "Extraction impossible", description: err?.message || "Impossible de lire le document. Collez le contenu manuellement.", variant: "destructive" });
+    } finally {
+      setAiBusy(false);
     }
   };
 

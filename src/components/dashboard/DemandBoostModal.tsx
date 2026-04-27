@@ -34,11 +34,13 @@ interface DemandBoostModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBoostSuccess?: () => void;
+  presetDemandId?: string;
+  presetDemand?: { id: string; title: string; category: string };
 }
 
 interface DemandLite { id: string; title: string; category: string; }
 
-const DemandBoostModal = ({ open, onOpenChange, onBoostSuccess }: DemandBoostModalProps) => {
+const DemandBoostModal = ({ open, onOpenChange, onBoostSuccess, presetDemandId, presetDemand }: DemandBoostModalProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { profile } = useProfile();
@@ -59,12 +61,16 @@ const DemandBoostModal = ({ open, onOpenChange, onBoostSuccess }: DemandBoostMod
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        const list = (data || []) as DemandLite[];
+        let list = (data || []) as DemandLite[];
+        if (presetDemand && !list.find((d) => d.id === presetDemand.id)) {
+          list = [presetDemand, ...list];
+        }
         setDemands(list);
-        if (list.length && !selectedDemand) setSelectedDemand(list[0].id);
+        const target = presetDemandId || presetDemand?.id || (list[0]?.id ?? "");
+        setSelectedDemand(target);
         setLoadingDemands(false);
       });
-  }, [open, profile?.id]);
+  }, [open, profile?.id, presetDemandId, presetDemand?.id]);
 
   const handleBoost = async () => {
     if (!selectedDemand) {

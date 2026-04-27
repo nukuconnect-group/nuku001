@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const AddProductModal = lazy(() => import("@/components/dashboard/AddProductModal"));
+const AddFormationModal = lazy(() => import("@/components/dashboard/AddFormationModal"));
+const PublishChoiceModal = lazy(() => import("@/components/dashboard/PublishChoiceModal"));
 const AccountSidebar = lazy(() => import("./AccountSidebar"));
 
 const MobileBottomNav = () => {
@@ -19,6 +21,8 @@ const MobileBottomNav = () => {
   const { user, profile: ctxProfile } = useProfile();
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showAddFormation, setShowAddFormation] = useState(false);
+  const [showPublishChoice, setShowPublishChoice] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
@@ -100,7 +104,7 @@ const MobileBottomNav = () => {
         return;
       }
       
-      setShowAddProduct(true);
+      setShowPublishChoice(true);
     } catch (err) {
       setShowSellLoading(false);
       toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
@@ -211,6 +215,15 @@ const MobileBottomNav = () => {
 
       {profile && (
         <Suspense fallback={null}>
+          <PublishChoiceModal
+            open={showPublishChoice && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => { if (!open) setShowPublishChoice(false); }}
+            onChoose={(type) => {
+              setShowPublishChoice(false);
+              if (type === "product") setShowAddProduct(true);
+              else setShowAddFormation(true);
+            }}
+          />
           <AddProductModal
             open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
             onOpenChange={(open) => {
@@ -220,6 +233,15 @@ const MobileBottomNav = () => {
             onProductAdded={() => {
               toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
               setShowAddProduct(false);
+            }}
+          />
+          <AddFormationModal
+            open={showAddFormation && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => { if (!open) setShowAddFormation(false); }}
+            instructorName={profile.full_name || profile.business_name || "Formateur"}
+            onCreated={() => {
+              toast({ title: "Formation publiée !", description: "Votre formation est visible dans le module Formations." });
+              setShowAddFormation(false);
             }}
           />
         </Suspense>
