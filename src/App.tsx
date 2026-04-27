@@ -2,7 +2,14 @@ import { useState, useEffect, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import {
+  createOfflinePersister,
+  PERSIST_MAX_AGE,
+  PERSIST_BUSTER,
+} from "@/lib/offlinePersistence";
+import OfflineBanner from "@/components/layout/OfflineBanner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/components/cart/CartContext";
@@ -69,12 +76,44 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 2,
-      gcTime: 1000 * 60 * 10,
-      retry: 1,
+      gcTime: 1000 * 60 * 60 * 24, // 24h pour cohérence avec persistance
+      retry: (failureCount, error: any) => {
+        // Pas de retry hors-ligne (inutile, on ressert le cache)
+        if (typeof navigator !== "undefined" && !navigator.onLine) return false;
+        // Pas de retry sur les 4xx (sauf 408/429)
+        const status = error?.status ?? error?.response?.status;
+        if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
       refetchOnWindowFocus: false,
+      refetchOnReconnect: "always",
+      networkMode: "offlineFirst",
+    },
+    mutations: {
+      networkMode: "offlineFirst",
+      retry: (failureCount) => failureCount < 2,
     },
   },
 });
+
+// Resync automatique : React Query suit l'état réseau du navigateur
+if (typeof window !== "undefined") {
+  onlineManager.setEventListener((setOnline) => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  });
+}
+
+const offlinePersister = createOfflinePersister();
 
 
 const App = () => {
@@ -94,9 +133,25 @@ const App = () => {
     setShowSplash(false);
   };
 
+  const QueryProvider: any = offlinePersister ? PersistQueryClientProvider : QueryClientProvider;
+  const queryProviderProps: any = offlinePersister
+    ? {
+        client: queryClient,
+        persistOptions: {
+          persister: offlinePersister,
+          maxAge: PERSIST_MAX_AGE,
+          buster: PERSIST_BUSTER,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (q: any) =>
+              q.state.status === "success" && !!q.state.data,
+          },
+        },
+      }
+    : { client: queryClient };
+
   return (
     <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider {...queryProviderProps}>
       <ThemeProvider>
       <LanguageProvider>
         <ProfileProvider>
@@ -109,6 +164,7 @@ const App = () => {
             )}
             <BrowserRouter>
               <RouteProgress />
+              <OfflineBanner />
               <PerformanceTracker />
               <LinkPrefetcher />
               <ScrollToTop />
@@ -172,7 +228,7 @@ const App = () => {
         </ProfileProvider>
       </LanguageProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </QueryProvider>
     </HelmetProvider>
   );
 };
