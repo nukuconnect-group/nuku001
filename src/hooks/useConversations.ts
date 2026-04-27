@@ -242,22 +242,24 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Realtime subscription
+  // Realtime subscription with debounce to avoid hammering the DB
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    const scheduleRefetch = () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchConversations(), 800);
+    };
     const channel = supabase
       .channel("conversations-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, () => {
-        fetchConversations();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, scheduleRefetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, scheduleRefetch)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
   }, [fetchConversations]);
 
   return { conversations, loading, profileId, userId, refetch: fetchConversations };
