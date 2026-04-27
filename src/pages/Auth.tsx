@@ -19,8 +19,34 @@ import authLoginImg from "@/assets/auth-login-hero.jpg";
 import authSignupImg from "@/assets/auth-signup-hero.jpg";
 
 const sectors = [
-  "Céréales & Légumineuses", "Maraîchage", "Fruits", "Tubercules",
-  "Élevage", "Aviculture", "Pêche & Aquaculture", "Transformation agroalimentaire",
+  "Céréales & Légumineuses",
+  "Maraîchage",
+  "Fruits",
+  "Tubercules & Racines",
+  "Élevage (bovin, ovin, caprin)",
+  "Aviculture",
+  "Pêche & Aquaculture / Pisciculture",
+  "Apiculture (miel)",
+  "Cultures de rente (cacao, café, coton, anacarde)",
+  "Plantes médicinales & aromatiques",
+  "Horticulture / Pépinières & Plants",
+  "Semences & Intrants agricoles",
+  "Engrais & Fertilisants",
+  "Produits phytosanitaires",
+  "Aliments pour bétail & volaille",
+  "Équipements & Machines agricoles",
+  "Irrigation & Pompage",
+  "Énergie solaire agricole",
+  "Transformation agroalimentaire",
+  "Conditionnement & Emballage",
+  "Stockage & Conservation (chaîne du froid)",
+  "Logistique & Transport agricole",
+  "Agroforesterie & Sylviculture",
+  "Biotechnologie & Agritech",
+  "Conseil & Services agricoles",
+  "Coopératives & Groupements",
+  "Import / Export agricole",
+  "Autre",
 ];
 
 const countries = [
