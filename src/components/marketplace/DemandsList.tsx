@@ -22,11 +22,13 @@ interface DemandsListProps {
 const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useProfile();
   const { data: demands, isLoading } = useDemands(category);
   const { formatPrice } = useLanguage();
   const [offerValues, setOfferValues] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
+  const [boostDemand, setBoostDemand] = useState<{ id: string; title: string; category: string } | null>(null);
 
   const openDemandConversation = async (demand: Demand, mode: "chat" | "offer") => {
     const offerQuantity = offerValues[demand.id]?.trim();
