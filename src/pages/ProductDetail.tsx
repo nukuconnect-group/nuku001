@@ -418,8 +418,6 @@ const ProductDetail = () => {
                 onContact={handleOpenChat}
               />
 
-              {/* Buyer delivery zone (auto from profile, editable) */}
-              <BuyerDeliveryZone productLocation={product.location} />
 
               {/* Delivery options */}
               <Card className="border-primary/20">
@@ -581,6 +579,40 @@ const ProductDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Adresse de livraison + temps de traitement (style pro) */}
+              <div className="space-y-2">
+                <BuyerDeliveryZone productLocation={product.location} />
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-4 h-4 text-primary" aria-hidden="true" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
+                          Temps de traitement
+                        </p>
+                        <p className="text-xs sm:text-sm font-semibold text-foreground">
+                          {(() => {
+                            const d = product.shippingDelayDays ?? 1;
+                            if (d === 0) return "Expédition immédiate";
+                            if (d === 1) return "Expédié sous 24 heures";
+                            if (d <= 3) return `Expédié sous ${d} jours ouvrés`;
+                            return `Expédié sous ${d} jours`;
+                          })()}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Préparé par {product.producer.name} avant remise au livreur NukuConnect.
+                        </p>
+                      </div>
+                      <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold">
+                        {(product.shippingDelayDays ?? 1) <= 1 ? "Rapide" : "Standard"}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Owner: Batch QR generator (only visible to product owner) */}
               <OwnerBatchQRGenerator productId={product.id} producerId={product.producer.id} productName={product.name} />
