@@ -51,6 +51,9 @@ const Auth = () => {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [signupStep, setSignupStep] = useState<"select" | "form">("select");
   const [emailVerificationPending, setEmailVerificationPending] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [accountExists, setAccountExists] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -181,7 +184,23 @@ const Auth = () => {
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
-        const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
+        // Anti-enumeration: when the email is already registered, Supabase returns
+        // a 200 with user.identities = [] and NO email is sent. Detect & guide the user.
+        const isRepeatedSignup = !authData.session && (!authData.user.identities || authData.user.identities.length === 0);
+        if (isRepeatedSignup) {
+          setAccountExists(true);
+          setPendingVerificationEmail(signupEmail);
+          setAuthMode("login");
+          setSignupStep("select");
+          setLoginEmail(signupEmail);
+          toast({
+            title: "Un compte existe déjà avec cet email",
+            description: "Connectez-vous, ou utilisez « Renvoyer l'email de confirmation » si vous ne l'avez pas reçu.",
+          });
+          return;
+        }
+
+        const needsConfirmation = !authData.session;
         await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
         // Link referral if present — only remove localStorage AFTER successful claim
@@ -217,6 +236,9 @@ const Auth = () => {
           setAuthMode("login");
           setSignupStep("select");
           setEmailVerificationPending(true);
+          setPendingVerificationEmail(signupEmail);
+          setLoginEmail(signupEmail);
+          setAccountExists(false);
           return;
         }
         toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
