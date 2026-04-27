@@ -13,9 +13,16 @@ export interface MessageItem {
   replyToId?: string;
 }
 
+export type EmailNotifyStatus =
+  | { state: "idle" }
+  | { state: "pending"; at: number }
+  | { state: "ok"; at: number; ms: number }
+  | { state: "error"; at: number; ms: number; message: string };
+
 export function useMessages(conversationId: string | null, profileId: string | null, userId: string | null) {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastEmailStatus, setLastEmailStatus] = useState<EmailNotifyStatus>({ state: "idle" });
 
   const isDeliveryConversation = !!conversationId?.startsWith("delivery-");
   const deliveryId = isDeliveryConversation ? conversationId.replace("delivery-", "") : null;
@@ -175,6 +182,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
         // Notify recipient by email (throttled server-side per 5 min)
         const startedAt = Date.now();
+        setLastEmailStatus({ state: "pending", at: startedAt });
         console.info("[email-notify] invoking notify-message-recipient", { conversationId });
         supabase.functions
           .invoke("notify-message-recipient", {
@@ -183,26 +191,39 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .then(({ data, error }) => {
             const ms = Date.now() - startedAt;
             if (error) {
+              const msg = error.message ?? "Erreur inconnue";
               console.error("[email-notify] FAILED", { error, ms });
+              setLastEmailStatus({ state: "error", at: Date.now(), ms, message: msg });
               try {
-                // dynamic import to avoid hard dep cycle in tests
                 import("sonner").then(({ toast }) => {
-                  toast.error("Notification email non envoyée", {
-                    description: error.message ?? "Erreur inconnue",
-                  });
+                  toast.error("Notification email non envoyée", { description: msg });
                 });
               } catch {}
             } else {
               console.info("[email-notify] OK", { data, ms });
+              setLastEmailStatus({ state: "ok", at: Date.now(), ms });
+              try {
+                import("sonner").then(({ toast }) => {
+                  toast.success("Email de notification envoyé", { duration: 1800 });
+                });
+              } catch {}
             }
           })
           .catch((err) => {
+            const ms = Date.now() - startedAt;
+            const msg = err?.message ?? String(err);
             console.error("[email-notify] EXCEPTION", err);
+            setLastEmailStatus({ state: "error", at: Date.now(), ms, message: msg });
+            try {
+              import("sonner").then(({ toast }) => {
+                toast.error("Notification email non envoyée", { description: msg });
+              });
+            } catch {}
           });
       }
     },
     [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
   );
 
-  return { messages, setMessages, loading, sendMessage };
+  return { messages, setMessages, loading, sendMessage, lastEmailStatus };
 }

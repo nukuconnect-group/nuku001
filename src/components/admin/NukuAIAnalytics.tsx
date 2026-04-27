@@ -13,17 +13,34 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGri
 export default function NukuAIAnalytics() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
 
+  const fetchQuestions = async () => {
+    const { data } = await supabase
+      .from("nuku_ai_questions" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    setQuestions((data as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchQuestions(); }, []);
+
+  // Realtime — refresh on each new chatbot question
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("nuku_ai_questions" as any)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      setQuestions((data as any) || []);
-      setLoading(false);
-    })();
+    const channel = supabase
+      .channel("nuku-ai-questions-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "nuku_ai_questions" },
+        (payload) => {
+          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 500));
+          setLiveCount((c) => c + 1);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const stats = useMemo(() => {
@@ -60,6 +77,19 @@ export default function NukuAIAnalytics() {
 
   return (
     <div className="space-y-3">
+      {/* Live indicator */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+          </span>
+          <span className="text-[11px] font-medium text-muted-foreground">Temps réel actif</span>
+        </div>
+        {liveCount > 0 && (
+          <Badge variant="secondary" className="text-[10px]">+{liveCount} nouvelles depuis l'ouverture</Badge>
+        )}
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Card><CardContent className="p-3 text-center">

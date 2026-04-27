@@ -330,30 +330,36 @@ const BuyerDashboard = () => {
             <CardContent className="p-3 sm:p-5 pt-0">
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
                 {[
-                  { label: "Commandes", icon: Package, tab: "orders", badge: pendingOrders },
+                  // Commandes : redirige vers la page dédiée /suivi-livraison (factures, paiements, traçabilité)
+                  { label: "Commandes", icon: Package, href: "/suivi-livraison", badge: pendingOrders },
                   { label: "Favoris", icon: Heart, tab: "favorites" },
                   { label: "Messages", icon: MessageCircle, tab: "messages" },
                   { label: "Alertes", icon: Bell, tab: "alerts", badge: unreadNotifs },
                   { label: "Paiements", icon: Receipt, tab: "payments" },
                   { label: "Paramètres", icon: Settings, tab: "settings" },
-                ].map(({ label, icon: Icon, tab, badge }) => (
+                ].map(({ label, icon: Icon, tab, href, badge }: any) => (
                   <button
-                    key={tab}
+                    key={label}
                     type="button"
+                    aria-label={label}
                     onClick={() => {
+                      if (href) {
+                        navigate(href);
+                        return;
+                      }
                       setActiveTab(tab);
                       setTimeout(() => {
                         document.getElementById("buyer-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }, 50);
                     }}
-                    className="relative flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-center"
+                    className="relative flex flex-col items-center justify-center gap-1.5 p-3 sm:p-3 min-h-[72px] sm:min-h-[84px] rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 active:scale-[0.97] transition-all text-center touch-manipulation"
                   >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-medium text-foreground leading-tight">{label}</span>
+                    <span className="text-[11px] sm:text-xs font-medium text-foreground leading-tight">{label}</span>
                     {badge && badge > 0 ? (
-                      <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-destructive text-destructive-foreground rounded-full text-[9px] font-bold flex items-center justify-center">
+                      <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground rounded-full text-[10px] font-bold flex items-center justify-center">
                         {badge}
                       </span>
                     ) : null}
