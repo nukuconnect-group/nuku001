@@ -17,6 +17,7 @@ import {
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
+import { useCall } from "@/contexts/CallContext";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
@@ -47,6 +48,7 @@ interface Props {
 export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { startCall } = useCall();
   const [messageInput, setMessageInput] = useState("");
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -371,15 +373,25 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const parseMessage = (content: string) => {
     const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
     const voiceMatch = content.match(/\[voice:(https?:\/\/[^\]]+)\]/);
+    const callMatch = content.match(/\[call:([a-z-]+):(\d+)\]/);
+    if (callMatch) {
+      const text = content.replace(/\n?\[call:[^\]]+\]/, "").trim();
+      return {
+        text: text || "Appel",
+        imageUrl: null as string | null,
+        voiceUrl: null as string | null,
+        call: { status: callMatch[1] as "missed" | "ended" | "declined" | "outgoing-missed", duration: parseInt(callMatch[2], 10) },
+      };
+    }
     if (imageMatch) {
       const text = content.replace(/\n?\[image:[^\]]+\]/, "").trim();
-      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null };
+      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null, call: null };
     }
     if (voiceMatch) {
       const text = content.replace(/\n?\[voice:[^\]]+\]/, "").trim();
-      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1] };
+      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1], call: null };
     }
-    return { text: content, imageUrl: null as string | null, voiceUrl: null as string | null };
+    return { text: content, imageUrl: null as string | null, voiceUrl: null as string | null, call: null };
   };
 
   const handleReply = (msg: MessageItem) => {
@@ -443,7 +455,19 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => toast({ title: "📞 Appel", description: `Appel en cours vers ${conversation.participant.name}...` })}
+          onClick={() => {
+            if (!conversation.participant.userId) {
+              toast({ title: "Appel impossible", description: "Cet utilisateur n'est pas joignable.", variant: "destructive" });
+              return;
+            }
+            startCall({
+              conversationId: conversation.id,
+              peerUserId: conversation.participant.userId,
+              peerName: conversation.participant.name,
+              peerAvatar: conversation.participant.avatar,
+            });
+          }}
+          title="Appeler"
         >
           <Phone className="w-4 h-4" />
         </Button>
@@ -523,8 +547,36 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
         {messages.map((msg) => {
-          const { text, imageUrl, voiceUrl } = parseMessage(msg.content);
+          const parsed = parseMessage(msg.content);
+          const { text, imageUrl, voiceUrl, call } = parsed;
           const repliedMsg = findReplyMessage(msg.replyToId);
+
+          // Render call log style WhatsApp
+          if (call) {
+            const isMissed = call.status === "missed" || call.status === "outgoing-missed" || call.status === "declined";
+            const labelMap: Record<string, string> = {
+              missed: "Appel manqué",
+              "outgoing-missed": "Appel sans réponse",
+              declined: "Appel refusé",
+              ended: `Appel · ${Math.floor(call.duration / 60)}:${String(call.duration % 60).padStart(2, "0")}`,
+            };
+            return (
+              <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border text-xs ${
+                  isMissed
+                    ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-700 dark:text-red-300"
+                    : "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300"
+                }`}>
+                  <Phone className={`w-3.5 h-3.5 ${isMissed ? "rotate-[135deg]" : ""}`} />
+                  <span className="font-medium">{labelMap[call.status]}</span>
+                  <span className="opacity-60 text-[10px]">
+                    {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">

@@ -15,6 +15,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/components/cart/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { CallProvider } from "@/contexts/CallContext";
+import CallModal from "@/components/calls/CallModal";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import SplashScreen from "@/components/SplashScreen";
 import RealtimeNotifications from "./components/RealtimeNotifications";
@@ -155,6 +157,7 @@ const App = () => {
       <ThemeProvider>
       <LanguageProvider>
         <ProfileProvider>
+        <CallProvider>
         <CartProvider>
           <TooltipProvider>
             <Toaster />
@@ -223,8 +226,10 @@ const App = () => {
                 </Routes>
               </SmartSuspense>
             </BrowserRouter>
+            <CallModal />
           </TooltipProvider>
         </CartProvider>
+        </CallProvider>
         </ProfileProvider>
       </LanguageProvider>
       </ThemeProvider>
