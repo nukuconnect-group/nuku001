@@ -17,17 +17,27 @@ export interface ConversationItem {
   category?: ConversationCategory;
 }
 
+// Module-level cache: survives unmount so navigating back to Messages
+// shows previous data instantly while a fresh fetch runs in the background.
+const cache: {
+  conversations: ConversationItem[];
+  profileId: string | null;
+  userId: string | null;
+  hasData: boolean;
+} = { conversations: [], profileId: null, userId: null, hasData: false };
+
 export function useConversations() {
-  const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationItem[]>(cache.conversations);
+  const [loading, setLoading] = useState(!cache.hasData);
+  const [profileId, setProfileId] = useState<string | null>(cache.profileId);
+  const [userId, setUserId] = useState<string | null>(cache.userId);
 
   const fetchConversations = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setLoading(false); return; }
 
     setUserId(session.user.id);
+    cache.userId = session.user.id;
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -37,6 +47,7 @@ export function useConversations() {
 
     if (!profile) { setLoading(false); return; }
     setProfileId(profile.id);
+    cache.profileId = profile.id;
 
     const { data: convs } = await supabase
       .from("conversations")
@@ -127,7 +138,10 @@ export function useConversations() {
     // Fetch delivery conversations
     const deliveryItems = await fetchDeliveryConversations(session.user.id, profile.id);
 
-    setConversations([...items, ...deliveryItems]);
+    const merged = [...items, ...deliveryItems];
+    setConversations(merged);
+    cache.conversations = merged;
+    cache.hasData = true;
     setLoading(false);
   }, []);
 
