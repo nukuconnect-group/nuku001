@@ -426,7 +426,7 @@ const BuyerDashboard = () => {
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <div id="buyer-tabs" className="scroll-mt-20" />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-            <TabsList className="bg-muted p-1 w-full overflow-x-auto flex justify-start sm:justify-center scrollbar-hide">
+            <TabsList className="sr-only" aria-hidden="true">
               <TabsTrigger value="orders" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
                 <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">Commandes</span>
