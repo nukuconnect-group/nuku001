@@ -404,46 +404,25 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     }
   };
 
-  // Pré-validation : bloque la publication si le flux IA est incomplet
+  // Indicateurs informatifs (n'empêchent plus la publication)
   const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
-  const extractionFailed = diagnostics.some((d) => (d.step === "extracted" && (d.status === "ko" || d.status === "warn")) || (d.step === "extracting" && d.status === "ko") || (d.step === "error" && d.status === "ko"));
   const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
   const hasUnapprovedChapters = chapterPreview.some((c) => !c.approved);
-  // Si l'utilisateur a fourni un contenu IA, on exige une prévisualisation de chapitres validée
-  const aiBlocksPublish = aiUsed && chapterPreview.length === 0 && cleanVideosCount === 0;
   const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
   const lastAiError = [...diagnostics].reverse().find((d) => d.status === "ko" && (d.step === "ai_preview" || d.step === "ai_modules" || d.step === "extracted" || d.step === "error"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
-      toast({ title: "Titre requis", variant: "destructive" });
+      toast({ title: "Titre requis", description: "Donnez un titre à votre formation.", variant: "destructive" });
       return;
     }
-    // Pré-validation IA : si un document a été importé, exige une prévisualisation des chapitres validée
-    if (aiBlocksPublish) {
-      toast({
-        title: "Chapitres IA manquants",
-        description: "Cliquez sur « Prévisualiser les chapitres IA » avant de publier (ou ajoutez au moins une vidéo).",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0) {
-      toast({
-        title: "Extraction du document échouée",
-        description: "Corrigez le problème d'extraction (voir Diagnostic) ou collez le contenu manuellement avant de publier.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Avertissement non bloquant si chapitres prévisualisés mais non approuvés
     if (chapterPreview.length > 0 && hasUnapprovedChapters) {
       toast({
-        title: "Chapitres à valider",
-        description: "Approuvez chaque chapitre ou modifiez-le avant de publier.",
-        variant: "destructive",
+        title: "Chapitres non approuvés",
+        description: "Les chapitres seront publiés tels quels. Approuvez-les pour valider votre relecture.",
       });
-      return;
     }
     setIsLoading(true);
     pushDiag({ step: "publishing", label: "Création de la formation", status: "pending" });
