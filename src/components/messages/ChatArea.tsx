@@ -267,26 +267,97 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     e.target.value = "";
   };
 
-  const toggleRecording = async () => {
-    if (isRecording) { mediaRecorderRef.current?.stop(); setIsRecording(false); return; }
+  const stopVisualizer = () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  const startRecording = async () => {
     try {
+      cancelledRef.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordStreamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        recordStreamRef.current = null;
+        stopVisualizer();
+        if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+        const duration = (Date.now() - recordStartRef.current) / 1000;
         const blob = new Blob(chunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        onLocalMessage({ id: `local-${Date.now()}`, senderId: "me", content: "🎙️ Message vocal", timestamp: new Date(), status: "sent", type: "voice", fileUrl: url });
+        if (cancelledRef.current || duration < 0.5) {
+          setRecordSeconds(0); setWaveform([]); setIsRecording(false); return;
+        }
+        void uploadAndSendVoice(blob, duration);
+        setRecordSeconds(0); setWaveform([]); setIsRecording(false);
       };
-      recorder.start();
+      recorder.start(100);
       mediaRecorderRef.current = recorder;
+      recordStartRef.current = Date.now();
       setIsRecording(true);
+      setRecordSeconds(0);
+      setWaveform([]);
+      // Timer
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds(Math.floor((Date.now() - recordStartRef.current) / 1000));
+      }, 250);
+      // Visualizer (waveform)
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx: AudioContext = new AudioCtx();
+      audioCtxRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteTimeDomainData(data);
+        // Compute amplitude (0..1)
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / data.length);
+        setWaveform((prev) => {
+          const next = [...prev, Math.min(1, rms * 2.2)];
+          return next.length > 40 ? next.slice(next.length - 40) : next;
+        });
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      rafRef.current = requestAnimationFrame(tick);
     } catch {
       toast({ title: "Micro non disponible", description: "Autorisez l'accès au microphone", variant: "destructive" });
     }
   };
+
+  const stopRecording = (cancel = false) => {
+    cancelledRef.current = cancel;
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") rec.stop();
+    else {
+      // No active recorder, just clean
+      recordStreamRef.current?.getTracks().forEach(t => t.stop());
+      stopVisualizer();
+      if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+      setRecordSeconds(0); setWaveform([]); setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) { stopRecording(false); return; }
+    await startRecording();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => () => { stopRecording(true); }, []);
+
 
   const getMessageStatus = (status: string) => {
     switch (status) {
