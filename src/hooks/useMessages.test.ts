@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { waitFor } from "@testing-library/dom";
+import * as RTL from "@testing-library/react";
+const { renderHook, act, waitFor } = RTL as unknown as {
+  renderHook: typeof RTL.renderHook;
+  act: typeof RTL.act;
+  waitFor: (cb: () => void | Promise<void>, opts?: { timeout?: number; interval?: number }) => Promise<void>;
+};
 
 // --- Mock Supabase client BEFORE importing the hook ---
 const invokeMock = vi.fn();
