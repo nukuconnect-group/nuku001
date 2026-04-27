@@ -524,12 +524,14 @@ export type Database = {
       }
       demands: {
         Row: {
+          boosted_until: string | null
           budget: number | null
           category: string
           created_at: string
           description: string | null
           id: string
           image_url: string | null
+          is_boosted: boolean
           location: string | null
           profile_id: string
           quantity: number | null
@@ -540,12 +542,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          boosted_until?: string | null
           budget?: number | null
           category: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_boosted?: boolean
           location?: string | null
           profile_id: string
           quantity?: number | null
@@ -556,12 +560,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          boosted_until?: string | null
           budget?: number | null
           category?: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_boosted?: boolean
           location?: string | null
           profile_id?: string
           quantity?: number | null

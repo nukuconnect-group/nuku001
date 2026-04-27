@@ -23,12 +23,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid, Coins, Plus
+  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid, Coins, Plus, Rocket
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
+import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 // Lazy load heavy components
@@ -60,7 +61,8 @@ const BuyerDashboard = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
   const { wishlist: wishlistItems } = useWishlist();
-  const { balance: tokenBalance, loading: tokensLoading } = useTokens();
+  const { balance: tokenBalance, loading: tokensLoading, refresh: refreshTokens } = useTokens();
+  const [showDemandBoost, setShowDemandBoost] = useState(false);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationData, setMigrationData] = useState({
     businessName: "",
@@ -260,11 +262,14 @@ const BuyerDashboard = () => {
                   <Receipt className="w-5 h-5" />
                   <span className="text-sm font-semibold">Résumé des achats</span>
                 </div>
-                <Link to="/jetons">
-                  <Button size="sm" variant="secondary" className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs">
-                    <Plus className="w-3 h-3" /> Booster un besoin
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs"
+                  onClick={() => setShowDemandBoost(true)}
+                >
+                  <Rocket className="w-3 h-3" /> Booster un besoin
+                </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                 <div>
@@ -795,6 +800,13 @@ const BuyerDashboard = () => {
         </div>
       </main>
       </DashboardLayout>
+
+      {/* Modal de boost de besoin */}
+      <DemandBoostModal
+        open={showDemandBoost}
+        onOpenChange={setShowDemandBoost}
+        onBoostSuccess={() => refreshTokens()}
+      />
 
       {/* Migration Modal */}
       <Dialog open={showMigrationModal} onOpenChange={setShowMigrationModal}>
