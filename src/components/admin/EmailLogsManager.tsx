@@ -19,7 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, CheckCircle2, XCircle, Ban, Loader2, RefreshCw } from "lucide-react";
+import { Mail, CheckCircle2, XCircle, Ban, Loader2, RefreshCw, Download } from "lucide-react";
+import { toast } from "sonner";
 
 type LogRow = {
   id: string;
@@ -95,14 +96,23 @@ const EmailLogsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, customStart, customEnd]);
 
-  // Deduplicate by message_id (latest status per email)
+  // Deduplicate by message_id (latest status per email) + compute response time
   const dedupedRows = useMemo(() => {
-    const map = new Map<string, LogRow>();
+    // rawRows is sorted DESC (most recent first)
+    const latest = new Map<string, LogRow>();
+    const earliest = new Map<string, LogRow>();
     for (const row of rawRows) {
       const key = row.message_id || row.id;
-      if (!map.has(key)) map.set(key, row);
+      if (!latest.has(key)) latest.set(key, row);
+      earliest.set(key, row); // overwritten => last assignment is the oldest
     }
-    return Array.from(map.values());
+    return Array.from(latest.entries()).map(([key, row]) => {
+      const first = earliest.get(key);
+      const responseMs = first && first.id !== row.id
+        ? new Date(row.created_at).getTime() - new Date(first.created_at).getTime()
+        : null;
+      return { ...row, response_ms: responseMs };
+    });
   }, [rawRows]);
 
   const templates = useMemo(() => {
@@ -133,6 +143,54 @@ const EmailLogsManager = () => {
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
+  const formatResponse = (ms: number | null | undefined) => {
+    if (ms == null) return "—";
+    if (ms < 1000) return `${ms} ms`;
+    if (ms < 60_000) return `${(ms / 1000).toFixed(2)} s`;
+    return `${(ms / 60_000).toFixed(1)} min`;
+  };
+
+  const exportCSV = () => {
+    try {
+      const headers = [
+        "id", "message_id", "template", "destinataire", "statut",
+        "temps_reponse_ms", "temps_reponse_lisible", "date", "erreur",
+      ];
+      const escape = (val: any) => {
+        const s = val == null ? "" : String(val);
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [headers.join(",")];
+      for (const r of filtered) {
+        lines.push([
+          r.id,
+          r.message_id || "",
+          r.template_name,
+          r.recipient_email,
+          r.status,
+          (r as any).response_ms ?? "",
+          formatResponse((r as any).response_ms),
+          new Date(r.created_at).toISOString(),
+          r.error_message || "",
+        ].map(escape).join(","));
+      }
+      const csv = "\uFEFF" + lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `email-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${filtered.length} envois exportés`);
+    } catch (e) {
+      console.error("[email-logs] export failed", e);
+      toast.error("Échec de l'export CSV");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -145,10 +203,16 @@ const EmailLogsManager = () => {
             Suivi des envois (signup, welcome, etc.) — déduplication par message
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Actualiser
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={loading || filtered.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -276,6 +340,7 @@ const EmailLogsManager = () => {
                   <TableHead>Destinataire</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Temps</TableHead>
                   <TableHead>Erreur</TableHead>
                 </TableRow>
               </TableHeader>
@@ -291,6 +356,9 @@ const EmailLogsManager = () => {
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(row.created_at).toLocaleString("fr-FR")}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatResponse((row as any).response_ms)}
                     </TableCell>
                     <TableCell className="text-xs text-destructive max-w-xs truncate">
                       {row.error_message || "—"}

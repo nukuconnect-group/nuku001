@@ -52,6 +52,7 @@ const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const FormationDetail = lazy(() => import("./pages/FormationDetail"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const MesCommandes = lazy(() => import("./pages/MesCommandes"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Affiliation = lazy(() => import("./pages/Affiliation"));
@@ -133,6 +134,7 @@ const App = () => {
                   <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
                   <Route path="/panier" element={<Cart />} />
                   <Route path="/commande/:id" element={<OrderDetail />} />
+                  <Route path="/mes-commandes" element={<MesCommandes />} />
                   <Route path="/driver-dashboard" element={<DriverDashboard />} />
                   <Route path="/learner-dashboard" element={<LearnerDashboard />} />
                   <Route path="/plans" element={<Plans />} />
