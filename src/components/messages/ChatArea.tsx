@@ -493,24 +493,19 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
         <OfflineReadIndicator />
-        {/* Welcome / protection banner — persistent until user dismisses */}
-        {!welcomeDismissed && (
-          <div className="relative flex items-start gap-2 mx-auto max-w-md p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 shadow-sm animate-fade-in">
-            <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0 pr-5">
-              <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 mb-0.5">
-                Achetez en toute sécurité
-              </p>
-              <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des commandes.
-                <Link to="/aide" className="text-primary underline ml-1">En savoir plus</Link>
-              </p>
-            </div>
-            <button onClick={dismissWelcome} className="absolute top-1.5 right-1.5 p-1 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900" aria-label="Fermer">
-              <X className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" />
-            </button>
+        {/* Protection banner — toujours visible, rappel en début de discussion */}
+        <div className="flex items-start gap-2 mx-auto max-w-md p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 shadow-sm animate-fade-in">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 mb-0.5">
+              Achetez en toute sécurité
+            </p>
+            <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
+              Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des commandes.
+              <Link to="/aide" className="text-primary underline ml-1">En savoir plus</Link>
+            </p>
           </div>
-        )}
+        </div>
         {/* Product preview card */}
         {conversation.productName && conversation.productImage && (
           <Link to={`/produit/${conversation.productId}`} className="block">
