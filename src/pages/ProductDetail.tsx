@@ -16,6 +16,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
 import { ProductDetailSkeleton, CachedDataBanner } from "@/components/marketplace/ProductDetailSkeleton";
+import OfflineFallback from "@/components/layout/OfflineFallback";
 import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
@@ -176,10 +177,11 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-4">{t("product.notFound")}</h1>
-          <Link to="/marketplace"><Button variant="hero">{t("product.backToMp")}</Button></Link>
-        </div>
+        <OfflineFallback
+          title={t("product.notFound")}
+          description="Ce produit n'a pas pu être chargé. Vérifiez votre connexion et réessayez."
+          queryKeys={[["product", id || ""], ["product-slug", id || ""]]}
+        />
         <Footer />
       </div>
     );
