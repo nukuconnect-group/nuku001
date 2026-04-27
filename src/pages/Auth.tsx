@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Truck, GraduationCap, BookOpen, ArrowLeft, Check, Search, AlertCircle, ChevronsUpDown } from "lucide-react";
+import { User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, Building, Briefcase, Truck, GraduationCap, BookOpen, ArrowLeft, Check, Search, AlertCircle, ChevronsUpDown, Sparkles } from "lucide-react";
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import authLoginImg from "@/assets/auth-login-hero.jpg";
 import authSignupImg from "@/assets/auth-signup-hero.jpg";
