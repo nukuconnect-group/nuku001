@@ -477,10 +477,6 @@ const ProductDetail = () => {
                   <Button variant="hero" className="gap-2 h-10 sm:h-11 text-xs sm:text-sm" onClick={handleBuyNow}>
                     <CreditCard className="w-4 h-4" />Acheter maintenant
                   </Button>
-                </div>
-                <Button variant="secondary" className="w-full gap-2 h-10 sm:h-11 text-xs sm:text-sm" onClick={handleOpenChat}>
-                  <MessageCircle className="w-4 h-4" />Discuter avec le fournisseur
-                </Button>
               </div>
 
               {/* Inline chat form */}
