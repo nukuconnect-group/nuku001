@@ -13,9 +13,11 @@ interface Props {
 }
 
 /**
- * Bloc "Détail & Gros" — inspiré Alibaba / AliExpress.
- * Accessibilité : structure sémantique (section/h2/h3 + table avec scope),
- * libellés aria, support contraste élevé via bordures et focus visibles.
+ * Bloc "Détail & Gros".
+ * Affiche UNIQUEMENT les prix réels saisis par le vendeur.
+ * - Prix au détail = prix de base saisi par le vendeur.
+ * - Prix de gros  = paliers (product_price_tiers) saisis par le vendeur.
+ * Aucune grille fictive n'est générée par la plateforme.
  */
 export default function WholesalePricingPanel({
   productId,
@@ -41,34 +43,32 @@ export default function WholesalePricingPanel({
   const isFast = (shippingDays ?? 1) <= 1;
   const ShipIcon = isFast ? Zap : Truck;
 
-  const hasCustom = customTiers.length > 0;
-  const tiers = hasCustom
-    ? customTiers.map((t) => ({
-        min: t.min_quantity,
-        max: t.max_quantity,
-        price: Number(t.price),
-      }))
-    : buildDefaultLadder(basePrice, minOrder);
+  const tiers = customTiers.map((t) => ({
+    min: t.min_quantity,
+    max: t.max_quantity,
+    price: Number(t.price),
+  }));
+  const hasTiers = tiers.length > 0;
 
-  // Best deal = lowest unit price among all tiers (not just the last one)
-  const bestIndex = tiers.reduce(
-    (acc, t, i) => (t.price < tiers[acc].price ? i : acc),
-    0,
-  );
-  const best = tiers[bestIndex];
-  const bestSavings = computeSavings(basePrice, best.price);
-  const bestTierLabel = best.max
-    ? `${formatNum(best.min)} – ${formatNum(best.max)} ${unit}`
-    : `≥ ${formatNum(best.min)} ${unit}`;
+  // Best deal = lowest unit price (only meaningful if tiers exist)
+  const bestIndex = hasTiers
+    ? tiers.reduce((acc, t, i) => (t.price < tiers[acc].price ? i : acc), 0)
+    : -1;
+  const best = hasTiers ? tiers[bestIndex] : null;
+  const bestSavings = best ? computeSavings(basePrice, best.price) : 0;
+  const bestTierLabel = best
+    ? best.max
+      ? `${formatNum(best.min)} – ${formatNum(best.max)} ${unit}`
+      : `≥ ${formatNum(best.min)} ${unit}`
+    : "";
 
   return (
     <section
       className="rounded-2xl border-2 border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-primary/40"
       aria-labelledby="pricing-title"
     >
-      {/* SR-only main heading */}
       <h2 id="pricing-title" className="sr-only">
-        Tarifs détail et gros
+        Tarifs détail{hasTiers ? " et gros" : ""}
       </h2>
 
       {/* Top status band */}
@@ -79,24 +79,22 @@ export default function WholesalePricingPanel({
         </Badge>
         <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 gap-1 text-[10px] sm:text-xs font-semibold px-2 py-0.5">
           <Tag className="w-3 h-3" aria-hidden="true" />
-          Tarif détail & gros
+          {hasTiers ? "Tarif détail & gros" : "Tarif détail"}
         </Badge>
-        {!hasCustom && (
-          <span className="text-[9px] sm:text-[10px] text-muted-foreground italic ml-auto">
-            Grille indicative
-          </span>
-        )}
       </div>
 
-      {/* Two-column header: Détail | Gros */}
-      <div className="grid grid-cols-2 divide-x-2 divide-border">
+      {/* Header: Détail (+ Gros si paliers définis) */}
+      <div className={hasTiers ? "grid grid-cols-2 divide-x-2 divide-border" : ""}>
         {/* Détail */}
         <div className="p-3 sm:p-4">
           <h3 className="flex items-center gap-1 text-[10px] sm:text-xs uppercase tracking-wide font-bold text-muted-foreground mb-1.5">
             <ShoppingCart className="w-3 h-3" aria-hidden="true" />
             Prix au détail
           </h3>
-          <p className="flex items-baseline gap-1.5 flex-wrap" aria-label={`Prix au détail : ${formatPrice(basePrice)} par ${unit}`}>
+          <p
+            className="flex items-baseline gap-1.5 flex-wrap"
+            aria-label={`Prix au détail : ${formatPrice(basePrice)} par ${unit}`}
+          >
             <span className="font-heading text-xl sm:text-3xl font-extrabold text-destructive leading-none tabular-nums">
               {formatPrice(basePrice)}
             </span>
@@ -112,152 +110,147 @@ export default function WholesalePricingPanel({
           </p>
         </div>
 
-        {/* Gros — best deal */}
-        <div
-          className="relative p-3 sm:p-4 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
-          aria-label={`Meilleur prix de gros : ${formatPrice(best.price)} par ${unit}, à partir de ${formatNum(best.min)} ${unit}, économie ${bestSavings}%`}
-        >
-          {/* Best price badge */}
-          {bestSavings > 0 && (
-            <span
-              className="absolute -top-1 right-2 sm:right-3 inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md border border-emerald-700"
-              role="status"
-            >
-              <Crown className="w-2.5 h-2.5" aria-hidden="true" />
-              Meilleur prix
-            </span>
-          )}
-          <h3 className="flex items-center gap-1 text-[10px] sm:text-xs uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400 mb-1.5">
-            <Layers className="w-3 h-3" aria-hidden="true" />
-            Prix de gros
-          </h3>
-          <p className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="font-heading text-xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 leading-none tabular-nums">
-              {formatPrice(best.price)}
-            </span>
-            <span className="text-[11px] sm:text-xs text-muted-foreground" aria-hidden="true">
-              / {unit}
-            </span>
-          </p>
-          <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1 flex-wrap">
-            Dès{" "}
-            <span className="font-semibold text-foreground tabular-nums">
-              {formatNum(best.min)} {unit}
-            </span>
+        {/* Gros — uniquement si le vendeur a saisi des paliers */}
+        {hasTiers && best && (
+          <div
+            className="relative p-3 sm:p-4 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
+            aria-label={`Meilleur prix de gros : ${formatPrice(best.price)} par ${unit}, à partir de ${formatNum(best.min)} ${unit}${bestSavings > 0 ? `, économie ${bestSavings}%` : ""}`}
+          >
             {bestSavings > 0 && (
-              <span className="inline-flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400 font-bold">
-                <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" />
-                −{bestSavings}%
+              <span
+                className="absolute -top-1 right-2 sm:right-3 inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md border border-emerald-700"
+                role="status"
+              >
+                <Crown className="w-2.5 h-2.5" aria-hidden="true" />
+                Meilleur prix
               </span>
             )}
-          </p>
-        </div>
+            <h3 className="flex items-center gap-1 text-[10px] sm:text-xs uppercase tracking-wide font-bold text-emerald-700 dark:text-emerald-400 mb-1.5">
+              <Layers className="w-3 h-3" aria-hidden="true" />
+              Prix de gros
+            </h3>
+            <p className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="font-heading text-xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 leading-none tabular-nums">
+                {formatPrice(best.price)}
+              </span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground" aria-hidden="true">
+                / {unit}
+              </span>
+            </p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1 flex-wrap">
+              Dès{" "}
+              <span className="font-semibold text-foreground tabular-nums">
+                {formatNum(best.min)} {unit}
+              </span>
+              {bestSavings > 0 && (
+                <span className="inline-flex items-center gap-0.5 text-emerald-700 dark:text-emerald-400 font-bold">
+                  <TrendingDown className="w-2.5 h-2.5" aria-hidden="true" />
+                  −{bestSavings}%
+                </span>
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Tier ladder table — Alibaba style, accessible */}
-      <div className="border-t-2 border-border bg-muted/20">
-        <div className="px-3 sm:px-4 py-2 bg-card border-b border-border">
-          <h3 className="text-[10px] sm:text-xs uppercase tracking-wide font-bold text-muted-foreground">
-            Détail des tranches
-          </h3>
+      {/* Tier ladder — uniquement si paliers réels du vendeur */}
+      {hasTiers && (
+        <div className="border-t-2 border-border bg-muted/20">
+          <div className="px-3 sm:px-4 py-2 bg-card border-b border-border">
+            <h3 className="text-[10px] sm:text-xs uppercase tracking-wide font-bold text-muted-foreground">
+              Détail des tranches
+            </h3>
+          </div>
+          <table
+            className="w-full text-xs sm:text-sm"
+            aria-label="Grille des prix par tranche de quantité"
+          >
+            <thead>
+              <tr className="bg-card border-b border-border">
+                <th scope="col" className="text-left px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                  Quantité
+                </th>
+                <th scope="col" className="text-center px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                  Prix unitaire
+                </th>
+                <th scope="col" className="text-right px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                  Économies
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {/* Retail row (always shown to compare) */}
+              <tr>
+                <th scope="row" className="text-left px-3 sm:px-4 py-2 font-medium tabular-nums">
+                  {formatNum(minOrder)}
+                  {tiers[0].min > minOrder ? ` – ${formatNum(tiers[0].min - 1)}` : ""} {unit}
+                </th>
+                <td className="text-center px-3 sm:px-4 py-2 font-bold text-destructive tabular-nums">
+                  {formatPrice(basePrice)}
+                </td>
+                <td className="text-right px-3 sm:px-4 py-2 text-muted-foreground" aria-label="Pas d'économie">
+                  —
+                </td>
+              </tr>
+              {tiers.map((t, i) => {
+                const savings = computeSavings(basePrice, t.price);
+                const isBest = i === bestIndex;
+                const range = t.max ? `${formatNum(t.min)} – ${formatNum(t.max)}` : `≥ ${formatNum(t.min)}`;
+                return (
+                  <tr
+                    key={`${t.min}-${t.max ?? "inf"}`}
+                    className={isBest ? "bg-emerald-500/10 ring-1 ring-emerald-500/30" : ""}
+                    aria-current={isBest ? "true" : undefined}
+                  >
+                    <th scope="row" className="text-left px-3 sm:px-4 py-2 font-medium tabular-nums flex items-center gap-1.5">
+                      {range} {unit}
+                      {isBest && (
+                        <span
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold border border-emerald-700"
+                          aria-label={`Meilleur prix à partir de ${formatNum(t.min)} ${unit}`}
+                        >
+                          <Crown className="w-2.5 h-2.5" aria-hidden="true" />
+                          Meilleur prix
+                        </span>
+                      )}
+                    </th>
+                    <td className={`text-center px-3 sm:px-4 py-2 font-bold tabular-nums ${isBest ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"}`}>
+                      {formatPrice(t.price)}
+                    </td>
+                    <td className="text-right px-3 sm:px-4 py-2">
+                      {savings > 0 ? (
+                        <Badge
+                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0 ${
+                            isBest
+                              ? "bg-emerald-600 text-white hover:bg-emerald-600 border border-emerald-700"
+                              : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40"
+                          }`}
+                          aria-label={`Économie de ${savings} pour cent`}
+                        >
+                          −{savings}%
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground" aria-hidden="true">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {best && (
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground px-3 sm:px-4 py-2 border-t border-border bg-card flex items-center gap-1">
+              <TrendingDown className="w-3 h-3 text-emerald-600" aria-hidden="true" />
+              Meilleure offre :{" "}
+              <span className="font-semibold text-foreground tabular-nums">
+                {formatPrice(best.price)} / {unit}
+              </span>{" "}
+              à partir de{" "}
+              <span className="font-semibold text-foreground tabular-nums">{bestTierLabel}</span>.
+            </p>
+          )}
         </div>
-        <table
-          className="w-full text-xs sm:text-sm"
-          aria-label="Grille des prix par tranche de quantité"
-        >
-          <thead>
-            <tr className="bg-card border-b border-border">
-              <th
-                scope="col"
-                className="text-left px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground"
-              >
-                Quantité
-              </th>
-              <th
-                scope="col"
-                className="text-center px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground"
-              >
-                Prix unitaire
-              </th>
-              <th
-                scope="col"
-                className="text-right px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] uppercase tracking-wide font-bold text-muted-foreground"
-              >
-                Économies
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {/* Retail row */}
-            <tr>
-              <th scope="row" className="text-left px-3 sm:px-4 py-2 font-medium tabular-nums">
-                {formatNum(minOrder)} – {formatNum(Math.max(tiers[0].min - 1, minOrder))} {unit}
-              </th>
-              <td className="text-center px-3 sm:px-4 py-2 font-bold text-destructive tabular-nums">
-                {formatPrice(basePrice)}
-              </td>
-              <td className="text-right px-3 sm:px-4 py-2 text-muted-foreground" aria-label="Pas d'économie">
-                —
-              </td>
-            </tr>
-            {tiers.map((t, i) => {
-              const savings = computeSavings(basePrice, t.price);
-              const isBest = i === bestIndex;
-              const range = t.max ? `${formatNum(t.min)} – ${formatNum(t.max)}` : `≥ ${formatNum(t.min)}`;
-              return (
-                <tr
-                  key={`${t.min}-${t.max ?? "inf"}`}
-                  className={isBest ? "bg-emerald-500/10 ring-1 ring-emerald-500/30" : ""}
-                  aria-current={isBest ? "true" : undefined}
-                >
-                  <th
-                    scope="row"
-                    className="text-left px-3 sm:px-4 py-2 font-medium tabular-nums flex items-center gap-1.5"
-                  >
-                    {range} {unit}
-                    {isBest && (
-                      <span
-                        className="inline-flex items-center gap-0.5 px-1.5 py-0 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold border border-emerald-700"
-                        aria-label={`Meilleur prix à partir de ${formatNum(t.min)} ${unit}`}
-                      >
-                        <Crown className="w-2.5 h-2.5" aria-hidden="true" />
-                        Meilleur prix
-                      </span>
-                    )}
-                  </th>
-                  <td
-                    className={`text-center px-3 sm:px-4 py-2 font-bold tabular-nums ${
-                      isBest ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
-                    }`}
-                  >
-                    {formatPrice(t.price)}
-                  </td>
-                  <td className="text-right px-3 sm:px-4 py-2">
-                    {savings > 0 ? (
-                      <Badge
-                        className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0 ${
-                          isBest
-                            ? "bg-emerald-600 text-white hover:bg-emerald-600 border border-emerald-700"
-                            : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40"
-                        }`}
-                        aria-label={`Économie de ${savings} pour cent`}
-                      >
-                        −{savings}%
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground" aria-hidden="true">—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <p className="text-[10px] sm:text-[11px] text-muted-foreground px-3 sm:px-4 py-2 border-t border-border bg-card flex items-center gap-1">
-          <TrendingDown className="w-3 h-3 text-emerald-600" aria-hidden="true" />
-          Meilleure offre : <span className="font-semibold text-foreground tabular-nums">{formatPrice(best.price)} / {unit}</span> à partir de <span className="font-semibold text-foreground tabular-nums">{bestTierLabel}</span>.
-        </p>
-      </div>
+      )}
     </section>
   );
 }
@@ -272,21 +265,4 @@ function computeSavings(base: number, tier: number): number {
 
 function formatNum(n: number): string {
   return new Intl.NumberFormat("fr-FR").format(n);
-}
-
-/**
- * Default progressive ladder when no admin tiers are configured.
- * Discounts: −3% / −7% / −12% applied above predictable thresholds.
- */
-function buildDefaultLadder(basePrice: number, minOrder: number) {
-  const start = Math.max(minOrder, 1);
-  const t1Min = Math.max(start * 5, 10);
-  const t2Min = Math.max(start * 20, 50);
-  const t3Min = Math.max(start * 100, 200);
-  const round = (n: number) => Math.max(1, Math.round(n));
-  return [
-    { min: t1Min, max: t2Min - 1, price: round(basePrice * 0.97) },
-    { min: t2Min, max: t3Min - 1, price: round(basePrice * 0.93) },
-    { min: t3Min, max: null as number | null, price: round(basePrice * 0.88) },
-  ];
 }

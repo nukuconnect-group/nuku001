@@ -27,9 +27,14 @@ interface Props {
  *  - price required and > 0
  *  - no overlap between ranges
  */
-export function validateTiers(tiers: TierDraft[]): string[] {
+export function validateTiers(tiers: TierDraft[], opts: { required?: boolean } = {}): string[] {
   const errors: string[] = [];
-  if (tiers.length === 0) return errors;
+  if (tiers.length === 0) {
+    if (opts.required) {
+      errors.push("Ajoutez au moins un palier de prix de gros pour inciter les acheteurs.");
+    }
+    return errors;
+  }
 
   const parsed = tiers.map((t, i) => ({
     i,
@@ -80,19 +85,22 @@ export default function PriceTiersEditor({ value, onChange, unit, basePrice, onV
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-1.5 text-sm">
           <Layers className="w-3.5 h-3.5 text-primary" />
-          Tarifs dégressifs (gros / détail) — optionnel
+          Prix de gros par palier <span className="text-destructive">*</span>
         </Label>
         <Button type="button" size="sm" variant="outline" onClick={add} className="h-7 text-[10px] gap-1">
           <Plus className="w-3 h-3" />Ajouter palier
         </Button>
       </div>
       <p className="text-[10px] text-muted-foreground">
-        Affichez plusieurs prix selon la quantité commandée (style Alibaba). Le prix de base s'applique aux quantités hors paliers.
+        Obligatoire : ajoutez au moins un palier pour proposer un prix de gros (ex. ≥ 10 unités).
+        Le prix au détail saisi plus haut s'applique aux quantités hors paliers.
       </p>
 
       {value.length === 0 ? (
-        <Card className="p-3 text-center bg-muted/30 border-dashed">
-          <p className="text-[11px] text-muted-foreground">Aucun palier — ajoutez-en pour proposer des prix gros.</p>
+        <Card className="p-3 text-center bg-destructive/5 border-dashed border-destructive/40">
+          <p className="text-[11px] text-destructive font-medium">
+            Aucun palier — ajoutez au moins un prix de gros pour publier le produit.
+          </p>
         </Card>
       ) : (
         <div className="space-y-2">
