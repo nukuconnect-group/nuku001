@@ -523,7 +523,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             </p>
             <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
               Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des commandes.
-              <Link to="/aide#paiements" className="text-primary underline ml-1">En savoir plus</Link>
+              <Link to="/politique-achat" className="text-primary underline ml-1">En savoir plus</Link>
             </p>
           </div>
         </div>
