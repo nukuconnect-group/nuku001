@@ -418,8 +418,6 @@ const ProductDetail = () => {
                 onContact={handleOpenChat}
               />
 
-              {/* Buyer delivery zone (auto from profile, editable) */}
-              <BuyerDeliveryZone productLocation={product.location} />
 
               {/* Delivery options */}
               <Card className="border-primary/20">
