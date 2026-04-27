@@ -78,13 +78,15 @@ export const prefetchLikelyRoutes = () => {
 
 /** Attache un listener de préchargement au survol ou focus d'un élément. */
 export const attachPrefetchOnHover = (el: HTMLElement, path: string) => {
-  const handler = () => prefetchRoute(path);
-  el.addEventListener("mouseenter", handler, { once: true });
-  el.addEventListener("focus", handler, { once: true });
-  el.addEventListener("touchstart", handler, { once: true, passive: true });
+  const onHover = () => prefetchRoute(path, "hover");
+  const onFocus = () => prefetchRoute(path, "focus");
+  const onTouch = () => prefetchRoute(path, "touch");
+  el.addEventListener("mouseenter", onHover, { once: true });
+  el.addEventListener("focus", onFocus, { once: true });
+  el.addEventListener("touchstart", onTouch, { once: true, passive: true });
   return () => {
-    el.removeEventListener("mouseenter", handler);
-    el.removeEventListener("focus", handler);
-    el.removeEventListener("touchstart", handler);
+    el.removeEventListener("mouseenter", onHover);
+    el.removeEventListener("focus", onFocus);
+    el.removeEventListener("touchstart", onTouch);
   };
 };
