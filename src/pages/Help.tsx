@@ -16,6 +16,7 @@ import {
 
 const faqCategories = [
   {
+    slug: "compte",
     icon: User,
     title: "Compte & Inscription",
     questions: [
@@ -38,6 +39,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "commandes",
     icon: ShoppingCart,
     title: "Commandes & Achats",
     questions: [
@@ -60,8 +62,9 @@ const faqCategories = [
     ]
   },
   {
+    slug: "paiements",
     icon: CreditCard,
-    title: "Paiements",
+    title: "Politique d'achat, paiement & remboursement",
     questions: [
       {
         q: "Quels moyens de paiement sont acceptés ?",
@@ -69,15 +72,24 @@ const faqCategories = [
       },
       {
         q: "Mon paiement est-il sécurisé ?",
-        a: "Oui, toutes les transactions sont sécurisées par chiffrement SSL/TLS. Vos données de paiement ne sont jamais stockées sur nos serveurs."
+        a: "Oui, toutes les transactions sont sécurisées par chiffrement SSL/TLS. Vos données de paiement ne sont jamais stockées sur nos serveurs. Effectuer vos paiements et discussions UNIQUEMENT sur NukuConnect vous garantit la protection des commandes."
       },
       {
         q: "Quand suis-je débité ?",
         a: "Le débit est effectué au moment de la validation de votre commande. En cas d'annulation, le remboursement est traité sous 48-72 heures."
       },
+      {
+        q: "Comment fonctionne le remboursement ?",
+        a: "En cas de produit non conforme, non livré ou annulé, ouvrez un litige depuis votre commande. Après vérification, le remboursement est effectué sur votre moyen de paiement d'origine sous 48-72 heures ouvrées."
+      },
+      {
+        q: "Que couvre la protection des achats NukuConnect ?",
+        a: "La protection couvre : non-livraison, produit endommagé ou non conforme à la description, et fraude. Elle s'applique uniquement aux paiements effectués via la plateforme. Les paiements en dehors de NukuConnect ne sont pas couverts."
+      },
     ]
   },
   {
+    slug: "livraison",
     icon: Truck,
     title: "Livraison",
     questions: [
@@ -96,6 +108,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "producteurs",
     icon: Settings,
     title: "Producteurs / Fournisseurs",
     questions: [
@@ -118,6 +131,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "securite",
     icon: Shield,
     title: "Sécurité & Confidentialité",
     questions: [
