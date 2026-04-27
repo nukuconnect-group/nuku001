@@ -120,6 +120,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     const f = e.target.files?.[0];
     if (!f) return;
     setCoverFile(f);
+    setGeneratedCoverUrl("");
     const reader = new FileReader();
     reader.onload = (ev) => setCoverPreview(ev.target?.result as string);
     reader.readAsDataURL(f);
@@ -154,11 +155,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const MAX_DOC_SIZE_MB = 10;
   const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
 
-  const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-
-    resetDiag();
+  const extractAndSetDocumentText = async (f: File, reset = true) => {
+    if (reset) resetDiag();
     pushDiag({ step: "size_check", label: `Taille du fichier (${(f.size/1024/1024).toFixed(2)} Mo)`, status: "pending" });
 
     if (f.size > MAX_DOC_SIZE_BYTES) {
@@ -169,11 +167,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
         variant: "destructive",
       });
-      e.target.value = "";
-      return;
+      throw new Error("FILE_TOO_LARGE");
     }
     pushDiag({ step: "size_check", label: "Taille du fichier", status: "ok", detail: `${(f.size/1024/1024).toFixed(2)} Mo` });
 
+    setAiSourceFile(f);
     setAiFileName(f.name);
     setChapterPreview([]);
     const lower = f.name.toLowerCase();
@@ -189,26 +187,22 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         description: "Formats acceptés : .txt, .md, .pdf, .docx",
         variant: "destructive",
       });
-      e.target.value = "";
       setAiFileName("");
-      return;
+      setAiSourceFile(null);
+      throw new Error("BAD_FORMAT");
     }
     const fmt = isPdf ? "PDF" : isDocx ? "DOCX" : "TEXT";
     pushDiag({ step: "format_check", label: "Format du fichier", status: "ok", detail: fmt });
 
     try {
+      setAiBusy(true);
       if (isText) {
         pushDiag({ step: "extracting", label: "Lecture du fichier texte", status: "pending" });
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const txt = String(ev.target?.result || "");
-          setAiContent(txt);
-          pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
-        };
-        reader.readAsText(f);
-        return;
+        const txt = await f.text();
+        setAiContent(txt);
+        pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
+        return txt;
       }
-      setAiBusy(true);
       pushDiag({ step: "extracting", label: `Extraction du texte (${fmt})`, status: "pending" });
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
@@ -221,18 +215,45 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
           variant: "destructive",
         });
+        return "";
       } else {
         setAiContent(text);
         pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "ok", detail: `${text.length} caractères extraits` });
         toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
+        return text;
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
       const fe = friendlyError(err);
       pushDiag({ step: "error", label: "Extraction du texte", status: "ko", code: fe.code, detail: fe.description });
       toast({ title: fe.title, description: fe.description, variant: "destructive" });
+      throw err;
     } finally {
       setAiBusy(false);
+    }
+  };
+
+  const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try {
+      await extractAndSetDocumentText(f, true);
+    } catch {
+      e.target.value = "";
+    }
+  };
+
+  const handleRetestExtraction = async () => {
+    if (!aiSourceFile) {
+      toast({ title: "Aucun document", description: "Importez d'abord un PDF/DOCX/TXT à tester.", variant: "destructive" });
+      return;
+    }
+    setChapterPreview([]);
+    try {
+      await extractAndSetDocumentText(aiSourceFile, true);
+      toast({ title: "Extraction re-testée", description: "Le diagnostic a été mis à jour sans relancer la génération des chapitres." });
+    } catch {
+      // Le détail est déjà affiché dans le diagnostic et le toast d'erreur.
     }
   };
 
