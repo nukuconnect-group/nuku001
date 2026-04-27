@@ -215,6 +215,15 @@ const MobileBottomNav = () => {
 
       {profile && (
         <Suspense fallback={null}>
+          <PublishChoiceModal
+            open={showPublishChoice && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => { if (!open) setShowPublishChoice(false); }}
+            onChoose={(type) => {
+              setShowPublishChoice(false);
+              if (type === "product") setShowAddProduct(true);
+              else setShowAddFormation(true);
+            }}
+          />
           <AddProductModal
             open={showAddProduct && (profile.user_type === "producer" || profile.user_type === "trainer")}
             onOpenChange={(open) => {
@@ -224,6 +233,15 @@ const MobileBottomNav = () => {
             onProductAdded={() => {
               toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
               setShowAddProduct(false);
+            }}
+          />
+          <AddFormationModal
+            open={showAddFormation && (profile.user_type === "producer" || profile.user_type === "trainer")}
+            onOpenChange={(open) => { if (!open) setShowAddFormation(false); }}
+            instructorName={profile.full_name || profile.business_name || "Formateur"}
+            onCreated={() => {
+              toast({ title: "Formation publiée !", description: "Votre formation est visible dans le module Formations." });
+              setShowAddFormation(false);
             }}
           />
         </Suspense>
