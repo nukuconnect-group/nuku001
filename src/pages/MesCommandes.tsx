@@ -24,6 +24,8 @@ import {
   Package, Truck, CheckCircle2, Clock, XCircle, Receipt,
   ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download,
 } from "lucide-react";
+import { lazy, Suspense } from "react";
+const DeliveryLiveMap = lazy(() => import("@/components/delivery/DeliveryLiveMap"));
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { generateOrdersRecapPDF } from "@/utils/generateOrdersRecapPDF";
 import { toast } from "sonner";
@@ -79,7 +81,7 @@ const MesCommandes = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("orders")
-        .select("*, products(name, images, price, unit), deliveries(status, delivered_at, driver_id, delivery_fee)")
+        .select("*, products(name, images, price, unit), deliveries(id, status, delivered_at, driver_id, delivery_fee, driver_current_lat, driver_current_lng, pickup_address, dropoff_address)")
         .eq("buyer_id", profile.id)
         .order("created_at", { ascending: false });
       if (error) {
