@@ -64,17 +64,29 @@ const MobileBottomNav = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, refresh)
       .subscribe();
 
-    // Refresh on route changes / when conversations are opened (read flag updates)
-    const onUpdate = () => refresh();
-    window.addEventListener("nuku:messages-read", onUpdate);
-    window.addEventListener("focus", onUpdate);
-    document.addEventListener("visibilitychange", onUpdate);
+    // Instant local decrement when a conversation is read in this tab.
+    // The server count refetch then reconciles any drift.
+    const onRead = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const decrement = typeof detail.decrement === "number" ? detail.decrement : null;
+      if (decrement && decrement > 0) {
+        setUnreadMessages((prev) => Math.max(0, prev - decrement));
+      }
+      refresh();
+    };
+    const onFocus = () => refresh();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("nuku:messages-read", onRead as EventListener);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       supabase.removeChannel(channel);
-      window.removeEventListener("nuku:messages-read", onUpdate);
-      window.removeEventListener("focus", onUpdate);
-      document.removeEventListener("visibilitychange", onUpdate);
+      window.removeEventListener("nuku:messages-read", onRead as EventListener);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [profile?.id, user?.id, fetchUnreadMessages]);
 

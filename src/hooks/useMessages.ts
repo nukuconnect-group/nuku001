@@ -58,6 +58,13 @@ export function useMessages(conversationId: string | null, profileId: string | n
         }))
       );
 
+      // Count "other"-authored unread messages BEFORE marking them read,
+      // so we can decrement the global counter instantly in the UI.
+      const myId = isDeliveryConversation ? userId : profileId;
+      const decrement = data.filter(
+        (m: any) => m.sender_id !== myId && m.is_read === false
+      ).length;
+
       // Mark unread messages as read
       let didMarkRead = false;
       if (isDeliveryConversation && userId) {
@@ -79,7 +86,9 @@ export function useMessages(conversationId: string | null, profileId: string | n
       }
       if (didMarkRead) {
         try {
-          window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } }));
+          window.dispatchEvent(
+            new CustomEvent("nuku:messages-read", { detail: { conversationId, decrement } })
+          );
         } catch {}
       }
     }
