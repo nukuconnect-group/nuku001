@@ -66,6 +66,7 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<any | null>(null);
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!confirm(`Supprimer définitivement le compte de "${userName}" (données + authentification) ? L'email sera libéré pour permettre une nouvelle inscription. Cette action est irréversible.`)) return;
