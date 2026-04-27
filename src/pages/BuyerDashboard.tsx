@@ -61,7 +61,8 @@ const BuyerDashboard = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
   const { wishlist: wishlistItems } = useWishlist();
-  const { balance: tokenBalance, loading: tokensLoading } = useTokens();
+  const { balance: tokenBalance, loading: tokensLoading, refresh: refreshTokens } = useTokens();
+  const [showDemandBoost, setShowDemandBoost] = useState(false);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationData, setMigrationData] = useState({
     businessName: "",
