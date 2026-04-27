@@ -955,6 +955,7 @@ export type Database = {
       }
       formations: {
         Row: {
+          author_user_id: string | null
           category: string
           created_at: string
           description: string | null
@@ -974,6 +975,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          author_user_id?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -993,6 +995,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          author_user_id?: string | null
           category?: string
           created_at?: string
           description?: string | null
