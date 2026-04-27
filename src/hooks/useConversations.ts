@@ -258,6 +258,20 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
+  // Prefetch on window focus / tab visibility — instant cache + silent refresh
+  useEffect(() => {
+    const onFocus = () => fetchConversations();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchConversations();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [fetchConversations]);
+
   // Realtime subscription with debounce to avoid hammering the DB
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
