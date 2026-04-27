@@ -250,79 +250,35 @@ const BuyerDashboard = () => {
             </div>
           </div>
 
-          {/* Wallet / Balance Card */}
+          {/* Résumé des achats — fusion portefeuille + stats principales */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Receipt className="w-5 h-5" />
                 <span className="text-sm font-semibold">Résumé des achats</span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Total dépensé</p>
-                  <p className="text-lg sm:text-2xl font-bold">{formatPrice(totalSpent)}</p>
+                  <p className="text-base sm:text-2xl font-bold">{formatPrice(totalSpent)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Commandes</p>
-                  <p className="text-lg sm:text-2xl font-bold">{orders.length}</p>
+                  <p className="text-base sm:text-2xl font-bold">{orders.length}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">En attente</p>
-                  <p className="text-lg sm:text-2xl font-bold text-accent">{pendingOrders}</p>
+                  <p className="text-base sm:text-2xl font-bold text-accent">{pendingOrders}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-primary-foreground/70">Favoris</p>
+                  <p className="text-base sm:text-2xl font-bold">{wishlistItems?.length || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Stats Grid - responsive */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 sm:mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.label} className="overflow-hidden">
-                <CardContent className="p-3 sm:p-5">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.color}`}>
-                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.label}</p>
-                      <p className="font-heading text-sm sm:text-xl font-bold text-foreground truncate">
-                        {stat.value}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Affiliation */}
-          {user && (
-            <div className="mb-5 sm:mb-8">
-              <AffiliationCard userId={user.id} />
-            </div>
-          )}
-
-          {/* Become Producer Banner - responsive */}
-          <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-            <CardContent className="p-3 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <Store className="w-5 h-5 sm:w-7 sm:h-7 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-heading text-sm sm:text-lg font-semibold text-foreground">Devenez vendeur</h3>
-                  <p className="text-[11px] sm:text-sm text-muted-foreground">Vendez vos produits sur NUKUCONNECT</p>
-                </div>
-              </div>
-              <Button onClick={() => setShowMigrationModal(true)} className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto">
-                <Store className="w-3.5 h-3.5" />
-                Devenir vendeur
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Buy Intent - responsive */}
+          {/* Que recherchez-vous ? — placé juste après le résumé */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/10">
             <CardContent className="p-3 sm:p-6">
               <h3 className="font-heading text-sm sm:text-lg font-semibold text-foreground mb-1.5 sm:mb-2 flex items-center gap-2">
@@ -340,6 +296,51 @@ const BuyerDashboard = () => {
               <div className="mt-3 sm:mt-4">
                 <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
                 <DemandsList limit={3} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions rapides — icônes (anciens onglets bas) */}
+          <Card className="mb-5 sm:mb-8">
+            <CardHeader className="p-3 sm:p-5 pb-2">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-primary" />
+                Actions rapides
+              </CardTitle>
+              <CardDescription className="text-[11px]">Accédez rapidement à vos espaces</CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-5 pt-0">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+                {[
+                  { label: "Commandes", icon: Package, tab: "orders", badge: pendingOrders },
+                  { label: "Favoris", icon: Heart, tab: "favorites" },
+                  { label: "Messages", icon: MessageCircle, tab: "messages" },
+                  { label: "Alertes", icon: Bell, tab: "alerts", badge: unreadNotifs },
+                  { label: "Paiements", icon: Receipt, tab: "payments" },
+                  { label: "Paramètres", icon: Settings, tab: "settings" },
+                ].map(({ label, icon: Icon, tab, badge }) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setTimeout(() => {
+                        document.getElementById("buyer-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 50);
+                    }}
+                    className="relative flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-center"
+                  >
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-medium text-foreground leading-tight">{label}</span>
+                    {badge && badge > 0 ? (
+                      <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-destructive text-destructive-foreground rounded-full text-[9px] font-bold flex items-center justify-center">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>
