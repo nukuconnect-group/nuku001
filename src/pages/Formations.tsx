@@ -23,12 +23,14 @@ const levelLabels: Record<string, string> = {
 const Formations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [selectedAuthor, setSelectedAuthor] = useState("Tous");
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [formations, setFormations] = useState<any[]>([]);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>(["Tous"]);
+  const [authors, setAuthors] = useState<string[]>(["Tous"]);
 
   useEffect(() => {
     const load = async () => {
