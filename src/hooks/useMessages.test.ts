@@ -55,19 +55,7 @@ describe("useMessages — email notification toast", () => {
     toastSuccessMock.mockReset();
     fromMock.mockReset();
 
-    fromMock.mockImplementation((table: string) => {
-      if (table === "messages") {
-        // First call from fetchMessages (.select().eq().order())
-        // Subsequent calls from insert and update — return a flexible chain
-        return {
-          ...buildSelectChain([]),
-          ...buildInsertChain("msg-1"),
-          ...buildUpdateChain(),
-        };
-      }
-      if (table === "conversations") return buildUpdateChain();
-      return buildSelectChain([]);
-    });
+    fromMock.mockImplementation(() => makeChain({ data: [], error: null }));
   });
 
   it("affiche un toast d'erreur quand l'envoi d'email échoue après un nouveau message taggé produit", async () => {
