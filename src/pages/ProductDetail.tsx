@@ -39,6 +39,7 @@ import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCal
 import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
+import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -406,6 +407,9 @@ const ProductDetail = () => {
                   <span className="text-xs sm:text-sm text-muted-foreground">{t("product.deliveryAvailable")}</span>
                 </div>
               </div>
+
+              {/* Buyer delivery zone (auto from profile, editable) */}
+              <BuyerDeliveryZone productLocation={product.location} />
 
               {/* Delivery options */}
               <Card className="border-primary/20">
