@@ -446,7 +446,15 @@ const Settings = () => {
                 onClick={async () => {
                   const confirmText = "SUPPRIMER";
                   const input = window.prompt(`Pour confirmer la suppression définitive de votre compte, tapez "${confirmText}" :`);
-                  if (input !== confirmText) return;
+                  if (input === null) return; // user cancelled
+                  if (input.trim() !== confirmText) {
+                    toast({
+                      title: "Confirmation incorrecte",
+                      description: `Vous devez taper exactement "${confirmText}" (en majuscules) pour confirmer la suppression. Suppression annulée.`,
+                      variant: "destructive",
+                    });
+                    return;
+                  }
                   try {
                     const { data, error } = await supabase.functions.invoke("delete-user-account", { body: {} });
                     if (error) throw error;
