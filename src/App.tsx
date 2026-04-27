@@ -164,6 +164,7 @@ const App = () => {
             )}
             <BrowserRouter>
               <RouteProgress />
+              <OfflineBanner />
               <PerformanceTracker />
               <LinkPrefetcher />
               <ScrollToTop />
