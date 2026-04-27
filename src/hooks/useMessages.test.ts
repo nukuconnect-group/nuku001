@@ -36,24 +36,17 @@ vi.mock("sonner", () => ({
 
 import { useMessages } from "./useMessages";
 
-// Helper to build a chainable Supabase query mock
-const buildSelectChain = (data: any[] = []) => ({
-  select: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  neq: vi.fn().mockReturnThis(),
-  order: vi.fn().mockResolvedValue({ data, error: null }),
-});
-
-const buildInsertChain = (id = "msg-1") => ({
-  insert: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  single: vi.fn().mockResolvedValue({ data: { id }, error: null }),
-});
-
-const buildUpdateChain = () => ({
-  update: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-});
+// Universal chainable thenable that resolves to { data, error }
+const makeChain = (resolved: any = { data: [], error: null }) => {
+  const chain: any = {};
+  ["select", "insert", "update", "eq", "neq", "in", "or", "order", "limit"].forEach((m) => {
+    chain[m] = vi.fn(() => chain);
+  });
+  chain.single = vi.fn().mockResolvedValue({ data: { id: "msg-1" }, error: null });
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  chain.then = (resolve: any) => Promise.resolve(resolved).then(resolve);
+  return chain;
+};
 
 describe("useMessages — email notification toast", () => {
   beforeEach(() => {
