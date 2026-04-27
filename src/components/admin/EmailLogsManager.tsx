@@ -143,6 +143,54 @@ const EmailLogsManager = () => {
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
+  const formatResponse = (ms: number | null | undefined) => {
+    if (ms == null) return "—";
+    if (ms < 1000) return `${ms} ms`;
+    if (ms < 60_000) return `${(ms / 1000).toFixed(2)} s`;
+    return `${(ms / 60_000).toFixed(1)} min`;
+  };
+
+  const exportCSV = () => {
+    try {
+      const headers = [
+        "id", "message_id", "template", "destinataire", "statut",
+        "temps_reponse_ms", "temps_reponse_lisible", "date", "erreur",
+      ];
+      const escape = (val: any) => {
+        const s = val == null ? "" : String(val);
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [headers.join(",")];
+      for (const r of filtered) {
+        lines.push([
+          r.id,
+          r.message_id || "",
+          r.template_name,
+          r.recipient_email,
+          r.status,
+          (r as any).response_ms ?? "",
+          formatResponse((r as any).response_ms),
+          new Date(r.created_at).toISOString(),
+          r.error_message || "",
+        ].map(escape).join(","));
+      }
+      const csv = "\uFEFF" + lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `email-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${filtered.length} envois exportés`);
+    } catch (e) {
+      console.error("[email-logs] export failed", e);
+      toast.error("Échec de l'export CSV");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
