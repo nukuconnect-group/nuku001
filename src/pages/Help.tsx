@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -16,6 +16,7 @@ import {
 
 const faqCategories = [
   {
+    slug: "compte",
     icon: User,
     title: "Compte & Inscription",
     questions: [
@@ -38,6 +39,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "commandes",
     icon: ShoppingCart,
     title: "Commandes & Achats",
     questions: [
@@ -60,8 +62,9 @@ const faqCategories = [
     ]
   },
   {
+    slug: "paiements",
     icon: CreditCard,
-    title: "Paiements",
+    title: "Politique d'achat, paiement & remboursement",
     questions: [
       {
         q: "Quels moyens de paiement sont acceptés ?",
@@ -69,15 +72,24 @@ const faqCategories = [
       },
       {
         q: "Mon paiement est-il sécurisé ?",
-        a: "Oui, toutes les transactions sont sécurisées par chiffrement SSL/TLS. Vos données de paiement ne sont jamais stockées sur nos serveurs."
+        a: "Oui, toutes les transactions sont sécurisées par chiffrement SSL/TLS. Vos données de paiement ne sont jamais stockées sur nos serveurs. Effectuer vos paiements et discussions UNIQUEMENT sur NukuConnect vous garantit la protection des commandes."
       },
       {
         q: "Quand suis-je débité ?",
         a: "Le débit est effectué au moment de la validation de votre commande. En cas d'annulation, le remboursement est traité sous 48-72 heures."
       },
+      {
+        q: "Comment fonctionne le remboursement ?",
+        a: "En cas de produit non conforme, non livré ou annulé, ouvrez un litige depuis votre commande. Après vérification, le remboursement est effectué sur votre moyen de paiement d'origine sous 48-72 heures ouvrées."
+      },
+      {
+        q: "Que couvre la protection des achats NukuConnect ?",
+        a: "La protection couvre : non-livraison, produit endommagé ou non conforme à la description, et fraude. Elle s'applique uniquement aux paiements effectués via la plateforme. Les paiements en dehors de NukuConnect ne sont pas couverts."
+      },
     ]
   },
   {
+    slug: "livraison",
     icon: Truck,
     title: "Livraison",
     questions: [
@@ -96,6 +108,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "producteurs",
     icon: Settings,
     title: "Producteurs / Fournisseurs",
     questions: [
@@ -118,6 +131,7 @@ const faqCategories = [
     ]
   },
   {
+    slug: "securite",
     icon: Shield,
     title: "Sécurité & Confidentialité",
     questions: [
@@ -146,6 +160,25 @@ const Help = () => {
   const toggleItem = (key: string) => {
     setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Scroll + open category questions when arriving via #hash (e.g. /aide#paiements)
+  useEffect(() => {
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (!hash) return;
+    const catIdx = faqCategories.findIndex((c) => c.slug === hash);
+    if (catIdx === -1) return;
+    // Open all questions of that category
+    const next: Record<string, boolean> = {};
+    faqCategories[catIdx].questions.forEach((_, qIdx) => {
+      next[`${catIdx}-${qIdx}`] = true;
+    });
+    setOpenItems((prev) => ({ ...prev, ...next }));
+    // Scroll to the section after layout
+    setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  }, []);
 
   const filteredCategories = faqCategories.map(cat => ({
     ...cat,
@@ -186,7 +219,7 @@ const Help = () => {
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
           <div className="space-y-6 sm:space-y-8">
             {filteredCategories.map((category, catIdx) => (
-              <div key={catIdx}>
+              <div key={catIdx} id={category.slug} className="scroll-mt-24">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <category.icon className="w-5 h-5 text-primary" />
