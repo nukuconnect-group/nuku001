@@ -1,4 +1,4 @@
-// Edge function: Fully delete a user account (data + auth user)
+// Edge function: Fully delete a user account (data + products + auth user)
 // - Self-delete: any authenticated user can delete their own account
 // - Admin-delete: admins can delete any account by passing target_user_id
 // After deletion, the email is freed and the user can re-register
@@ -31,7 +31,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Client bound to caller (to identify them via JWT)
     const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -47,7 +46,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const targetId: string = body?.target_user_id || callerId;
 
-    // Service-role client for privileged ops
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     // If deleting another user, check admin role
@@ -69,67 +67,136 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 1) Cleanup app data (idempotent — uses existing RPC if present)
-    // We call via service role (bypasses the has_role check by using a direct
-    // delete fallback if RPC fails for self-delete).
-    if (targetId !== callerId) {
-      // admin path — RPC has its own admin check via auth.uid; call as caller
-      const { error: rpcErr } = await userClient.rpc(
-        "admin_delete_user_data",
-        { p_user_id: targetId },
-      );
-      if (rpcErr) {
-        console.error("RPC admin_delete_user_data error:", rpcErr);
-      }
-    } else {
-      // self-delete: do best-effort cleanup with service role
-      const tables: Array<{ table: string; column: string }> = [
-        { table: "products", column: "producer_id_via_profile" }, // handled below
-      ];
-      // Best-effort direct deletes (FK cascades on auth.users will cover the rest)
+    // Resolve user's profile id (used to delete profile-keyed data)
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("user_id", targetId)
+      .maybeSingle();
+    const profileId: string | null = profile?.id ?? null;
+
+    const safeDelete = async (label: string, fn: () => Promise<any>) => {
       try {
-        const { data: profile } = await admin
-          .from("profiles")
-          .select("id")
-          .eq("user_id", targetId)
-          .maybeSingle();
-        if (profile?.id) {
-          await admin.from("products").delete().eq("producer_id", profile.id);
-          await admin.from("orders").delete().eq("buyer_id", profile.id);
-          await admin
-            .from("follows")
-            .delete()
-            .or(`follower_id.eq.${profile.id},following_id.eq.${profile.id}`);
-        }
-        await admin.from("demands").delete().eq("user_id", targetId);
-        await admin.from("notifications").delete().eq("user_id", targetId);
-        await admin.from("wishlist").delete().eq("user_id", targetId);
-        await admin.from("subscriptions").delete().eq("user_id", targetId);
-        await admin.from("reviews").delete().eq("user_id", targetId);
-        await admin.from("driver_profiles").delete().eq("user_id", targetId);
-        await admin.from("delivery_addresses").delete().eq("user_id", targetId);
-        await admin.from("profile_private").delete().eq("user_id", targetId);
-        await admin.from("user_roles").delete().eq("user_id", targetId);
-        await admin.from("profiles").delete().eq("user_id", targetId);
+        const { error } = await fn();
+        if (error) console.warn(`[delete-user] ${label}:`, error.message);
       } catch (e) {
-        console.error("Self-delete cleanup error (non-fatal):", e);
+        console.warn(`[delete-user] ${label} threw:`, (e as Error).message);
       }
+    };
+
+    // Exhaustive cleanup with service role (order matters: children → parents)
+    if (profileId) {
+      // Products & related (products belong to producers via profile id)
+      const { data: ownedProducts } = await admin
+        .from("products")
+        .select("id")
+        .eq("producer_id", profileId);
+      const productIds = (ownedProducts || []).map((p: any) => p.id);
+      if (productIds.length) {
+        await safeDelete("product_boosts", () =>
+          admin.from("product_boosts").delete().in("product_id", productIds));
+        await safeDelete("reviews(by product)", () =>
+          admin.from("reviews").delete().in("product_id", productIds));
+        await safeDelete("wishlist(by product)", () =>
+          admin.from("wishlist").delete().in("product_id", productIds));
+      }
+      await safeDelete("products", () =>
+        admin.from("products").delete().eq("producer_id", profileId));
+
+      // Conversations / messages where user is a party
+      const { data: convs } = await admin
+        .from("conversations")
+        .select("id")
+        .or(`buyer_id.eq.${profileId},seller_id.eq.${profileId}`);
+      const convIds = (convs || []).map((c: any) => c.id);
+      if (convIds.length) {
+        await safeDelete("messages", () =>
+          admin.from("messages").delete().in("conversation_id", convIds));
+        await safeDelete("conversations", () =>
+          admin.from("conversations").delete().in("id", convIds));
+      }
+
+      // Orders + deliveries
+      const { data: ordersAsBuyer } = await admin
+        .from("orders").select("id").eq("buyer_id", profileId);
+      const { data: ordersAsSeller } = await admin
+        .from("orders").select("id").eq("seller_id", profileId);
+      const orderIds = [
+        ...(ordersAsBuyer || []),
+        ...(ordersAsSeller || []),
+      ].map((o: any) => o.id);
+      if (orderIds.length) {
+        await safeDelete("deliveries", () =>
+          admin.from("deliveries").delete().in("order_id", orderIds));
+        await safeDelete("orders", () =>
+          admin.from("orders").delete().in("id", orderIds));
+      }
+
+      await safeDelete("follows", () =>
+        admin.from("follows").delete().or(
+          `follower_id.eq.${profileId},following_id.eq.${profileId}`,
+        ));
+      await safeDelete("reviews(by user)", () =>
+        admin.from("reviews").delete().eq("user_id", targetId));
     }
 
-    // 2) Delete the auth user (frees the email for re-registration)
+    // User-keyed data
+    await safeDelete("demands", () =>
+      admin.from("demands").delete().eq("user_id", targetId));
+    await safeDelete("notifications", () =>
+      admin.from("notifications").delete().eq("user_id", targetId));
+    await safeDelete("wishlist", () =>
+      admin.from("wishlist").delete().eq("user_id", targetId));
+    await safeDelete("subscriptions", () =>
+      admin.from("subscriptions").delete().eq("user_id", targetId));
+    await safeDelete("token_transactions", () =>
+      admin.from("token_transactions").delete().eq("user_id", targetId));
+    await safeDelete("token_purchases", () =>
+      admin.from("token_purchases").delete().eq("user_id", targetId));
+    await safeDelete("driver_profiles", () =>
+      admin.from("driver_profiles").delete().eq("user_id", targetId));
+    await safeDelete("delivery_addresses", () =>
+      admin.from("delivery_addresses").delete().eq("user_id", targetId));
+    await safeDelete("profile_private", () =>
+      admin.from("profile_private").delete().eq("user_id", targetId));
+    await safeDelete("user_presence", () =>
+      admin.from("user_presence").delete().eq("user_id", targetId));
+    await safeDelete("user_roles", () =>
+      admin.from("user_roles").delete().eq("user_id", targetId));
+    await safeDelete("referrals(referrer)", () =>
+      admin.from("referrals").delete().eq("referrer_id", targetId));
+    await safeDelete("referrals(referred)", () =>
+      admin.from("referrals").delete().eq("referred_user_id", targetId));
+    await safeDelete("referral_earnings", () =>
+      admin.from("referral_earnings").delete().eq("referrer_id", targetId));
+
+    // Finally remove the profile itself
+    await safeDelete("profiles", () =>
+      admin.from("profiles").delete().eq("user_id", targetId));
+
+    // Delete the auth user (frees the email for re-registration)
     const { error: delErr } = await admin.auth.admin.deleteUser(targetId);
     if (delErr) {
       console.error("auth.admin.deleteUser error:", delErr);
-      return new Response(JSON.stringify({ error: delErr.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: delErr.message,
+          hint: "Some related data could not be removed; check edge logs.",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: true, target_user_id: targetId }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (e) {
     console.error("delete-user-account fatal:", e);
     return new Response(
