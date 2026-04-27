@@ -336,6 +336,65 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
                 )}
               </div>
 
+              {/* Historique des boosts (propriétaire uniquement) */}
+              {profile && selectedDemand.profile_id === profile.id && (
+                <div className="mb-5 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <History className="w-3.5 h-3.5 text-primary" />
+                      <Label className="text-xs font-semibold text-foreground">Historique des boosts</Label>
+                    </div>
+                    {(selectedDemand as any).is_boosted && (selectedDemand as any).boosted_until && new Date((selectedDemand as any).boosted_until) > new Date() ? (
+                      <Badge className="bg-primary text-primary-foreground text-[9px] gap-1"><Rocket className="w-2.5 h-2.5" /> Actif</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[9px]">Inactif</Badge>
+                    )}
+                  </div>
+                  {(selectedDemand as any).boosted_until && (
+                    <p className="text-[10px] text-muted-foreground mb-2">
+                      {new Date((selectedDemand as any).boosted_until) > new Date()
+                        ? `Expire le ${new Date((selectedDemand as any).boosted_until).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+                        : `Dernier boost expiré le ${new Date((selectedDemand as any).boosted_until).toLocaleDateString("fr-FR")}`}
+                    </p>
+                  )}
+                  {historyLoading ? (
+                    <div className="flex justify-center py-2"><Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /></div>
+                  ) : boostHistory.length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground italic">Aucun boost effectué pour cette demande.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {boostHistory.map((tx) => {
+                        const date = new Date(tx.created_at);
+                        // Tente d'extraire la durée depuis la raison "Boost besoin "..." (Xj)"
+                        const match = tx.reason?.match(/\((\d+)j\)/);
+                        const days = match ? `${match[1]}j` : "—";
+                        return (
+                          <li key={tx.id} className="flex items-center justify-between gap-2 text-[10px] bg-background/60 rounded-md px-2 py-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Calendar className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+                              <span className="text-foreground">
+                                {date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                              <span className="text-muted-foreground">• {days}</span>
+                            </div>
+                            <span className="font-semibold text-primary shrink-0">−{Math.abs(tx.amount)} jeton{Math.abs(tx.amount) > 1 ? "s" : ""}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  <Button
+                    type="button"
+                    variant="hero"
+                    size="sm"
+                    className="w-full mt-2 gap-1.5 h-8 text-[11px]"
+                    onClick={() => setBoostDemand({ id: selectedDemand.id, title: selectedDemand.title, category: selectedDemand.category })}
+                  >
+                    <Rocket className="w-3 h-3" /> Booster cette demande
+                  </Button>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="space-y-3 pb-4">
                 <Button
