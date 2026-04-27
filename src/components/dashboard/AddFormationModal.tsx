@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2 } from "lucide-react";
+import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3 } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Props {
