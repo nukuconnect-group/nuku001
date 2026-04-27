@@ -335,16 +335,16 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         return;
       }
       const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
+      const savedAt = new Date().toISOString();
       const nextForm = {
         ...form,
-        ...f,
-        title: meta.title?.toString().slice(0, 120) || f.title,
-        description: meta.description?.toString().slice(0, 500) || f.description,
+        title: meta.title?.toString().slice(0, 120) || form.title,
+        description: meta.description?.toString().slice(0, 500) || form.description,
         category: safeCategory,
       };
       setForm(nextForm);
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt: new Date().toISOString() }));
-      setDraftSavedAt(new Date().toISOString());
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt }));
+      setDraftSavedAt(savedAt);
       setHasSavedDraft(true);
       pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
       toast({ title: "✨ Champs remplis", description: "Brouillon sauvegardé automatiquement. Vous pouvez reprendre plus tard." });
