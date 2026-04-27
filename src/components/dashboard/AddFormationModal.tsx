@@ -20,7 +20,7 @@ interface Props {
 
 type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
 interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
-type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean };
+type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean; editing?: boolean };
 
 // Traduit un message technique en message clair pour l'utilisateur
 const friendlyError = (err: any): { title: string; description: string; code: string } => {
@@ -47,6 +47,15 @@ const FORMATION_CATEGORIES = [
 
 const DRAFT_KEY = "nukuconnect_formation_ai_draft";
 
+const getStoredDraftSavedAt = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw)?.savedAt || "" : "";
+  } catch {
+    return "";
+  }
+};
+
 const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Props) => {
   const { toast } = useToast();
   const { uploadImages, uploading } = useImageUpload();
@@ -65,7 +74,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [chapterPreview, setChapterPreview] = useState<ChapterDraft[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
-  const [draftSavedAt, setDraftSavedAt] = useState<string>("");
+  const [draftSavedAt, setDraftSavedAt] = useState<string>(() => getStoredDraftSavedAt());
   const [hasSavedDraft, setHasSavedDraft] = useState(() => Boolean(localStorage.getItem(DRAFT_KEY)));
   const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
   const resetDiag = () => setDiagnostics([]);
