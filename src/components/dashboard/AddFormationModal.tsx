@@ -397,6 +397,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
   const extractionFailed = diagnostics.some((d) => (d.step === "extracted" && (d.status === "ko" || d.status === "warn")) || (d.step === "extracting" && d.status === "ko") || (d.step === "error" && d.status === "ko"));
   const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
+  const hasUnapprovedChapters = chapterPreview.some((c) => !c.approved);
   // Si l'utilisateur a fourni un contenu IA, on exige une prévisualisation de chapitres validée
   const aiBlocksPublish = aiUsed && chapterPreview.length === 0 && cleanVideosCount === 0;
   const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
@@ -421,6 +422,14 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       toast({
         title: "Extraction du document échouée",
         description: "Corrigez le problème d'extraction (voir Diagnostic) ou collez le contenu manuellement avant de publier.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (chapterPreview.length > 0 && hasUnapprovedChapters) {
+      toast({
+        title: "Chapitres à valider",
+        description: "Approuvez chaque chapitre ou modifiez-le avant de publier.",
         variant: "destructive",
       });
       return;
@@ -503,6 +512,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       setVideoUrls([""]);
       setChapterPreview([]);
+      setAiSourceFile(null);
+      setGeneratedCoverUrl("");
+      localStorage.removeItem(DRAFT_KEY);
+      setHasSavedDraft(false);
+      setDraftSavedAt("");
       resetDiag();
       onOpenChange(false);
       onCreated?.();
