@@ -104,7 +104,7 @@ const MobileBottomNav = () => {
         return;
       }
       
-      setShowAddProduct(true);
+      setShowPublishChoice(true);
     } catch (err) {
       setShowSellLoading(false);
       toast({ title: "Erreur", description: "Impossible de charger votre profil", variant: "destructive" });
