@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3 } from "lucide-react";
+import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3, CheckCircle, Image as ImageIcon, RotateCcw, Save } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
 
 type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
 interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
+type ChapterDraft = { title: string; description: string; duration_minutes: number; approved?: boolean };
 
 // Traduit un message technique en message clair pour l'utilisateur
 const friendlyError = (err: any): { title: string; description: string; code: string } => {
@@ -42,6 +43,8 @@ const FORMATION_CATEGORIES = [
   "Agriculture", "Élevage", "Aquaculture", "Aviculture",
   "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général",
 ];
+
+const DRAFT_KEY = "nukuconnect_formation_ai_draft";
 
 const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Props) => {
   const { toast } = useToast();
