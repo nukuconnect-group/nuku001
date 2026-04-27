@@ -32,6 +32,7 @@ const Footer = () => {
       { label: t("footer.terms"), href: "/terms" },
       { label: t("footer.privacy"), href: "/privacy" },
       { label: t("footer.legal"), href: "/legal" },
+      { label: "Politique d'achat & remboursement", href: "/politique-achat" },
     ],
   };
 
