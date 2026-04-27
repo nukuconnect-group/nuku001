@@ -255,11 +255,18 @@ const BuyerDashboard = () => {
           {/* Résumé des achats — fusion portefeuille + stats principales */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
             <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Receipt className="w-5 h-5" />
-                <span className="text-sm font-semibold">Résumé des achats</span>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Résumé des achats</span>
+                </div>
+                <Link to="/jetons">
+                  <Button size="sm" variant="secondary" className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs">
+                    <Plus className="w-3 h-3" /> Booster un besoin
+                  </Button>
+                </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Total dépensé</p>
                   <p className="text-base sm:text-2xl font-bold">{formatPrice(totalSpent)}</p>
@@ -275,6 +282,15 @@ const BuyerDashboard = () => {
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Favoris</p>
                   <p className="text-base sm:text-2xl font-bold">{wishlistItems?.length || 0}</p>
+                </div>
+                <div className="col-span-2 sm:col-span-1 border-t sm:border-t-0 sm:border-l border-primary-foreground/20 sm:pl-4 pt-2 sm:pt-0">
+                  <p className="text-[10px] text-primary-foreground/70 flex items-center gap-1">
+                    <Coins className="w-3 h-3" /> Mes jetons
+                  </p>
+                  <p className="text-base sm:text-2xl font-bold">
+                    {tokensLoading ? "…" : tokenBalance}
+                  </p>
+                  <p className="text-[9px] text-primary-foreground/60 mt-0.5">Boostez vos besoins d'achat</p>
                 </div>
               </div>
             </CardContent>
