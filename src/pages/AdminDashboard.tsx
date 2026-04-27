@@ -873,6 +873,15 @@ const AdminDashboard = () => {
                             </td>
                             <td className="py-2.5 px-2">
                               <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-[10px] text-primary hover:bg-primary/10"
+                                  onClick={() => setDetailUser(u)}
+                                  title="Voir détails / modifier / réinitialiser"
+                                >
+                                  Détails
+                                </Button>
                                 <UserSubscriptionActions
                                   userId={u.user_id}
                                   userName={u.full_name}
