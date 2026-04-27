@@ -87,6 +87,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const ringTimeoutRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
   const callStartRef = useRef<number>(0);
+  // Refs to avoid stale closures inside setTimeout / signal handlers
+  const metaRef = useRef<CallMeta | null>(null);
+  const statusRef = useRef<CallStatus>("idle");
+  useEffect(() => { metaRef.current = meta; }, [meta]);
+  useEffect(() => { statusRef.current = status; }, [status]);
 
   // ----- helpers -----
   const playRingtone = useCallback(() => {
