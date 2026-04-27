@@ -25,6 +25,7 @@ import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/Langua
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import AccountSidebar from "@/components/layout/AccountSidebar";
+import { useSearchSuggestionsPrefetch } from "@/hooks/useSearchSuggestionsPrefetch";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
 const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal"));
@@ -156,6 +157,7 @@ const Header = () => {
   const { user, profile } = useProfile();
   const { lang, setLang, currency, setCurrency, t, formatPrice } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const { onSearchFocus, onSearchType } = useSearchSuggestionsPrefetch();
   const { data: dbProducts } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -560,8 +562,8 @@ const Header = () => {
                 <div className="hidden lg:flex flex-1 max-w-xl mx-6" ref={searchRef}>
                 <div className="relative w-full">
                   <Input type="text" placeholder="Rechercher produit, catégorie, fournisseur..." value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
-                    onFocus={() => setShowSearchResults(true)}
+                    onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); onSearchType(); }}
+                    onFocus={() => { setShowSearchResults(true); onSearchFocus(); }}
                     className="w-full h-10 pl-4 pr-44 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
                   <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                     <button type="button" onClick={() => setQrScannerOpen(true)}
@@ -671,8 +673,8 @@ const Header = () => {
         <div className="relative flex items-center gap-1.5">
           <div className="relative flex-1">
               <Input type="text" placeholder="Rechercher produit, catégorie, fournisseur..." value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); }}
-              onFocus={() => setShowSearchResults(true)}
+              onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); onSearchType(); }}
+              onFocus={() => { setShowSearchResults(true); onSearchFocus(); }}
               className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
               <button type="button" onClick={() => setQrScannerOpen(true)}

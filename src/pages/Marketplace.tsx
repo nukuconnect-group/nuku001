@@ -33,6 +33,7 @@ import QRScanner from "@/components/QRScanner";
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import { useDemands } from "@/hooks/useDemands";
+import OfflineFallback from "@/components/layout/OfflineFallback";
 import { Product } from "@/data/marketplace";
 import { ProductGridSkeleton } from "@/components/marketplace/ProductCardSkeleton";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
@@ -216,7 +217,7 @@ const Marketplace = () => {
   const { t, formatPrice: fmtPrice } = useLanguage();
   const { toast } = useToast();
   const { user, profile } = useProfile();
-  const { data: dbProducts, isLoading } = useProducts();
+  const { data: dbProducts, isLoading, isError, refetch } = useProducts();
   const { data: marketplaceCategories = [] } = useCategories();
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { data: allDemands } = useDemands();
@@ -741,6 +742,14 @@ const Marketplace = () => {
         </div>
       </div>
 
+      {!isLoading && isError && (!dbProducts || dbProducts.length === 0) && (
+        <OfflineFallback
+          title="Marketplace indisponible"
+          description="Aucun produit en cache. Reconnectez-vous pour parcourir la marketplace."
+          onRetry={() => refetch()}
+          queryKeys={[["products"]]}
+        />
+      )}
       {isLoading && (
         <section className="py-3 sm:py-6 lg:py-8">
           <div className="container mx-auto px-3 sm:px-4">

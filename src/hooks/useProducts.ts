@@ -168,6 +168,9 @@ const isFormationProduct = (p: { name?: string; category?: string; description?:
 const filterOutFormations = (products: Product[]) =>
   products.filter((p) => !isFormationProduct({ name: p.name, category: p.category, description: p.description }));
 
+const PRODUCTS_LIST_KEY = "products-list";
+const PRODUCT_BY_ID_KEY = (id: string) => `product-id:${id}`;
+
 export const useProducts = () => {
   return useQuery({
     queryKey: ["products"],
@@ -187,35 +190,33 @@ export const useProducts = () => {
         if (error) throw error;
         const allProducts = await enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
         const products = filterOutFormations(allProducts);
-        // Cache for offline use
-        try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
+        cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 60 * 6); // 6h
         return products;
       } catch (e) {
         console.warn("Supabase client failed, trying direct fetch:", e);
         try {
           const allProducts = await fetchProductsDirect();
           const products = filterOutFormations(allProducts);
-          try { localStorage.setItem("nuku_products_cache", JSON.stringify(products)); } catch {}
+          cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 60 * 6);
           return products;
         } catch (fetchErr) {
-          // Offline fallback
-          console.warn("Network unavailable, using cached products");
-          const cached = localStorage.getItem("nuku_products_cache");
-          if (cached) return filterOutFormations(JSON.parse(cached) as Product[]);
-          return [];
+          // Offline / network failure → ressers le cache local
+          const cached = cacheGet<Product[]>(PRODUCTS_LIST_KEY);
+          if (cached) {
+            console.info("[cache] Returning cached products list");
+            return cached.data;
+          }
+          throw fetchErr;
         }
       }
     },
     staleTime: 1000 * 60 * 2,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 5000),
     placeholderData: () => {
-      try {
-        const cached = localStorage.getItem("nuku_products_cache");
-        if (cached) return filterOutFormations(JSON.parse(cached) as Product[]);
-      } catch {}
-      return undefined;
+      const cached = cacheGet<Product[]>(PRODUCTS_LIST_KEY);
+      return cached?.data;
     },
   });
 };
@@ -239,24 +240,39 @@ export const useProduct = (id: string) => {
         if (error) throw error;
         if (!data) throw new Error("Product not found");
         const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
+        cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 60 * 6);
         return product;
       } catch (e) {
         console.warn("Supabase client failed for product, using direct fetch:", e);
-        const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio)&id=eq.${id}`;
-        const res = await fetch(url, {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-          },
-        });
-        if (!res.ok) throw new Error(`Product fetch failed: ${res.status}`);
-        const data = await res.json();
-        if (!data?.[0]) throw new Error("Product not found");
-        const [product] = await enrichProductsWithPublicProfiles([data[0] as DbProduct]);
-        return product;
+        try {
+          const url = `${SUPABASE_URL}/rest/v1/products?select=*,producer:profiles!products_producer_id_fkey(id,full_name,avatar_url,is_verified,location,bio)&id=eq.${id}`;
+          const res = await fetch(url, {
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+            },
+          });
+          if (!res.ok) throw new Error(`Product fetch failed: ${res.status}`);
+          const data = await res.json();
+          if (!data?.[0]) throw new Error("Product not found");
+          const [product] = await enrichProductsWithPublicProfiles([data[0] as DbProduct]);
+          cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 60 * 6);
+          return product;
+        } catch (err) {
+          const cached = cacheGet<Product>(PRODUCT_BY_ID_KEY(id));
+          if (cached) {
+            console.info("[cache] Returning cached product", id);
+            return cached.data;
+          }
+          throw err;
+        }
       }
     },
     enabled: !!id,
+    placeholderData: () => {
+      const cached = cacheGet<Product>(PRODUCT_BY_ID_KEY(id));
+      return cached?.data;
+    },
   });
 };
 
