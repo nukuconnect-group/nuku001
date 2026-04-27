@@ -197,19 +197,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const finalizeCall = useCallback((reason: "missed" | "ended" | "declined" | "outgoing-missed") => {
-    const m = meta;
+    const m = metaRef.current;
     const dur = Math.floor((Date.now() - callStartRef.current) / 1000);
     if (m && profile?.id) {
-      // Only the caller logs the message, to avoid duplicates
-      if (m.isCaller) {
-        const realDur = reason === "ended" ? dur : 0;
-        logCallMessage(m.conversationId, profile.id, reason, realDur);
-      }
+      // Both sides log into their own thread so each user sees the call entry.
+      const realDur = reason === "ended" ? dur : 0;
+      logCallMessage(m.conversationId, profile.id, reason, realDur);
     }
     cleanupCall();
     setStatus("idle");
     setMeta(null);
-  }, [meta, profile?.id, cleanupCall]);
+  }, [profile?.id, cleanupCall]);
 
   // ----- incoming signal handler -----
   const handleSignal = useCallback(async (payload: any) => {
@@ -217,7 +215,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
     if (payload.type === "offer") {
       // Incoming call
-      if (status !== "idle") {
+      if (statusRef.current !== "idle") {
         // Busy — auto-decline
         await sendSignal(payload.from, { type: "decline", callId: payload.callId, from: user.id });
         return;
