@@ -669,6 +669,12 @@ const Auth = () => {
                         </ScrollArea>
                       </PopoverContent>
                     </Popover>
+                    {sectorAutoSuggested && producerSector && (
+                      <p className="text-[10px] text-primary -mt-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Secteur suggéré automatiquement à partir du nom : « {producerSector} ». Modifiez si besoin.
+                      </p>
+                    )}
                   </div>
                 )}
 
