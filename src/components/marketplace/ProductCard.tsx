@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
+import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
 
 interface ProductCardProps {
   product: Product;
@@ -73,12 +74,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
     return (
       <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-xl border-border/50">
         <div className="flex flex-col sm:flex-row">
-          <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0">
-            {product.image && !listImgError ? (
-              <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover" onError={() => setListImgError(true)} />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground"><Package className="w-8 h-8" /></div>
-            )}
+          <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0 bg-muted">
+            <img
+              src={listImgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+              alt={product.name}
+              loading="lazy"
+              className="w-full h-full object-cover"
+              onError={() => setListImgError(true)}
+            />
             <div className="absolute top-2 left-2 flex gap-1">
               <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
               {product.discount && (
@@ -126,15 +129,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   return (
     <Link to={`/produit/${product.slug || product.id}`} className="block h-full">
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
-        {/* Image — Alibaba-style tall ratio */}
+        {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          {product.image && !imgError ? (
-            <img src={product.image} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" onError={() => setImgError(true)} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <Package className="w-8 h-8" />
-            </div>
-          )}
+          <img
+            src={imgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+            alt={product.name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            onError={() => setImgError(true)}
+          />
           
           {/* Top badges */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
