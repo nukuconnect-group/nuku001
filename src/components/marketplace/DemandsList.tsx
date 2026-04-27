@@ -157,7 +157,10 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {items.map((demand) => (
+        {items.map((demand) => {
+          const isOwner = !!profile && demand.profile_id === profile.id;
+          const isBoosted = (demand as any).is_boosted && (!(demand as any).boosted_until || new Date((demand as any).boosted_until) > new Date());
+          return (
           <Card
             key={demand.id}
             className="overflow-hidden hover:shadow-md transition-all flex flex-col cursor-pointer"
@@ -168,11 +171,21 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
               <div className="relative w-full aspect-[4/3] bg-muted">
                 <img src={(demand as any).image_url} alt={demand.title} className="absolute inset-0 w-full h-full object-cover" />
                 <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
+                {isBoosted && (
+                  <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] px-1.5 py-0 font-bold shadow flex items-center gap-1">
+                    <Rocket className="w-2.5 h-2.5" /> BOOST
+                  </Badge>
+                )}
               </div>
             ) : (
               <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/5 flex items-center justify-center">
                 <Package className="w-10 h-10 text-accent/40" />
                 <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
+                {isBoosted && (
+                  <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] px-1.5 py-0 font-bold shadow flex items-center gap-1">
+                    <Rocket className="w-2.5 h-2.5" /> BOOST
+                  </Badge>
+                )}
               </div>
             )}
 
@@ -205,10 +218,32 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
                   </span>
                 )}
               </div>
+
+              {isOwner && (
+                <Button
+                  size="sm"
+                  variant={isBoosted ? "outline" : "hero"}
+                  className="mt-2 h-7 text-[10px] gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setBoostDemand({ id: demand.id, title: demand.title, category: demand.category });
+                  }}
+                >
+                  <Rocket className="w-3 h-3" /> {isBoosted ? "Re-booster" : "Booster"}
+                </Button>
+              )}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
+
+      <DemandBoostModal
+        open={!!boostDemand}
+        onOpenChange={(open) => { if (!open) setBoostDemand(null); }}
+        presetDemand={boostDemand || undefined}
+        presetDemandId={boostDemand?.id}
+      />
 
       {/* Demand Detail Sheet */}
       <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && setSelectedDemand(null)}>
