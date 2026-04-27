@@ -258,6 +258,26 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
+  // Zero unread badge instantly when a conversation is read in this tab
+  useEffect(() => {
+    const onRead = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const convId = detail.conversationId as string | undefined;
+      if (!convId) {
+        // refetch as fallback
+        fetchConversations();
+        return;
+      }
+      setConversations((prev) => {
+        const next = prev.map((c) => (c.id === convId ? { ...c, unread: 0 } : c));
+        cache.conversations = next;
+        return next;
+      });
+    };
+    window.addEventListener("nuku:messages-read", onRead as EventListener);
+    return () => window.removeEventListener("nuku:messages-read", onRead as EventListener);
+  }, [fetchConversations]);
+
   // Prefetch on window focus / tab visibility — instant cache + silent refresh
   useEffect(() => {
     const onFocus = () => fetchConversations();
