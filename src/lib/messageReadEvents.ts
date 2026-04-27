@@ -136,13 +136,28 @@ export const emitMessagesRead = (detail: ReadEventDetail) => {
   } catch {}
 };
 
+/** Notify subscribers when the offline queue size changes (UI banners). */
+const queueListeners = new Set<(size: number) => void>();
+const notifyQueueChange = () => {
+  const size = getOfflineReadQueue().length;
+  queueListeners.forEach((cb) => { try { cb(size); } catch {} });
+};
+export const subscribeOfflineQueue = (cb: (size: number) => void) => {
+  queueListeners.add(cb);
+  cb(getOfflineReadQueue().length);
+  return () => { queueListeners.delete(cb); };
+};
+
 /** Queue a read intent while offline so it can be replayed later. */
 export const queueOfflineRead = (detail: ReadEventDetail) => {
   try {
     const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
     const arr: ReadEventDetail[] = raw ? JSON.parse(raw) : [];
+    // Dedupe by eventId in the queue too
+    if (detail.eventId && arr.some((d) => d.eventId === detail.eventId)) return;
     arr.push({ ...detail, at: detail.at ?? Date.now() });
     localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(arr));
+    notifyQueueChange();
   } catch {}
 };
 
@@ -154,7 +169,7 @@ export const getOfflineReadQueue = (): ReadEventDetail[] => {
 };
 
 export const clearOfflineReadQueue = () => {
-  try { localStorage.removeItem(OFFLINE_QUEUE_KEY); } catch {}
+  try { localStorage.removeItem(OFFLINE_QUEUE_KEY); notifyQueueChange(); } catch {}
 };
 
 /**
