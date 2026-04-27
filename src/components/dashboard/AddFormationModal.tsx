@@ -373,23 +373,82 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             <p className="text-[11px] text-muted-foreground">
               Importez un document texte ou collez le contenu : l'IA crée automatiquement les chapitres pédagogiques.
               Vous pouvez aussi ajouter des liens vers vos vidéos. Tout sera publié dans la section <strong>Formations</strong>.
+              <br />
+              <span className="text-[10px]">Taille max document : 10 Mo. Formats : .txt, .md, .pdf, .docx</span>
             </p>
 
             <div className="space-y-1.5">
               <input id="ai-doc" type="file" accept=".txt,.md,.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleAiFile} className="hidden" />
               <label htmlFor="ai-doc" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 hover:border-primary/70 cursor-pointer text-xs text-foreground bg-background">
                 <FileText className="w-3.5 h-3.5 text-primary" />
-                {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx)"}
+                {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx) — max 10 Mo"}
               </label>
               <Textarea
                 value={aiContent}
-                onChange={(e) => setAiContent(e.target.value)}
+                onChange={(e) => { setAiContent(e.target.value); if (chapterPreview.length) setChapterPreview([]); }}
                 rows={4}
                 placeholder="Ou collez ici le contenu du document à structurer en chapitres…"
                 className="text-xs"
               />
+              {aiContent.trim().length >= 50 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviewChapters}
+                  disabled={previewLoading || aiBusy}
+                  className="gap-1.5 text-[11px] h-8"
+                >
+                  {previewLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
+                  {chapterPreview.length ? "Régénérer la prévisualisation" : "Prévisualiser les chapitres IA"}
+                </Button>
+              )}
             </div>
 
+            {chapterPreview.length > 0 && (
+              <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
+                <div className="flex items-center gap-1.5">
+                  <Edit3 className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-xs font-semibold">
+                    {chapterPreview.length} chapitre(s) — modifiez avant publication
+                  </Label>
+                </div>
+                {chapterPreview.map((ch, idx) => (
+                  <div key={idx} className="space-y-1.5 p-2.5 rounded-md bg-muted/40 border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
+                      <Input
+                        value={ch.title}
+                        onChange={(e) => updateChapterField(idx, "title", e.target.value)}
+                        placeholder="Titre du chapitre"
+                        className="text-xs h-8 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min={1}
+                        value={ch.duration_minutes}
+                        onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
+                        className="text-xs h-8 w-16"
+                        title="Durée (min)"
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeChapter(idx)} className="h-8 w-8 shrink-0">
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={ch.description}
+                      onChange={(e) => updateChapterField(idx, "description", e.target.value)}
+                      rows={2}
+                      placeholder="Description du chapitre"
+                      className="text-[11px]"
+                    />
+                  </div>
+                ))}
+                <p className="text-[10px] text-muted-foreground italic">
+                  ✓ Les chapitres ci-dessus seront utilisés tels quels (l'IA ne sera pas relancée).
+                </p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5"><Video className="w-3.5 h-3.5 text-accent" /> Vidéos de la formation (URLs)</Label>
               {videoUrls.map((url, idx) => (
