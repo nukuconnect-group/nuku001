@@ -545,12 +545,33 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Cover */}
           <div className="space-y-2">
-            <Label>Image de couverture</Label>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <Label>Image de couverture</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateCover}
+                disabled={coverGenerating || !form.title.trim() || !form.description.trim()}
+                className="gap-1.5 text-[11px] h-8"
+              >
+                {coverGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5 text-primary" />}
+                Générer une image de couverture
+              </Button>
+            </div>
             <input id="cover" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
             {coverPreview ? (
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-                <img src={coverPreview} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(""); }}
+                <img src={coverPreview} alt="Couverture de la formation" className="w-full h-full object-cover" />
+                {generatedCoverUrl && (
+                  <span className="absolute left-2 top-2 px-2 py-1 rounded-md bg-background/85 text-[10px] text-foreground border border-border">
+                    Image IA générée
+                  </span>
+                )}
+                <label htmlFor="cover" className="absolute left-2 bottom-2 px-2 py-1 rounded-md bg-background/90 text-[10px] text-foreground border border-border cursor-pointer hover:bg-background">
+                  Remplacer l'image
+                </label>
+                <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(""); setGeneratedCoverUrl(""); }}
                   className="absolute top-2 right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                   <X className="w-4 h-4" />
                 </button>
@@ -562,6 +583,17 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
               </label>
             )}
           </div>
+
+          {hasSavedDraft && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5">
+              <p className="text-[11px] text-foreground">
+                Brouillon disponible{draftSavedAt ? ` — ${new Date(draftSavedAt).toLocaleString("fr-FR")}` : ""}
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={resumeDraft} className="h-8 text-[11px] gap-1">
+                <Save className="w-3 h-3" /> Reprendre plus tard
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
