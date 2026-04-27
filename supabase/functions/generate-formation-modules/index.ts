@@ -28,77 +28,116 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "unauthenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { formation_id, document_text, video_urls = [] } = await req.json();
-    if (!formation_id || (!document_text && video_urls.length === 0)) {
-      return new Response(JSON.stringify({ error: "missing formation_id or content" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const body = await req.json();
+    const {
+      formation_id,
+      document_text,
+      video_urls = [],
+      preview_only = false,
+      chapters: providedChapters,
+    } = body || {};
+
+    // Mode preview : pas besoin de formation_id, juste générer les chapitres
+    if (preview_only) {
+      if (!document_text || String(document_text).trim().length < 50) {
+        return new Response(JSON.stringify({ error: "missing_document_text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else {
+      if (!formation_id) {
+        return new Response(JSON.stringify({ error: "missing_formation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!providedChapters && !document_text && (video_urls?.length ?? 0) === 0) {
+        return new Response(JSON.stringify({ error: "missing_content" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Verify formation ownership via user_id on profile (optional simple check)
-    const { data: formation } = await admin.from("formations").select("id,title").eq("id", formation_id).maybeSingle();
-    if (!formation) {
-      return new Response(JSON.stringify({ error: "formation not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    let formationTitle = "Formation";
+    if (formation_id) {
+      const { data: formation } = await admin.from("formations").select("id,title").eq("id", formation_id).maybeSingle();
+      if (!preview_only && !formation) {
+        return new Response(JSON.stringify({ error: "formation_not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      formationTitle = formation?.title || formationTitle;
     }
 
-    // Truncate doc text to avoid huge prompts
-    const sourceText = (document_text || "").slice(0, 18000);
+    let chapters: Array<{ title: string; description: string; duration_minutes: number }> = [];
 
-    // Ask the AI for a structured outline (tool calling)
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "Tu es un pédagogue agricole. À partir d'un document, tu structures une formation claire en 4 à 8 chapitres. Réponds en français, concis et orienté pratique." },
-          { role: "user", content: `Titre de la formation: "${formation.title}"\n\nContenu du document à structurer:\n${sourceText}\n\nGénère les chapitres pédagogiques.` },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "generate_chapters",
-            description: "Renvoie une liste ordonnée de chapitres pour la formation",
-            parameters: {
-              type: "object",
-              properties: {
-                chapters: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      duration_minutes: { type: "number" },
+    // Si l'utilisateur fournit déjà des chapitres édités → on les utilise tels quels
+    if (Array.isArray(providedChapters) && providedChapters.length > 0) {
+      chapters = providedChapters
+        .filter((c: any) => c && typeof c.title === "string" && c.title.trim())
+        .map((c: any) => ({
+          title: String(c.title).slice(0, 200).trim(),
+          description: String(c.description || "").slice(0, 1000).trim(),
+          duration_minutes: Math.max(1, Math.min(600, Math.round(Number(c.duration_minutes) || 10))),
+        }));
+    } else if (document_text) {
+      // Sinon on génère via IA à partir du document
+      const sourceText = String(document_text).slice(0, 18000);
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: "Tu es un pédagogue agricole. À partir d'un document, tu structures une formation claire en 4 à 8 chapitres. Réponds en français, concis et orienté pratique." },
+            { role: "user", content: `Titre de la formation: "${formationTitle}"\n\nContenu du document à structurer:\n${sourceText}\n\nGénère les chapitres pédagogiques.` },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "generate_chapters",
+              description: "Renvoie une liste ordonnée de chapitres pour la formation",
+              parameters: {
+                type: "object",
+                properties: {
+                  chapters: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        description: { type: "string" },
+                        duration_minutes: { type: "number" },
+                      },
+                      required: ["title", "description", "duration_minutes"],
+                      additionalProperties: false,
                     },
-                    required: ["title", "description", "duration_minutes"],
-                    additionalProperties: false,
                   },
                 },
+                required: ["chapters"],
+                additionalProperties: false,
               },
-              required: ["chapters"],
-              additionalProperties: false,
             },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "generate_chapters" } },
-      }),
-    });
+          }],
+          tool_choice: { type: "function", function: { name: "generate_chapters" } },
+        }),
+      });
 
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      console.error("AI error", aiResp.status, t);
-      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (aiResp.status === 402) return new Response(JSON.stringify({ error: "credits_required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`ai_failed:${aiResp.status}`);
+      if (!aiResp.ok) {
+        const t = await aiResp.text();
+        console.error("AI error", aiResp.status, t);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "credits_required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`ai_failed:${aiResp.status}`);
+      }
+
+      const aiJson = await aiResp.json();
+      const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
+      const args = toolCall ? JSON.parse(toolCall.function.arguments) : { chapters: [] };
+      chapters = args.chapters || [];
     }
 
-    const aiJson = await aiResp.json();
-    const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
-    const args = toolCall ? JSON.parse(toolCall.function.arguments) : { chapters: [] };
-    const chapters: Array<{ title: string; description: string; duration_minutes: number }> = args.chapters || [];
+    // Mode preview : on renvoie les chapitres sans rien insérer
+    if (preview_only) {
+      return new Response(JSON.stringify({ success: true, chapters }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Build modules: AI text chapters first, then video URLs as separate modules
+    // Build modules: chapitres texte + vidéos
     const modules: any[] = chapters.map((c, idx) => ({
       formation_id,
       title: c.title,

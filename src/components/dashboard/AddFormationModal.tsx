@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2 } from "lucide-react";
+import { Loader2, GraduationCap, Upload, X, Sparkles, Video, FileText, Plus, Trash2, Eye, Edit3 } from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Props {
@@ -35,6 +35,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [aiFileName, setAiFileName] = useState<string>("");
   const [videoUrls, setVideoUrls] = useState<string[]>([""]);
   const [aiBusy, setAiBusy] = useState(false);
+  const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -79,14 +81,42 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     return (result.value || "").trim();
   };
 
+  const MAX_DOC_SIZE_MB = 10;
+  const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
+
   const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+
+    // Limite de taille côté client
+    if (f.size > MAX_DOC_SIZE_BYTES) {
+      const sizeMb = (f.size / 1024 / 1024).toFixed(1);
+      toast({
+        title: "Document trop volumineux",
+        description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     setAiFileName(f.name);
+    setChapterPreview([]);
     const lower = f.name.toLowerCase();
     const isText = f.type.startsWith("text/") || lower.endsWith(".txt") || lower.endsWith(".md");
     const isPdf = f.type === "application/pdf" || lower.endsWith(".pdf");
     const isDocx = lower.endsWith(".docx") || f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    if (!isText && !isPdf && !isDocx) {
+      toast({
+        title: "Format non supporté",
+        description: "Formats acceptés : .txt, .md, .pdf, .docx",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      setAiFileName("");
+      return;
+    }
 
     try {
       if (isText) {
@@ -99,17 +129,24 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
       else if (isDocx) text = await extractTextFromDocx(f);
-      else throw new Error("Format non supporté. Utilisez .txt, .md, .pdf ou .docx");
 
       if (!text || text.length < 30) {
-        toast({ title: "Document peu lisible", description: "Aucun texte exploitable trouvé. Vous pouvez coller le contenu manuellement.", variant: "destructive" });
+        toast({
+          title: "Document non lisible",
+          description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
+          variant: "destructive",
+        });
       } else {
         setAiContent(text);
-        toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur Publier pour générer les chapitres IA.` });
+        toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
-      toast({ title: "Extraction impossible", description: err?.message || "Impossible de lire le document. Collez le contenu manuellement.", variant: "destructive" });
+      toast({
+        title: "Extraction impossible",
+        description: err?.message || "Impossible de lire le document. Le fichier est peut-être corrompu ou protégé.",
+        variant: "destructive",
+      });
     } finally {
       setAiBusy(false);
     }
@@ -120,6 +157,47 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   };
   const addVideoField = () => setVideoUrls(prev => [...prev, ""]);
   const removeVideoField = (idx: number) => setVideoUrls(prev => prev.filter((_, i) => i !== idx));
+
+  const handlePreviewChapters = async () => {
+    if (aiContent.trim().length < 50) {
+      toast({
+        title: "Contenu trop court",
+        description: "Ajoutez au moins 50 caractères de contenu (importez un document ou collez du texte).",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { document_text: aiContent, preview_only: true },
+      });
+      if (error) throw error;
+      const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
+      if (!chs.length) {
+        toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
+        return;
+      }
+      setChapterPreview(chs);
+      toast({ title: "✨ Chapitres prêts", description: `${chs.length} chapitres générés. Modifiez-les avant publication.` });
+    } catch (err: any) {
+      console.error("Preview chapters error", err);
+      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer la prévisualisation.", variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const updateChapterField = (idx: number, field: "title" | "description" | "duration_minutes", value: string) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? {
+      ...c,
+      [field]: field === "duration_minutes" ? Math.max(1, parseInt(value) || 1) : value,
+    } : c));
+  };
+
+  const removeChapter = (idx: number) => {
+    setChapterPreview(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,18 +228,25 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
       if (error) throw error;
 
-      // IA: si contenu document ou vidéos fournis → génération auto de modules
+      // IA: chapitres édités OU contenu document OU vidéos fournis → génération auto de modules
       const cleanVideos = videoUrls.map(v => v.trim()).filter(Boolean);
-      if (created?.id && (aiContent.trim().length > 50 || cleanVideos.length > 0)) {
+      const hasEditedChapters = chapterPreview.length > 0;
+      const hasContent = aiContent.trim().length > 50;
+      if (created?.id && (hasEditedChapters || hasContent || cleanVideos.length > 0)) {
         setAiBusy(true);
         try {
           const { data: aiData, error: aiErr } = await supabase.functions.invoke("generate-formation-modules", {
-            body: { formation_id: created.id, document_text: aiContent, video_urls: cleanVideos },
+            body: {
+              formation_id: created.id,
+              document_text: hasEditedChapters ? "" : aiContent,
+              video_urls: cleanVideos,
+              chapters: hasEditedChapters ? chapterPreview : undefined,
+            },
           });
           if (aiErr) throw aiErr;
           toast({
             title: "✨ Formation prête",
-            description: `${aiData?.chapters_generated || 0} chapitres IA + ${cleanVideos.length} vidéo(s) ajoutés.`,
+            description: `${aiData?.modules_inserted || 0} module(s) ajouté(s).`,
           });
         } catch (aiE: any) {
           console.error("AI modules error", aiE);
@@ -182,6 +267,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiContent("");
       setAiFileName("");
       setVideoUrls([""]);
+      setChapterPreview([]);
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
@@ -287,23 +373,82 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             <p className="text-[11px] text-muted-foreground">
               Importez un document texte ou collez le contenu : l'IA crée automatiquement les chapitres pédagogiques.
               Vous pouvez aussi ajouter des liens vers vos vidéos. Tout sera publié dans la section <strong>Formations</strong>.
+              <br />
+              <span className="text-[10px]">Taille max document : 10 Mo. Formats : .txt, .md, .pdf, .docx</span>
             </p>
 
             <div className="space-y-1.5">
               <input id="ai-doc" type="file" accept=".txt,.md,.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleAiFile} className="hidden" />
               <label htmlFor="ai-doc" className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 hover:border-primary/70 cursor-pointer text-xs text-foreground bg-background">
                 <FileText className="w-3.5 h-3.5 text-primary" />
-                {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx)"}
+                {aiFileName ? aiFileName : "Importer un document (.txt, .md, .pdf, .docx) — max 10 Mo"}
               </label>
               <Textarea
                 value={aiContent}
-                onChange={(e) => setAiContent(e.target.value)}
+                onChange={(e) => { setAiContent(e.target.value); if (chapterPreview.length) setChapterPreview([]); }}
                 rows={4}
                 placeholder="Ou collez ici le contenu du document à structurer en chapitres…"
                 className="text-xs"
               />
+              {aiContent.trim().length >= 50 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviewChapters}
+                  disabled={previewLoading || aiBusy}
+                  className="gap-1.5 text-[11px] h-8"
+                >
+                  {previewLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
+                  {chapterPreview.length ? "Régénérer la prévisualisation" : "Prévisualiser les chapitres IA"}
+                </Button>
+              )}
             </div>
 
+            {chapterPreview.length > 0 && (
+              <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
+                <div className="flex items-center gap-1.5">
+                  <Edit3 className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-xs font-semibold">
+                    {chapterPreview.length} chapitre(s) — modifiez avant publication
+                  </Label>
+                </div>
+                {chapterPreview.map((ch, idx) => (
+                  <div key={idx} className="space-y-1.5 p-2.5 rounded-md bg-muted/40 border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
+                      <Input
+                        value={ch.title}
+                        onChange={(e) => updateChapterField(idx, "title", e.target.value)}
+                        placeholder="Titre du chapitre"
+                        className="text-xs h-8 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min={1}
+                        value={ch.duration_minutes}
+                        onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
+                        className="text-xs h-8 w-16"
+                        title="Durée (min)"
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeChapter(idx)} className="h-8 w-8 shrink-0">
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={ch.description}
+                      onChange={(e) => updateChapterField(idx, "description", e.target.value)}
+                      rows={2}
+                      placeholder="Description du chapitre"
+                      className="text-[11px]"
+                    />
+                  </div>
+                ))}
+                <p className="text-[10px] text-muted-foreground italic">
+                  ✓ Les chapitres ci-dessus seront utilisés tels quels (l'IA ne sera pas relancée).
+                </p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5"><Video className="w-3.5 h-3.5 text-accent" /> Vidéos de la formation (URLs)</Label>
               {videoUrls.map((url, idx) => (

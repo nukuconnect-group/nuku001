@@ -23,12 +23,14 @@ const levelLabels: Record<string, string> = {
 const Formations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [selectedAuthor, setSelectedAuthor] = useState("Tous");
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const [formations, setFormations] = useState<any[]>([]);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>(["Tous"]);
+  const [authors, setAuthors] = useState<string[]>(["Tous"]);
 
   useEffect(() => {
     const load = async () => {
@@ -44,6 +46,8 @@ const Formations = () => {
       // Extract categories
       const cats = ["Tous", ...new Set(formationsData.map((f: any) => f.category).filter(Boolean))];
       setCategories(cats as string[]);
+      const auths = ["Tous", ...new Set(formationsData.map((f: any) => f.instructor).filter(Boolean))];
+      setAuthors(auths as string[]);
 
       // Get user progress
       const { data: { session } } = await supabase.auth.getSession();
@@ -65,8 +69,9 @@ const Formations = () => {
   const filteredCourses = formations.filter((course) => {
     const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase()) || course.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "Tous" || course.category === selectedCategory;
+    const matchesAuthor = selectedAuthor === "Tous" || course.instructor === selectedAuthor;
     const matchesFree = !showFreeOnly || !course.is_paid;
-    return matchesSearch && matchesCategory && matchesFree;
+    return matchesSearch && matchesCategory && matchesAuthor && matchesFree;
   });
 
   const formatPrice = (price: number) => new Intl.NumberFormat("fr-FR").format(price);
@@ -156,6 +161,18 @@ const Formations = () => {
                 </Button>
               ))}
             </div>
+            {authors.length > 1 && (
+              <select
+                value={selectedAuthor}
+                onChange={(e) => setSelectedAuthor(e.target.value)}
+                className="text-sm bg-background border border-input rounded-md px-2 py-1.5 h-9"
+                aria-label="Filtrer par auteur"
+              >
+                {authors.map((a) => (
+                  <option key={a} value={a}>{a === "Tous" ? "Tous les auteurs" : a}</option>
+                ))}
+              </select>
+            )}
             <Button variant={showFreeOnly ? "default" : "outline"} size="sm" onClick={() => setShowFreeOnly(!showFreeOnly)}>
               Gratuit uniquement
             </Button>
