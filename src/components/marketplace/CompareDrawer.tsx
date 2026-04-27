@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Product } from "@/data/marketplace";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Star, Leaf, MapPin, ShieldCheck } from "lucide-react";
+import VerifiedBadge from "@/components/seller/VerifiedBadge";
 
 interface CompareDrawerProps {
   products: Product[];
@@ -111,7 +112,7 @@ const CompareDrawer = ({ products, open, onOpenChange, onRemove, onClear }: Comp
                     <td key={p.id} className="p-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <span className="text-xs">{p.producer.name}</span>
-                        {p.producer.verified && <ShieldCheck className="w-3 h-3 text-primary" />}
+                        {p.producer.verified && <VerifiedBadge verified variant="compact" />}
                       </div>
                     </td>
                   ))}
