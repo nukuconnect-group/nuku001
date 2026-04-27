@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save
+  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
@@ -396,14 +396,6 @@ const BuyerDashboard = () => {
                 <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
               </div>
             )}
-          </Suspense>
-
-          {/* Subscription Management */}
-          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-5 sm:mb-8">
-              <SubscriptionCard />
-              <TokenWalletCard />
-            </div>
           </Suspense>
 
           {/* Formations Section */}
