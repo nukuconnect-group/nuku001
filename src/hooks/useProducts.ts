@@ -257,22 +257,36 @@ export const useProductBySlug = (slug: string) => {
   return useQuery({
     queryKey: ["product-slug", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          producer:profiles!products_producer_id_fkey(
-            id, full_name, avatar_url, is_verified, location, bio
-          )
-        `)
-        .eq("slug", slug)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`
+            *,
+            producer:profiles!products_producer_id_fkey(
+              id, full_name, avatar_url, is_verified, location, bio
+            )
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
 
-      if (error) throw error;
-      if (!data) throw new Error("Product not found");
-      const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
-      return product;
+        if (error) throw error;
+        if (!data) throw new Error("Product not found");
+        const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
+        cacheSet(`product-slug:${slug}`, product, 1000 * 60 * 60 * 6);
+        return product;
+      } catch (err) {
+        const cached = cacheGet<Product>(`product-slug:${slug}`);
+        if (cached) {
+          console.info("[cache] Returning cached product by slug", slug);
+          return cached.data;
+        }
+        throw err;
+      }
     },
     enabled: !!slug,
+    placeholderData: () => {
+      const cached = cacheGet<Product>(`product-slug:${slug}`);
+      return cached?.data;
+    },
   });
 };
