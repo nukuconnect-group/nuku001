@@ -100,6 +100,50 @@ const Auth = () => {
   const filteredSectors = sectors.filter((s) => s.toLowerCase().includes(sectorSearch.trim().toLowerCase()));
   const companyMissing = (userType === "producer" || userType === "trainer") && !producerCompany.trim();
 
+  // Suggestion automatique du secteur à partir du nom de l'entreprise
+  const SECTOR_KEYWORDS: Array<{ kw: RegExp; sector: string }> = [
+    { kw: /(poule|volaille|avicult|poulet|œuf|oeuf)/i, sector: "Aviculture" },
+    { kw: /(poisson|piscicult|aquacult|crevette|tilapia|pêche|peche)/i, sector: "Pêche & Aquaculture / Pisciculture" },
+    { kw: /(miel|abeille|apicult|ruche)/i, sector: "Apiculture (miel)" },
+    { kw: /(maraîch|maraich|légume|legume|tomate|piment|salade)/i, sector: "Maraîchage" },
+    { kw: /(fruit|verger|mangue|ananas|banane|orange|agrume)/i, sector: "Fruits" },
+    { kw: /(maïs|mais|riz|sorgho|mil|haricot|niébé|niebe|soja|céréale|cereale|légumineuse|legumineuse)/i, sector: "Céréales & Légumineuses" },
+    { kw: /(manioc|igname|patate|tubercule|taro)/i, sector: "Tubercules & Racines" },
+    { kw: /(bovin|ovin|caprin|bœuf|boeuf|mouton|chèvre|chevre|élevage|elevage)/i, sector: "Élevage (bovin, ovin, caprin)" },
+    { kw: /(cacao|café|cafe|coton|anacarde|cajou)/i, sector: "Cultures de rente (cacao, café, coton, anacarde)" },
+    { kw: /(plante médicinal|medicinal|aromatique|tisane|moringa)/i, sector: "Plantes médicinales & aromatiques" },
+    { kw: /(pépini|pepini|horticult|fleur|plant)/i, sector: "Horticulture / Pépinières & Plants" },
+    { kw: /(semence|intrant)/i, sector: "Semences & Intrants agricoles" },
+    { kw: /(engrais|fertilis|compost|npk|urée|uree)/i, sector: "Engrais & Fertilisants" },
+    { kw: /(pesticide|phyto|insecticide|herbicide|fongicide)/i, sector: "Produits phytosanitaires" },
+    { kw: /(provende|aliment.*bétail|aliment.*betail|aliment.*volaille|aliment.*animal)/i, sector: "Aliments pour bétail & volaille" },
+    { kw: /(machine|tracteur|équipement|equipement|outil agricole)/i, sector: "Équipements & Machines agricoles" },
+    { kw: /(irrigation|pompe|forage|goutte à goutte|goutte a goutte)/i, sector: "Irrigation & Pompage" },
+    { kw: /(solaire|photovoltaï|photovoltai|énergie|energie)/i, sector: "Énergie solaire agricole" },
+    { kw: /(transformat|jus|farine|huile|conserverie|agroalimentaire)/i, sector: "Transformation agroalimentaire" },
+    { kw: /(emballage|conditionnement|sachet|carton)/i, sector: "Conditionnement & Emballage" },
+    { kw: /(stockage|froid|frigorifique|chambre froide|conservation)/i, sector: "Stockage & Conservation (chaîne du froid)" },
+    { kw: /(logistique|transport|camion|fret)/i, sector: "Logistique & Transport agricole" },
+    { kw: /(forêt|foret|sylvicult|agroforest|reboisement)/i, sector: "Agroforesterie & Sylviculture" },
+    { kw: /(biotech|agritech|drone|capteur|iot|saas agricole)/i, sector: "Biotechnologie & Agritech" },
+    { kw: /(conseil|consult|service agricole|expertise)/i, sector: "Conseil & Services agricoles" },
+    { kw: /(coopérative|cooperative|groupement|union|gie)/i, sector: "Coopératives & Groupements" },
+    { kw: /(import|export|commerce extérieur|commerce exterieur)/i, sector: "Import / Export agricole" },
+  ];
+  const [sectorAutoSuggested, setSectorAutoSuggested] = useState(false);
+  useEffect(() => {
+    if (userType !== "producer") return;
+    const name = producerCompany.trim();
+    if (name.length < 3) return;
+    // Ne pas écraser un choix manuel de l'utilisateur
+    if (producerSector && !sectorAutoSuggested) return;
+    const match = SECTOR_KEYWORDS.find((s) => s.kw.test(name));
+    if (match && match.sector !== producerSector) {
+      setProducerSector(match.sector);
+      setSectorAutoSuggested(true);
+    }
+  }, [producerCompany, userType]);
+
   const [buyerFirstName, setBuyerFirstName] = useState("");
   const [buyerLastName, setBuyerLastName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
