@@ -97,19 +97,36 @@ const EmailLogsManager = () => {
   }, [range, customStart, customEnd]);
 
   // Deduplicate by message_id (latest status per email) + compute response time
+  // response_ms = (timestamp of last 'sent'/'failed'/'bounced'/'dlq')
+  //             - (timestamp of first 'pending' log) for the same message_id
   const dedupedRows = useMemo(() => {
     // rawRows is sorted DESC (most recent first)
+    const FINAL_STATUSES = new Set(["sent", "failed", "bounced", "dlq"]);
     const latest = new Map<string, LogRow>();
-    const earliest = new Map<string, LogRow>();
+    const firstPendingAt = new Map<string, number>();
+    const lastFinalAt = new Map<string, number>();
+
     for (const row of rawRows) {
       const key = row.message_id || row.id;
       if (!latest.has(key)) latest.set(key, row);
-      earliest.set(key, row); // overwritten => last assignment is the oldest
+      const ts = new Date(row.created_at).getTime();
+      if (row.status === "pending") {
+        // keep the EARLIEST pending timestamp
+        const prev = firstPendingAt.get(key);
+        if (prev === undefined || ts < prev) firstPendingAt.set(key, ts);
+      }
+      if (FINAL_STATUSES.has(row.status)) {
+        // keep the LATEST final timestamp
+        const prev = lastFinalAt.get(key);
+        if (prev === undefined || ts > prev) lastFinalAt.set(key, ts);
+      }
     }
+
     return Array.from(latest.entries()).map(([key, row]) => {
-      const first = earliest.get(key);
-      const responseMs = first && first.id !== row.id
-        ? new Date(row.created_at).getTime() - new Date(first.created_at).getTime()
+      const start = firstPendingAt.get(key);
+      const end = lastFinalAt.get(key);
+      const responseMs = start !== undefined && end !== undefined && end >= start
+        ? end - start
         : null;
       return { ...row, response_ms: responseMs };
     });
