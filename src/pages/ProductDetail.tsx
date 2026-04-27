@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
+import { ProductDetailSkeleton, CachedDataBanner } from "@/components/marketplace/ProductDetailSkeleton";
 import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
@@ -161,13 +162,11 @@ const ProductDetail = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !product) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20 lg:pb-0">
         <Header />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <ProductDetailSkeleton />
         <MobileBottomNav />
       </div>
     );

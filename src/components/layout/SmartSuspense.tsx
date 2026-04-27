@@ -83,14 +83,20 @@ const SmartLoader = () => {
   );
 };
 
-/** Error boundary qui capture les échecs de chargement de chunk lazy */
+/**
+ * Error boundary qui capture les échecs de chargement de chunk lazy.
+ * Au retry, on remonte une `key` pour forcer React à re-monter l'arbre
+ * et réessayer l'import dynamique SANS full reload de la page.
+ * Si l'échec est un "Failed to fetch dynamically imported module" persistant
+ * (déploiement avec hash de chunk obsolète), on tente alors un soft reload.
+ */
 class ChunkErrorBoundary extends Component<
-  { children: ReactNode },
-  { hasError: boolean; error?: Error }
+  { children: ReactNode; resetKey: number; onReset: () => void },
+  { hasError: boolean; error?: Error; retryCount: number }
 > {
-  constructor(props: { children: ReactNode }) {
+  constructor(props: { children: ReactNode; resetKey: number; onReset: () => void }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, retryCount: 0 };
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -102,29 +108,41 @@ class ChunkErrorBoundary extends Component<
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
-    window.location.reload();
+    const isChunkError =
+      this.state.error?.message?.includes("dynamically imported module") ||
+      this.state.error?.message?.includes("Loading chunk") ||
+      this.state.error?.name === "ChunkLoadError";
+
+    // Après 2 échecs sur un chunk, on force un reload (déploiement obsolète)
+    if (isChunkError && this.state.retryCount >= 1) {
+      window.location.reload();
+      return;
+    }
+
+    this.setState((s) => ({ hasError: false, error: undefined, retryCount: s.retryCount + 1 }));
+    this.props.onReset();
   };
 
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
-          <div className="max-w-md w-full bg-card border border-border rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-lg">
+          <div className="max-w-md w-full bg-card border border-border rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-lg animate-in fade-in zoom-in-95 duration-300">
             <div className="mx-auto w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
               <AlertTriangle className="w-7 h-7 text-destructive" />
             </div>
             <div className="space-y-1">
               <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                Échec du chargement de la page
+                Échec du chargement
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Une erreur s'est produite. Réessayez pour recharger la page.
+                Une erreur s'est produite pendant le chargement du composant.
+                {this.state.retryCount > 0 && " Tentative précédente échouée."}
               </p>
             </div>
             <Button onClick={this.handleRetry} className="w-full gap-2">
               <RefreshCw className="w-4 h-4" />
-              Réessayer
+              Réessayer sans recharger
             </Button>
           </div>
         </div>
@@ -134,11 +152,16 @@ class ChunkErrorBoundary extends Component<
   }
 }
 
-/** Wrapper combinant Suspense + ErrorBoundary + détection de lenteur */
-export const SmartSuspense = ({ children }: { children: ReactNode }) => (
-  <ChunkErrorBoundary>
-    <Suspense fallback={<SmartLoader />}>{children}</Suspense>
-  </ChunkErrorBoundary>
-);
+/** Wrapper combinant Suspense + ErrorBoundary + détection de lenteur + retry doux */
+export const SmartSuspense = ({ children }: { children: ReactNode }) => {
+  const [resetKey, setResetKey] = useState(0);
+  return (
+    <ChunkErrorBoundary resetKey={resetKey} onReset={() => setResetKey((k) => k + 1)}>
+      <Suspense key={resetKey} fallback={<SmartLoader />}>
+        {children}
+      </Suspense>
+    </ChunkErrorBoundary>
+  );
+};
 
 export default SmartSuspense;

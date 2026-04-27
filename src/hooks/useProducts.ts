@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/data/marketplace";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import { cacheGet, cacheSet } from "@/lib/localCache";
 
 export interface DbProduct {
   id: string;
@@ -209,6 +210,13 @@ export const useProducts = () => {
     gcTime: 1000 * 60 * 5,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * (attempt + 1), 5000),
+    placeholderData: () => {
+      try {
+        const cached = localStorage.getItem("nuku_products_cache");
+        if (cached) return filterOutFormations(JSON.parse(cached) as Product[]);
+      } catch {}
+      return undefined;
+    },
   });
 };
 
@@ -256,22 +264,36 @@ export const useProductBySlug = (slug: string) => {
   return useQuery({
     queryKey: ["product-slug", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          producer:profiles!products_producer_id_fkey(
-            id, full_name, avatar_url, is_verified, location, bio
-          )
-        `)
-        .eq("slug", slug)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`
+            *,
+            producer:profiles!products_producer_id_fkey(
+              id, full_name, avatar_url, is_verified, location, bio
+            )
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
 
-      if (error) throw error;
-      if (!data) throw new Error("Product not found");
-      const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
-      return product;
+        if (error) throw error;
+        if (!data) throw new Error("Product not found");
+        const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
+        cacheSet(`product-slug:${slug}`, product, 1000 * 60 * 60 * 6);
+        return product;
+      } catch (err) {
+        const cached = cacheGet<Product>(`product-slug:${slug}`);
+        if (cached) {
+          console.info("[cache] Returning cached product by slug", slug);
+          return cached.data;
+        }
+        throw err;
+      }
     },
     enabled: !!slug,
+    placeholderData: () => {
+      const cached = cacheGet<Product>(`product-slug:${slug}`);
+      return cached?.data;
+    },
   });
 };
