@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
+import OfflineReadIndicator from "./OfflineReadIndicator";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
@@ -383,6 +384,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
+        <OfflineReadIndicator />
         {/* Welcome / protection banner — persistent until user dismisses */}
         {!welcomeDismissed && (
           <div className="relative flex items-start gap-2 mx-auto max-w-md p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 shadow-sm animate-fade-in">
