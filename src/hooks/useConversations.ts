@@ -70,12 +70,13 @@ export function useConversations() {
     // Batch fetch last messages and unread counts
     const convIds = convs.map((c: any) => c.id);
     
-    // Get last message for each conversation
+    // Get last messages (cap at 500 most recent across all conversations for perf)
     const { data: allMessages } = await supabase
       .from("messages")
       .select("conversation_id, content, created_at, sender_id, is_read")
       .in("conversation_id", convIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     // Group by conversation - take first (latest) per conversation
     const lastMsgMap = new Map<string, any>();
