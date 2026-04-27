@@ -16,7 +16,7 @@ import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import DriverRatingModal from "@/components/delivery/DriverRatingModal";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, Star,
-  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash
+  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash, Mail
 } from "lucide-react";
 
 const DeliveryTracking = () => {
