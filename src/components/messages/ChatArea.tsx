@@ -17,6 +17,7 @@ import {
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
+import { useCall } from "@/contexts/CallContext";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
