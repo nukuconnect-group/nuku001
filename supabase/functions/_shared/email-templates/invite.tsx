@@ -33,7 +33,7 @@ export const InviteEmail = ({
     <Preview>Vous êtes invité à rejoindre {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NukuConnect" width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NukuConnect" width="140" height="40" style={logo} />
         <Heading style={h1}>Vous êtes invité !</Heading>
         <Text style={text}>
           Vous avez été invité à rejoindre{' '}
@@ -57,7 +57,7 @@ export default InviteEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', Arial, sans-serif" }
 const container = { padding: '32px 25px' }
-const logo = { margin: '0 0 24px 0' }
+const logo = { margin: '0 auto 24px', display: 'block', objectFit: 'contain' as const, maxWidth: '140px', height: 'auto' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
