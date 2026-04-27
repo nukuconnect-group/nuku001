@@ -878,39 +878,56 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                   </span>
                 </div>
                 {chapterPreview.map((ch, idx) => (
-                  <div key={idx} className={`space-y-1.5 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-primary shrink-0">#{idx + 1}</span>
-                      <Input
-                        value={ch.title}
-                        onChange={(e) => updateChapterField(idx, "title", e.target.value)}
-                        placeholder="Titre du chapitre"
-                        className="text-xs h-8 flex-1"
-                      />
-                      <Input
-                        type="number"
-                        min={1}
-                        value={ch.duration_minutes}
-                        onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
-                        className="text-xs h-8 w-16"
-                        title="Durée (min)"
-                      />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeChapter(idx)} className="h-8 w-8 shrink-0">
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                      </Button>
+                  <div key={idx} className={`space-y-2 p-2.5 rounded-md border ${ch.approved ? "bg-primary/5 border-primary/30" : "bg-muted/40 border-border"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold text-primary">Chapitre {idx + 1}</p>
+                        <h4 className="text-sm font-semibold text-foreground break-words">{ch.title || "Titre à compléter"}</h4>
+                        <p className="text-[11px] text-muted-foreground break-words line-clamp-2">{ch.description || "Description à compléter"}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Durée estimée : {ch.duration_minutes || 1} min</p>
+                      </div>
+                      {ch.approved && <CheckCircle className="w-4 h-4 text-primary shrink-0 mt-1" />}
                     </div>
-                    <Textarea
-                      value={ch.description}
-                      onChange={(e) => updateChapterField(idx, "description", e.target.value)}
-                      rows={2}
-                      placeholder="Description du chapitre"
-                      className="text-[11px]"
-                    />
-                    <div className="flex justify-end">
-                      <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
-                        <CheckCircle className="w-3 h-3" />
-                        {ch.approved ? "Approuvé" : "Approuver ce chapitre"}
+
+                    {ch.editing && (
+                      <div className="space-y-1.5 rounded-md border border-border bg-background p-2">
+                        <Input
+                          value={ch.title}
+                          onChange={(e) => updateChapterField(idx, "title", e.target.value)}
+                          placeholder="Titre du chapitre"
+                          className="text-xs h-8"
+                        />
+                        <Textarea
+                          value={ch.description}
+                          onChange={(e) => updateChapterField(idx, "description", e.target.value)}
+                          rows={2}
+                          placeholder="Description du chapitre"
+                          className="text-[11px]"
+                        />
+                        <Input
+                          type="number"
+                          min={1}
+                          value={ch.duration_minutes}
+                          onChange={(e) => updateChapterField(idx, "duration_minutes", e.target.value)}
+                          className="text-xs h-8 w-28"
+                          title="Durée (min)"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex justify-between gap-2 flex-wrap">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeChapter(idx)} className="h-7 text-[11px] gap-1 text-destructive hover:text-destructive">
+                        <Trash2 className="w-3 h-3" /> Retirer
                       </Button>
+                      <div className="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => editChapter(idx)} className="h-7 text-[11px] gap-1">
+                          <Edit3 className="w-3 h-3" /> Modifier
+                        </Button>
+                        <Button type="button" variant={ch.approved ? "secondary" : "outline"} size="sm" onClick={() => approveChapter(idx)} className="h-7 text-[11px] gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          {ch.approved ? "Approuvé" : "Approuver"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
