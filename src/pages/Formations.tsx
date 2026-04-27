@@ -161,6 +161,18 @@ const Formations = () => {
                 </Button>
               ))}
             </div>
+            {authors.length > 1 && (
+              <select
+                value={selectedAuthor}
+                onChange={(e) => setSelectedAuthor(e.target.value)}
+                className="text-sm bg-background border border-input rounded-md px-2 py-1.5 h-9"
+                aria-label="Filtrer par auteur"
+              >
+                {authors.map((a) => (
+                  <option key={a} value={a}>{a === "Tous" ? "Tous les auteurs" : a}</option>
+                ))}
+              </select>
+            )}
             <Button variant={showFreeOnly ? "default" : "outline"} size="sm" onClick={() => setShowFreeOnly(!showFreeOnly)}>
               Gratuit uniquement
             </Button>
