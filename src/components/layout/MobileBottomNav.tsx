@@ -21,6 +21,8 @@ const MobileBottomNav = () => {
   const { user, profile: ctxProfile } = useProfile();
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showAddFormation, setShowAddFormation] = useState(false);
+  const [showPublishChoice, setShowPublishChoice] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
