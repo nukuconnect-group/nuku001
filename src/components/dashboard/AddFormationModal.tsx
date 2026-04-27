@@ -55,6 +55,30 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     reader.readAsDataURL(f);
   };
 
+  const handleAiFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setAiFileName(f.name);
+    // Pour .txt on lit directement; pour PDF/DOCX on demande à l'utilisateur de coller le texte (extraction côté client lourde évitée)
+    const isText = f.type.startsWith("text/") || f.name.toLowerCase().endsWith(".txt") || f.name.toLowerCase().endsWith(".md");
+    if (isText) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAiContent(String(ev.target?.result || ""));
+      reader.readAsText(f);
+    } else {
+      toast({
+        title: "Document détecté",
+        description: "Pour un PDF/DOCX, copiez-collez le contenu dans le champ ci-dessous. L'IA générera automatiquement les chapitres.",
+      });
+    }
+  };
+
+  const updateVideoUrl = (idx: number, val: string) => {
+    setVideoUrls(prev => prev.map((v, i) => (i === idx ? val : v)));
+  };
+  const addVideoField = () => setVideoUrls(prev => [...prev, ""]);
+  const removeVideoField = (idx: number) => setVideoUrls(prev => prev.filter((_, i) => i !== idx));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
@@ -69,7 +93,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         imageUrl = urls[0] || null;
       }
 
-      const { error } = await supabase.from("formations").insert({
+      const { data: created, error } = await supabase.from("formations").insert({
         title: form.title,
         description: form.description,
         category: form.category,
@@ -80,17 +104,42 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         price: form.is_paid ? parseFloat(form.price) || 0 : 0,
         image_url: imageUrl,
         is_published: true,
-      } as any);
+      } as any).select("id").single();
 
       if (error) throw error;
 
-      toast({
-        title: "✅ Formation publiée",
-        description: "Votre formation est désormais visible dans le module Formations.",
-      });
+      // IA: si contenu document ou vidéos fournis → génération auto de modules
+      const cleanVideos = videoUrls.map(v => v.trim()).filter(Boolean);
+      if (created?.id && (aiContent.trim().length > 50 || cleanVideos.length > 0)) {
+        setAiBusy(true);
+        try {
+          const { data: aiData, error: aiErr } = await supabase.functions.invoke("generate-formation-modules", {
+            body: { formation_id: created.id, document_text: aiContent, video_urls: cleanVideos },
+          });
+          if (aiErr) throw aiErr;
+          toast({
+            title: "✨ Formation prête",
+            description: `${aiData?.chapters_generated || 0} chapitres IA + ${cleanVideos.length} vidéo(s) ajoutés.`,
+          });
+        } catch (aiE: any) {
+          console.error("AI modules error", aiE);
+          toast({ title: "Formation publiée", description: "La génération IA a échoué, vous pouvez ajouter les modules manuellement.", variant: "destructive" });
+        } finally {
+          setAiBusy(false);
+        }
+      } else {
+        toast({
+          title: "✅ Formation publiée",
+          description: "Votre formation est visible dans le module Formations.",
+        });
+      }
+
       setForm({ title: "", description: "", category: "Général", level: "beginner", duration_minutes: "60", is_paid: false, price: "0" });
       setCoverFile(null);
       setCoverPreview("");
+      setAiContent("");
+      setAiFileName("");
+      setVideoUrls([""]);
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
