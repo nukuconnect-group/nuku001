@@ -278,16 +278,19 @@ export function useConversations() {
     return () => window.removeEventListener("nuku:messages-read", onRead as EventListener);
   }, [fetchConversations]);
 
-  // Prefetch on window focus / tab visibility — instant cache + silent refresh
+  // Prefetch on window focus / tab visibility / reconnect — instant cache + silent refresh
   useEffect(() => {
     const onFocus = () => fetchConversations();
     const onVisibility = () => {
       if (document.visibilityState === "visible") fetchConversations();
     };
+    const onOnline = () => fetchConversations();
     window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [fetchConversations]);
