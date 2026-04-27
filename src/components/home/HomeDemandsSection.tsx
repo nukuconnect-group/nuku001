@@ -58,6 +58,20 @@ const SAMPLE_DEMANDS = [
   },
 ];
 
+const DemandImage = ({ src, category, title }: { src?: string; category: string; title: string }) => {
+  const [errored, setErrored] = useState(false);
+  const finalSrc = !src || errored ? getCategoryFallbackImage(category, title) : src;
+  return (
+    <img
+      src={finalSrc}
+      alt={title}
+      loading="lazy"
+      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
+      onError={() => setErrored(true)}
+    />
+  );
+};
+
 const HomeDemandsSection = () => {
   const { data: demands = [], isLoading } = useDemands();
   const { formatPrice } = useLanguage();
