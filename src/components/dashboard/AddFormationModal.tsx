@@ -79,14 +79,42 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     return (result.value || "").trim();
   };
 
+  const MAX_DOC_SIZE_MB = 10;
+  const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
+
   const handleAiFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+
+    // Limite de taille côté client
+    if (f.size > MAX_DOC_SIZE_BYTES) {
+      const sizeMb = (f.size / 1024 / 1024).toFixed(1);
+      toast({
+        title: "Document trop volumineux",
+        description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     setAiFileName(f.name);
+    setChapterPreview([]);
     const lower = f.name.toLowerCase();
     const isText = f.type.startsWith("text/") || lower.endsWith(".txt") || lower.endsWith(".md");
     const isPdf = f.type === "application/pdf" || lower.endsWith(".pdf");
     const isDocx = lower.endsWith(".docx") || f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    if (!isText && !isPdf && !isDocx) {
+      toast({
+        title: "Format non supporté",
+        description: "Formats acceptés : .txt, .md, .pdf, .docx",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      setAiFileName("");
+      return;
+    }
 
     try {
       if (isText) {
@@ -99,17 +127,24 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
       else if (isDocx) text = await extractTextFromDocx(f);
-      else throw new Error("Format non supporté. Utilisez .txt, .md, .pdf ou .docx");
 
       if (!text || text.length < 30) {
-        toast({ title: "Document peu lisible", description: "Aucun texte exploitable trouvé. Vous pouvez coller le contenu manuellement.", variant: "destructive" });
+        toast({
+          title: "Document non lisible",
+          description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
+          variant: "destructive",
+        });
       } else {
         setAiContent(text);
-        toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur Publier pour générer les chapitres IA.` });
+        toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
-      toast({ title: "Extraction impossible", description: err?.message || "Impossible de lire le document. Collez le contenu manuellement.", variant: "destructive" });
+      toast({
+        title: "Extraction impossible",
+        description: err?.message || "Impossible de lire le document. Le fichier est peut-être corrompu ou protégé.",
+        variant: "destructive",
+      });
     } finally {
       setAiBusy(false);
     }
