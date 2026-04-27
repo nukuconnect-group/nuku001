@@ -46,6 +46,8 @@ const Formations = () => {
       // Extract categories
       const cats = ["Tous", ...new Set(formationsData.map((f: any) => f.category).filter(Boolean))];
       setCategories(cats as string[]);
+      const auths = ["Tous", ...new Set(formationsData.map((f: any) => f.instructor).filter(Boolean))];
+      setAuthors(auths as string[]);
 
       // Get user progress
       const { data: { session } } = await supabase.auth.getSession();
