@@ -161,6 +161,25 @@ const Help = () => {
     setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Scroll + open category questions when arriving via #hash (e.g. /aide#paiements)
+  useEffect(() => {
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (!hash) return;
+    const catIdx = faqCategories.findIndex((c) => c.slug === hash);
+    if (catIdx === -1) return;
+    // Open all questions of that category
+    const next: Record<string, boolean> = {};
+    faqCategories[catIdx].questions.forEach((_, qIdx) => {
+      next[`${catIdx}-${qIdx}`] = true;
+    });
+    setOpenItems((prev) => ({ ...prev, ...next }));
+    // Scroll to the section after layout
+    setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  }, []);
+
   const filteredCategories = faqCategories.map(cat => ({
     ...cat,
     questions: cat.questions.filter(
