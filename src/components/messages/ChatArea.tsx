@@ -50,6 +50,15 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [messageInput, setMessageInput] = useState("");
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [waveform, setWaveform] = useState<number[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const recordStreamRef = useRef<MediaStream | null>(null);
+  const recordStartRef = useRef<number>(0);
+  const cancelledRef = useRef<boolean>(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
