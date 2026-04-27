@@ -398,8 +398,119 @@ const DeliveryTracking = () => {
               )}
             </div>
           )}
+
+          {/* Public tracking — no login required */}
+          <div className="max-w-lg mx-auto mt-4 p-3 sm:p-4 bg-card border border-border rounded-xl text-left">
+            <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-primary" />
+              Suivre une commande sans se connecter
+            </p>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Saisissez l'<strong>ID de commande</strong> reçu par email ou sur la facture, puis votre <strong>email</strong> pour voir le parcours en temps réel.
+            </p>
+            <div className="space-y-2">
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="ID de commande (ex: 8a1f...)"
+                  value={publicOrderId}
+                  onChange={(e) => setPublicOrderId(e.target.value)}
+                  className="pl-9 h-10 text-sm font-mono"
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="Email lié à la commande"
+                  value={publicEmail}
+                  onChange={(e) => setPublicEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handlePublicTrack()}
+                  className="pl-9 h-10 text-sm"
+                />
+              </div>
+              <Button variant="hero" size="sm" onClick={handlePublicTrack} disabled={publicLoading} className="w-full gap-1.5 h-10">
+                {publicLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                Suivre la commande
+              </Button>
+              {publicError && (
+                <p className="text-xs text-destructive flex items-start gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span>{publicError}</span>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* Public tracking result */}
+      {publicResult && (
+        <section className="py-5">
+          <div className="container mx-auto px-3 sm:px-4 max-w-2xl">
+            <Card>
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">{publicResult.product?.name || "Commande"}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {publicResult.order?.quantity} {publicResult.product?.unit || "unités"} • {formatPrice(Number(publicResult.order?.total_price || 0))}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                      Réf: {publicResult.order?.id}
+                    </p>
+                  </div>
+                  <Badge className={`${getStatusColor(publicResult.order?.status)} self-start gap-1`}>
+                    {getStatusIcon(publicResult.order?.status)}
+                    {getStatusLabel(publicResult.order?.status)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                {publicResult.seller_name && (
+                  <div className="p-3 bg-muted/50 rounded-xl mb-4 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Vendeur</p>
+                      <p className="text-sm font-medium">{publicResult.seller_name}</p>
+                    </div>
+                  </div>
+                )}
+                <h3 className="font-heading font-semibold text-sm mb-3">Parcours en temps réel</h3>
+                <div className="space-y-0">
+                  {getOrderSteps({
+                    status: publicResult.order?.status,
+                    created_at: publicResult.order?.created_at,
+                    updated_at: publicResult.order?.updated_at,
+                  }).map((step, i, arr) => (
+                    <div key={i} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          step.status === "done" ? "bg-primary text-primary-foreground" :
+                          step.status === "current" ? "bg-blue-500 text-white animate-pulse" :
+                          "bg-muted text-muted-foreground"
+                        }`}>
+                          {step.icon}
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className={`w-0.5 h-8 ${step.status === "done" ? "bg-primary" : "bg-border"}`} />
+                        )}
+                      </div>
+                      <div className="pb-4">
+                        <p className={`text-sm font-medium ${step.status === "pending" ? "text-muted-foreground" : "text-foreground"}`}>{step.title}</p>
+                        {step.desc && <p className="text-xs text-muted-foreground">{step.desc}</p>}
+                        {step.time && <p className="text-[10px] text-primary font-medium">{step.time}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section className="py-6">
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
