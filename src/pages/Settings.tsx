@@ -406,7 +406,7 @@ const Settings = () => {
 
           {/* Become Producer (only for buyers) */}
           {resolvedUserType === "buyer" && (
-            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 mb-5">
               <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -427,6 +427,43 @@ const Settings = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Danger Zone — Delete account */}
+          <Card className="border-destructive/30">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 text-destructive">
+                <Trash2 className="w-4 h-4" />
+                Supprimer mon compte
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Cette action est définitive. Toutes vos données seront effacées. Votre email sera libéré : vous pourrez recréer un compte plus tard et recevoir un nouveau lien de confirmation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <Button
+                variant="destructive"
+                className="gap-1.5 text-xs w-full sm:w-auto"
+                onClick={async () => {
+                  const confirmText = "SUPPRIMER";
+                  const input = window.prompt(`Pour confirmer la suppression définitive de votre compte, tapez "${confirmText}" :`);
+                  if (input !== confirmText) return;
+                  try {
+                    const { data, error } = await supabase.functions.invoke("delete-user-account", { body: {} });
+                    if (error) throw error;
+                    if ((data as any)?.error) throw new Error((data as any).error);
+                    toast({ title: "Compte supprimé", description: "Votre compte a été définitivement supprimé." });
+                    await supabase.auth.signOut();
+                    window.location.replace("/");
+                  } catch (err: any) {
+                    toast({ title: "Erreur", description: err.message, variant: "destructive" });
+                  }
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Supprimer définitivement mon compte
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />
