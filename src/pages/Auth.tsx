@@ -135,7 +135,21 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) {
-        toast({ title: error.message.includes("Invalid") ? "Erreur de connexion" : "Erreur", description: error.message.includes("Invalid") ? "Email ou mot de passe incorrect." : error.message.includes("not confirmed") ? "Veuillez vérifier votre email." : error.message, variant: "destructive" });
+        const isUnconfirmed = /not confirmed|confirm/i.test(error.message);
+        if (isUnconfirmed) {
+          setPendingVerificationEmail(loginEmail);
+          setEmailVerificationPending(true);
+          setAccountExists(false);
+        }
+        toast({
+          title: error.message.includes("Invalid") ? "Erreur de connexion" : "Erreur",
+          description: error.message.includes("Invalid")
+            ? "Email ou mot de passe incorrect."
+            : isUnconfirmed
+              ? "Veuillez vérifier votre email avant de vous connecter. Vous pouvez renvoyer le lien ci-dessus."
+              : error.message,
+          variant: "destructive",
+        });
         return;
       }
       toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
