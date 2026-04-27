@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDemands, type Demand } from "@/hooks/useDemands";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 
 interface DemandsListProps {
   category?: string;
