@@ -36,6 +36,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
   const { balance, spendTokens, loading: balanceLoading } = useTokens();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [isLoading, setIsLoading] = useState(false);
+  const [boostedSuccess, setBoostedSuccess] = useState(false);
 
   const handleBoost = async () => {
     if (!product) return;
