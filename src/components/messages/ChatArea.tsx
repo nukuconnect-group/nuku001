@@ -547,8 +547,36 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
         {messages.map((msg) => {
-          const { text, imageUrl, voiceUrl } = parseMessage(msg.content);
+          const parsed = parseMessage(msg.content);
+          const { text, imageUrl, voiceUrl, call } = parsed;
           const repliedMsg = findReplyMessage(msg.replyToId);
+
+          // Render call log style WhatsApp
+          if (call) {
+            const isMissed = call.status === "missed" || call.status === "outgoing-missed" || call.status === "declined";
+            const labelMap: Record<string, string> = {
+              missed: "Appel manqué",
+              "outgoing-missed": "Appel sans réponse",
+              declined: "Appel refusé",
+              ended: `Appel · ${Math.floor(call.duration / 60)}:${String(call.duration % 60).padStart(2, "0")}`,
+            };
+            return (
+              <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl shadow-sm border text-xs ${
+                  isMissed
+                    ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-700 dark:text-red-300"
+                    : "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300"
+                }`}>
+                  <Phone className={`w-3.5 h-3.5 ${isMissed ? "rotate-[135deg]" : ""}`} />
+                  <span className="font-medium">{labelMap[call.status]}</span>
+                  <span className="opacity-60 text-[10px]">
+                    {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
