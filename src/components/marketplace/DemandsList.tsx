@@ -342,7 +342,7 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       <History className="w-3.5 h-3.5 text-primary" />
-                      <Label className="text-xs font-semibold text-foreground">Historique des boosts</Label>
+                      <span className="text-xs font-semibold text-foreground">Historique des boosts</span>
                     </div>
                     {(selectedDemand as any).is_boosted && (selectedDemand as any).boosted_until && new Date((selectedDemand as any).boosted_until) > new Date() ? (
                       <Badge className="bg-primary text-primary-foreground text-[9px] gap-1"><Rocket className="w-2.5 h-2.5" /> Actif</Badge>
