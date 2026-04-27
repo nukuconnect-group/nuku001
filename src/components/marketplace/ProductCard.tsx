@@ -202,22 +202,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           </div>
         </div>
 
-        <CardContent className="p-2.5 sm:p-3 flex-1 flex flex-col gap-1">
-          {/* Price — prominent like Alibaba */}
+        <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-0.5 min-h-0 overflow-hidden">
+          {/* Price */}
           <div className="flex items-baseline gap-1 flex-wrap">
-            <span className="font-heading text-base sm:text-lg font-bold text-destructive">{formatPrice(product.price)}</span>
+            <span className="font-heading text-sm sm:text-base font-bold text-destructive">{formatPrice(product.price)}</span>
             {product.originalPrice && (
               <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
             )}
             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
           </div>
-
-          {/* Wholesale hint — discret, en une ligne */}
-          {lowestTierPrice !== null && lowestTierPrice < product.price && (
-            <div className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-              Dès {formatPrice(lowestTierPrice)}/{product.unit} en gros
-            </div>
-          )}
 
           {/* Title */}
           <h3 className="font-medium text-foreground text-[11px] sm:text-xs leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
@@ -225,59 +218,41 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           </h3>
 
           {/* Min order + shipping delay */}
-          <div className="flex items-center gap-2 text-[8px] sm:text-[9px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] text-muted-foreground truncate">
             <span>Min. 1 {product.unit}</span>
             <span className="text-border">•</span>
             <ShippingDelayBadge days={shippingDays} />
           </div>
 
           {/* Reviews + Sales */}
-          <div className="flex items-center gap-1.5 mt-auto">
-            <div className="flex items-center gap-0.5">
-              <Star className="w-2.5 h-2.5 text-accent fill-accent" />
-              <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
-            </div>
+          <div className="flex items-center gap-1 mt-auto">
+            <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
+            <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
             <span className="text-[8px] text-muted-foreground">({reviewCount})</span>
             <span className="text-border text-[8px]">|</span>
-            <span className="text-[8px] text-muted-foreground">{totalSales}+ vendus</span>
+            <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
           </div>
 
-          {/* Supplier info — Alibaba-style "Verified Fournisseur : Nom entreprise" */}
+          {/* Supplier info */}
           {!hideProducer && (
-            <div className="flex items-center gap-1.5 pt-1.5 mt-0.5 border-t border-border/50">
+            <div className="flex items-center gap-1 pt-1 mt-0.5 border-t border-border/50 min-w-0">
               <img
                 src={product.producer.avatar || defaultAvatar}
                 alt={product.producer.name}
-                className="w-5 h-5 rounded-sm object-cover border border-border/60 flex-shrink-0"
+                className="w-4 h-4 rounded-sm object-cover border border-border/60 flex-shrink-0"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
               />
-              <span className="flex items-center gap-1 min-w-0 flex-1">
-                {product.producer.verified ? (
-                  <Badge className="bg-emerald-500 text-white gap-0.5 text-[8px] sm:text-[9px] px-1.5 py-0 h-4 flex-shrink-0 shadow-sm">
-                    <ShieldCheck className="w-2 h-2" />Vérifié
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[8px] sm:text-[9px] px-1.5 py-0 h-4 text-muted-foreground border-border flex-shrink-0">
-                    Non vérifié
-                  </Badge>
-                )}
-                <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
-              </span>
+              {product.producer.verified && (
+                <ShieldCheck className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+              )}
+              <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
             </div>
           )}
 
           {/* Location */}
-          <div className="flex items-center gap-1 text-[7px] sm:text-[8px] text-muted-foreground">
-            <MapPin className="w-2 h-2" />
-            <span>{product.location}</span>
-            {matchingDemands > 0 && (
-              <>
-                <span className="text-border">•</span>
-                <span className="text-accent font-medium flex items-center gap-0.5">
-                  <HandCoins className="w-2 h-2" />{matchingDemands} demande{matchingDemands > 1 ? "s" : ""}
-                </span>
-              </>
-            )}
+          <div className="flex items-center gap-1 text-[8px] text-muted-foreground truncate">
+            <MapPin className="w-2 h-2 flex-shrink-0" />
+            <span className="truncate">{product.location}</span>
           </div>
         </CardContent>
       </Card>
