@@ -408,6 +408,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const aiUsed = aiFileName.trim().length > 0 || aiContent.trim().length > 0;
   const cleanVideosCount = videoUrls.filter((v) => v.trim().length > 0).length;
   const hasUnapprovedChapters = chapterPreview.some((c) => !c.approved);
+  // Conservés à false pour ne plus bloquer la publication, mais utilisés pour afficher les conseils
+  const aiBlocksPublish = false;
+  const extractionFailed = false;
   const aiContentTooShort = aiUsed && aiContent.trim().length > 0 && aiContent.trim().length < 50;
   const lastAiError = [...diagnostics].reverse().find((d) => d.status === "ko" && (d.step === "ai_preview" || d.step === "ai_modules" || d.step === "extracted" || d.step === "error"));
 
