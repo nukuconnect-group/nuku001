@@ -33,17 +33,23 @@ const routePrefetchers: Record<string, () => Promise<unknown>> = {
   "/settings": () => import("../pages/Settings"),
 };
 
+import { getConnectionMode } from "./connectionMode";
+
 const prefetched = new Set<string>();
 
-/** Précharge une route donnée si pas déjà fait. No-op sur connexion lente / data saver. */
-export const prefetchRoute = (path: string) => {
-  // Skip si data saver activé
-  const conn = (navigator as any).connection;
-  if (conn?.saveData || conn?.effectiveType === "slow-2g" || conn?.effectiveType === "2g") {
-    return;
-  }
+export type PrefetchTrigger = "hover" | "focus" | "touch" | "idle";
 
-  // Match exact ou par préfixe
+/**
+ * Précharge une route donnée. Le comportement dépend du mode connexion :
+ * - low  : seul "focus" est autorisé (intention claire au clavier)
+ * - mid  : "focus" et "touch" autorisés (pas de hover ni d'idle)
+ * - fast : tous les triggers autorisés
+ */
+export const prefetchRoute = (path: string, trigger: PrefetchTrigger = "hover") => {
+  const mode = getConnectionMode();
+  if (mode === "low" && trigger !== "focus") return;
+  if (mode === "mid" && (trigger === "hover" || trigger === "idle")) return;
+
   const key = Object.keys(routePrefetchers).find(
     (k) => path === k || path.startsWith(k + "/")
   );
@@ -53,17 +59,18 @@ export const prefetchRoute = (path: string) => {
   routePrefetchers[key]().catch(() => prefetched.delete(key));
 };
 
-/** Précharge les routes les plus probables après chargement initial. */
+/** Précharge les routes les plus probables après chargement initial. Désactivé hors mode "fast". */
 export const prefetchLikelyRoutes = () => {
+  if (getConnectionMode() !== "fast") return;
   const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1500));
   idle(() => {
-    prefetchRoute("/marketplace");
-    prefetchRoute("/auth");
+    prefetchRoute("/marketplace", "idle");
+    prefetchRoute("/auth", "idle");
   });
   idle(
     () => {
-      prefetchRoute("/categories");
-      prefetchRoute("/formations");
+      prefetchRoute("/categories", "idle");
+      prefetchRoute("/formations", "idle");
     },
     { timeout: 3000 }
   );
@@ -71,13 +78,15 @@ export const prefetchLikelyRoutes = () => {
 
 /** Attache un listener de préchargement au survol ou focus d'un élément. */
 export const attachPrefetchOnHover = (el: HTMLElement, path: string) => {
-  const handler = () => prefetchRoute(path);
-  el.addEventListener("mouseenter", handler, { once: true });
-  el.addEventListener("focus", handler, { once: true });
-  el.addEventListener("touchstart", handler, { once: true, passive: true });
+  const onHover = () => prefetchRoute(path, "hover");
+  const onFocus = () => prefetchRoute(path, "focus");
+  const onTouch = () => prefetchRoute(path, "touch");
+  el.addEventListener("mouseenter", onHover, { once: true });
+  el.addEventListener("focus", onFocus, { once: true });
+  el.addEventListener("touchstart", onTouch, { once: true, passive: true });
   return () => {
-    el.removeEventListener("mouseenter", handler);
-    el.removeEventListener("focus", handler);
-    el.removeEventListener("touchstart", handler);
+    el.removeEventListener("mouseenter", onHover);
+    el.removeEventListener("focus", onFocus);
+    el.removeEventListener("touchstart", onTouch);
   };
 };
