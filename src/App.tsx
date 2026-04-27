@@ -161,7 +161,7 @@ const App = () => {
                   <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </Suspense>
+              </SmartSuspense>
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
