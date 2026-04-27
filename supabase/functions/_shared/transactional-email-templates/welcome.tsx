@@ -41,7 +41,7 @@ const WelcomeEmail = ({ name, userType }: WelcomeEmailProps) => (
     <Preview>Bienvenue sur {SITE_NAME} ! 🌱</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt={SITE_NAME} width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt={SITE_NAME} width="80" height="80" style={logo} />
         <Heading style={h1}>
           Bienvenue{name ? `, ${name}` : ''} ! 🎉
         </Heading>
@@ -88,7 +88,7 @@ export const template = {
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', Arial, sans-serif" }
 const container = { padding: '32px 25px', maxWidth: '600px' }
-const logo = { margin: '0 0 24px 0' }
+const logo = { margin: '0 auto 24px', display: 'block', objectFit: 'contain' as const, width: '80px', height: '80px' }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#008000', margin: '0 0 16px' }
 const text = { fontSize: '14px', color: 'hsl(210, 10%, 45%)', lineHeight: '1.6', margin: '0 0 24px' }
 const featureBox = { backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '16px', margin: '0 0 24px' }
