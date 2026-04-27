@@ -154,7 +154,7 @@ const ProductDetail = () => {
 
       const { error: msgError } = await supabase
         .from("messages")
-        .insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+        .insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content });
       if (msgError) throw msgError;
 
       toast({ title: "Message envoyé ✓", description: `Votre message a été envoyé à ${product.producer.name}` });
