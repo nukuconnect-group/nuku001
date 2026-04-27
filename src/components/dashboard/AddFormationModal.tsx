@@ -384,7 +384,6 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         return;
       }
       const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
-      const savedAt = new Date().toISOString();
       const nextForm = {
         ...form,
         title: meta.title?.toString().slice(0, 120) || form.title,
