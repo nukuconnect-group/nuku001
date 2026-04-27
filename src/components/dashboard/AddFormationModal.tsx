@@ -18,6 +18,26 @@ interface Props {
   onCreated?: () => void;
 }
 
+type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
+interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
+
+// Traduit un message technique en message clair pour l'utilisateur
+const friendlyError = (err: any): { title: string; description: string; code: string } => {
+  const raw = (err?.message || err?.error || String(err || "")).toString();
+  const code = err?.code || err?.status || (err?.context?.status ? String(err.context.status) : "");
+  if (/rate_limited|429/i.test(raw)) return { title: "Trop de requêtes IA", description: "Patientez 1 minute puis réessayez.", code: code || "429" };
+  if (/credits_required|402/i.test(raw)) return { title: "Crédits IA insuffisants", description: "Ajoutez des crédits dans Paramètres > Espace de travail > Utilisation.", code: code || "402" };
+  if (/missing_document_text/i.test(raw)) return { title: "Document trop court", description: "Le document ne contient pas assez de texte exploitable (min. 50 caractères).", code: "EMPTY_DOC" };
+  if (/missing_content/i.test(raw)) return { title: "Contenu manquant", description: "Importez un document ou ajoutez au moins une vidéo.", code: "NO_CONTENT" };
+  if (/missing_formation_id/i.test(raw)) return { title: "Formation introuvable", description: "Veuillez réessayer la publication.", code: "NO_FORMATION_ID" };
+  if (/unauthenticated|401/i.test(raw)) return { title: "Session expirée", description: "Reconnectez-vous puis réessayez.", code: code || "401" };
+  if (/Failed to fetch|NetworkError|network/i.test(raw)) return { title: "Connexion instable", description: "Vérifiez votre internet puis réessayez.", code: "NETWORK" };
+  if (/ai_failed/i.test(raw)) return { title: "L'IA n'a pas pu structurer le document", description: "Essayez avec un texte plus clair ou plus structuré.", code: "AI_FAIL" };
+  if (/InvalidPDFException|password|encrypt/i.test(raw)) return { title: "PDF protégé ou corrompu", description: "Ce PDF est protégé par mot de passe ou endommagé.", code: "PDF_PROTECTED" };
+  if (/scan|image only|empty/i.test(raw)) return { title: "Document non lisible", description: "Le PDF semble scanné (images). Collez le texte manuellement.", code: "PDF_SCAN" };
+  return { title: "Une erreur est survenue", description: raw.slice(0, 200) || "Erreur inconnue.", code: code || "UNKNOWN" };
+};
+
 const FORMATION_CATEGORIES = [
   "Agriculture", "Élevage", "Aquaculture", "Aviculture",
   "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général",
@@ -37,6 +57,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [aiBusy, setAiBusy] = useState(false);
   const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
+  const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
+  const resetDiag = () => setDiagnostics([]);
 
   const [form, setForm] = useState({
     title: "",
