@@ -65,7 +65,7 @@ export default function AffiliationCard({ userId }: Props) {
             <p className="text-[9px] text-muted-foreground">Filleuls actifs</p>
           </div>
           <div className="bg-accent/10 rounded-lg p-2 text-center">
-            <p className="text-lg font-bold text-accent-foreground">{totalEarnings.toLocaleString()} F</p>
+            <p className="text-lg font-bold text-accent-foreground">{totalEarnings.toLocaleString("fr-FR")} F</p>
             <p className="text-[9px] text-muted-foreground">Gains totaux</p>
           </div>
         </div>

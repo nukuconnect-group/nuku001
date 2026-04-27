@@ -93,7 +93,7 @@ const WithdrawalManager = () => {
               <Banknote className="w-4 h-4 text-muted-foreground" />
               <span className="text-[10px] text-muted-foreground">Montant en attente</span>
             </div>
-            <p className="text-lg font-bold">{totalPending.toLocaleString()} FCFA</p>
+            <p className="text-lg font-bold">{totalPending.toLocaleString("fr-FR")} FCFA</p>
           </CardContent>
         </Card>
         <Card>
@@ -137,7 +137,7 @@ const WithdrawalManager = () => {
                       )}
                       <div className="min-w-0">
                         <p className="text-xs font-medium truncate">{profileData?.full_name || "Utilisateur"}</p>
-                        <p className="text-[10px] font-semibold text-primary">{Number(w.amount).toLocaleString()} FCFA</p>
+                        <p className="text-[10px] font-semibold text-primary">{Number(w.amount).toLocaleString("fr-FR")} FCFA</p>
                         <p className="text-[9px] text-muted-foreground">
                           {OPERATORS[w.operator] || w.operator} · {w.phone_number} · {new Date(w.created_at).toLocaleDateString("fr-FR")}
                         </p>
@@ -175,7 +175,7 @@ const WithdrawalManager = () => {
                 </div>
                 <div className="bg-muted/50 rounded-lg p-2">
                   <p className="text-[10px] text-muted-foreground">Montant</p>
-                  <p className="font-bold text-primary">{Number(selectedWithdrawal.amount).toLocaleString()} FCFA</p>
+                  <p className="font-bold text-primary">{Number(selectedWithdrawal.amount).toLocaleString("fr-FR")} FCFA</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-2">
                   <p className="text-[10px] text-muted-foreground">Opérateur</p>

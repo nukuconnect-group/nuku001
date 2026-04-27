@@ -167,7 +167,7 @@ const RealtimeNotifications = () => {
 
           if (sellerProfile?.user_id === userId) {
             const title = "🎉 Nouvelle commande reçue !";
-            const body = `Commande de ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString()} FCFA`;
+            const body = `Commande de ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString("fr-FR")} FCFA`;
             
             notifyUser(title, body, () => navigate("/suivi-livraison"));
             toast({ title, description: body });

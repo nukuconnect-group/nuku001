@@ -143,7 +143,7 @@ const FormationsSection = () => {
                       </div>
                     </div>
                     <Badge className="absolute top-1 left-1 text-[8px] px-1 py-0" variant={f.is_paid ? "default" : "secondary"}>
-                      {f.is_paid ? `${f.price?.toLocaleString()} F` : "Gratuit"}
+                      {f.is_paid ? `${f.price?.toLocaleString("fr-FR")} F` : "Gratuit"}
                     </Badge>
                   </div>
                   <CardContent className="p-2.5 flex-1 min-w-0">

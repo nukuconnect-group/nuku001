@@ -128,7 +128,7 @@ const WithdrawalPanel = () => {
               <Banknote className="w-4 h-4 text-primary" />
               <span className="text-[10px] sm:text-xs text-muted-foreground">Gains totaux</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-foreground">{totalEarnings.toLocaleString()} FCFA</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground">{totalEarnings.toLocaleString("fr-FR")} FCFA</p>
           </CardContent>
         </Card>
         <Card>
@@ -137,7 +137,7 @@ const WithdrawalPanel = () => {
               <Send className="w-4 h-4 text-muted-foreground" />
               <span className="text-[10px] sm:text-xs text-muted-foreground">Déjà retiré</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-foreground">{totalWithdrawn.toLocaleString()} FCFA</p>
+            <p className="text-lg sm:text-xl font-bold text-foreground">{totalWithdrawn.toLocaleString("fr-FR")} FCFA</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
@@ -146,7 +146,7 @@ const WithdrawalPanel = () => {
               <Wallet className="w-4 h-4 text-green-600" />
               <span className="text-[10px] sm:text-xs text-muted-foreground">Solde disponible</span>
             </div>
-            <p className="text-lg sm:text-xl font-bold text-green-600">{availableBalance.toLocaleString()} FCFA</p>
+            <p className="text-lg sm:text-xl font-bold text-green-600">{availableBalance.toLocaleString("fr-FR")} FCFA</p>
           </CardContent>
         </Card>
       </div>
@@ -229,7 +229,7 @@ const WithdrawalPanel = () => {
                         {op?.label.charAt(0) || "?"}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium">{Number(w.amount).toLocaleString()} FCFA</p>
+                        <p className="text-xs font-medium">{Number(w.amount).toLocaleString("fr-FR")} FCFA</p>
                         <p className="text-[9px] text-muted-foreground">{op?.label} · {w.phone_number}</p>
                         <p className="text-[9px] text-muted-foreground">{new Date(w.created_at).toLocaleDateString("fr-FR")}</p>
                       </div>

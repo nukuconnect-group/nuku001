@@ -514,7 +514,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               </p>
             </div>
             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-bold text-sm border-0">
-              {(delivery.driver_fee || 0).toLocaleString()} F
+              {(delivery.driver_fee || 0).toLocaleString("fr-FR")} F
             </Badge>
           </div>
 
@@ -634,7 +634,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{productInfo.name}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Qté: {orderDetails?.quantity} {productInfo.unit} • {orderDetails?.total_price?.toLocaleString()} F
+                  Qté: {orderDetails?.quantity} {productInfo.unit} • {orderDetails?.total_price?.toLocaleString("fr-FR")} F
                 </p>
               </div>
             </div>

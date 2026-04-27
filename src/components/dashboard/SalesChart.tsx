@@ -90,7 +90,7 @@ export const SalesAreaChart = ({ orders = [] }: SalesChartProps) => {
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
-              formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Ventes']}
+              formatter={(value: number) => [`${value.toLocaleString("fr-FR")} FCFA`, 'Ventes']}
             />
             <Area
               type="monotone"

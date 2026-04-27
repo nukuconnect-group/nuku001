@@ -173,7 +173,7 @@ const FormationDetail = () => {
             <Badge variant="secondary" className="text-[10px]">{formation.category}</Badge>
             <Badge variant="outline" className="text-[10px]">{formation.level === "beginner" ? "Débutant" : formation.level === "intermediate" ? "Intermédiaire" : "Avancé"}</Badge>
             <Badge className={formation.is_paid ? "bg-primary text-primary-foreground text-[10px]" : "bg-accent text-accent-foreground text-[10px]"}>
-              {formation.is_paid ? `${formation.price?.toLocaleString()} FCFA` : "Gratuit"}
+              {formation.is_paid ? `${formation.price?.toLocaleString("fr-FR")} FCFA` : "Gratuit"}
             </Badge>
           </div>
           <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">{formation.title}</h1>

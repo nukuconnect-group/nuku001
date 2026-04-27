@@ -102,7 +102,7 @@ const SupplierAIRecommendations = ({ userId, profileId, location, onAddProduct }
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground">{trend.category}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {trend.demand_count} demandes • Prix moy. ~{trend.avg_price?.toLocaleString()} F
+                      {trend.demand_count} demandes • Prix moy. ~{trend.avg_price?.toLocaleString("fr-FR")} F
                     </p>
                     <p className="text-[9px] text-primary mt-0.5">💡 {trend.suggestion}</p>
                   </div>
