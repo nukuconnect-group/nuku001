@@ -408,6 +408,16 @@ const ProductDetail = () => {
                 </div>
               </div>
 
+              {/* Seller card — moved right after stock + delivery summary */}
+              <SellerCard
+                businessName={product.producer.name}
+                avatarUrl={product.producer.avatar}
+                verified={product.producer.verified}
+                rating={product.producer.rating}
+                location={product.location}
+                onContact={handleOpenChat}
+              />
+
               {/* Buyer delivery zone (auto from profile, editable) */}
               <BuyerDeliveryZone productLocation={product.location} />
 
