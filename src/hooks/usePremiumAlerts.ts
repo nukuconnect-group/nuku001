@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Crée des notifications in-app contextuelles :
  *  - Solde de jetons faible (≤ 5)
- *  - Abonnement expirant bientôt (≤ 7 jours)
- *  - Abonnement déjà expiré
+ *  - Pack expirant seulement si aucun jeton actif n'est disponible
+ *  - Pack expiré seulement si aucun jeton actif n'est disponible
  *
  * Déduplication : on stocke en localStorage la dernière clé (jour + type)
  * pour ne pas spammer la même notif plusieurs fois par jour.
@@ -62,18 +62,18 @@ export function usePremiumAlerts(userId: string | null | undefined) {
       if (sub) {
         const plan = (sub as any).plan as string;
         const expiresAt = (sub as any).expires_at ? new Date((sub as any).expires_at) : null;
-        if (expiresAt && plan !== "free") {
+        if (expiresAt && plan !== "free" && bal <= 0) {
           const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / 86400000);
           if (daysLeft <= 0) {
             await insertOnce("sub_expired", {
-              title: `⏰ Abonnement ${plan} expiré`,
-              description: "Renouvelez pour conserver vos avantages premium (analytics, API, conseiller IA).",
+              title: `⏰ Pack ${plan} terminé`,
+              description: "Aucun jeton actif n'est disponible. Rechargez seulement si vous voulez continuer à booster ou utiliser les options premium.",
               type: "subscription",
             });
           } else if (daysLeft <= 7) {
             await insertOnce("sub_expiring", {
-              title: `⏳ Abonnement ${plan} expire dans ${daysLeft}j`,
-              description: "Pensez au renouvellement pour éviter toute interruption.",
+              title: `⏳ Pack ${plan} bientôt terminé`,
+              description: "Aucun jeton actif n'est disponible. Vos jetons restent valables 12 mois après achat.",
               type: "subscription",
             });
           }
