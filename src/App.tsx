@@ -207,7 +207,9 @@ const App = () => {
                   <Route path="/favoris" element={<Favorites />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/legal" element={<Legal />} />
+                 <Route path="/legal" element={<Legal />} />
+                 <Route path="/politique-achat" element={<PurchasePolicy />} />
+                 <Route path="/politique-remboursement" element={<PurchasePolicy />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
