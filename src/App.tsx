@@ -17,6 +17,7 @@ import PresenceTracker from "./components/PresenceTracker";
 import ProfileLeavePopup from "./components/ProfileLeavePopup";
 import RouteProgress from "./components/layout/RouteProgress";
 import SmartSuspense from "./components/layout/SmartSuspense";
+import PerformanceTracker from "./components/PerformanceTracker";
 
 // Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
