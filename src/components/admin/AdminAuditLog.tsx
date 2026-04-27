@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Coins, Crown, History, Download, ArrowUpDown, Search } from "lucide-react";
+import { Loader2, Coins, Crown, History, Download, ArrowUpDown, Search, ChevronDown, ChevronUp, User, Shield, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface AuditEntry {
   id: string;
