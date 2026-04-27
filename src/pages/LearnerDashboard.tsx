@@ -72,9 +72,17 @@ const LearnerDashboard = () => {
 
   if (profileLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-      <SEO url="/learner-dashboard" title="Espace Apprenant" description="Suivez vos formations agricoles et obtenez vos certificats." noIndex />
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-20 lg:pb-0">
+        <SEO url="/learner-dashboard" title="Espace Apprenant" description="Suivez vos formations agricoles et obtenez vos certificats." noIndex />
+        <div className="container mx-auto px-3 sm:px-4 py-4 space-y-4">
+          <div className="h-7 w-56 bg-muted animate-pulse rounded" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1,2,3,4].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
+          </div>
+          <div className="space-y-3">
+            {[1,2,3].map(i => <div key={i} className="h-28 bg-muted animate-pulse rounded-xl" />)}
+          </div>
+        </div>
       </div>
     );
   }
