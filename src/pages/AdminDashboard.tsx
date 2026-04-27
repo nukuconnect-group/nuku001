@@ -38,6 +38,7 @@ import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
 import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
+import AdminUserDetailsModal from "@/components/admin/AdminUserDetailsModal";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminRecentActions from "@/components/admin/AdminRecentActions";
 import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins } from "lucide-react";
@@ -66,6 +67,7 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<any | null>(null);
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!confirm(`Supprimer définitivement le compte de "${userName}" (données + authentification) ? L'email sera libéré pour permettre une nouvelle inscription. Cette action est irréversible.`)) return;
@@ -871,6 +873,15 @@ const AdminDashboard = () => {
                             </td>
                             <td className="py-2.5 px-2">
                               <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-[10px] text-primary hover:bg-primary/10"
+                                  onClick={() => setDetailUser(u)}
+                                  title="Voir détails / modifier / réinitialiser"
+                                >
+                                  Détails
+                                </Button>
                                 <UserSubscriptionActions
                                   userId={u.user_id}
                                   userName={u.full_name}

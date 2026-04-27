@@ -5,7 +5,19 @@ export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
 
 export interface ConversationItem {
   id: string;
-  participant: { id: string; name: string; avatar: string; isOnline: boolean; userId?: string };
+  participant: {
+    id: string;
+    name: string;
+    avatar: string;
+    isOnline: boolean;
+    userId?: string;
+    location?: string;
+    timezone?: string;
+    availabilityStart?: string;
+    availabilityEnd?: string;
+    isVerified?: boolean;
+    yearsActive?: number;
+  };
   lastMessage: string;
   timestamp: string;
   unread: number;
@@ -54,8 +66,8 @@ export function useConversations() {
       .select(`
         id, product_id, buyer_id, seller_id, updated_at,
         products:product_id (name, images),
-        buyer:buyer_id (id, full_name, avatar_url, user_id),
-        seller:seller_id (id, full_name, avatar_url, user_id)
+        buyer:buyer_id (id, full_name, avatar_url, user_id, location, timezone, availability_start, availability_end, is_verified, years_active),
+        seller:seller_id (id, full_name, avatar_url, user_id, location, timezone, availability_start, availability_end, is_verified, years_active)
       `)
       .or(`buyer_id.eq.${profile.id},seller_id.eq.${profile.id}`)
       .order("updated_at", { ascending: false });
@@ -125,6 +137,12 @@ export function useConversations() {
           name: other?.full_name || "Utilisateur",
           avatar: other?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(other?.full_name || "U")}&background=1c98ed&color=fff`,
           isOnline,
+          location: other?.location,
+          timezone: other?.timezone,
+          availabilityStart: other?.availability_start,
+          availabilityEnd: other?.availability_end,
+          isVerified: other?.is_verified,
+          yearsActive: other?.years_active,
         },
         lastMessage: lastMsg?.content || "Nouvelle conversation",
         timestamp: lastMsg ? formatTime(lastMsg.created_at) : formatTime(c.updated_at),

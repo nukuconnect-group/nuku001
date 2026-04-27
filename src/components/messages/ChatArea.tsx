@@ -18,6 +18,7 @@ import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
 import { useCall } from "@/contexts/CallContext";
+import CallOptionsSheet from "@/components/calls/CallOptionsSheet";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
@@ -65,6 +66,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [callSheetOpen, setCallSheetOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(() => {
     if (!conversation) return false;
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
@@ -460,12 +462,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               toast({ title: "Appel impossible", description: "Cet utilisateur n'est pas joignable.", variant: "destructive" });
               return;
             }
-            startCall({
-              conversationId: conversation.id,
-              peerUserId: conversation.participant.userId,
-              peerName: conversation.participant.name,
-              peerAvatar: conversation.participant.avatar,
-            });
+            setCallSheetOpen(true);
           }}
           title="Appeler"
         >
@@ -763,6 +760,28 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           </form>
         )}
       </div>
+
+      <CallOptionsSheet
+        open={callSheetOpen}
+        onClose={() => setCallSheetOpen(false)}
+        peerName={conversation.participant.name}
+        peerAvatar={conversation.participant.avatar}
+        peerLocation={conversation.participant.location}
+        peerTimezone={conversation.participant.timezone}
+        availabilityStart={conversation.participant.availabilityStart}
+        availabilityEnd={conversation.participant.availabilityEnd}
+        isVerified={conversation.participant.isVerified}
+        yearsActive={conversation.participant.yearsActive}
+        onVoiceCall={() => {
+          if (!conversation.participant.userId) return;
+          startCall({
+            conversationId: conversation.id,
+            peerUserId: conversation.participant.userId,
+            peerName: conversation.participant.name,
+            peerAvatar: conversation.participant.avatar,
+          });
+        }}
+      />
     </div>
   );
 }
