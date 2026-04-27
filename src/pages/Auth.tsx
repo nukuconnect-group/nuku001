@@ -351,15 +351,40 @@ const Auth = () => {
 
           {authMode === "login" ? (
             <div className="space-y-5">
-              {emailVerificationPending && (
+              {accountExists && (
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mail className="w-5 h-5 text-amber-600" />
+                    <h3 className="font-heading text-sm font-bold text-foreground">Compte déjà existant</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Un compte existe déjà avec <strong>{pendingVerificationEmail}</strong>. Connectez-vous,
+                    ou si vous n'avez jamais reçu l'email de confirmation, renvoyez-le ci-dessous.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="outline" onClick={handleResendConfirmation} disabled={resendingEmail}>
+                      {resendingEmail ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Envoi…</> : <><Mail className="w-3 h-3 mr-1" />Renvoyer l'email</>}
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => { setForgotMode(true); setForgotEmail(pendingVerificationEmail); }}>
+                      Mot de passe oublié ?
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {emailVerificationPending && !accountExists && (
                 <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Mail className="w-5 h-5 text-primary" />
                     <h3 className="font-heading text-sm font-bold text-foreground">Vérifiez votre email 📩</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Un email de vérification a été envoyé. Cliquez sur le lien dans l'email puis connectez-vous ici.
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Un email de vérification a été envoyé{pendingVerificationEmail ? ` à ` : "."}
+                    {pendingVerificationEmail && <strong>{pendingVerificationEmail}</strong>}.
+                    Cliquez sur le lien dans l'email puis connectez-vous ici. Pensez à vérifier vos spams.
                   </p>
+                  <Button type="button" size="sm" variant="outline" onClick={handleResendConfirmation} disabled={resendingEmail}>
+                    {resendingEmail ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Envoi…</> : <><Mail className="w-3 h-3 mr-1" />Renvoyer l'email de confirmation</>}
+                  </Button>
                 </div>
               )}
               <div>
