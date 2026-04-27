@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTokens } from "@/hooks/useTokens";
 import { Rocket, Coins, Check, Loader2, Clock, Sparkles } from "lucide-react";
+import ProductBoostStats from "./ProductBoostStats";
 
 interface BoostPlan {
   id: string;
@@ -36,6 +37,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
   const { balance, spendTokens, loading: balanceLoading } = useTokens();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [isLoading, setIsLoading] = useState(false);
+  const [boostedSuccess, setBoostedSuccess] = useState(false);
 
   const handleBoost = async () => {
     if (!product) return;
@@ -86,7 +88,7 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
         });
       }
 
-      onOpenChange(false);
+      setBoostedSuccess(true);
       onBoostSuccess?.();
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
@@ -95,94 +97,111 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
     }
   };
 
+  const handleClose = (next: boolean) => {
+    if (!next) setBoostedSuccess(false);
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-base sm:text-lg flex items-center gap-2">
-            <Rocket className="w-5 h-5 text-primary" /> Booster votre produit
+            <Rocket className="w-5 h-5 text-primary" />
+            {boostedSuccess ? "Boost activé" : "Booster votre produit"}
           </DialogTitle>
-          {product && (
+          {product && !boostedSuccess && (
             <p className="text-xs text-muted-foreground mt-1">
               Mettez en avant <span className="font-semibold text-foreground">"{product.name}"</span> avec vos crédits
             </p>
           )}
         </DialogHeader>
 
-        {/* Solde crédits */}
-        <div className="rounded-xl bg-gradient-hero text-primary-foreground p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coins className="w-5 h-5" />
-            <div>
-              <p className="text-[10px] opacity-90">Votre solde</p>
-              <p className="font-heading text-lg font-bold">{balanceLoading ? "…" : balance} crédit{balance > 1 ? "s" : ""}</p>
+        {boostedSuccess && product ? (
+          <div className="space-y-3">
+            <ProductBoostStats productId={product.id} productName={product.name} successMode />
+            <Button variant="outline" className="w-full" onClick={() => handleClose(false)}>
+              Fermer
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Solde crédits */}
+            <div className="rounded-xl bg-gradient-hero text-primary-foreground p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="w-5 h-5" />
+                <div>
+                  <p className="text-[10px] opacity-90">Votre solde</p>
+                  <p className="font-heading text-lg font-bold">{balanceLoading ? "…" : balance} crédit{balance > 1 ? "s" : ""}</p>
+                </div>
+              </div>
+              <Button size="sm" variant="secondary" className="text-xs h-8" onClick={() => { handleClose(false); navigate("/jetons"); }}>
+                <Sparkles className="w-3.5 h-3.5 mr-1" /> Recharger
+              </Button>
             </div>
-          </div>
-          <Button size="sm" variant="secondary" className="text-xs h-8" onClick={() => { onOpenChange(false); navigate("/jetons"); }}>
-            <Sparkles className="w-3.5 h-3.5 mr-1" /> Recharger
-          </Button>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-          {boostPlans.map((plan) => {
-            const isSelected = selectedPlan === plan.id;
-            return (
-              <Card
-                key={plan.id}
-                className={`cursor-pointer transition-all duration-200 relative ${isSelected ? "ring-2 ring-primary shadow-elevated" : "hover:shadow-soft hover:border-primary/30"}`}
-                onClick={() => setSelectedPlan(plan.id)}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] px-2">Populaire</Badge>
-                )}
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Rocket className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-heading text-xs sm:text-sm font-semibold">{plan.name}</h3>
-                      <div className="flex items-baseline gap-1 mt-0.5">
-                        <Coins className="w-3.5 h-3.5 text-primary" />
-                        <span className="font-heading text-lg font-bold text-primary">{plan.tokens}</span>
-                        <span className="text-[10px] text-muted-foreground">crédit{plan.tokens > 1 ? "s" : ""}</span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">{plan.days} jours</span>
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-primary-foreground" />
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              {boostPlans.map((plan) => {
+                const isSelected = selectedPlan === plan.id;
+                return (
+                  <Card
+                    key={plan.id}
+                    className={`cursor-pointer transition-all duration-200 relative ${isSelected ? "ring-2 ring-primary shadow-elevated" : "hover:shadow-soft hover:border-primary/30"}`}
+                    onClick={() => setSelectedPlan(plan.id)}
+                  >
+                    {plan.popular && (
+                      <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] px-2">Populaire</Badge>
                     )}
-                  </div>
-                  <ul className="mt-3 space-y-1.5">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-muted-foreground">
-                        <Check className="w-3 h-3 text-primary flex-shrink-0" />{feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Rocket className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-heading text-xs sm:text-sm font-semibold">{plan.name}</h3>
+                          <div className="flex items-baseline gap-1 mt-0.5">
+                            <Coins className="w-3.5 h-3.5 text-primary" />
+                            <span className="font-heading text-lg font-bold text-primary">{plan.tokens}</span>
+                            <span className="text-[10px] text-muted-foreground">crédit{plan.tokens > 1 ? "s" : ""}</span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">{plan.days} jours</span>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <ul className="mt-3 space-y-1.5">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-muted-foreground">
+                            <Check className="w-3 h-3 text-primary flex-shrink-0" />{feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-          <div>
-            <p className="text-[10px] text-muted-foreground">Plan sélectionné</p>
-            <p className="font-heading text-sm font-bold">
-              {boostPlans.find(p => p.id === selectedPlan)?.name} — {boostPlans.find(p => p.id === selectedPlan)?.tokens} crédit{(boostPlans.find(p => p.id === selectedPlan)?.tokens || 1) > 1 ? "s" : ""}
-            </p>
-          </div>
-          <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={handleBoost} disabled={isLoading}>
-            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
-            Booster
-          </Button>
-        </div>
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Plan sélectionné</p>
+                <p className="font-heading text-sm font-bold">
+                  {boostPlans.find(p => p.id === selectedPlan)?.name} — {boostPlans.find(p => p.id === selectedPlan)?.tokens} crédit{(boostPlans.find(p => p.id === selectedPlan)?.tokens || 1) > 1 ? "s" : ""}
+                </p>
+              </div>
+              <Button variant="hero" size="sm" className="gap-1.5 text-xs" onClick={handleBoost} disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
+                Booster
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
