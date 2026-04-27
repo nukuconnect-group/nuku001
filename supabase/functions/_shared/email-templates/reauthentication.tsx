@@ -25,7 +25,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Preview>Votre code de vérification</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NukuConnect" width="140" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NukuConnect" width="80" height="80" style={logo} />
         <Heading style={h1}>Confirmez votre identité</Heading>
         <Text style={text}>Utilisez le code ci-dessous pour confirmer votre identité :</Text>
         <Text style={codeStyle}>{token}</Text>
@@ -41,7 +41,7 @@ export default ReauthenticationEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', Arial, sans-serif" }
 const container = { padding: '32px 25px' }
-const logo = { margin: '0 auto 24px', display: 'block', objectFit: 'contain' as const, maxWidth: '140px', height: 'auto' }
+const logo = { margin: '0 auto 24px', display: 'block', objectFit: 'contain' as const, width: '80px', height: '80px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
