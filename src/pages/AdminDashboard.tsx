@@ -33,6 +33,7 @@ import DeliveryManager from "@/components/admin/DeliveryManager";
 import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
 import EmailStatsManager from "@/components/admin/EmailStatsManager";
+import EmailLogsManager from "@/components/admin/EmailLogsManager";
 import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
@@ -289,6 +290,7 @@ const AdminDashboard = () => {
     { id: "support", label: "Support", icon: MessageCircle },
     { id: "broadcast", label: "Notifications", icon: Megaphone },
     { id: "emails", label: "Emails", icon: Send },
+    { id: "email-logs", label: "Logs Emails", icon: FileText },
     { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
@@ -1094,6 +1096,11 @@ const AdminDashboard = () => {
             {/* Emails Tab */}
             {activeTab === "emails" && (
               <EmailStatsManager />
+            )}
+
+            {/* Email Logs Tab */}
+            {activeTab === "email-logs" && (
+              <EmailLogsManager />
             )}
 
             {/* KYC Tab */}
