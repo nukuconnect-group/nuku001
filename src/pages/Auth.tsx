@@ -51,6 +51,9 @@ const Auth = () => {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [signupStep, setSignupStep] = useState<"select" | "form">("select");
   const [emailVerificationPending, setEmailVerificationPending] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [accountExists, setAccountExists] = useState(false);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -132,7 +135,21 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) {
-        toast({ title: error.message.includes("Invalid") ? "Erreur de connexion" : "Erreur", description: error.message.includes("Invalid") ? "Email ou mot de passe incorrect." : error.message.includes("not confirmed") ? "Veuillez vérifier votre email." : error.message, variant: "destructive" });
+        const isUnconfirmed = /not confirmed|confirm/i.test(error.message);
+        if (isUnconfirmed) {
+          setPendingVerificationEmail(loginEmail);
+          setEmailVerificationPending(true);
+          setAccountExists(false);
+        }
+        toast({
+          title: error.message.includes("Invalid") ? "Erreur de connexion" : "Erreur",
+          description: error.message.includes("Invalid")
+            ? "Email ou mot de passe incorrect."
+            : isUnconfirmed
+              ? "Veuillez vérifier votre email avant de vous connecter. Vous pouvez renvoyer le lien ci-dessus."
+              : error.message,
+          variant: "destructive",
+        });
         return;
       }
       toast({ title: "Connexion réussie", description: "Bienvenue sur NUKUCONNECT !" });
@@ -150,6 +167,44 @@ const Auth = () => {
       else { toast({ title: "Email envoyé", description: "Vérifiez votre boîte email." }); setForgotMode(false); setForgotEmail(""); }
     } catch { toast({ title: "Erreur", description: "Une erreur est survenue.", variant: "destructive" }); }
     finally { setIsLoading(false); }
+  };
+
+  const handleResendConfirmation = async () => {
+    const target = (pendingVerificationEmail || loginEmail).trim();
+    if (!target) {
+      toast({ title: "Email manquant", description: "Saisissez votre email pour renvoyer la confirmation.", variant: "destructive" });
+      return;
+    }
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: target,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
+      if (error) {
+        // If account is already confirmed, Supabase returns an error — guide user to login/reset
+        const msg = (error as any)?.message || "";
+        if (/confirmed|already/i.test(msg)) {
+          toast({
+            title: "Compte déjà confirmé",
+            description: "Connectez-vous, ou utilisez « Mot de passe oublié » si nécessaire.",
+          });
+        } else {
+          toast({ title: "Erreur", description: msg || "Impossible de renvoyer l'email.", variant: "destructive" });
+        }
+      } else {
+        toast({
+          title: "Email envoyé 📩",
+          description: `Un nouvel email de confirmation a été envoyé à ${target}. Vérifiez aussi vos spams.`,
+        });
+        setEmailVerificationPending(true);
+      }
+    } catch {
+      toast({ title: "Erreur", description: "Une erreur est survenue lors du renvoi.", variant: "destructive" });
+    } finally {
+      setResendingEmail(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -181,7 +236,23 @@ const Auth = () => {
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
-        const needsConfirmation = authData.user.identities && authData.user.identities.length > 0 && !authData.session;
+        // Anti-enumeration: when the email is already registered, Supabase returns
+        // a 200 with user.identities = [] and NO email is sent. Detect & guide the user.
+        const isRepeatedSignup = !authData.session && (!authData.user.identities || authData.user.identities.length === 0);
+        if (isRepeatedSignup) {
+          setAccountExists(true);
+          setPendingVerificationEmail(signupEmail);
+          setAuthMode("login");
+          setSignupStep("select");
+          setLoginEmail(signupEmail);
+          toast({
+            title: "Un compte existe déjà avec cet email",
+            description: "Connectez-vous, ou utilisez « Renvoyer l'email de confirmation » si vous ne l'avez pas reçu.",
+          });
+          return;
+        }
+
+        const needsConfirmation = !authData.session;
         await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
         // Link referral if present — only remove localStorage AFTER successful claim
@@ -217,6 +288,9 @@ const Auth = () => {
           setAuthMode("login");
           setSignupStep("select");
           setEmailVerificationPending(true);
+          setPendingVerificationEmail(signupEmail);
+          setLoginEmail(signupEmail);
+          setAccountExists(false);
           return;
         }
         toast({ title: "Inscription réussie !", description: "Bienvenue sur NUKUCONNECT !" });
@@ -291,15 +365,40 @@ const Auth = () => {
 
           {authMode === "login" ? (
             <div className="space-y-5">
-              {emailVerificationPending && (
+              {accountExists && (
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mail className="w-5 h-5 text-amber-600" />
+                    <h3 className="font-heading text-sm font-bold text-foreground">Compte déjà existant</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Un compte existe déjà avec <strong>{pendingVerificationEmail}</strong>. Connectez-vous,
+                    ou si vous n'avez jamais reçu l'email de confirmation, renvoyez-le ci-dessous.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="outline" onClick={handleResendConfirmation} disabled={resendingEmail}>
+                      {resendingEmail ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Envoi…</> : <><Mail className="w-3 h-3 mr-1" />Renvoyer l'email</>}
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => { setForgotMode(true); setForgotEmail(pendingVerificationEmail); }}>
+                      Mot de passe oublié ?
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {emailVerificationPending && !accountExists && (
                 <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Mail className="w-5 h-5 text-primary" />
                     <h3 className="font-heading text-sm font-bold text-foreground">Vérifiez votre email 📩</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Un email de vérification a été envoyé. Cliquez sur le lien dans l'email puis connectez-vous ici.
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Un email de vérification a été envoyé{pendingVerificationEmail ? ` à ` : "."}
+                    {pendingVerificationEmail && <strong>{pendingVerificationEmail}</strong>}.
+                    Cliquez sur le lien dans l'email puis connectez-vous ici. Pensez à vérifier vos spams.
                   </p>
+                  <Button type="button" size="sm" variant="outline" onClick={handleResendConfirmation} disabled={resendingEmail}>
+                    {resendingEmail ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Envoi…</> : <><Mail className="w-3 h-3 mr-1" />Renvoyer l'email de confirmation</>}
+                  </Button>
                 </div>
               )}
               <div>

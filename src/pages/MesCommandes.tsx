@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/sheet";
 import {
   Package, Truck, CheckCircle2, Clock, XCircle, Receipt,
-  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download,
+  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download, Loader2,
 } from "lucide-react";
+const DeliveryLiveMap = lazy(() => import("@/components/delivery/DeliveryLiveMap"));
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { generateOrdersRecapPDF } from "@/utils/generateOrdersRecapPDF";
 import { toast } from "sonner";
@@ -79,7 +80,7 @@ const MesCommandes = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("orders")
-        .select("*, products(name, images, price, unit), deliveries(status, delivered_at, driver_id, delivery_fee)")
+        .select("*, products(name, images, price, unit), deliveries(id, status, delivered_at, driver_id, delivery_fee, driver_current_lat, driver_current_lng, pickup_address, dropoff_address)")
         .eq("buyer_id", profile.id)
         .order("created_at", { ascending: false });
       if (error) {
@@ -252,6 +253,43 @@ const MesCommandes = () => {
               </CardContent>
             </Card>
 
+            {/* Live tracking — driver position in real time when delivery is in transit */}
+            {delivery?.id && ["accepted", "picked_up", "in_transit", "delivered"].includes(delivery.status) && (
+              <Card>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> Suivi en direct du livreur
+                    </p>
+                    {delivery.status !== "delivered" && (
+                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1" />
+                        En direct
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="h-56 rounded-md overflow-hidden border border-border">
+                    <Suspense fallback={
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      </div>
+                    }>
+                      <DeliveryLiveMap deliveryId={delivery.id} />
+                    </Suspense>
+                  </div>
+                  {delivery.pickup_address && (
+                    <p className="text-[11px] text-muted-foreground">
+                      <strong>Récupération :</strong> {delivery.pickup_address}
+                    </p>
+                  )}
+                  {delivery.dropoff_address && (
+                    <p className="text-[11px] text-muted-foreground">
+                      <strong>Livraison :</strong> {delivery.dropoff_address}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             <div className="flex flex-col gap-2">
               <Button onClick={() => handleInvoice(o)} className="w-full" size="sm">
                 <FileDown className="w-4 h-4 mr-2" /> Télécharger facture PDF
