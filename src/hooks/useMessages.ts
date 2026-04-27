@@ -70,9 +70,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
         (m: any) => m.sender_id !== myId && m.is_read === false
       ).length;
 
-      // Mark unread messages as read
+      // Mark unread messages as read (offline-aware)
       let didMarkRead = false;
-      if (isDeliveryConversation && userId) {
+      const isOnline = typeof navigator === "undefined" ? true : navigator.onLine;
+      if (!isOnline && decrement > 0) {
+        // Queue for replay when back online; still update UI optimistically
+        queueOfflineRead({ conversationId: conversationId!, decrement });
+        didMarkRead = true;
+      } else if (isDeliveryConversation && userId) {
         const { error: upErr } = await supabase
           .from("delivery_messages")
           .update({ is_read: true })
@@ -80,6 +85,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", userId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
       } else if (profileId) {
         const { error: upErr } = await supabase
           .from("messages")
@@ -88,13 +94,10 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", profileId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
       }
       if (didMarkRead) {
-        try {
-          window.dispatchEvent(
-            new CustomEvent("nuku:messages-read", { detail: { conversationId, decrement } })
-          );
-        } catch {}
+        emitMessagesRead({ conversationId: conversationId!, decrement });
       }
     }
 
