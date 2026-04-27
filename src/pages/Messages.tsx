@@ -77,36 +77,47 @@ const Messages = () => {
   }, [loading, profileId]);
 
   // Auto-select conversation from URL params (incl. contact + prefill from Réseaux)
+  // ⚠️ Ne s'exécute qu'une seule fois pour éviter d'écraser la sélection manuelle
+  // de l'utilisateur lors du rafraîchissement de la liste des conversations.
   useEffect(() => {
-    if (!conversations.length) return;
+    if (!conversations.length || autoSelectedRef.current) return;
     const convId = searchParams.get("conversation");
     const productId = searchParams.get("product");
     const sellerName = searchParams.get("seller");
     const contactId = searchParams.get("contact");
     const prefill = searchParams.get("prefill");
+    const deliveryId = searchParams.get("delivery");
 
+    let match: ConversationItem | undefined;
     if (convId) {
-      const match = conversations.find(c => c.id === convId);
-      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
-    } else if (searchParams.get("delivery")) {
-      const deliveryId = searchParams.get("delivery");
-      const match = conversations.find(c => c.deliveryId === deliveryId);
-      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
+      match = conversations.find(c => c.id === convId);
+    } else if (deliveryId) {
+      match = conversations.find(c => c.deliveryId === deliveryId);
     } else if (contactId) {
-      const match = conversations.find(c => c.participant.id === contactId);
-      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
+      match = conversations.find(c => c.participant.id === contactId);
       if (prefill) {
         try { sessionStorage.setItem(`msg-prefill-${contactId}`, decodeURIComponent(prefill)); } catch {}
       }
     } else if (productId || sellerName) {
-      const match = conversations.find(
+      match = conversations.find(
         (c) =>
           c.productId === productId ||
           c.participant.name.toLowerCase() === sellerName?.toLowerCase()
       );
-      if (match && match.id !== selectedConversation?.id) setSelectedConversation(match);
     }
-  }, [conversations, searchParams]);
+
+    if (match) {
+      setSelectedConversation(match);
+      autoSelectedRef.current = true;
+      // Nettoie l'URL pour éviter toute ré-sélection involontaire
+      const params = new URLSearchParams(searchParams);
+      ["conversation", "product", "seller", "contact", "prefill", "delivery"].forEach(k => params.delete(k));
+      setSearchParams(params, { replace: true });
+    } else if (!convId && !productId && !sellerName && !contactId && !deliveryId) {
+      autoSelectedRef.current = true;
+    }
+  }, [conversations, searchParams, setSearchParams]);
+
 
   // Auto-scroll on new messages
   useEffect(() => {
