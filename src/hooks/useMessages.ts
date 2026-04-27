@@ -174,11 +174,31 @@ export function useMessages(conversationId: string | null, profileId: string | n
       if (!isDeliveryConversation) {
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
         // Notify recipient by email (throttled server-side per 5 min)
+        const startedAt = Date.now();
+        console.info("[email-notify] invoking notify-message-recipient", { conversationId });
         supabase.functions
           .invoke("notify-message-recipient", {
             body: { conversationId, preview: content },
           })
-          .catch(() => {});
+          .then(({ data, error }) => {
+            const ms = Date.now() - startedAt;
+            if (error) {
+              console.error("[email-notify] FAILED", { error, ms });
+              try {
+                // dynamic import to avoid hard dep cycle in tests
+                import("sonner").then(({ toast }) => {
+                  toast.error("Notification email non envoyée", {
+                    description: error.message ?? "Erreur inconnue",
+                  });
+                });
+              } catch {}
+            } else {
+              console.info("[email-notify] OK", { data, ms });
+            }
+          })
+          .catch((err) => {
+            console.error("[email-notify] EXCEPTION", err);
+          });
       }
     },
     [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
