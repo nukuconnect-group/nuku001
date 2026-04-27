@@ -50,6 +50,15 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const [messageInput, setMessageInput] = useState("");
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [waveform, setWaveform] = useState<number[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const recordStreamRef = useRef<MediaStream | null>(null);
+  const recordStartRef = useRef<number>(0);
+  const cancelledRef = useRef<boolean>(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<{ file: File; url: string } | null>(null);
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
@@ -192,11 +201,13 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const ext = file.name.split('.').pop() || 'jpg';
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const fileName = `${user.id}/chat-${conversation.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(fileName, file, { contentType: file.type });
+      const { error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(fileName, file, { contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(fileName);
       const content = caption ? `📷 ${caption}` : "📷 Photo";
       onSend(`${content}\n[image:${urlData.publicUrl}]`, replyTo?.id);
       setImagePreview(null);
@@ -204,9 +215,30 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       setReplyTo(null);
       toast({ title: "Image envoyée ✓" });
     } catch (error: any) {
-      toast({ title: "Erreur d'envoi", description: "Impossible d'envoyer l'image", variant: "destructive" });
+      console.error("Image upload error:", error);
+      toast({ title: "Erreur d'envoi", description: error?.message || "Impossible d'envoyer l'image", variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const uploadAndSendVoice = async (blob: Blob, durationSec: number) => {
+    if (!conversation) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const fileName = `${user.id}/voice-${conversation.id}-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(fileName, blob, { contentType: "audio/webm", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(fileName);
+      onSend(`🎙️ Message vocal (${Math.round(durationSec)}s)\n[voice:${urlData.publicUrl}]`, replyTo?.id);
+      setReplyTo(null);
+      toast({ title: "Vocal envoyé ✓" });
+    } catch (error: any) {
+      console.error("Voice upload error:", error);
+      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le vocal", variant: "destructive" });
     }
   };
 
@@ -235,26 +267,97 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     e.target.value = "";
   };
 
-  const toggleRecording = async () => {
-    if (isRecording) { mediaRecorderRef.current?.stop(); setIsRecording(false); return; }
+  const stopVisualizer = () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  const startRecording = async () => {
     try {
+      cancelledRef.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordStreamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        recordStreamRef.current = null;
+        stopVisualizer();
+        if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+        const duration = (Date.now() - recordStartRef.current) / 1000;
         const blob = new Blob(chunks, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        onLocalMessage({ id: `local-${Date.now()}`, senderId: "me", content: "🎙️ Message vocal", timestamp: new Date(), status: "sent", type: "voice", fileUrl: url });
+        if (cancelledRef.current || duration < 0.5) {
+          setRecordSeconds(0); setWaveform([]); setIsRecording(false); return;
+        }
+        void uploadAndSendVoice(blob, duration);
+        setRecordSeconds(0); setWaveform([]); setIsRecording(false);
       };
-      recorder.start();
+      recorder.start(100);
       mediaRecorderRef.current = recorder;
+      recordStartRef.current = Date.now();
       setIsRecording(true);
+      setRecordSeconds(0);
+      setWaveform([]);
+      // Timer
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds(Math.floor((Date.now() - recordStartRef.current) / 1000));
+      }, 250);
+      // Visualizer (waveform)
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx: AudioContext = new AudioCtx();
+      audioCtxRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteTimeDomainData(data);
+        // Compute amplitude (0..1)
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / data.length);
+        setWaveform((prev) => {
+          const next = [...prev, Math.min(1, rms * 2.2)];
+          return next.length > 40 ? next.slice(next.length - 40) : next;
+        });
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      rafRef.current = requestAnimationFrame(tick);
     } catch {
       toast({ title: "Micro non disponible", description: "Autorisez l'accès au microphone", variant: "destructive" });
     }
   };
+
+  const stopRecording = (cancel = false) => {
+    cancelledRef.current = cancel;
+    const rec = mediaRecorderRef.current;
+    if (rec && rec.state !== "inactive") rec.stop();
+    else {
+      // No active recorder, just clean
+      recordStreamRef.current?.getTracks().forEach(t => t.stop());
+      stopVisualizer();
+      if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+      setRecordSeconds(0); setWaveform([]); setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) { stopRecording(false); return; }
+    await startRecording();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => () => { stopRecording(true); }, []);
+
 
   const getMessageStatus = (status: string) => {
     switch (status) {
@@ -267,11 +370,16 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
   const parseMessage = (content: string) => {
     const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
+    const voiceMatch = content.match(/\[voice:(https?:\/\/[^\]]+)\]/);
     if (imageMatch) {
       const text = content.replace(/\n?\[image:[^\]]+\]/, "").trim();
-      return { text: text || "📷 Photo", imageUrl: imageMatch[1] };
+      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null };
     }
-    return { text: content, imageUrl: null };
+    if (voiceMatch) {
+      const text = content.replace(/\n?\[voice:[^\]]+\]/, "").trim();
+      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1] };
+    }
+    return { text: content, imageUrl: null as string | null, voiceUrl: null as string | null };
   };
 
   const handleReply = (msg: MessageItem) => {
@@ -420,7 +528,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <span className="text-[10px] text-muted-foreground bg-muted px-3 py-1 rounded-full">Aujourd'hui</span>
         </div>
         {messages.map((msg) => {
-          const { text, imageUrl } = parseMessage(msg.content);
+          const { text, imageUrl, voiceUrl } = parseMessage(msg.content);
           const repliedMsg = findReplyMessage(msg.replyToId);
           return (
             <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
@@ -454,7 +562,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
                   {msg.type === "image" && msg.fileUrl && !imageUrl && (
                     <img src={msg.fileUrl} alt="" className="rounded-lg mb-1.5 max-h-48 object-cover" />
                   )}
-                  {msg.type === "voice" && msg.fileUrl && (
+                  {voiceUrl && (
+                    <audio controls src={voiceUrl} className="max-w-full h-8 mb-1" />
+                  )}
+                  {msg.type === "voice" && msg.fileUrl && !voiceUrl && (
                     <audio controls src={msg.fileUrl} className="max-w-full h-8 mb-1" />
                   )}
                   {msg.type === "file" && (
@@ -547,21 +658,63 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
       {/* Input - responsive, fully aligned on mobile, no bottom-nav overlap */}
       <div className="px-2 sm:px-3 pt-2 pb-2 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}>
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 w-full">
-          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
-            <ImageIcon className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
-          <Button type="button" variant="ghost" size="icon" className={`h-10 w-10 flex-shrink-0 ${isRecording ? "text-destructive animate-pulse" : ""}`} onClick={toggleRecording}>
-            {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
-          </Button>
-          <Button type="submit" size="icon" className="h-11 w-11 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
-            {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-          </Button>
-        </form>
+        {isRecording ? (
+          /* WhatsApp-style recording bar with live waveform */
+          <div className="flex items-center gap-2 w-full h-11">
+            <button
+              type="button"
+              onClick={() => stopRecording(true)}
+              className="h-10 w-10 flex-shrink-0 rounded-full bg-muted flex items-center justify-center text-destructive"
+              aria-label="Annuler l'enregistrement"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex-1 min-w-0 h-11 rounded-full bg-muted/60 px-3 flex items-center gap-2 overflow-hidden">
+              <span className="w-2 h-2 rounded-full bg-destructive animate-pulse flex-shrink-0" />
+              <span className="text-xs font-mono text-foreground tabular-nums w-10 flex-shrink-0">
+                {String(Math.floor(recordSeconds / 60)).padStart(1, "0")}:{String(recordSeconds % 60).padStart(2, "0")}
+              </span>
+              <div className="flex-1 h-8 flex items-center gap-[2px] overflow-hidden">
+                {waveform.length === 0 ? (
+                  <span className="text-[10px] text-muted-foreground">Parlez maintenant…</span>
+                ) : (
+                  waveform.map((amp, i) => (
+                    <span
+                      key={i}
+                      className="w-[3px] rounded-full bg-primary/80"
+                      style={{ height: `${Math.max(8, amp * 100)}%` }}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="icon"
+              className="h-11 w-11 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90"
+              onClick={() => stopRecording(false)}
+              aria-label="Envoyer le vocal"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-1.5 w-full">
+            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => imageInputRef.current?.click()}>
+              <ImageIcon className="w-5 h-5 text-muted-foreground" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="w-5 h-5 text-muted-foreground" />
+            </Button>
+            <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
+            <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleRecording}>
+              <Mic className="w-5 h-5 text-muted-foreground" />
+            </Button>
+            <Button type="submit" size="icon" className="h-11 w-11 flex-shrink-0 rounded-full bg-primary hover:bg-primary/90" disabled={(!messageInput.trim() && !imagePreview) || isUploadingImage}>
+              {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );

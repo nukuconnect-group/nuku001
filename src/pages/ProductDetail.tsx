@@ -85,11 +85,13 @@ const ProductDetail = () => {
     if (!product) return;
     const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
     setMessage(autoMessage);
-    setShowContactForm(true);
+    // Direct redirect: create conversation, send the prefilled message, then go to /messages
+    void handleSendAndRedirect(autoMessage);
   };
 
-  const handleSendAndRedirect = async () => {
-    if (!product || !message.trim()) return;
+  const handleSendAndRedirect = async (overrideMessage?: string) => {
+    const content = (overrideMessage ?? message).trim();
+    if (!product || !content) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
@@ -152,7 +154,7 @@ const ProductDetail = () => {
 
       const { error: msgError } = await supabase
         .from("messages")
-        .insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content: message });
+        .insert({ conversation_id: conversationId, sender_id: buyerProfile.id, content });
       if (msgError) throw msgError;
 
       toast({ title: "Message envoyé ✓", description: `Votre message a été envoyé à ${product.producer.name}` });
@@ -508,7 +510,7 @@ const ProductDetail = () => {
                       <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowContactForm(false)}>
                         Annuler
                       </Button>
-                      <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleSendAndRedirect} disabled={isSending || !message.trim()}>
+                      <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={() => handleSendAndRedirect()} disabled={isSending || !message.trim()}>
                         {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         Envoyer et ouvrir la conversation
                       </Button>
