@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const AddProductModal = lazy(() => import("@/components/dashboard/AddProductModal"));
+const AddFormationModal = lazy(() => import("@/components/dashboard/AddFormationModal"));
+const PublishChoiceModal = lazy(() => import("@/components/dashboard/PublishChoiceModal"));
 const AccountSidebar = lazy(() => import("./AccountSidebar"));
 
 const MobileBottomNav = () => {
