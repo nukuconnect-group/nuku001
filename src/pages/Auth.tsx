@@ -705,8 +705,8 @@ const Auth = () => {
                   </label>
                 </div>
 
-                <Button type="submit" variant="hero" className="w-full h-11" disabled={isLoading}>
-                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : "Créer mon compte"}
+                <Button type="submit" variant="hero" className="w-full h-11" disabled={isLoading || companyMissing} title={companyMissing ? "Veuillez renseigner le nom de l'entreprise" : undefined}>
+                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Inscription...</> : companyMissing ? "Nom d'entreprise requis" : "Créer mon compte"}
                 </Button>
               </form>
 
