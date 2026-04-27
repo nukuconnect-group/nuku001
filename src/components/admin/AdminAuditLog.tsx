@@ -23,6 +23,21 @@ export default function AdminAuditLog({ targetUserId }: { targetUserId?: string 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortDesc, setSortDesc] = useState(true);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(key);
+      toast.success("Copié");
+      setTimeout(() => setCopiedId((c) => (c === key ? null : c)), 1200);
+    } catch {
+      toast.error("Impossible de copier");
+    }
+  };
+
+  const shortId = (id?: string | null) => (id ? `${id.slice(0, 8)}…${id.slice(-4)}` : "—");
 
   useEffect(() => {
     const load = async () => {
