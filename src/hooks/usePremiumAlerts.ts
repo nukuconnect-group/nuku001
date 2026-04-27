@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Crée des notifications in-app contextuelles :
+ * Crée des notifications in-app contextuelles, sans ambiguïté :
+ *  - "✅ Jetons actifs détectés" — quand un solde > 0 est disponible
+ *  - "⚠️ Aucun jeton disponible" — propose la prochaine action (recharger)
  *  - Solde de jetons faible (≤ 5)
- *  - Pack expirant seulement si aucun jeton actif n'est disponible
- *  - Pack expiré seulement si aucun jeton actif n'est disponible
  *
  * Déduplication : on stocke en localStorage la dernière clé (jour + type)
  * pour ne pas spammer la même notif plusieurs fois par jour.
@@ -38,21 +38,29 @@ export function usePremiumAlerts(userId: string | null | undefined) {
       // Solde jetons
       const { data: balance } = await supabase.rpc("get_user_token_balance", { p_user_id: userId });
       const bal = typeof balance === "number" ? balance : 0;
-      if (bal <= 5 && bal > 0) {
-        await insertOnce("tokens_low", {
-          title: "💰 Solde de jetons faible",
-          description: `Il vous reste ${bal} jeton${bal > 1 ? "s" : ""}. Rechargez pour continuer à booster vos produits.`,
+
+      if (bal > 5) {
+        // Jetons confortables → message rassurant unique par jour
+        await insertOnce("tokens_active", {
+          title: "✅ Jetons actifs détectés",
+          description: `Solde actuel : ${bal} jetons (valides 12 mois). Aucune action requise — votre compte reste actif.`,
           type: "tokens",
         });
-      } else if (bal === 0) {
+      } else if (bal > 0) {
+        await insertOnce("tokens_low", {
+          title: "💰 Jetons actifs mais solde faible",
+          description: `Il vous reste ${bal} jeton${bal > 1 ? "s" : ""}. Prochaine action : rechargez via la page Jetons pour éviter une interruption.`,
+          type: "tokens",
+        });
+      } else {
         await insertOnce("tokens_empty", {
-          title: "🪙 Solde de jetons épuisé",
-          description: "Rechargez vos jetons pour activer la traçabilité et booster vos produits.",
+          title: "⚠️ Aucun jeton disponible",
+          description: "Votre solde est à 0. Prochaine action : rechargez des jetons pour activer la traçabilité et booster vos produits.",
           type: "tokens",
         });
       }
 
-      // Abonnement
+      // Abonnement — uniquement quand pas de jeton actif
       const { data: sub } = await supabase
         .from("subscriptions" as any)
         .select("plan, status, expires_at")
@@ -66,14 +74,14 @@ export function usePremiumAlerts(userId: string | null | undefined) {
           const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / 86400000);
           if (daysLeft <= 0) {
             await insertOnce("sub_expired", {
-              title: `⏰ Pack ${plan} terminé`,
-              description: "Aucun jeton actif n'est disponible. Rechargez seulement si vous voulez continuer à booster ou utiliser les options premium.",
+              title: `⏰ Pack ${plan} terminé — aucun jeton disponible`,
+              description: "Prochaine action : rechargez vos jetons pour continuer à utiliser les options premium.",
               type: "subscription",
             });
           } else if (daysLeft <= 7) {
             await insertOnce("sub_expiring", {
-              title: `⏳ Pack ${plan} bientôt terminé`,
-              description: "Aucun jeton actif n'est disponible. Vos jetons restent valables 12 mois après achat.",
+              title: `⏳ Pack ${plan} se termine dans ${daysLeft}j`,
+              description: "Aucun jeton disponible actuellement. Vos jetons restent valables 12 mois après achat — pensez à recharger.",
               type: "subscription",
             });
           }
