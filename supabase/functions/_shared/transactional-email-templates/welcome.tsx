@@ -59,7 +59,7 @@ const WelcomeEmail = ({ name, userType }: WelcomeEmailProps) => (
         </Section>
 
         <Section style={ctaSection}>
-          <Button style={ctaButton} href="https://nukuconnect.lovable.app/marketplace">
+          <Button style={ctaButton} href="https://nukuconnect.com/marketplace">
             Explorer la Marketplace
           </Button>
         </Section>

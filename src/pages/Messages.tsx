@@ -140,9 +140,39 @@ const Messages = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <main className="flex-1 flex overflow-hidden min-h-0">
+          <div className="w-full lg:w-96 border-r border-border flex flex-col bg-card">
+            <div className="p-3 sm:p-4 border-b border-border space-y-3">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-primary" />
+                <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+              </div>
+              <div className="h-9 bg-muted animate-pulse rounded" />
+              <div className="flex gap-1.5">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="h-6 w-16 bg-muted animate-pulse rounded-full" />
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="p-3 flex items-start gap-3 border-b border-border">
+                  <div className="w-11 h-11 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-48 bg-muted animate-pulse rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 hidden lg:flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <MessageCircle className="w-12 h-12 text-muted-foreground/20 mx-auto" />
+              <div className="h-3 w-40 bg-muted animate-pulse rounded mx-auto" />
+            </div>
+          </div>
+        </main>
         <MobileBottomNav />
       </div>
     );
