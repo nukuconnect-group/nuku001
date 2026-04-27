@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useTokens } from "@/hooks/useTokens";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -22,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid
+  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid, Coins, Plus
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
@@ -59,6 +60,7 @@ const BuyerDashboard = () => {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
   const { wishlist: wishlistItems } = useWishlist();
+  const { balance: tokenBalance, loading: tokensLoading } = useTokens();
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationData, setMigrationData] = useState({
     businessName: "",
@@ -253,11 +255,18 @@ const BuyerDashboard = () => {
           {/* Résumé des achats — fusion portefeuille + stats principales */}
           <Card className="mb-5 sm:mb-8 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
             <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Receipt className="w-5 h-5" />
-                <span className="text-sm font-semibold">Résumé des achats</span>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Résumé des achats</span>
+                </div>
+                <Link to="/jetons">
+                  <Button size="sm" variant="secondary" className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs">
+                    <Plus className="w-3 h-3" /> Booster un besoin
+                  </Button>
+                </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Total dépensé</p>
                   <p className="text-base sm:text-2xl font-bold">{formatPrice(totalSpent)}</p>
@@ -273,6 +282,15 @@ const BuyerDashboard = () => {
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Favoris</p>
                   <p className="text-base sm:text-2xl font-bold">{wishlistItems?.length || 0}</p>
+                </div>
+                <div className="col-span-2 sm:col-span-1 border-t sm:border-t-0 sm:border-l border-primary-foreground/20 sm:pl-4 pt-2 sm:pt-0">
+                  <p className="text-[10px] text-primary-foreground/70 flex items-center gap-1">
+                    <Coins className="w-3 h-3" /> Mes jetons
+                  </p>
+                  <p className="text-base sm:text-2xl font-bold">
+                    {tokensLoading ? "…" : tokenBalance}
+                  </p>
+                  <p className="text-[9px] text-primary-foreground/60 mt-0.5">Boostez vos besoins d'achat</p>
                 </div>
               </div>
             </CardContent>
@@ -408,7 +426,7 @@ const BuyerDashboard = () => {
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <div id="buyer-tabs" className="scroll-mt-20" />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-            <TabsList className="bg-muted p-1 w-full overflow-x-auto flex justify-start sm:justify-center scrollbar-hide">
+            <TabsList className="sr-only" aria-hidden="true">
               <TabsTrigger value="orders" className="gap-1 sm:gap-2 data-[state=active]:bg-background text-[11px] sm:text-sm px-2.5 sm:px-4 flex-shrink-0">
                 <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">Commandes</span>
