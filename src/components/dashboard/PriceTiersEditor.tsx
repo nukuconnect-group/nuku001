@@ -27,9 +27,14 @@ interface Props {
  *  - price required and > 0
  *  - no overlap between ranges
  */
-export function validateTiers(tiers: TierDraft[]): string[] {
+export function validateTiers(tiers: TierDraft[], opts: { required?: boolean } = {}): string[] {
   const errors: string[] = [];
-  if (tiers.length === 0) return errors;
+  if (tiers.length === 0) {
+    if (opts.required) {
+      errors.push("Ajoutez au moins un palier de prix de gros pour inciter les acheteurs.");
+    }
+    return errors;
+  }
 
   const parsed = tiers.map((t, i) => ({
     i,
