@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket, History } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
