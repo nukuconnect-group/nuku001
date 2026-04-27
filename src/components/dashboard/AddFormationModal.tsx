@@ -392,9 +392,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         category: safeCategory,
       };
       setForm(nextForm);
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt }));
-      setDraftSavedAt(savedAt);
-      setHasSavedDraft(true);
+      saveDraft({ form: nextForm });
       pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
       toast({ title: "✨ Champs remplis", description: "Brouillon sauvegardé automatiquement. Vous pouvez reprendre plus tard." });
     } catch (err: any) {
