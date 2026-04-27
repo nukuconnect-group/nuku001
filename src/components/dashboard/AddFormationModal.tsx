@@ -18,6 +18,26 @@ interface Props {
   onCreated?: () => void;
 }
 
+type DiagStep = "idle" | "size_check" | "format_check" | "extracting" | "extracted" | "ai_preview" | "ai_modules" | "publishing" | "done" | "error";
+interface DiagEntry { step: DiagStep; label: string; status: "pending" | "ok" | "ko" | "warn"; detail?: string; code?: string; at: number; }
+
+// Traduit un message technique en message clair pour l'utilisateur
+const friendlyError = (err: any): { title: string; description: string; code: string } => {
+  const raw = (err?.message || err?.error || String(err || "")).toString();
+  const code = err?.code || err?.status || (err?.context?.status ? String(err.context.status) : "");
+  if (/rate_limited|429/i.test(raw)) return { title: "Trop de requêtes IA", description: "Patientez 1 minute puis réessayez.", code: code || "429" };
+  if (/credits_required|402/i.test(raw)) return { title: "Crédits IA insuffisants", description: "Ajoutez des crédits dans Paramètres > Espace de travail > Utilisation.", code: code || "402" };
+  if (/missing_document_text/i.test(raw)) return { title: "Document trop court", description: "Le document ne contient pas assez de texte exploitable (min. 50 caractères).", code: "EMPTY_DOC" };
+  if (/missing_content/i.test(raw)) return { title: "Contenu manquant", description: "Importez un document ou ajoutez au moins une vidéo.", code: "NO_CONTENT" };
+  if (/missing_formation_id/i.test(raw)) return { title: "Formation introuvable", description: "Veuillez réessayer la publication.", code: "NO_FORMATION_ID" };
+  if (/unauthenticated|401/i.test(raw)) return { title: "Session expirée", description: "Reconnectez-vous puis réessayez.", code: code || "401" };
+  if (/Failed to fetch|NetworkError|network/i.test(raw)) return { title: "Connexion instable", description: "Vérifiez votre internet puis réessayez.", code: "NETWORK" };
+  if (/ai_failed/i.test(raw)) return { title: "L'IA n'a pas pu structurer le document", description: "Essayez avec un texte plus clair ou plus structuré.", code: "AI_FAIL" };
+  if (/InvalidPDFException|password|encrypt/i.test(raw)) return { title: "PDF protégé ou corrompu", description: "Ce PDF est protégé par mot de passe ou endommagé.", code: "PDF_PROTECTED" };
+  if (/scan|image only|empty/i.test(raw)) return { title: "Document non lisible", description: "Le PDF semble scanné (images). Collez le texte manuellement.", code: "PDF_SCAN" };
+  return { title: "Une erreur est survenue", description: raw.slice(0, 200) || "Erreur inconnue.", code: code || "UNKNOWN" };
+};
+
 const FORMATION_CATEGORIES = [
   "Agriculture", "Élevage", "Aquaculture", "Aviculture",
   "Maraîchage", "Agro-business", "Transformation", "Marketing agricole", "Général",
@@ -37,6 +57,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [aiBusy, setAiBusy] = useState(false);
   const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
+  const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
+  const resetDiag = () => setDiagnostics([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -90,9 +113,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     const f = e.target.files?.[0];
     if (!f) return;
 
-    // Limite de taille côté client
+    resetDiag();
+    pushDiag({ step: "size_check", label: `Taille du fichier (${(f.size/1024/1024).toFixed(2)} Mo)`, status: "pending" });
+
     if (f.size > MAX_DOC_SIZE_BYTES) {
       const sizeMb = (f.size / 1024 / 1024).toFixed(1);
+      pushDiag({ step: "size_check", label: "Taille du fichier", status: "ko", code: "FILE_TOO_LARGE", detail: `Fichier ${sizeMb} Mo > limite ${MAX_DOC_SIZE_MB} Mo.` });
       toast({
         title: "Document trop volumineux",
         description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
@@ -101,6 +127,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       e.target.value = "";
       return;
     }
+    pushDiag({ step: "size_check", label: "Taille du fichier", status: "ok", detail: `${(f.size/1024/1024).toFixed(2)} Mo` });
 
     setAiFileName(f.name);
     setChapterPreview([]);
@@ -109,7 +136,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     const isPdf = f.type === "application/pdf" || lower.endsWith(".pdf");
     const isDocx = lower.endsWith(".docx") || f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+    pushDiag({ step: "format_check", label: "Format du fichier", status: "pending" });
     if (!isText && !isPdf && !isDocx) {
+      pushDiag({ step: "format_check", label: "Format du fichier", status: "ko", code: "BAD_FORMAT", detail: `Type "${f.type || lower.split(".").pop()}" non supporté.` });
       toast({
         title: "Format non supporté",
         description: "Formats acceptés : .txt, .md, .pdf, .docx",
@@ -119,20 +148,29 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       return;
     }
+    const fmt = isPdf ? "PDF" : isDocx ? "DOCX" : "TEXT";
+    pushDiag({ step: "format_check", label: "Format du fichier", status: "ok", detail: fmt });
 
     try {
       if (isText) {
+        pushDiag({ step: "extracting", label: "Lecture du fichier texte", status: "pending" });
         const reader = new FileReader();
-        reader.onload = (ev) => setAiContent(String(ev.target?.result || ""));
+        reader.onload = (ev) => {
+          const txt = String(ev.target?.result || "");
+          setAiContent(txt);
+          pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
+        };
         reader.readAsText(f);
         return;
       }
       setAiBusy(true);
+      pushDiag({ step: "extracting", label: `Extraction du texte (${fmt})`, status: "pending" });
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
       else if (isDocx) text = await extractTextFromDocx(f);
 
       if (!text || text.length < 30) {
+        pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "warn", code: "EMPTY_TEXT", detail: "Aucun texte exploitable (PDF scanné ou vide)." });
         toast({
           title: "Document non lisible",
           description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
@@ -140,15 +178,14 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         });
       } else {
         setAiContent(text);
+        pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "ok", detail: `${text.length} caractères extraits` });
         toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
-      toast({
-        title: "Extraction impossible",
-        description: err?.message || "Impossible de lire le document. Le fichier est peut-être corrompu ou protégé.",
-        variant: "destructive",
-      });
+      const fe = friendlyError(err);
+      pushDiag({ step: "error", label: "Extraction du texte", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setAiBusy(false);
     }
@@ -170,6 +207,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       return;
     }
     setPreviewLoading(true);
+    pushDiag({ step: "ai_preview", label: "Génération IA des chapitres (preview)", status: "pending" });
     try {
       const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
         body: { document_text: aiContent, preview_only: true },
@@ -177,14 +215,18 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       if (error) throw error;
       const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
       if (!chs.length) {
+        pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
         return;
       }
       setChapterPreview(chs);
+      pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "ok", detail: `${chs.length} chapitres prêts` });
       toast({ title: "✨ Chapitres prêts", description: `${chs.length} chapitres générés. Modifiez-les avant publication.` });
     } catch (err: any) {
       console.error("Preview chapters error", err);
-      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer la prévisualisation.", variant: "destructive" });
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setPreviewLoading(false);
     }
@@ -208,6 +250,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       return;
     }
     setIsLoading(true);
+    pushDiag({ step: "publishing", label: "Création de la formation", status: "pending" });
     try {
       let imageUrl: string | null = null;
       if (coverFile) {
@@ -229,13 +272,17 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       } as any).select("id").single();
 
       if (error) throw error;
+      pushDiag({ step: "publishing", label: "Création de la formation", status: "ok", detail: `ID ${created?.id?.slice(0, 8)}…` });
 
       // IA: chapitres édités OU contenu document OU vidéos fournis → génération auto de modules
       const cleanVideos = videoUrls.map(v => v.trim()).filter(Boolean);
       const hasEditedChapters = chapterPreview.length > 0;
       const hasContent = aiContent.trim().length > 50;
+      let aiSucceeded = true;
+      let modulesInserted = 0;
       if (created?.id && (hasEditedChapters || hasContent || cleanVideos.length > 0)) {
         setAiBusy(true);
+        pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "pending" });
         try {
           const { data: aiData, error: aiErr } = await supabase.functions.invoke("generate-formation-modules", {
             body: {
@@ -246,20 +293,30 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             },
           });
           if (aiErr) throw aiErr;
-          toast({
-            title: "✨ Formation prête",
-            description: `${aiData?.modules_inserted || 0} module(s) ajouté(s).`,
-          });
+          modulesInserted = aiData?.modules_inserted || 0;
+          pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "ok", detail: `${modulesInserted} module(s) créé(s)` });
         } catch (aiE: any) {
+          aiSucceeded = false;
           console.error("AI modules error", aiE);
-          toast({ title: "Formation publiée", description: "La génération IA a échoué, vous pouvez ajouter les modules manuellement.", variant: "destructive" });
+          const fe = friendlyError(aiE);
+          pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "ko", code: fe.code, detail: fe.description });
+          toast({
+            title: "Formation publiée — IA non disponible",
+            description: `${fe.title}. Vous pouvez ajouter les modules manuellement depuis la page Formation.`,
+            variant: "destructive",
+          });
         } finally {
           setAiBusy(false);
         }
-      } else {
+      }
+
+      if (aiSucceeded) {
+        pushDiag({ step: "done", label: "Publication finalisée", status: "ok", detail: "Disponible dans le module Formation" });
         toast({
           title: "✅ Formation publiée",
-          description: "Votre formation est visible dans le module Formations.",
+          description: modulesInserted > 0
+            ? `${modulesInserted} module(s) ajouté(s). Disponible dans le module Formation.`
+            : "Votre formation est visible dans le module Formation.",
         });
       }
 
@@ -270,10 +327,13 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       setVideoUrls([""]);
       setChapterPreview([]);
+      resetDiag();
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+      const fe = friendlyError(err);
+      pushDiag({ step: "error", label: "Publication échouée", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -406,6 +466,49 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                 </Button>
               )}
             </div>
+
+            {/* Diagnostic panel */}
+            {diagnostics.length > 0 && (
+              <div className="rounded-lg border border-border bg-background/60 p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-semibold flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-primary" />
+                    Diagnostic en direct
+                  </Label>
+                  <button type="button" onClick={resetDiag} className="text-[10px] text-muted-foreground hover:text-foreground underline">
+                    Effacer
+                  </button>
+                </div>
+                <ul className="space-y-1">
+                  {diagnostics.map((d, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[11px]">
+                      <span
+                        className={`mt-1 inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                          d.status === "ok" ? "bg-primary" :
+                          d.status === "ko" ? "bg-destructive" :
+                          d.status === "warn" ? "bg-yellow-500" : "bg-muted-foreground animate-pulse"
+                        }`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={d.status === "ko" ? "text-destructive font-medium" : "text-foreground"}>
+                            {d.label}
+                          </span>
+                          {d.code && (
+                            <code className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground">
+                              {d.code}
+                            </code>
+                          )}
+                        </div>
+                        {d.detail && (
+                          <p className="text-[10px] text-muted-foreground break-words">{d.detail}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
