@@ -3,7 +3,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, FileText } from "lucide-react";
+import { ShieldCheck, FileText, AlertTriangle } from "lucide-react";
 
 const sections: { title: string; body: React.ReactNode }[] = [
   {
@@ -166,6 +166,27 @@ export default function PurchasePolicy() {
         </div>
 
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-3xl">
+          <Card className="mb-5 border-l-4 border-l-destructive bg-destructive/5">
+            <CardContent className="p-4 sm:p-5 flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="space-y-1.5 text-sm leading-relaxed">
+                <h2 className="font-heading text-base font-bold text-foreground">
+                  Avertissement important
+                </h2>
+                <p className="text-foreground/90">
+                  Tout produit ou service acheté <strong>en dehors de la plateforme Nukuconnect</strong>{" "}
+                  (transactions directes, paiements hors plateforme, contacts privés, etc.) n'est{" "}
+                  <strong>pas couvert</strong> par notre politique de protection, de médiation ou de
+                  remboursement.
+                </p>
+                <p className="text-foreground/90">
+                  Seuls les achats effectués <strong>via Nukuconnect</strong> bénéficient de la
+                  protection acheteur, du suivi de commande et du recours en cas de litige.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="space-y-4 sm:space-y-5">
             {sections.map((s, i) => (
               <Card key={i} className="overflow-hidden">
