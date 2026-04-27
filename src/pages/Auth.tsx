@@ -47,7 +47,7 @@ const sectors = [
   "Coopératives & Groupements",
   "Import / Export agricole",
   "Autre",
-];
+].sort((a, b) => a.localeCompare(b, "fr"));
 
 const countries = [
   "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso",
