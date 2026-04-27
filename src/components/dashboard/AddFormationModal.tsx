@@ -590,7 +590,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
                 Brouillon disponible{draftSavedAt ? ` — ${new Date(draftSavedAt).toLocaleString("fr-FR")}` : ""}
               </p>
               <Button type="button" variant="outline" size="sm" onClick={resumeDraft} className="h-8 text-[11px] gap-1">
-                <Save className="w-3 h-3" /> Reprendre plus tard
+                <Save className="w-3 h-3" /> Reprendre le brouillon
               </Button>
             </div>
           )}
@@ -926,8 +926,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           </div>
 
           <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || aiBlocksPublish || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
+            <Button type="button" variant="outline" onClick={closeAndKeepDraft}>Reprendre plus tard</Button>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating || aiBlocksPublish || hasUnapprovedChapters || (extractionFailed && chapterPreview.length === 0 && cleanVideosCount === 0)}>
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>
