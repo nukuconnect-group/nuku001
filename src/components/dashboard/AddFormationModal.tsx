@@ -279,7 +279,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         body: { document_text: aiContent, preview_only: true },
       });
       if (error) throw error;
-      const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
+      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false }));
       if (!chs.length) {
         pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
@@ -302,7 +302,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     setChapterPreview(prev => prev.map((c, i) => i === idx ? {
       ...c,
       [field]: field === "duration_minutes" ? Math.max(1, parseInt(value) || 1) : value,
+      approved: false,
     } : c));
+  };
+
+  const approveChapter = (idx: number) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true } : c));
   };
 
   const removeChapter = (idx: number) => {
@@ -330,14 +335,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         return;
       }
       const safeCategory = FORMATION_CATEGORIES.includes(meta.category) ? meta.category : "Général";
-      setForm((f) => ({
+      const nextForm = {
+        ...form,
         ...f,
         title: meta.title?.toString().slice(0, 120) || f.title,
         description: meta.description?.toString().slice(0, 500) || f.description,
         category: safeCategory,
-      }));
+      };
+      setForm(nextForm);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form: nextForm, aiContent, aiFileName, videoUrls, chapterPreview, savedAt: new Date().toISOString() }));
+      setDraftSavedAt(new Date().toISOString());
+      setHasSavedDraft(true);
       pushDiag({ step: "ai_preview", label: "Auto-remplissage IA", status: "ok", detail: `Titre, description et catégorie remplis.` });
-      toast({ title: "✨ Champs remplis", description: "Titre, description et catégorie suggérés par l'IA — modifiez si besoin." });
+      toast({ title: "✨ Champs remplis", description: "Brouillon sauvegardé automatiquement. Vous pouvez reprendre plus tard." });
     } catch (err: any) {
       console.error("Auto-fill metadata error", err);
       const fe = friendlyError(err);
