@@ -262,11 +262,14 @@ const BuyerDashboard = () => {
                   <Receipt className="w-5 h-5" />
                   <span className="text-sm font-semibold">Résumé des achats</span>
                 </div>
-                <Link to="/jetons">
-                  <Button size="sm" variant="secondary" className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs">
-                    <Plus className="w-3 h-3" /> Booster un besoin
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs"
+                  onClick={() => setShowDemandBoost(true)}
+                >
+                  <Rocket className="w-3 h-3" /> Booster un besoin
+                </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
                 <div>
