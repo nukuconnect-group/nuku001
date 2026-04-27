@@ -13,6 +13,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { KycImage } from "@/components/kyc/KycImage";
 
 const statusBadge = (status: string) => {
   switch (status) {
@@ -275,22 +276,21 @@ const KYCManager = () => {
                   ].map(({ label, url }) => (
                     <div key={label} className="space-y-2">
                       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                      {url ? (
-                        <div className="relative group cursor-pointer" onClick={() => setZoomImage(url)}>
-                          <img
-                            src={url}
-                            alt={label}
-                            className="w-full h-48 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+                      <div
+                        className="relative group cursor-pointer"
+                        onClick={() => url && setZoomImage(url)}
+                      >
+                        <KycImage
+                          src={url}
+                          alt={label}
+                          className="w-full h-48 rounded-lg border-2 border-border hover:border-primary transition-colors"
+                        />
+                        {url && (
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center pointer-events-none">
                             <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-48 rounded-lg border-2 border-dashed border-border bg-muted/30 flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">Non fourni</span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
