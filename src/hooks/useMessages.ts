@@ -147,14 +147,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
             return [...prev, newMsg];
           });
 
-          // Auto-mark as read if from other
+          // Auto-mark as read if from other (deterministic eventId per message)
           if (isDeliveryConversation && m.sender_id !== userId && userId) {
             supabase.from("delivery_messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1, eventId: `${conversationId}:msg:${m.id}` });
             });
           } else if (m.sender_id !== profileId && profileId) {
             supabase.from("messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1, eventId: `${conversationId}:msg:${m.id}` });
             });
           }
         }
