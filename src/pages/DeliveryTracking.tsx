@@ -173,6 +173,53 @@ const DeliveryTracking = () => {
     if (profile) await fetchOrders(profile);
   };
 
+  // UUID v4-ish validation (8-4-4-4-12)
+  const looksLikeUuid = (v: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v.trim());
+
+  const handlePublicTrack = async () => {
+    setPublicError("");
+    setPublicResult(null);
+    const id = publicOrderId.trim();
+    const email = publicEmail.trim();
+    if (!id || !email) {
+      setPublicError("Veuillez saisir l'ID de commande et votre email.");
+      return;
+    }
+    if (!looksLikeUuid(id)) {
+      setPublicError("L'ID de commande semble invalide. Vérifiez sur votre facture ou email de confirmation.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setPublicError("Adresse email invalide.");
+      return;
+    }
+    setPublicLoading(true);
+    const { data, error } = await supabase.rpc("track_order_public" as any, {
+      p_order_id: id,
+      p_email: email,
+    });
+    setPublicLoading(false);
+    if (error) {
+      setPublicError("Erreur de connexion. Réessayez dans un instant.");
+      return;
+    }
+    const res = data as any;
+    if (res?.error === "not_found") {
+      setPublicError("Aucune commande trouvée avec cet identifiant.");
+      return;
+    }
+    if (res?.error === "email_mismatch") {
+      setPublicError("L'email ne correspond pas à cette commande. Utilisez l'email lié au compte qui a passé la commande.");
+      return;
+    }
+    if (res?.error) {
+      setPublicError("Impossible de récupérer cette commande.");
+      return;
+    }
+    setPublicResult(res);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed": case "delivered": return "bg-primary text-primary-foreground";
