@@ -85,11 +85,13 @@ const ProductDetail = () => {
     if (!product) return;
     const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
     setMessage(autoMessage);
-    setShowContactForm(true);
+    // Direct redirect: create conversation, send the prefilled message, then go to /messages
+    void handleSendAndRedirect(autoMessage);
   };
 
-  const handleSendAndRedirect = async () => {
-    if (!product || !message.trim()) return;
+  const handleSendAndRedirect = async (overrideMessage?: string) => {
+    const content = (overrideMessage ?? message).trim();
+    if (!product || !content) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
