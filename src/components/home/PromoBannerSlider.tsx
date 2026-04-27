@@ -246,18 +246,20 @@ const PromoBannerSlider = () => {
               <h3 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">Publications récentes</h3>
               <Link to="/marketplace" className="text-[10px] sm:text-xs text-primary font-medium">Tout voir →</Link>
             </div>
-            {/* Mobile: horizontal scroll */}
-            <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide md:hidden">
+            {/* Mobile: horizontal scroll - uniform card size */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide md:hidden">
               {recentProducts.map((product) => (
-                <div key={product.id} className="flex-shrink-0 w-[140px]">
+                <div key={product.id} className="flex-shrink-0 w-[140px] h-[260px]">
                   <ProductCard product={product} viewMode="grid" hideProducer />
                 </div>
               ))}
             </div>
-            {/* Desktop: grid */}
+            {/* Desktop: grid - uniform card size */}
             <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-3">
               {recentProducts.slice(0, 5).map((product) => (
-                <ProductCard key={product.id} product={product} viewMode="grid" hideProducer />
+                <div key={product.id} className="h-[300px]">
+                  <ProductCard product={product} viewMode="grid" hideProducer />
+                </div>
               ))}
             </div>
           </div>
