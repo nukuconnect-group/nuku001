@@ -34,29 +34,49 @@ const MobileBottomNav = () => {
     setProfile(ctxProfile);
   }, [ctxProfile]);
 
-  // Fetch unread messages count
-  const fetchUnreadMessages = useCallback(async (profileId: string) => {
-    const { count } = await supabase
+  // Fetch unread messages count (RLS limits to user's conversations)
+  const fetchUnreadMessages = useCallback(async (profileId: string, uid: string | undefined) => {
+    const { count: msgCount } = await supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
       .neq("sender_id", profileId)
       .eq("is_read", false);
-    setUnreadMessages(count || 0);
+    let total = msgCount || 0;
+    if (uid) {
+      const { count: dmCount } = await supabase
+        .from("delivery_messages")
+        .select("id", { count: "exact", head: true })
+        .neq("sender_id", uid)
+        .eq("is_read", false);
+      total += dmCount || 0;
+    }
+    setUnreadMessages(total);
   }, []);
 
   useEffect(() => {
     if (!profile?.id) return;
-    fetchUnreadMessages(profile.id);
+    const refresh = () => fetchUnreadMessages(profile.id, user?.id);
+    refresh();
 
     const channel = supabase
       .channel("mobile-unread-messages")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        fetchUnreadMessages(profile.id);
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, refresh)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [profile?.id, fetchUnreadMessages]);
+    // Refresh on route changes / when conversations are opened (read flag updates)
+    const onUpdate = () => refresh();
+    window.addEventListener("nuku:messages-read", onUpdate);
+    window.addEventListener("focus", onUpdate);
+    document.addEventListener("visibilitychange", onUpdate);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("nuku:messages-read", onUpdate);
+      window.removeEventListener("focus", onUpdate);
+      document.removeEventListener("visibilitychange", onUpdate);
+    };
+  }, [profile?.id, user?.id, fetchUnreadMessages]);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase

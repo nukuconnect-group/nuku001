@@ -2277,7 +2277,38 @@ export type Database = {
       }
       expire_old_tokens: { Args: never; Returns: number }
       get_admin_analytics: { Args: never; Returns: Json }
+      get_admin_email_confirmations: {
+        Args: { p_limit?: number; p_status?: string }
+        Returns: {
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          full_name: string
+          is_confirmed: boolean
+          last_sign_in_at: string
+          user_id: string
+          user_type: string
+        }[]
+      }
       get_admin_orders: { Args: never; Returns: Json[] }
+      get_admin_recent_actions: {
+        Args: {
+          p_limit?: number
+          p_since?: string
+          p_type?: string
+          p_until?: string
+          p_user_email?: string
+        }
+        Returns: {
+          action_time: string
+          action_type: string
+          details: Json
+          title: string
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }

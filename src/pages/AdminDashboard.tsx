@@ -39,6 +39,7 @@ import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
 import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
+import AdminRecentActions from "@/components/admin/AdminRecentActions";
 import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins } from "lucide-react";
 
 const COLORS = [
@@ -283,6 +284,7 @@ const AdminDashboard = () => {
 
   const sidebarItems = [
     { id: "overview", label: "Vue d'ensemble", icon: BarChart3 },
+    { id: "recent-actions", label: "Actions récentes", icon: Activity },
     { id: "analytics", label: "Analytics", icon: Activity },
     { id: "users", label: "Utilisateurs", icon: Users },
     { id: "orders", label: "Commandes", icon: ShoppingCart },
@@ -1156,6 +1158,9 @@ const AdminDashboard = () => {
 
             {/* Admin audit log */}
             {activeTab === "audit" && <AdminAuditLog />}
+
+            {/* Unified recent actions feed */}
+            {activeTab === "recent-actions" && <AdminRecentActions />}
         </main>
       </div>
       <Footer />
