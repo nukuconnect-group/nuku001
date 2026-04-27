@@ -95,6 +95,10 @@ const Auth = () => {
   const [producerLocation, setProducerLocation] = useState("");
   const [producerCompany, setProducerCompany] = useState("");
   const [producerSector, setProducerSector] = useState("");
+  const [sectorSearch, setSectorSearch] = useState("");
+  const [sectorOpen, setSectorOpen] = useState(false);
+  const filteredSectors = sectors.filter((s) => s.toLowerCase().includes(sectorSearch.trim().toLowerCase()));
+  const companyMissing = (userType === "producer" || userType === "trainer") && !producerCompany.trim();
 
   const [buyerFirstName, setBuyerFirstName] = useState("");
   const [buyerLastName, setBuyerLastName] = useState("");
