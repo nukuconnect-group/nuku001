@@ -284,6 +284,7 @@ const AdminDashboard = () => {
 
   const sidebarItems = [
     { id: "overview", label: "Vue d'ensemble", icon: BarChart3 },
+    { id: "recent-actions", label: "Actions récentes", icon: Activity },
     { id: "analytics", label: "Analytics", icon: Activity },
     { id: "users", label: "Utilisateurs", icon: Users },
     { id: "orders", label: "Commandes", icon: ShoppingCart },
