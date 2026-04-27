@@ -52,15 +52,20 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [isLoading, setIsLoading] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
+  const [generatedCoverUrl, setGeneratedCoverUrl] = useState<string>("");
+  const [coverGenerating, setCoverGenerating] = useState(false);
 
   // IA: contenu source + vidéos
   const [aiContent, setAiContent] = useState<string>("");
   const [aiFileName, setAiFileName] = useState<string>("");
+  const [aiSourceFile, setAiSourceFile] = useState<File | null>(null);
   const [videoUrls, setVideoUrls] = useState<string[]>([""]);
   const [aiBusy, setAiBusy] = useState(false);
-  const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
+  const [chapterPreview, setChapterPreview] = useState<ChapterDraft[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagEntry[]>([]);
+  const [draftSavedAt, setDraftSavedAt] = useState<string>("");
+  const [hasSavedDraft, setHasSavedDraft] = useState(() => Boolean(localStorage.getItem(DRAFT_KEY)));
   const pushDiag = (e: Omit<DiagEntry, "at">) => setDiagnostics((d) => [...d, { ...e, at: Date.now() }]);
   const resetDiag = () => setDiagnostics([]);
 
@@ -73,6 +78,43 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     is_paid: false,
     price: "0",
   });
+
+  const saveDraft = (next?: { form?: typeof form; chapters?: ChapterDraft[] }) => {
+    const payload = {
+      form: next?.form || form,
+      aiContent,
+      aiFileName,
+      videoUrls,
+      chapterPreview: next?.chapters || chapterPreview,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    setDraftSavedAt(payload.savedAt);
+    setHasSavedDraft(true);
+  };
+
+  const resumeDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.form) setForm(draft.form);
+      if (typeof draft.aiContent === "string") setAiContent(draft.aiContent);
+      if (typeof draft.aiFileName === "string") setAiFileName(draft.aiFileName);
+      if (Array.isArray(draft.videoUrls)) setVideoUrls(draft.videoUrls.length ? draft.videoUrls : [""]);
+      if (Array.isArray(draft.chapterPreview)) setChapterPreview(draft.chapterPreview);
+      setDraftSavedAt(draft.savedAt || "");
+      toast({ title: "Brouillon repris", description: "Les informations sauvegardées ont été restaurées." });
+    } catch {
+      toast({ title: "Brouillon illisible", description: "Impossible de restaurer ce brouillon.", variant: "destructive" });
+    }
+  };
+
+  const closeAndKeepDraft = () => {
+    saveDraft();
+    onOpenChange(false);
+    toast({ title: "Brouillon conservé", description: "Vous pourrez reprendre cette formation plus tard." });
+  };
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
