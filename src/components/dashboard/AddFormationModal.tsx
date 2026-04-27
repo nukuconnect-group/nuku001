@@ -30,6 +30,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
 
+  // IA: contenu source + vidéos
+  const [aiContent, setAiContent] = useState<string>("");
+  const [aiFileName, setAiFileName] = useState<string>("");
+  const [videoUrls, setVideoUrls] = useState<string[]>([""]);
+  const [aiBusy, setAiBusy] = useState(false);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
