@@ -13,17 +13,34 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGri
 export default function NukuAIAnalytics() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveCount, setLiveCount] = useState(0);
 
+  const fetchQuestions = async () => {
+    const { data } = await supabase
+      .from("nuku_ai_questions" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    setQuestions((data as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchQuestions(); }, []);
+
+  // Realtime — refresh on each new chatbot question
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("nuku_ai_questions" as any)
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      setQuestions((data as any) || []);
-      setLoading(false);
-    })();
+    const channel = supabase
+      .channel("nuku-ai-questions-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "nuku_ai_questions" },
+        (payload) => {
+          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 500));
+          setLiveCount((c) => c + 1);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const stats = useMemo(() => {
