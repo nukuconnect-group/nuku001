@@ -370,11 +370,16 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
 
   const parseMessage = (content: string) => {
     const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
+    const voiceMatch = content.match(/\[voice:(https?:\/\/[^\]]+)\]/);
     if (imageMatch) {
       const text = content.replace(/\n?\[image:[^\]]+\]/, "").trim();
-      return { text: text || "📷 Photo", imageUrl: imageMatch[1] };
+      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null };
     }
-    return { text: content, imageUrl: null };
+    if (voiceMatch) {
+      const text = content.replace(/\n?\[voice:[^\]]+\]/, "").trim();
+      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1] };
+    }
+    return { text: content, imageUrl: null as string | null, voiceUrl: null as string | null };
   };
 
   const handleReply = (msg: MessageItem) => {
