@@ -289,7 +289,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         body: { document_text: aiContent, preview_only: true },
       });
       if (error) throw error;
-      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false }));
+      const chs = ((data?.chapters || []) as ChapterDraft[]).map((ch) => ({ ...ch, approved: false, editing: false }));
       if (!chs.length) {
         pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
@@ -317,7 +317,11 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   };
 
   const approveChapter = (idx: number) => {
-    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true } : c));
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: true, editing: false } : c));
+  };
+
+  const editChapter = (idx: number) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? { ...c, approved: false, editing: true } : c));
   };
 
   const removeChapter = (idx: number) => {
