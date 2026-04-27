@@ -108,6 +108,7 @@ const App = () => {
             )}
             <BrowserRouter>
               <RouteProgress />
+              <PerformanceTracker />
               <ScrollToTop />
               <AnalyticsTracker />
               <PresenceTracker />
