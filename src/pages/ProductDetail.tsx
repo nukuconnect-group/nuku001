@@ -510,7 +510,7 @@ const ProductDetail = () => {
                       <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowContactForm(false)}>
                         Annuler
                       </Button>
-                      <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={handleSendAndRedirect} disabled={isSending || !message.trim()}>
+                      <Button variant="hero" size="sm" className="flex-1 gap-1.5 text-xs sm:text-sm" onClick={() => handleSendAndRedirect()} disabled={isSending || !message.trim()}>
                         {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         Envoyer et ouvrir la conversation
                       </Button>
