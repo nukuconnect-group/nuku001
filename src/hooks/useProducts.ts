@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/data/marketplace";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import { cacheGet, cacheSet } from "@/lib/localCache";
 
 export interface DbProduct {
   id: string;
