@@ -29,6 +29,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
 import DemandsList from "@/components/marketplace/DemandsList";
 import AffiliationCard from "@/components/dashboard/AffiliationCard";
+import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 // Lazy load heavy components
