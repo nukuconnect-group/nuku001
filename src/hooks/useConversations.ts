@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
@@ -70,12 +70,13 @@ export function useConversations() {
     // Batch fetch last messages and unread counts
     const convIds = convs.map((c: any) => c.id);
     
-    // Get last message for each conversation
+    // Get last messages (cap at 500 most recent across all conversations for perf)
     const { data: allMessages } = await supabase
       .from("messages")
       .select("conversation_id, content, created_at, sender_id, is_read")
       .in("conversation_id", convIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     // Group by conversation - take first (latest) per conversation
     const lastMsgMap = new Map<string, any>();
@@ -168,13 +169,14 @@ export function useConversations() {
 
     if (deliveries.length === 0) return [];
 
-    // Batch fetch delivery messages
+    // Batch fetch delivery messages (cap at 500)
     const deliveryIds = deliveries.map(d => d.id);
     const { data: allDeliveryMsgs } = await supabase
       .from("delivery_messages")
       .select("delivery_id, content, created_at, sender_id, is_read")
       .in("delivery_id", deliveryIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     const lastDeliveryMsgMap = new Map<string, any>();
     const unreadDeliveryMap = new Map<string, number>();
@@ -242,22 +244,24 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Realtime subscription
+  // Realtime subscription with debounce to avoid hammering the DB
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    const scheduleRefetch = () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => fetchConversations(), 800);
+    };
     const channel = supabase
       .channel("conversations-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => {
-        fetchConversations();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, () => {
-        fetchConversations();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, scheduleRefetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, scheduleRefetch)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      supabase.removeChannel(channel);
+    };
   }, [fetchConversations]);
 
   return { conversations, loading, profileId, userId, refetch: fetchConversations };

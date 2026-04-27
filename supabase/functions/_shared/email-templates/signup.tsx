@@ -35,7 +35,7 @@ export const SignupEmail = ({
     <Preview>Confirmez votre email pour {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img src={LOGO_URL} alt="NukuConnect" width="120" height="40" style={logo} />
+        <Img src={LOGO_URL} alt="NukuConnect" width="140" height="40" style={logo} />
         <Heading style={h1}>Bienvenue sur NukuConnect ! 🎉</Heading>
         <Text style={text}>
           Merci de vous être inscrit sur{' '}
@@ -58,6 +58,10 @@ export const SignupEmail = ({
           Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :
           <br />
           <Link href={confirmationUrl} style={link}>{confirmationUrl}</Link>
+          <br />
+          <span style={{ fontSize: '12px', color: '#999999' }}>
+            Site officiel : <Link href="https://nukuconnect.com" style={link}>https://nukuconnect.com</Link>
+          </span>
         </Text>
         <Text style={footer}>
           Si vous n'avez pas créé de compte, vous pouvez ignorer cet email en toute sécurité.
@@ -71,7 +75,7 @@ export default SignupEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Poppins', Arial, sans-serif" }
 const container = { padding: '32px 25px' }
-const logo = { margin: '0 0 24px 0' }
+const logo = { margin: '0 auto 24px', display: 'block', objectFit: 'contain' as const, maxWidth: '140px', height: 'auto' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
