@@ -87,6 +87,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const ringTimeoutRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
   const callStartRef = useRef<number>(0);
+  // Refs to avoid stale closures inside setTimeout / signal handlers
+  const metaRef = useRef<CallMeta | null>(null);
+  const statusRef = useRef<CallStatus>("idle");
+  useEffect(() => { metaRef.current = meta; }, [meta]);
+  useEffect(() => { statusRef.current = status; }, [status]);
 
   // ----- helpers -----
   const playRingtone = useCallback(() => {
@@ -192,19 +197,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const finalizeCall = useCallback((reason: "missed" | "ended" | "declined" | "outgoing-missed") => {
-    const m = meta;
+    const m = metaRef.current;
     const dur = Math.floor((Date.now() - callStartRef.current) / 1000);
     if (m && profile?.id) {
-      // Only the caller logs the message, to avoid duplicates
-      if (m.isCaller) {
-        const realDur = reason === "ended" ? dur : 0;
-        logCallMessage(m.conversationId, profile.id, reason, realDur);
-      }
+      // Both sides log into their own thread so each user sees the call entry.
+      const realDur = reason === "ended" ? dur : 0;
+      logCallMessage(m.conversationId, profile.id, reason, realDur);
     }
     cleanupCall();
     setStatus("idle");
     setMeta(null);
-  }, [meta, profile?.id, cleanupCall]);
+  }, [profile?.id, cleanupCall]);
 
   // ----- incoming signal handler -----
   const handleSignal = useCallback(async (payload: any) => {
@@ -212,7 +215,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
     if (payload.type === "offer") {
       // Incoming call
-      if (status !== "idle") {
+      if (statusRef.current !== "idle") {
         // Busy — auto-decline
         await sendSignal(payload.from, { type: "decline", callId: payload.callId, from: user.id });
         return;
@@ -228,11 +231,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
       });
       setStatus("incoming");
       playRingtone();
-      // Auto-missed after 30s
+      // Auto-missed after 30s — receiver logs "missed" in their own thread,
+      // caller will log "outgoing-missed" on its side via the hangup signal.
       ringTimeoutRef.current = window.setTimeout(() => {
-        // Other side will log "missed" because we are the receiver — but caller is the one inserting
-        // Send hangup to caller so they log outgoing-missed
         sendSignal(payload.from, { type: "hangup", callId: payload.callId, from: user.id, reason: "missed" });
+        if (profile?.id) {
+          logCallMessage(payload.conversationId, profile.id, "missed", 0);
+        }
         cleanupCall();
         setStatus("idle");
         setMeta(null);
@@ -266,7 +271,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     } else if (payload.type === "decline") {
       finalizeCall("declined");
     }
-  }, [user?.id, status, sendSignal, playRingtone, stopRingtone, startTimer, cleanupCall, finalizeCall]);
+  }, [user?.id, profile?.id, sendSignal, playRingtone, stopRingtone, startTimer, cleanupCall, finalizeCall]);
 
   // Subscribe to my call channel
   useEffect(() => {
