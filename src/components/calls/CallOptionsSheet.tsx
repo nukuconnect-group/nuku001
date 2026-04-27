@@ -62,24 +62,29 @@ export default function CallOptionsSheet({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl p-0 max-h-[88vh] overflow-y-auto border-0"
+        className="rounded-t-3xl p-0 max-h-[90vh] overflow-y-auto border-0 w-full sm:max-w-md sm:mx-auto"
       >
-        {/* Header with overlapping avatar */}
-        <SheetHeader className="relative pt-16 pb-4 px-6 text-center">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full overflow-hidden border-4 border-background shadow-xl bg-card">
+        {/* Drag handle */}
+        <div className="flex justify-center pt-2.5 pb-1">
+          <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Header with avatar (kept inside the sheet, fully visible) */}
+        <SheetHeader className="pt-3 pb-4 px-4 sm:px-6 text-center space-y-2">
+          <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-background shadow-xl bg-card ring-1 ring-border">
             {peerAvatar ? (
               <img src={peerAvatar} alt={peerName} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-primary/20 flex items-center justify-center text-3xl font-bold text-primary">
+              <div className="w-full h-full bg-primary/20 flex items-center justify-center text-2xl sm:text-3xl font-bold text-primary">
                 {peerName.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
-          <h2 className="text-base font-semibold text-foreground mt-2">{peerName}</h2>
+          <h2 className="text-base font-semibold text-foreground break-words">{peerName}</h2>
 
           <div className="flex items-center justify-center gap-2 flex-wrap text-[11px]">
             {peerLocation && (
-              <span className="text-muted-foreground">{peerLocation}</span>
+              <span className="text-muted-foreground break-words max-w-full">{peerLocation}</span>
             )}
             {yearsActive !== undefined && yearsActive > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
@@ -96,7 +101,7 @@ export default function CallOptionsSheet({
         </SheetHeader>
 
         {/* Availability message */}
-        <div className="px-6 pb-3">
+        <div className="px-4 sm:px-6 pb-3">
           <div className={`text-xs leading-relaxed text-center px-3 py-2.5 rounded-xl ${
             available
               ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
@@ -117,25 +122,25 @@ export default function CallOptionsSheet({
           {onVideoCall && (
             <button
               onClick={() => { onClose(); onVideoCall(); }}
-              className="w-full flex items-center gap-4 px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-4 px-4 sm:px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
             >
-              <Video className="w-5 h-5 text-foreground/70" />
+              <Video className="w-5 h-5 text-foreground/70 shrink-0" />
               <span className="text-sm font-medium text-foreground">Appel vidéo</span>
             </button>
           )}
           <button
             onClick={() => { onClose(); onVoiceCall(); }}
-            className="w-full flex items-center gap-4 px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
+            className="w-full flex items-center gap-4 px-4 sm:px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
           >
-            <Phone className="w-5 h-5 text-foreground/70" />
+            <Phone className="w-5 h-5 text-foreground/70 shrink-0" />
             <span className="text-sm font-medium text-foreground">Appel vocal</span>
           </button>
           {onScheduleCall && (
             <button
               onClick={() => { onClose(); onScheduleCall(); }}
-              className="w-full flex items-center gap-4 px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-4 px-4 sm:px-6 py-3.5 hover:bg-muted/50 transition-colors text-left"
             >
-              <Clock className="w-5 h-5 text-foreground/70" />
+              <Clock className="w-5 h-5 text-foreground/70 shrink-0" />
               <span className="text-sm font-medium text-foreground">Programmer un appel</span>
             </button>
           )}
