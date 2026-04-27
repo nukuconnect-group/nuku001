@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Product } from "@/data/marketplace";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Star, Leaf, MapPin, ShieldCheck } from "lucide-react";
+import VerifiedBadge from "@/components/seller/VerifiedBadge";
 
 interface CompareDrawerProps {
   products: Product[];
