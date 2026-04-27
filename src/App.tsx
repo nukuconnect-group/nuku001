@@ -112,7 +112,7 @@ const App = () => {
               <PresenceTracker />
               <RealtimeNotifications />
               <ProfileLeavePopup />
-              <Suspense fallback={<PageLoader />}>
+              <SmartSuspense>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/marketplace" element={<Marketplace />} />
