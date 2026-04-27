@@ -228,18 +228,25 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
       if (error) throw error;
 
-      // IA: si contenu document ou vidéos fournis → génération auto de modules
+      // IA: chapitres édités OU contenu document OU vidéos fournis → génération auto de modules
       const cleanVideos = videoUrls.map(v => v.trim()).filter(Boolean);
-      if (created?.id && (aiContent.trim().length > 50 || cleanVideos.length > 0)) {
+      const hasEditedChapters = chapterPreview.length > 0;
+      const hasContent = aiContent.trim().length > 50;
+      if (created?.id && (hasEditedChapters || hasContent || cleanVideos.length > 0)) {
         setAiBusy(true);
         try {
           const { data: aiData, error: aiErr } = await supabase.functions.invoke("generate-formation-modules", {
-            body: { formation_id: created.id, document_text: aiContent, video_urls: cleanVideos },
+            body: {
+              formation_id: created.id,
+              document_text: hasEditedChapters ? "" : aiContent,
+              video_urls: cleanVideos,
+              chapters: hasEditedChapters ? chapterPreview : undefined,
+            },
           });
           if (aiErr) throw aiErr;
           toast({
             title: "✨ Formation prête",
-            description: `${aiData?.chapters_generated || 0} chapitres IA + ${cleanVideos.length} vidéo(s) ajoutés.`,
+            description: `${aiData?.modules_inserted || 0} module(s) ajouté(s).`,
           });
         } catch (aiE: any) {
           console.error("AI modules error", aiE);
@@ -260,6 +267,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiContent("");
       setAiFileName("");
       setVideoUrls([""]);
+      setChapterPreview([]);
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
