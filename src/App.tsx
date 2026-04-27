@@ -55,6 +55,7 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Legal = lazy(() => import("./pages/Legal"));
+const PurchasePolicy = lazy(() => import("./pages/PurchasePolicy"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Help = lazy(() => import("./pages/Help"));
 const NotFound = lazy(() => import("./pages/NotFound"));
