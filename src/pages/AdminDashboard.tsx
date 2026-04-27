@@ -1098,6 +1098,11 @@ const AdminDashboard = () => {
               <EmailStatsManager />
             )}
 
+            {/* Email Logs Tab */}
+            {activeTab === "email-logs" && (
+              <EmailLogsManager />
+            )}
+
             {/* KYC Tab */}
             {activeTab === "kyc" && (
               <KYCManager />
