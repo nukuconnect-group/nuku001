@@ -113,9 +113,12 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     const f = e.target.files?.[0];
     if (!f) return;
 
-    // Limite de taille côté client
+    resetDiag();
+    pushDiag({ step: "size_check", label: `Taille du fichier (${(f.size/1024/1024).toFixed(2)} Mo)`, status: "pending" });
+
     if (f.size > MAX_DOC_SIZE_BYTES) {
       const sizeMb = (f.size / 1024 / 1024).toFixed(1);
+      pushDiag({ step: "size_check", label: "Taille du fichier", status: "ko", code: "FILE_TOO_LARGE", detail: `Fichier ${sizeMb} Mo > limite ${MAX_DOC_SIZE_MB} Mo.` });
       toast({
         title: "Document trop volumineux",
         description: `Le fichier fait ${sizeMb} Mo. Taille max autorisée : ${MAX_DOC_SIZE_MB} Mo.`,
@@ -124,6 +127,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       e.target.value = "";
       return;
     }
+    pushDiag({ step: "size_check", label: "Taille du fichier", status: "ok", detail: `${(f.size/1024/1024).toFixed(2)} Mo` });
 
     setAiFileName(f.name);
     setChapterPreview([]);
@@ -132,7 +136,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
     const isPdf = f.type === "application/pdf" || lower.endsWith(".pdf");
     const isDocx = lower.endsWith(".docx") || f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+    pushDiag({ step: "format_check", label: "Format du fichier", status: "pending" });
     if (!isText && !isPdf && !isDocx) {
+      pushDiag({ step: "format_check", label: "Format du fichier", status: "ko", code: "BAD_FORMAT", detail: `Type "${f.type || lower.split(".").pop()}" non supporté.` });
       toast({
         title: "Format non supporté",
         description: "Formats acceptés : .txt, .md, .pdf, .docx",
@@ -142,20 +148,29 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       return;
     }
+    const fmt = isPdf ? "PDF" : isDocx ? "DOCX" : "TEXT";
+    pushDiag({ step: "format_check", label: "Format du fichier", status: "ok", detail: fmt });
 
     try {
       if (isText) {
+        pushDiag({ step: "extracting", label: "Lecture du fichier texte", status: "pending" });
         const reader = new FileReader();
-        reader.onload = (ev) => setAiContent(String(ev.target?.result || ""));
+        reader.onload = (ev) => {
+          const txt = String(ev.target?.result || "");
+          setAiContent(txt);
+          pushDiag({ step: "extracted", label: "Lecture du fichier texte", status: "ok", detail: `${txt.length} caractères extraits` });
+        };
         reader.readAsText(f);
         return;
       }
       setAiBusy(true);
+      pushDiag({ step: "extracting", label: `Extraction du texte (${fmt})`, status: "pending" });
       let text = "";
       if (isPdf) text = await extractTextFromPdf(f);
       else if (isDocx) text = await extractTextFromDocx(f);
 
       if (!text || text.length < 30) {
+        pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "warn", code: "EMPTY_TEXT", detail: "Aucun texte exploitable (PDF scanné ou vide)." });
         toast({
           title: "Document non lisible",
           description: "Aucun texte exploitable trouvé (PDF scanné ou vide). Vous pouvez coller le contenu manuellement ci-dessous.",
@@ -163,15 +178,14 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         });
       } else {
         setAiContent(text);
+        pushDiag({ step: "extracted", label: `Extraction du texte (${fmt})`, status: "ok", detail: `${text.length} caractères extraits` });
         toast({ title: "✨ Document analysé", description: `${text.length} caractères extraits. Cliquez sur « Prévisualiser les chapitres » pour vérifier avant publication.` });
       }
     } catch (err: any) {
       console.error("Doc parse error", err);
-      toast({
-        title: "Extraction impossible",
-        description: err?.message || "Impossible de lire le document. Le fichier est peut-être corrompu ou protégé.",
-        variant: "destructive",
-      });
+      const fe = friendlyError(err);
+      pushDiag({ step: "error", label: "Extraction du texte", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setAiBusy(false);
     }
@@ -193,6 +207,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       return;
     }
     setPreviewLoading(true);
+    pushDiag({ step: "ai_preview", label: "Génération IA des chapitres (preview)", status: "pending" });
     try {
       const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
         body: { document_text: aiContent, preview_only: true },
@@ -200,14 +215,18 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       if (error) throw error;
       const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
       if (!chs.length) {
+        pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "warn", code: "NO_CHAPTERS", detail: "Aucun chapitre généré." });
         toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
         return;
       }
       setChapterPreview(chs);
+      pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "ok", detail: `${chs.length} chapitres prêts` });
       toast({ title: "✨ Chapitres prêts", description: `${chs.length} chapitres générés. Modifiez-les avant publication.` });
     } catch (err: any) {
       console.error("Preview chapters error", err);
-      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer la prévisualisation.", variant: "destructive" });
+      const fe = friendlyError(err);
+      pushDiag({ step: "ai_preview", label: "Génération IA des chapitres", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setPreviewLoading(false);
     }
