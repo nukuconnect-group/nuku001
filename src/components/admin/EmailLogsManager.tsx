@@ -340,6 +340,7 @@ const EmailLogsManager = () => {
                   <TableHead>Destinataire</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Temps</TableHead>
                   <TableHead>Erreur</TableHead>
                 </TableRow>
               </TableHeader>
@@ -355,6 +356,9 @@ const EmailLogsManager = () => {
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(row.created_at).toLocaleString("fr-FR")}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatResponse((row as any).response_ms)}
                     </TableCell>
                     <TableCell className="text-xs text-destructive max-w-xs truncate">
                       {row.error_message || "—"}
