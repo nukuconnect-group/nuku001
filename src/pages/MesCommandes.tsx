@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,9 +22,8 @@ import {
 } from "@/components/ui/sheet";
 import {
   Package, Truck, CheckCircle2, Clock, XCircle, Receipt,
-  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download,
+  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download, Loader2,
 } from "lucide-react";
-import { lazy, Suspense } from "react";
 const DeliveryLiveMap = lazy(() => import("@/components/delivery/DeliveryLiveMap"));
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { generateOrdersRecapPDF } from "@/utils/generateOrdersRecapPDF";
