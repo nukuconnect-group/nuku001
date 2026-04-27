@@ -801,6 +801,13 @@ const BuyerDashboard = () => {
       </main>
       </DashboardLayout>
 
+      {/* Modal de boost de besoin */}
+      <DemandBoostModal
+        open={showDemandBoost}
+        onOpenChange={setShowDemandBoost}
+        onBoostSuccess={() => refreshTokens()}
+      />
+
       {/* Migration Modal */}
       <Dialog open={showMigrationModal} onOpenChange={setShowMigrationModal}>
         <DialogContent className="max-w-md">
