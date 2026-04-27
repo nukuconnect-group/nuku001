@@ -96,14 +96,23 @@ const EmailLogsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, customStart, customEnd]);
 
-  // Deduplicate by message_id (latest status per email)
+  // Deduplicate by message_id (latest status per email) + compute response time
   const dedupedRows = useMemo(() => {
-    const map = new Map<string, LogRow>();
+    // rawRows is sorted DESC (most recent first)
+    const latest = new Map<string, LogRow>();
+    const earliest = new Map<string, LogRow>();
     for (const row of rawRows) {
       const key = row.message_id || row.id;
-      if (!map.has(key)) map.set(key, row);
+      if (!latest.has(key)) latest.set(key, row);
+      earliest.set(key, row); // overwritten => last assignment is the oldest
     }
-    return Array.from(map.values());
+    return Array.from(latest.entries()).map(([key, row]) => {
+      const first = earliest.get(key);
+      const responseMs = first && first.id !== row.id
+        ? new Date(row.created_at).getTime() - new Date(first.created_at).getTime()
+        : null;
+      return { ...row, response_ms: responseMs };
+    });
   }, [rawRows]);
 
   const templates = useMemo(() => {
