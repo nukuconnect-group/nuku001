@@ -17,7 +17,7 @@ const PublishChoiceModal = ({ open, onOpenChange, onChoose }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-base sm:text-lg">Que souhaitez-vous publier ?</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Que souhaitez-vous vendre aujourd&apos;hui ?</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Choisissez le type de contenu à mettre en ligne.
           </DialogDescription>
