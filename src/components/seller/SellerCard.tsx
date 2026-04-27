@@ -135,9 +135,9 @@ export default function SellerCard({
               size="sm"
               className="flex-1 gap-1 text-[10px] h-8"
               onClick={onContact}
-              aria-label={`Contacter le fournisseur ${businessName}`}
+              aria-label={`Discuter avec le fournisseur ${businessName}`}
             >
-              <MessageCircle className="w-3 h-3" aria-hidden="true" /> Contacter
+              <MessageCircle className="w-3 h-3" aria-hidden="true" /> Discuter
             </Button>
           )}
         </div>
