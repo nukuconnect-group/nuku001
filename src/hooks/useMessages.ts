@@ -155,6 +155,32 @@ export function useMessages(conversationId: string | null, profileId: string | n
     return () => { supabase.removeChannel(channel); };
   }, [conversationId, deliveryId, isDeliveryConversation, profileId, userId]);
 
+  // Replay queued offline read intents when connection returns
+  useEffect(() => {
+    const sync = async (detail: { conversationId: string }) => {
+      const cid = detail.conversationId;
+      if (cid?.startsWith("delivery-") && userId) {
+        await supabase
+          .from("delivery_messages")
+          .update({ is_read: true })
+          .eq("delivery_id", cid.replace("delivery-", ""))
+          .neq("sender_id", userId)
+          .eq("is_read", false);
+      } else if (profileId) {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("conversation_id", cid)
+          .neq("sender_id", profileId)
+          .eq("is_read", false);
+      }
+    };
+    const onOnline = () => { replayOfflineReads(sync); };
+    if (typeof navigator !== "undefined" && navigator.onLine) replayOfflineReads(sync);
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [profileId, userId]);
+
   const sendMessage = useCallback(
     async (content: string, replyToId?: string) => {
       if (!conversationId || !content.trim()) return;
