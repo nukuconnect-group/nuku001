@@ -462,12 +462,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               toast({ title: "Appel impossible", description: "Cet utilisateur n'est pas joignable.", variant: "destructive" });
               return;
             }
-            startCall({
-              conversationId: conversation.id,
-              peerUserId: conversation.participant.userId,
-              peerName: conversation.participant.name,
-              peerAvatar: conversation.participant.avatar,
-            });
+            setCallSheetOpen(true);
           }}
           title="Appeler"
         >
