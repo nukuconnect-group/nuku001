@@ -133,9 +133,25 @@ const App = () => {
     setShowSplash(false);
   };
 
+  const QueryProvider: any = offlinePersister ? PersistQueryClientProvider : QueryClientProvider;
+  const queryProviderProps: any = offlinePersister
+    ? {
+        client: queryClient,
+        persistOptions: {
+          persister: offlinePersister,
+          maxAge: PERSIST_MAX_AGE,
+          buster: PERSIST_BUSTER,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (q: any) =>
+              q.state.status === "success" && !!q.state.data,
+          },
+        },
+      }
+    : { client: queryClient };
+
   return (
     <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider {...queryProviderProps}>
       <ThemeProvider>
       <LanguageProvider>
         <ProfileProvider>
@@ -211,7 +227,7 @@ const App = () => {
         </ProfileProvider>
       </LanguageProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </QueryProvider>
     </HelmetProvider>
   );
 };
