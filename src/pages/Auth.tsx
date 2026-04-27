@@ -553,24 +553,78 @@ const Auth = () => {
                       <Input type="text" placeholder="Ville, Région" value={producerLocation} onChange={(e) => setProducerLocation(e.target.value)} className="pl-10" required />
                     </div>
                     <div className="relative">
-                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Building className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${companyMissing ? "text-destructive" : "text-muted-foreground"}`} />
                       <Input
                         type="text"
                         placeholder={userType === "trainer" ? "Organisme / Institution *" : "Nom de l'entreprise / exploitation *"}
                         value={producerCompany}
                         onChange={(e) => setProducerCompany(e.target.value)}
-                        className="pl-10"
+                        className={`pl-10 ${companyMissing ? "border-destructive focus-visible:ring-destructive" : ""}`}
                         required
                         aria-required="true"
+                        aria-invalid={companyMissing}
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground -mt-1">
-                      Ce nom sera affiché publiquement à la place de votre nom personnel.
-                    </p>
-                    <Select value={producerSector} onValueChange={setProducerSector}>
-                      <SelectTrigger><Briefcase className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder={userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité"} /></SelectTrigger>
-                      <SelectContent>{sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
+                    {companyMissing ? (
+                      <p className="text-[11px] text-destructive flex items-center gap-1 -mt-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Le nom de l'entreprise est obligatoire pour finaliser l'inscription.
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground -mt-1 flex items-center gap-1">
+                        <Check className="w-3 h-3 text-primary" />
+                        Ce nom sera affiché publiquement à la place de votre nom personnel.
+                      </p>
+                    )}
+
+                    {/* Secteur d'activité — recherche + liste alphabétique */}
+                    <Popover open={sectorOpen} onOpenChange={setSectorOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm h-10 hover:bg-accent/30 transition"
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className={producerSector ? "text-foreground truncate" : "text-muted-foreground"}>
+                              {producerSector || (userType === "trainer" ? "Domaine d'expertise" : "Secteur d'activité")}
+                            </span>
+                          </span>
+                          <ChevronsUpDown className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <div className="p-2 border-b border-border">
+                          <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input
+                              autoFocus
+                              value={sectorSearch}
+                              onChange={(e) => setSectorSearch(e.target.value)}
+                              placeholder="Rechercher un secteur…"
+                              className="pl-7 h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <ScrollArea className="max-h-64">
+                          <div className="p-1">
+                            {filteredSectors.length === 0 ? (
+                              <p className="text-xs text-muted-foreground px-2 py-3 text-center">Aucun secteur trouvé</p>
+                            ) : filteredSectors.map((s) => (
+                              <button
+                                type="button"
+                                key={s}
+                                onClick={() => { setProducerSector(s); setSectorOpen(false); setSectorSearch(""); }}
+                                className={`w-full text-left text-xs px-2 py-1.5 rounded hover:bg-accent flex items-center gap-2 ${producerSector === s ? "bg-accent/60 font-semibold" : ""}`}
+                              >
+                                {producerSector === s && <Check className="w-3 h-3 text-primary" />}
+                                <span className="truncate">{s}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
 
