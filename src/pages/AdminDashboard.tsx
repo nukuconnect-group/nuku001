@@ -1158,6 +1158,9 @@ const AdminDashboard = () => {
 
             {/* Admin audit log */}
             {activeTab === "audit" && <AdminAuditLog />}
+
+            {/* Unified recent actions feed */}
+            {activeTab === "recent-actions" && <AdminRecentActions />}
         </main>
       </div>
       <Footer />
