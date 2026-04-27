@@ -516,11 +516,11 @@ const DeliveryTracking = () => {
         <div className="container mx-auto px-3 sm:px-4 max-w-4xl">
           {!user ? (
             <Card>
-              <CardContent className="p-8 text-center">
-                <LogIn className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-heading font-bold text-lg mb-2">Connexion requise</h3>
-                <p className="text-sm text-muted-foreground mb-4">Connectez-vous pour voir vos commandes</p>
-                <Button variant="hero" onClick={() => navigate("/auth")}>Se connecter</Button>
+              <CardContent className="p-6 text-center">
+                <LogIn className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="font-heading font-bold text-sm mb-1">Connectez-vous pour voir vos commandes</h3>
+                <p className="text-xs text-muted-foreground mb-3">Vous pouvez aussi suivre une commande en haut de page avec son ID + email.</p>
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>Se connecter</Button>
               </CardContent>
             </Card>
           ) : orders.length === 0 && searchMode === "list" ? (
