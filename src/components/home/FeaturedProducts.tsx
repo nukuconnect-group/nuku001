@@ -72,7 +72,7 @@ const FeaturedProducts = () => {
             className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide"
             style={{ WebkitOverflowScrolling: 'touch' }}>
             {featuredProducts.map((product) => (
-              <div key={product.id} className="min-w-[150px] max-w-[180px] sm:min-w-[180px] sm:max-w-[220px] snap-start flex-shrink-0">
+              <div key={product.id} className="w-[140px] sm:w-[180px] h-[260px] sm:h-[320px] snap-start flex-shrink-0">
                 <ProductCard product={product} viewMode="grid" />
               </div>
             ))}
