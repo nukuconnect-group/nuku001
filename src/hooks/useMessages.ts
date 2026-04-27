@@ -13,9 +13,16 @@ export interface MessageItem {
   replyToId?: string;
 }
 
+export type EmailNotifyStatus =
+  | { state: "idle" }
+  | { state: "pending"; at: number }
+  | { state: "ok"; at: number; ms: number }
+  | { state: "error"; at: number; ms: number; message: string };
+
 export function useMessages(conversationId: string | null, profileId: string | null, userId: string | null) {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastEmailStatus, setLastEmailStatus] = useState<EmailNotifyStatus>({ state: "idle" });
 
   const isDeliveryConversation = !!conversationId?.startsWith("delivery-");
   const deliveryId = isDeliveryConversation ? conversationId.replace("delivery-", "") : null;
