@@ -192,11 +192,13 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const ext = file.name.split('.').pop() || 'jpg';
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const fileName = `${user.id}/chat-${conversation.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("product-images").upload(fileName, file, { contentType: file.type });
+      const { error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(fileName, file, { contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(fileName);
       const content = caption ? `📷 ${caption}` : "📷 Photo";
       onSend(`${content}\n[image:${urlData.publicUrl}]`, replyTo?.id);
       setImagePreview(null);
@@ -204,9 +206,30 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       setReplyTo(null);
       toast({ title: "Image envoyée ✓" });
     } catch (error: any) {
-      toast({ title: "Erreur d'envoi", description: "Impossible d'envoyer l'image", variant: "destructive" });
+      console.error("Image upload error:", error);
+      toast({ title: "Erreur d'envoi", description: error?.message || "Impossible d'envoyer l'image", variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const uploadAndSendVoice = async (blob: Blob, durationSec: number) => {
+    if (!conversation) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const fileName = `${user.id}/voice-${conversation.id}-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("chat-attachments")
+        .upload(fileName, blob, { contentType: "audio/webm", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(fileName);
+      onSend(`🎙️ Message vocal (${Math.round(durationSec)}s)\n[voice:${urlData.publicUrl}]`, replyTo?.id);
+      setReplyTo(null);
+      toast({ title: "Vocal envoyé ✓" });
+    } catch (error: any) {
+      console.error("Voice upload error:", error);
+      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le vocal", variant: "destructive" });
     }
   };
 
