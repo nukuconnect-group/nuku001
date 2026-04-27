@@ -467,6 +467,49 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
               )}
             </div>
 
+            {/* Diagnostic panel */}
+            {diagnostics.length > 0 && (
+              <div className="rounded-lg border border-border bg-background/60 p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-semibold flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-primary" />
+                    Diagnostic en direct
+                  </Label>
+                  <button type="button" onClick={resetDiag} className="text-[10px] text-muted-foreground hover:text-foreground underline">
+                    Effacer
+                  </button>
+                </div>
+                <ul className="space-y-1">
+                  {diagnostics.map((d, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[11px]">
+                      <span
+                        className={`mt-1 inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                          d.status === "ok" ? "bg-primary" :
+                          d.status === "ko" ? "bg-destructive" :
+                          d.status === "warn" ? "bg-yellow-500" : "bg-muted-foreground animate-pulse"
+                        }`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={d.status === "ko" ? "text-destructive font-medium" : "text-foreground"}>
+                            {d.label}
+                          </span>
+                          {d.code && (
+                            <code className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground">
+                              {d.code}
+                            </code>
+                          )}
+                        </div>
+                        {d.detail && (
+                          <p className="text-[10px] text-muted-foreground break-words">{d.detail}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {chapterPreview.length > 0 && (
               <div className="space-y-2 p-3 bg-background border border-primary/30 rounded-lg">
                 <div className="flex items-center gap-1.5">
