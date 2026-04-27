@@ -250,6 +250,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       return;
     }
     setIsLoading(true);
+    pushDiag({ step: "publishing", label: "Création de la formation", status: "pending" });
     try {
       let imageUrl: string | null = null;
       if (coverFile) {
@@ -271,13 +272,17 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       } as any).select("id").single();
 
       if (error) throw error;
+      pushDiag({ step: "publishing", label: "Création de la formation", status: "ok", detail: `ID ${created?.id?.slice(0, 8)}…` });
 
       // IA: chapitres édités OU contenu document OU vidéos fournis → génération auto de modules
       const cleanVideos = videoUrls.map(v => v.trim()).filter(Boolean);
       const hasEditedChapters = chapterPreview.length > 0;
       const hasContent = aiContent.trim().length > 50;
+      let aiSucceeded = true;
+      let modulesInserted = 0;
       if (created?.id && (hasEditedChapters || hasContent || cleanVideos.length > 0)) {
         setAiBusy(true);
+        pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "pending" });
         try {
           const { data: aiData, error: aiErr } = await supabase.functions.invoke("generate-formation-modules", {
             body: {
@@ -288,20 +293,30 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             },
           });
           if (aiErr) throw aiErr;
-          toast({
-            title: "✨ Formation prête",
-            description: `${aiData?.modules_inserted || 0} module(s) ajouté(s).`,
-          });
+          modulesInserted = aiData?.modules_inserted || 0;
+          pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "ok", detail: `${modulesInserted} module(s) créé(s)` });
         } catch (aiE: any) {
+          aiSucceeded = false;
           console.error("AI modules error", aiE);
-          toast({ title: "Formation publiée", description: "La génération IA a échoué, vous pouvez ajouter les modules manuellement.", variant: "destructive" });
+          const fe = friendlyError(aiE);
+          pushDiag({ step: "ai_modules", label: "Génération des chapitres et modules", status: "ko", code: fe.code, detail: fe.description });
+          toast({
+            title: "Formation publiée — IA non disponible",
+            description: `${fe.title}. Vous pouvez ajouter les modules manuellement depuis la page Formation.`,
+            variant: "destructive",
+          });
         } finally {
           setAiBusy(false);
         }
-      } else {
+      }
+
+      if (aiSucceeded) {
+        pushDiag({ step: "done", label: "Publication finalisée", status: "ok", detail: "Disponible dans le module Formation" });
         toast({
           title: "✅ Formation publiée",
-          description: "Votre formation est visible dans le module Formations.",
+          description: modulesInserted > 0
+            ? `${modulesInserted} module(s) ajouté(s). Disponible dans le module Formation.`
+            : "Votre formation est visible dans le module Formation.",
         });
       }
 
@@ -312,10 +327,13 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
       setAiFileName("");
       setVideoUrls([""]);
       setChapterPreview([]);
+      resetDiag();
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+      const fe = friendlyError(err);
+      pushDiag({ step: "error", label: "Publication échouée", status: "ko", code: fe.code, detail: fe.description });
+      toast({ title: fe.title, description: fe.description, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
