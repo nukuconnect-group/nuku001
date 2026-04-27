@@ -439,8 +439,28 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
           </div>
 
           <div className="space-y-2">
-            <Label>Titre *</Label>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <Label>Titre *</Label>
+              {aiContent.trim().length >= 50 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoFillMetadata}
+                  disabled={metaLoading || aiBusy}
+                  className="gap-1.5 text-[11px] h-7"
+                >
+                  {metaLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                  Auto-remplir avec l'IA
+                </Button>
+              )}
+            </div>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Cultiver le maïs en saison sèche" required />
+            {aiContent.trim().length >= 50 && !form.title.trim() && (
+              <p className="text-[10px] text-muted-foreground">
+                Astuce : cliquez sur « Auto-remplir avec l'IA » pour générer titre, description et catégorie depuis votre document.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
