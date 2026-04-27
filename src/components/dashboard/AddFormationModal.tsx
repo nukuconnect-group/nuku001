@@ -35,6 +35,8 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const [aiFileName, setAiFileName] = useState<string>("");
   const [videoUrls, setVideoUrls] = useState<string[]>([""]);
   const [aiBusy, setAiBusy] = useState(false);
+  const [chapterPreview, setChapterPreview] = useState<Array<{ title: string; description: string; duration_minutes: number }>>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
