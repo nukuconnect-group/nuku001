@@ -231,11 +231,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
       });
       setStatus("incoming");
       playRingtone();
-      // Auto-missed after 30s
+      // Auto-missed after 30s — receiver logs "missed" in their own thread,
+      // caller will log "outgoing-missed" on its side via the hangup signal.
       ringTimeoutRef.current = window.setTimeout(() => {
-        // Other side will log "missed" because we are the receiver — but caller is the one inserting
-        // Send hangup to caller so they log outgoing-missed
         sendSignal(payload.from, { type: "hangup", callId: payload.callId, from: user.id, reason: "missed" });
+        if (profile?.id) {
+          logCallMessage(payload.conversationId, profile.id, "missed", 0);
+        }
         cleanupCall();
         setStatus("idle");
         setMeta(null);
