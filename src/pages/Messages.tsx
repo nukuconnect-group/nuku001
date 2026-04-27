@@ -38,7 +38,8 @@ Nous sommes ravis de vous accueillir sur la première plateforme agricole intell
 *Si vous avez besoin d'aide, contactez le support depuis la section Aide. Bonne exploration ! 🌱*`;
 
 const Messages = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoSelectedRef = useRef(false);
   const navigate = useNavigate();
   const { user, isReady } = useProfile();
   const [selectedConversation, setSelectedConversation] = useState<ConversationItem | null>(null);
