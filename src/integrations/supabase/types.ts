@@ -1253,6 +1253,54 @@ export type Database = {
           },
         ]
       }
+      page_performance_logs: {
+        Row: {
+          connection_type: string | null
+          created_at: string
+          dom_ready_ms: number | null
+          error_message: string | null
+          fcp_ms: number | null
+          had_error: boolean
+          id: string
+          is_slow: boolean
+          load_time_ms: number
+          route: string
+          ttfb_ms: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          connection_type?: string | null
+          created_at?: string
+          dom_ready_ms?: number | null
+          error_message?: string | null
+          fcp_ms?: number | null
+          had_error?: boolean
+          id?: string
+          is_slow?: boolean
+          load_time_ms: number
+          route: string
+          ttfb_ms?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          connection_type?: string | null
+          created_at?: string
+          dom_ready_ms?: number | null
+          error_message?: string | null
+          fcp_ms?: number | null
+          had_error?: boolean
+          id?: string
+          is_slow?: boolean
+          load_time_ms?: number
+          route?: string
+          ttfb_ms?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_boosts: {
         Row: {
           created_at: string
@@ -2357,6 +2405,17 @@ export type Database = {
         }
       }
       get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
+      get_route_performance_stats: {
+        Args: { _days?: number }
+        Returns: {
+          avg_load_ms: number
+          error_count: number
+          p95_load_ms: number
+          route: string
+          slow_count: number
+          total_loads: number
+        }[]
+      }
       get_user_subscription: {
         Args: { p_user_id: string }
         Returns: {

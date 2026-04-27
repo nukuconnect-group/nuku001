@@ -17,6 +17,8 @@ import PresenceTracker from "./components/PresenceTracker";
 import ProfileLeavePopup from "./components/ProfileLeavePopup";
 import RouteProgress from "./components/layout/RouteProgress";
 import SmartSuspense from "./components/layout/SmartSuspense";
+import PerformanceTracker from "./components/PerformanceTracker";
+import LinkPrefetcher from "./components/LinkPrefetcher";
 
 // Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
@@ -107,6 +109,8 @@ const App = () => {
             )}
             <BrowserRouter>
               <RouteProgress />
+              <PerformanceTracker />
+              <LinkPrefetcher />
               <ScrollToTop />
               <AnalyticsTracker />
               <PresenceTracker />
