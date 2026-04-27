@@ -155,6 +155,44 @@ const Auth = () => {
     finally { setIsLoading(false); }
   };
 
+  const handleResendConfirmation = async () => {
+    const target = (pendingVerificationEmail || loginEmail).trim();
+    if (!target) {
+      toast({ title: "Email manquant", description: "Saisissez votre email pour renvoyer la confirmation.", variant: "destructive" });
+      return;
+    }
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: target,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
+      if (error) {
+        // If account is already confirmed, Supabase returns an error — guide user to login/reset
+        const msg = (error as any)?.message || "";
+        if (/confirmed|already/i.test(msg)) {
+          toast({
+            title: "Compte déjà confirmé",
+            description: "Connectez-vous, ou utilisez « Mot de passe oublié » si nécessaire.",
+          });
+        } else {
+          toast({ title: "Erreur", description: msg || "Impossible de renvoyer l'email.", variant: "destructive" });
+        }
+      } else {
+        toast({
+          title: "Email envoyé 📩",
+          description: `Un nouvel email de confirmation a été envoyé à ${target}. Vérifiez aussi vos spams.`,
+        });
+        setEmailVerificationPending(true);
+      }
+    } catch {
+      toast({ title: "Erreur", description: "Une erreur est survenue lors du renvoi.", variant: "destructive" });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
