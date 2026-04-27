@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  emitMessagesRead,
+  queueOfflineRead,
+  replayOfflineReads,
+} from "@/lib/messageReadEvents";
 
 export interface MessageItem {
   id: string;
@@ -65,9 +70,14 @@ export function useMessages(conversationId: string | null, profileId: string | n
         (m: any) => m.sender_id !== myId && m.is_read === false
       ).length;
 
-      // Mark unread messages as read
+      // Mark unread messages as read (offline-aware)
       let didMarkRead = false;
-      if (isDeliveryConversation && userId) {
+      const isOnline = typeof navigator === "undefined" ? true : navigator.onLine;
+      if (!isOnline && decrement > 0) {
+        // Queue for replay when back online; still update UI optimistically
+        queueOfflineRead({ conversationId: conversationId!, decrement });
+        didMarkRead = true;
+      } else if (isDeliveryConversation && userId) {
         const { error: upErr } = await supabase
           .from("delivery_messages")
           .update({ is_read: true })
@@ -75,6 +85,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", userId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
       } else if (profileId) {
         const { error: upErr } = await supabase
           .from("messages")
@@ -83,13 +94,10 @@ export function useMessages(conversationId: string | null, profileId: string | n
           .neq("sender_id", profileId)
           .eq("is_read", false);
         if (!upErr) didMarkRead = true;
+        else if (decrement > 0) { queueOfflineRead({ conversationId: conversationId!, decrement }); didMarkRead = true; }
       }
       if (didMarkRead) {
-        try {
-          window.dispatchEvent(
-            new CustomEvent("nuku:messages-read", { detail: { conversationId, decrement } })
-          );
-        } catch {}
+        emitMessagesRead({ conversationId: conversationId!, decrement });
       }
     }
 
@@ -133,11 +141,11 @@ export function useMessages(conversationId: string | null, profileId: string | n
           // Auto-mark as read if from other
           if (isDeliveryConversation && m.sender_id !== userId && userId) {
             supabase.from("delivery_messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              try { window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } })); } catch {}
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
             });
           } else if (m.sender_id !== profileId && profileId) {
             supabase.from("messages").update({ is_read: true }).eq("id", m.id).then(() => {
-              try { window.dispatchEvent(new CustomEvent("nuku:messages-read", { detail: { conversationId } })); } catch {}
+              emitMessagesRead({ conversationId: conversationId!, decrement: 1 });
             });
           }
         }
@@ -146,6 +154,32 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
     return () => { supabase.removeChannel(channel); };
   }, [conversationId, deliveryId, isDeliveryConversation, profileId, userId]);
+
+  // Replay queued offline read intents when connection returns
+  useEffect(() => {
+    const sync = async (detail: { conversationId: string }) => {
+      const cid = detail.conversationId;
+      if (cid?.startsWith("delivery-") && userId) {
+        await supabase
+          .from("delivery_messages")
+          .update({ is_read: true })
+          .eq("delivery_id", cid.replace("delivery-", ""))
+          .neq("sender_id", userId)
+          .eq("is_read", false);
+      } else if (profileId) {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("conversation_id", cid)
+          .neq("sender_id", profileId)
+          .eq("is_read", false);
+      }
+    };
+    const onOnline = () => { replayOfflineReads(sync); };
+    if (typeof navigator !== "undefined" && navigator.onLine) replayOfflineReads(sync);
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [profileId, userId]);
 
   const sendMessage = useCallback(
     async (content: string, replyToId?: string) => {
