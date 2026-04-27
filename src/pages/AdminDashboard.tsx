@@ -67,12 +67,15 @@ const AdminDashboard = () => {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Supprimer le compte de "${userName}" et toutes ses données ? Cette action est irréversible.`)) return;
+    if (!confirm(`Supprimer définitivement le compte de "${userName}" (données + authentification) ? L'email sera libéré pour permettre une nouvelle inscription. Cette action est irréversible.`)) return;
     setDeletingUserId(userId);
     try {
-      const { error } = await supabase.rpc("admin_delete_user_data", { p_user_id: userId });
+      const { data, error } = await supabase.functions.invoke("delete-user-account", {
+        body: { target_user_id: userId },
+      });
       if (error) throw error;
-      toast({ title: "Compte supprimé", description: `Les données de "${userName}" ont été supprimées.` });
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "Compte supprimé", description: `"${userName}" peut désormais se réinscrire avec le même email.` });
       setUsers(prev => prev.filter((u: any) => u.user_id !== userId));
     } catch (err: any) {
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
