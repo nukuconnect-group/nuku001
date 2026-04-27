@@ -158,6 +158,47 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
   const addVideoField = () => setVideoUrls(prev => [...prev, ""]);
   const removeVideoField = (idx: number) => setVideoUrls(prev => prev.filter((_, i) => i !== idx));
 
+  const handlePreviewChapters = async () => {
+    if (aiContent.trim().length < 50) {
+      toast({
+        title: "Contenu trop court",
+        description: "Ajoutez au moins 50 caractères de contenu (importez un document ou collez du texte).",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-formation-modules", {
+        body: { document_text: aiContent, preview_only: true },
+      });
+      if (error) throw error;
+      const chs = (data?.chapters || []) as Array<{ title: string; description: string; duration_minutes: number }>;
+      if (!chs.length) {
+        toast({ title: "Aucun chapitre généré", description: "Essayez avec un texte plus structuré.", variant: "destructive" });
+        return;
+      }
+      setChapterPreview(chs);
+      toast({ title: "✨ Chapitres prêts", description: `${chs.length} chapitres générés. Modifiez-les avant publication.` });
+    } catch (err: any) {
+      console.error("Preview chapters error", err);
+      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer la prévisualisation.", variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const updateChapterField = (idx: number, field: "title" | "description" | "duration_minutes", value: string) => {
+    setChapterPreview(prev => prev.map((c, i) => i === idx ? {
+      ...c,
+      [field]: field === "duration_minutes" ? Math.max(1, parseInt(value) || 1) : value,
+    } : c));
+  };
+
+  const removeChapter = (idx: number) => {
+    setChapterPreview(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
