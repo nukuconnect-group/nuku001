@@ -564,7 +564,7 @@ const Dashboard = () => {
                               <QrCode className="w-3 h-3 text-blue-500" /><span className="hidden sm:inline">QR</span>
                             </Button>
                             <Button variant="outline" size="sm" className="h-8 px-1 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1 text-[10px]"
-                              onClick={() => handleDeleteProduct(product.id)} aria-label="Supprimer">
+                              onClick={() => setProductToDelete(product)} aria-label="Supprimer">
                               <Trash2 className="w-3 h-3" /><span className="hidden sm:inline">Suppr.</span>
                             </Button>
                           </div>
