@@ -475,6 +475,13 @@ const BuyerDashboard = () => {
               </TabsTrigger>
             </TabsList>
 
+            {/* Affiliation earnings — visible across tabs at the top */}
+            {user?.id && (
+              <div className="mt-4">
+                <AffiliationCard userId={user.id} />
+              </div>
+            )}
+
             {/* Orders Tab */}
             <TabsContent value="orders">
               <Card>
