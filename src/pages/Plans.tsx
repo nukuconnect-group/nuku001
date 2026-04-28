@@ -342,6 +342,25 @@ const Plans = () => {
         </div>
       </section>
 
+      {sessionExpired && (
+        <section className="py-3">
+          <div className="container mx-auto px-3 sm:px-4 max-w-3xl">
+            <Alert variant="destructive" role="alert" aria-live="polite">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Session expirée</AlertTitle>
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                <span className="text-xs sm:text-sm">
+                  Votre session a expiré. Reconnectez-vous : votre paiement reprendra automatiquement.
+                </span>
+                <Button size="sm" variant="outline" onClick={handleReconnect} className="self-start sm:self-auto">
+                  Se reconnecter
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </section>
+      )}
+
       <section className="py-6 sm:py-12">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
