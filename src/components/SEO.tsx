@@ -43,8 +43,12 @@ const SEO = ({
   const finalNoIndex = override?.no_index ?? noIndex;
   const keywords = override?.keywords;
 
+  // Always compute a clean canonical: prefer explicit url/override, otherwise use current path.
+  const location = useLocation();
+  const canonicalPath = finalUrl || location.pathname || "/";
+  const canonicalUrl = buildCanonical(canonicalPath);
+
   const fullTitle = finalTitle ? `${finalTitle} | ${SITE_NAME}` : `${SITE_NAME} - Marketplace Agricole Intelligent d'Afrique`;
-  const canonicalUrl = finalUrl ? `${BASE_URL}${finalUrl}` : undefined;
   const ogImage = finalImage || DEFAULT_IMAGE;
 
   return (
@@ -53,7 +57,7 @@ const SEO = ({
       <meta name="description" content={finalDescription} />
       {keywords && <meta name="keywords" content={keywords} />}
       {finalNoIndex && <meta name="robots" content="noindex, nofollow" />}
-      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
