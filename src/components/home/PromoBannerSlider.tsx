@@ -25,7 +25,6 @@ import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 const banners = [
   {
     image: awardImage,
-    brandBg: true,
     title: "🏆 Meilleure Innovation 2025",
     subtitle: "NukuConnect sacrée par Togo Top Impact",
     cta: "Découvrir",
@@ -33,6 +32,7 @@ const banners = [
   },
   {
     image: heroShopping,
+    brandBg: true,
     title: "Achat en ligne simplifié",
     subtitle: "Commandez vos produits frais depuis chez vous",
     cta: "Commander",
