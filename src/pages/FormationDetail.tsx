@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
+import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
 const FormationDetail = () => {
   const { id } = useParams<{ id: string }>();
