@@ -15,7 +15,7 @@ import { Copy, Users, TrendingUp, Wallet, Share2, Gift, ShieldCheck, ArrowRight,
 
 const COMMISSION_RATES = {
   subscription: 0.10, // 10% on paid subscriptions
-  purchase: 0.03, // 3% on purchases
+  purchase: 0.02, // 2% on purchases
 };
 
 const Affiliation = () => {
@@ -113,14 +113,14 @@ const Affiliation = () => {
     <div className="min-h-screen pb-14 lg:pb-0">
       <SEO
         url="/affiliation"
-        title="Programme d'Affiliation Nukuconnect — Gagnez 10% & 3%"
-        description="Parrainez vos contacts sur Nukuconnect : 10% de commission à vie sur les abonnements payants et 3% sur chaque achat de vos filleuls. Inscription gratuite."
+        title="Programme d'Affiliation Nukuconnect — Gagnez 10% & 2%"
+        description="Parrainez vos contacts sur Nukuconnect : 10% de commission à vie sur les abonnements payants et 2% sur chaque achat de vos filleuls. Inscription gratuite."
         image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=630&fit=crop&q=80"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "WebPage",
           name: "Programme d'Affiliation Nukuconnect",
-          description: "Programme de parrainage avec 10% de commission sur abonnements et 3% sur achats.",
+          description: "Programme de parrainage avec 10% de commission sur abonnements et 2% sur achats.",
           url: "https://www.nukuconnect.com/affiliation",
           mainEntity: {
             "@type": "Service",
@@ -128,7 +128,7 @@ const Affiliation = () => {
             provider: { "@type": "Organization", name: "Nukuconnect" },
             offers: [
               { "@type": "Offer", description: "10% sur les abonnements payants des filleuls", category: "Affiliation" },
-              { "@type": "Offer", description: "3% sur les achats des filleuls", category: "Affiliation" },
+              { "@type": "Offer", description: "2% sur les achats des filleuls", category: "Affiliation" },
             ],
           },
         }}
@@ -169,10 +169,10 @@ const Affiliation = () => {
                 <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Wallet className="w-6 h-6 text-accent" />
                 </div>
-                <p className="text-3xl font-extrabold text-accent mb-1">3%</p>
+                <p className="text-3xl font-extrabold text-accent mb-1">2%</p>
                 <p className="text-sm font-semibold text-foreground">Sur chaque achat</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Gagnez 3% sur chaque transaction réalisée par vos filleuls
+                  Gagnez 2% sur chaque transaction réalisée par vos filleuls
                 </p>
               </CardContent>
             </Card>
