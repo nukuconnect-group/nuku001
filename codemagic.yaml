@@ -129,6 +129,81 @@ workflows:
           chmod +x gradlew
           ./gradlew bundleRelease
 
+      - name: Vérifier la signature de l'AAB (alias nukuconnect)
+        script: |
+          set -e
+          EXPECTED_ALIAS="nukuconnect"
+
+          echo "🔍 Recherche du fichier AAB généré..."
+          AAB_FILE=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -1)
+
+          if [ -z "$AAB_FILE" ] || [ ! -f "$AAB_FILE" ]; then
+            echo "❌ ERREUR: Aucun fichier .aab trouvé après la compilation."
+            echo "   → Vérifiez les logs Gradle ci-dessus."
+            exit 1
+          fi
+          echo "✅ AAB trouvé : $AAB_FILE"
+
+          AAB_SIZE=$(du -h "$AAB_FILE" | cut -f1)
+          echo "📦 Taille : $AAB_SIZE"
+
+          # 1) Récupérer l'empreinte SHA-256 attendue depuis le keystore source
+          EXPECTED_SHA256=$(keytool -list -v -keystore "$CM_KEYSTORE_PATH" \
+                            -storepass "$CM_KEYSTORE_PASSWORD" \
+                            -alias "$EXPECTED_ALIAS" 2>/dev/null \
+                            | grep "SHA256:" | head -1 | awk '{print $2}' | tr -d ':' | tr 'a-f' 'A-F')
+
+          if [ -z "$EXPECTED_SHA256" ]; then
+            echo "❌ ERREUR: Impossible d'extraire l'empreinte SHA-256 du keystore source."
+            exit 1
+          fi
+          echo "🔑 Empreinte attendue (keystore) : $EXPECTED_SHA256"
+
+          # 2) Extraire la signature réellement présente dans l'AAB
+          # Un AAB est un ZIP qui contient META-INF/*.RSA (ou .EC/.DSA) avec le certificat
+          mkdir -p /tmp/aab_check
+          unzip -o -q "$AAB_FILE" "META-INF/*" -d /tmp/aab_check || true
+
+          CERT_FILE=$(find /tmp/aab_check/META-INF -type f \( -name "*.RSA" -o -name "*.EC" -o -name "*.DSA" \) | head -1)
+
+          if [ -z "$CERT_FILE" ]; then
+            echo "❌ ERREUR: Aucun certificat trouvé dans META-INF de l'AAB."
+            echo "   → L'AAB n'est pas signé. Vérifiez la configuration de signature Codemagic."
+            exit 1
+          fi
+          echo "📄 Certificat embarqué : $CERT_FILE"
+
+          # 3) Calculer l'empreinte SHA-256 du certificat embarqué
+          ACTUAL_SHA256=$(keytool -printcert -file "$CERT_FILE" 2>/dev/null \
+                          | grep "SHA256:" | head -1 | awk '{print $2}' | tr -d ':' | tr 'a-f' 'A-F')
+
+          if [ -z "$ACTUAL_SHA256" ]; then
+            echo "❌ ERREUR: Impossible de lire le certificat embarqué dans l'AAB."
+            exit 1
+          fi
+          echo "🔑 Empreinte trouvée (AAB)       : $ACTUAL_SHA256"
+
+          # 4) Comparer les deux empreintes
+          if [ "$EXPECTED_SHA256" != "$ACTUAL_SHA256" ]; then
+            echo ""
+            echo "❌ ÉCHEC DE VÉRIFICATION : les signatures ne correspondent PAS !"
+            echo "   L'AAB a été signé avec un autre keystore que '$EXPECTED_ALIAS'."
+            echo "   → Upload sur Play Store BLOQUÉ pour éviter une mise à jour cassée."
+            echo ""
+            echo "   Causes possibles :"
+            echo "   • Mauvais keystore associé au workflow dans Codemagic"
+            echo "   • signingConfigs absente ou incorrecte dans android/app/build.gradle"
+            echo "   • Build en mode debug au lieu de release"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ ✅ ✅ Signature VALIDÉE — l'AAB est bien signé avec l'alias '$EXPECTED_ALIAS'."
+          echo "🚀 Prêt pour l'upload sur Google Play Console."
+
+          # Sauvegarde de l'empreinte dans un fichier (artifact) pour traçabilité
+          echo "$ACTUAL_SHA256" > android/app/build/outputs/signature_sha256.txt
+
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/mapping.txt
