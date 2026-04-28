@@ -221,6 +221,7 @@ const App = () => {
                   <Route path="/faq" element={<Help />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
+                  <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
