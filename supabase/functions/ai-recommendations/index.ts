@@ -135,8 +135,6 @@ Maximum 5 éléments par catégorie.`;
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      if (false) {
-      throw new Error(`AI error: ${response.status}`);
     }
 
     const aiData = await response.json();
