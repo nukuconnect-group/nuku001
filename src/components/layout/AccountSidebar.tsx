@@ -316,7 +316,44 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
+  const SHARE_URL = "https://nukuconnect.com";
+  const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
+  const encodedUrl = encodeURIComponent(SHARE_URL);
+  const encodedText = encodeURIComponent(SHARE_TEXT);
+
+  const copyShareLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(SHARE_URL);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = SHARE_URL;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      toast({ title: "✅ Lien copié", description: "Vous pouvez maintenant le coller où vous voulez." });
+      setShareOpen(false);
+    } catch {
+      toast({ title: "Impossible de copier", description: SHARE_URL, variant: "destructive" });
+    }
+  };
+
+  const shareTargets = [
+    { name: "WhatsApp", icon: MessageCircle, color: "bg-[#25D366]/10 text-[#25D366]", url: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
+    { name: "Facebook", icon: Facebook, color: "bg-[#1877F2]/10 text-[#1877F2]", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "X (Twitter)", icon: Twitter, color: "bg-foreground/10 text-foreground", url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
+    { name: "Telegram", icon: Send, color: "bg-[#0088cc]/10 text-[#0088cc]", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
+    { name: "LinkedIn", icon: Linkedin, color: "bg-[#0A66C2]/10 text-[#0A66C2]", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodeURIComponent("NUKUCONNECT")}&body=${encodedText}%20${encodedUrl}` },
+  ];
+
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md p-0 flex flex-col h-full overflow-hidden">
         {isAccountPending ? (
