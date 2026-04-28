@@ -750,6 +750,45 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         )}
       </SheetContent>
     </Sheet>
+
+    <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Partager NUKUCONNECT</DialogTitle>
+          <DialogDescription>Choisissez une application pour partager le lien.</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-3 py-2">
+          {shareTargets.map((t) => (
+            <a
+              key={t.name}
+              href={t.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setShareOpen(false)}
+              className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${t.color}`}>
+                <t.icon className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-medium text-center">{t.name}</span>
+            </a>
+          ))}
+        </div>
+        <button
+          onClick={copyShareLink}
+          className="flex items-center gap-3 w-full p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <Copy className="w-4 h-4 text-secondary" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-medium">Copier le lien</div>
+            <div className="text-xs text-muted-foreground truncate">{SHARE_URL}</div>
+          </div>
+        </button>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
