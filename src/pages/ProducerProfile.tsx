@@ -356,7 +356,27 @@ const ProducerProfile = () => {
                         variant="outline"
                         size="sm"
                         className="gap-1.5 text-xs h-8"
-                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(producer.location)}`, "_blank", "noopener")}
+                        onClick={() => {
+                          const destLat = (producer as any).lat ?? coords[0];
+                          const destLng = (producer as any).lng ?? coords[1];
+                          const open = (originLat?: number, originLng?: number) => {
+                            const url = buildDirectionsUrl({
+                              destLat, destLng,
+                              destText: producer.location,
+                              originLat, originLng,
+                            });
+                            window.open(url, "_blank", "noopener");
+                          };
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => open(pos.coords.latitude, pos.coords.longitude),
+                              () => open(),
+                              { timeout: 4000, maximumAge: 60000 },
+                            );
+                          } else {
+                            open();
+                          }
+                        }}
                       >
                         <Navigation className="w-3.5 h-3.5" />Itinéraire
                       </Button>
