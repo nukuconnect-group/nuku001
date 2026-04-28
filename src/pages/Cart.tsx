@@ -560,7 +560,8 @@ const Cart = () => {
           identifier,
           ...(selectedNetwork !== "CARD" && phoneDigits ? { phone_number: phoneDigits } : {}),
           ...(selectedNetwork && selectedNetwork !== "CARD" ? { network: selectedNetwork } : {}),
-          use_redirect: selectedNetwork === "CARD",
+          // Toujours rediriger vers la page Paygate (carte ET mobile money)
+          use_redirect: true,
         },
       });
 
