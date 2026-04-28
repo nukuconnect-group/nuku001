@@ -71,8 +71,23 @@ const FormationDetail = () => {
     load();
   }, [id]);
 
+  const enroll = async () => {
+    if (!userId || !formation || enrolling) return;
+    setEnrolling(true);
+    const { error } = await supabase.from("formation_progress" as any).upsert({
+      user_id: userId,
+      formation_id: formation.id,
+      module_id: null,
+      completed: false,
+      progress_percent: 0,
+    } as any, { onConflict: "user_id,formation_id,module_id" });
+    if (!error) setIsEnrolled(true);
+    setEnrolling(false);
+  };
+
   const toggleModuleComplete = async (moduleId: string) => {
     if (!userId || !formation) return;
+    if (!isEnrolled) await enroll();
     const formationId = formation.id;
     const isCompleted = !progress[moduleId];
 
