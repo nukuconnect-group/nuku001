@@ -185,9 +185,19 @@ const PromoBannerSlider = () => {
             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
                 <div className="relative h-48 sm:h-56 bg-muted">
-                  <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover saturate-[0.35] brightness-105" />
-                  {/* Subtle brand tint to neutralize stray colors (e.g. reds) */}
-                  <div className="absolute inset-0 bg-primary/10" />
+                  {(banner as any).brandBg ? (
+                    <>
+                      {/* Brand-only background — no red, full logo palette */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-secondary" />
+                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--accent))_0%,transparent_55%)]" />
+                    </>
+                  ) : (
+                    <>
+                      <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover saturate-[0.35] brightness-105" />
+                      {/* Subtle brand tint to neutralize stray colors */}
+                      <div className="absolute inset-0 bg-primary/10" />
+                    </>
+                  )}
                   {/* Strong bottom shade for crisp text legibility */}
                   <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-foreground/85 via-foreground/45 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
