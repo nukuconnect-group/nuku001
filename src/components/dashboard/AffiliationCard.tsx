@@ -90,17 +90,17 @@ export default function AffiliationCard({ userId }: Props) {
             <p className="text-[9px] text-muted-foreground leading-tight">Filleuls actifs</p>
           </div>
           <div className="bg-accent/10 rounded-lg p-2 text-center">
-            <p className="text-base font-bold text-accent-foreground">{formatNumber(subEarnings)} F</p>
+            <p className="text-base font-bold text-accent-foreground">{formatAmount(subEarnings)} F</p>
             <p className="text-[9px] text-muted-foreground leading-tight">10% abonnements</p>
           </div>
           <div className="bg-accent/10 rounded-lg p-2 text-center">
-            <p className="text-base font-bold text-accent-foreground">{formatNumber(purchaseEarnings)} F</p>
+            <p className="text-base font-bold text-accent-foreground">{formatAmount(purchaseEarnings)} F</p>
             <p className="text-[9px] text-muted-foreground leading-tight">2% achats</p>
           </div>
         </div>
         <div className="bg-muted/40 rounded-lg p-2 text-center">
           <p className="text-[10px] text-muted-foreground">Total gagné</p>
-          <p className="text-lg font-extrabold text-primary">{formatNumber(totalEarnings)} F</p>
+          <p className="text-lg font-extrabold text-primary">{formatAmount(totalEarnings)} F</p>
         </div>
         {code ? (
           <>
