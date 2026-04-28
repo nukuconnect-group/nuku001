@@ -43,6 +43,10 @@ import {
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
   QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard, Sparkles, ChevronDown, Coins
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
