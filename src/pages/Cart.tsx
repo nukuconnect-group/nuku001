@@ -377,6 +377,10 @@ const Cart = () => {
     await markOrdersFailed(`Paiement échoué | tx_ref: ${paymentIdentifier}`);
     setPendingCheckoutData(null);
     pendingCheckoutRef.current = null;
+    setPayStatus({
+      kind: "failed",
+      message: "La transaction n'a pas abouti — aucun montant n'a été débité. Vos commandes ont été annulées. Vous pouvez relancer le paiement.",
+    });
     toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Vos commandes ont été annulées. Réessayez.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
@@ -386,6 +390,10 @@ const Cart = () => {
     await markOrdersFailed(`Paiement expiré (timeout) | tx_ref: ${paymentIdentifier}`);
     setPendingCheckoutData(null);
     pendingCheckoutRef.current = null;
+    setPayStatus({
+      kind: "expired",
+      message: "Le paiement n'a pas été confirmé dans le délai imparti. Vos commandes ont été annulées — relancez le paiement pour réessayer.",
+    });
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
