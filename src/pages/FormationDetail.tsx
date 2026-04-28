@@ -199,6 +199,67 @@ const FormationDetail = () => {
         </div>
       </section>
 
+      {/* Self-paced banner + Summary + Source document */}
+      <section className="py-3 sm:py-5">
+        <div className="container mx-auto px-3 sm:px-4 space-y-3">
+          {/* Self-paced learning notice */}
+          <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+            <CalendarClock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="text-xs sm:text-sm">
+              <p className="font-semibold text-foreground mb-0.5">Suivez à votre rythme</p>
+              <p className="text-muted-foreground leading-relaxed">
+                Vous pouvez avancer dans cette formation selon votre disponibilité.
+                Votre progression est sauvegardée automatiquement, vous pouvez reprendre à tout moment.
+              </p>
+            </div>
+          </div>
+
+          {/* Summary */}
+          {formation.summary && (
+            <Card>
+              <CardContent className="p-3 sm:p-4">
+                <h2 className="font-heading text-sm sm:text-base font-bold text-foreground mb-2 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  Résumé de la formation
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                  {formation.summary}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Source PDF preview */}
+          {formation.source_document_url && (
+            <Card>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    Document de la formation
+                  </h2>
+                  <a href={formation.source_document_url} target="_blank" rel="noopener noreferrer" download>
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <Download className="w-3 h-3" /> Télécharger
+                    </Button>
+                  </a>
+                </div>
+                {formation.source_document_name && (
+                  <p className="text-[11px] text-muted-foreground mb-2 truncate">{formation.source_document_name}</p>
+                )}
+                <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "60vh", minHeight: 320 }}>
+                  <iframe
+                    src={`${formation.source_document_url}#view=FitH`}
+                    title={formation.source_document_name || "Document"}
+                    className="w-full h-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
+
       {/* Modules / Chapters */}
       <section className="py-4 sm:py-8">
         <div className="container mx-auto px-3 sm:px-4">
