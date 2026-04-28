@@ -351,6 +351,39 @@ export type Database = {
           },
         ]
       }
+      cookie_consents: {
+        Row: {
+          consent: string
+          created_at: string
+          id: string
+          ip_country: string | null
+          page_path: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consent: string
+          created_at?: string
+          id?: string
+          ip_country?: string | null
+          page_path?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consent?: string
+          created_at?: string
+          id?: string
+          ip_country?: string | null
+          page_path?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       deliveries: {
         Row: {
           accepted_at: string | null
