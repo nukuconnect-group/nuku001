@@ -212,6 +212,7 @@ const App = () => {
                   <Route path="/jetons" element={<Tokens />} />
                   <Route path="/tokens" element={<Tokens />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
+                  <Route path="/tracking/:token" element={<PublicDeliveryTracking />} />
                   <Route path="/a-propos" element={<About />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/favoris" element={<Favorites />} />
