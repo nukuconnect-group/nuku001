@@ -772,6 +772,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         availabilityEnd={conversation.participant.availabilityEnd}
         isVerified={conversation.participant.isVerified}
         yearsActive={conversation.participant.yearsActive}
+        isOnline={conversation.participant.isOnline}
         onVoiceCall={() => {
           if (!conversation.participant.userId) return;
           startCall({

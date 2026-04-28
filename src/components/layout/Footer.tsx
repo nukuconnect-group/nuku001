@@ -5,6 +5,7 @@ import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import footerBg from "@/assets/footer-bg.webp";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
+import TrustBadges from "@/components/cart/TrustBadges";
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -44,13 +45,16 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="text-white relative overflow-hidden">
-      {/* Background image with blur overlay */}
-      <div className="absolute inset-0 z-0">
-        <img src={footerBg} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-        <div className="absolute inset-0 backdrop-blur-[3px]" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.82) 0%, rgba(0, 107, 0, 0.85) 100%)" }} />
-      </div>
-      {/* App Download Section */}
+    <>
+      {/* Trust badges — visibles sur tout le site juste avant le pied de page */}
+      <TrustBadges />
+      <footer className="text-white relative overflow-hidden">
+        {/* Background image with blur overlay */}
+        <div className="absolute inset-0 z-0">
+          <img src={footerBg} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+          <div className="absolute inset-0 backdrop-blur-[3px]" style={{ background: "linear-gradient(135deg, rgba(28, 152, 237, 0.82) 0%, rgba(0, 107, 0, 0.85) 100%)" }} />
+        </div>
+        {/* App Download Section */}
       <div className="border-b border-white/15 relative z-10">
         <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
@@ -184,7 +188,8 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
+      </footer>
+    </>
   );
 };
 

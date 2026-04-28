@@ -314,18 +314,68 @@ export function useConversations() {
     };
   }, [fetchConversations]);
 
-  // Realtime subscription with debounce to avoid hammering the DB
+  // Realtime subscription with light debounce + instant local merge for new messages
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const scheduleRefetch = () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => fetchConversations(), 800);
+      // Très court : on veut un rafraîchissement quasi instantané
+      debounceRef.current = setTimeout(() => fetchConversations(), 250);
     };
+
+    // Mise à jour locale immédiate du dernier message (sans attendre le refetch)
+    const mergeLastMessage = (convId: string, content: string, fromOther: boolean, deliveryKey?: string) => {
+      const targetId = deliveryKey ? `delivery-${deliveryKey}` : convId;
+      setConversations((prev) => {
+        const next = prev.map((c) => {
+          if (c.id !== targetId) return c;
+          return {
+            ...c,
+            lastMessage: content || c.lastMessage,
+            timestamp: formatTime(new Date().toISOString()),
+            unread: fromOther ? (c.unread || 0) + 1 : c.unread,
+          };
+        });
+        // Remonte cette conversation en haut
+        next.sort((a, b) => (a.id === targetId ? -1 : b.id === targetId ? 1 : 0));
+        cache.conversations = next;
+        return next;
+      });
+    };
+
     const channel = supabase
       .channel("conversations-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, scheduleRefetch)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+        const m = payload.new as any;
+        // Update local instantly
+        if (cache.profileId) {
+          mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
+        }
+        scheduleRefetch();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, scheduleRefetch)
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
-      .on("postgres_changes", { event: "*", schema: "public", table: "delivery_messages" }, scheduleRefetch)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "delivery_messages" }, (payload) => {
+        const m = payload.new as any;
+        if (cache.userId) {
+          mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
+        }
+        scheduleRefetch();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "delivery_messages" }, scheduleRefetch)
+      // 🔴 Présence en temps réel : si un participant se connecte/déconnecte, on met à jour le badge
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_presence" }, (payload) => {
+        const row = (payload.new || payload.old) as any;
+        if (!row?.user_id) return;
+        setConversations((prev) => {
+          const next = prev.map((c) => {
+            if (c.participant.userId !== row.user_id) return c;
+            return { ...c, participant: { ...c.participant, isOnline: !!row.is_online } };
+          });
+          cache.conversations = next;
+          return next;
+        });
+      })
       .subscribe();
 
     return () => {
