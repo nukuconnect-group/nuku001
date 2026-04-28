@@ -1,7 +1,16 @@
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import { useSeoSettings } from "@/hooks/useSeoSettings";
 
 const BASE_URL = "https://www.nukuconnect.com";
+
+/** Build a canonical URL stripped of tracking params (srsltid, gclid, fbclid, utm_*, ...). */
+const buildCanonical = (path: string): string => {
+  // Keep only the pathname; drop query + hash entirely so Google consolidates
+  // /?srsltid=... and / on the same canonical entry.
+  const cleanPath = path.split("?")[0].split("#")[0] || "/";
+  return `${BASE_URL}${cleanPath}`;
+};
 const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 const SITE_NAME = "NUKUCONNECT";
 
