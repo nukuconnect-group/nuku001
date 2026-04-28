@@ -161,7 +161,7 @@ const WithdrawalPanel = () => {
             Demander un retrait
           </CardTitle>
           <CardDescription className="text-[10px] sm:text-xs">
-            Minimum 500 FCFA · Traitement sous 24-48h
+            Minimum 500 FCFA · Traitement sous 24-48h · Vos gains sont crédités dès qu'un paiement est initié.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
