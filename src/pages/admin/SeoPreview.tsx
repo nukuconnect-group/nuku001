@@ -265,17 +265,44 @@ const SeoPreview = () => {
               <a href={route} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
             </Button>
           </div>
-          {!known ? (
+          {!slugShapeOk ? (
+            <p className="text-[11px] text-destructive flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Slug invalide. Format attendu : minuscules, chiffres, tirets et "/" uniquement.
+            </p>
+          ) : !known ? (
             <p className="text-[11px] text-amber-600 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> Route inconnue. Vérifiez l'orthographe ou choisissez une suggestion.
+              <AlertTriangle className="w-3 h-3" /> Route inconnue (normalisée : <span className="font-mono">{normalizedRoute}</span>). Aucun tag SEO ne sera affiché tant que vous ne choisissez pas une route existante.
             </p>
           ) : (
             <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> Route valide.
+              <CheckCircle2 className="w-3 h-3" /> Route valide{normalizedRoute !== route && <> (normalisée : <span className="font-mono">{normalizedRoute}</span>)</>}.
             </p>
           )}
         </CardContent>
       </Card>
+
+      {!routeOk && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="py-6 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-destructive">Affichage des balises SEO bloqué.</p>
+              <p className="text-muted-foreground mt-1">
+                La route normalisée <span className="font-mono">{normalizedRoute || "(vide)"}</span> n'est pas reconnue par l'application.
+                Pour éviter de prévisualiser des tags qui ne correspondent à aucune page réelle, l'aperçu, l'historique et la récupération live sont désactivés.
+              </p>
+              {suggestions.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {suggestions.slice(0, 6).map(s => (
+                    <button key={s} onClick={() => setRoute(s)} className="text-[11px] px-2 py-0.5 rounded bg-muted hover:bg-muted/80 font-mono">{s}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {routeOk && (<></>)}
 
       {/* Computed tags */}
       <Card>
