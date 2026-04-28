@@ -196,7 +196,7 @@ export const useProducts = () => {
         if (error) throw error;
         const allProducts = await enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
         const products = filterOutFormations(allProducts);
-        cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 5); // 6h
+        cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 5); // 5 min
         return products;
       } catch (e) {
         console.warn("Supabase client failed, trying direct fetch:", e);
