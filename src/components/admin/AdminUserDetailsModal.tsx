@@ -286,7 +286,38 @@ export default function AdminUserDetailsModal({ user, open, onClose, onUpdated }
 
         {/* Password & ban actions */}
         <div className="space-y-3 pt-3 border-t border-border">
-          <h3 className="text-xs font-semibold text-foreground">Sécurité du compte</h3>
+          <h3 className="text-xs font-semibold text-foreground">Sécurité du compte & accès</h3>
+
+          {/* Email confirmation / access recovery — useful when the original email failed */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleResendConfirmation}
+              disabled={loading === "resend_confirm" || !user.email || !!user.email_confirmed_at}
+              className="h-8 gap-2 text-xs"
+              title={user.email_confirmed_at ? "Email déjà confirmé" : "Renvoyer le lien d'activation du compte"}
+            >
+              {loading === "resend_confirm" ? <Loader2 className="w-3 h-3 animate-spin" /> : <MailCheck className="w-3 h-3" />}
+              Renvoyer email de confirmation
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSendMagicLink}
+              disabled={loading === "magic" || !user.email || !user.email_confirmed_at}
+              className="h-8 gap-2 text-xs"
+              title={!user.email_confirmed_at ? "Confirmez d'abord l'email" : "Envoyer un lien magique de connexion"}
+            >
+              {loading === "magic" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              Lien magique de connexion
+            </Button>
+          </div>
+          {!user.email_confirmed_at && user.email && (
+            <p className="text-[10px] text-amber-600 -mt-1">
+              ⚠️ Email non confirmé — l'utilisateur ne peut pas se connecter tant qu'il n'a pas activé son compte.
+            </p>
+          )}
 
           <div className="space-y-2">
             <Button
