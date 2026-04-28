@@ -417,89 +417,136 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               <div className="h-2 bg-muted/40" />
 
-              {/* Country */}
+              {/* Country — inline editable */}
               <div className="py-1">
-                <div className="px-4 py-3.5 border-b border-border/20">
-                  <div className="flex items-center gap-3.5 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                <div className="px-4 py-3 border-b border-border/20">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       <Globe className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <span className="text-[13px] font-medium tracking-tight">Pays</span>
-                  </div>
-                  <div className="ml-12">
-                    <p className="text-[12px] text-muted-foreground">📍 {profile?.location || "Togo"}</p>
+                    <span className="text-[15px] font-medium tracking-tight flex-shrink-0">Pays</span>
+                    <div className="flex-1 min-w-0 flex items-center justify-end gap-2">
+                      {isCountryEditing ? (
+                        <Select
+                          value={profileCountry}
+                          onValueChange={(v) => handleSaveCountry(v)}
+                          disabled={isSavingCountry}
+                        >
+                          <SelectTrigger className="h-8 text-[14px] w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <span className="text-[14px] text-muted-foreground truncate">📍 {profileCountry || "Togo"}</span>
+                          <button
+                            onClick={() => setIsCountryEditing(true)}
+                            className="text-[12px] font-semibold text-primary hover:underline flex-shrink-0"
+                          >
+                            Modifier
+                          </button>
+                        </>
+                      )}
+                      {isSavingCountry && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                    </div>
                   </div>
                 </div>
 
                 {/* Help, Support & Settings */}
                 <Link to="/aide" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
-                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                     <HelpCircle className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Centre d'assistance</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Centre d'assistance</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
                 <button
                   onClick={() => { onClose(); window.open("https://wa.me/22891201468", "_blank"); }}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
                     <Phone className="w-4 h-4 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <span className="text-[13px] font-medium tracking-tight block">Support WhatsApp</span>
-                    <span className="text-[10px] text-muted-foreground">+228 91 20 14 68</span>
+                    <span className="text-[15px] font-medium tracking-tight block">Support WhatsApp</span>
+                    <span className="text-[11px] text-muted-foreground">+228 91 20 14 68</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </button>
                 <button
                   onClick={() => { onClose(); navigate("/aide?chat=1"); }}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Headphones className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Support client</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Support client</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </button>
                 <Link to="/settings" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
-                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                     <Settings className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Paramètres</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Paramètres</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
 
-                {/* Theme selector */}
-                <div className="px-4 py-3 border-b border-border/20">
-                  <div className="flex items-center gap-3.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                {/* Apparence — collapsible: user clicks first, then chooses */}
+                <div className="border-b border-border/20">
+                  <button
+                    onClick={() => setAppearanceOpen((v) => !v)}
+                    className="flex items-center gap-3.5 px-4 py-3.5 w-full text-left hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : theme === "light" ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Monitor className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                    <span className="flex-1 text-[13px] font-medium tracking-tight">Apparence</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 ml-12">
-                    {([
-                      { value: "light", label: "Clair", Icon: Sun },
-                      { value: "dark", label: "Sombre", Icon: Moon },
-                      { value: "system", label: "Auto", Icon: Monitor },
-                    ] as { value: ThemeMode; label: string; Icon: typeof Sun }[]).map(({ value, label, Icon }) => (
-                      <button
-                        key={value}
-                        onClick={() => setTheme(value)}
-                        className={`flex flex-col items-center gap-1 py-2 px-1 rounded-md border text-[10px] transition-colors ${
-                          theme === value
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background hover:bg-muted text-foreground"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        <span className="font-medium">{label}</span>
-                      </button>
-                    ))}
-                  </div>
+                    <div className="flex-1">
+                      <span className="text-[15px] font-medium tracking-tight block">Apparence</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {theme === "dark" ? "Sombre" : theme === "light" ? "Clair" : "Auto (système)"}
+                      </span>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-muted-foreground/40 flex-shrink-0 transition-transform ${appearanceOpen ? "rotate-90" : ""}`} />
+                  </button>
+
+                  {appearanceOpen && (
+                    <div className="px-4 pb-3 -mt-1 space-y-1.5">
+                      {([
+                        { value: "light", label: "Clair", desc: "Fond clair en permanence", Icon: Sun },
+                        { value: "dark", label: "Sombre", desc: "Fond sombre en permanence", Icon: Moon },
+                        { value: "system", label: "Auto", desc: "Suit le réglage du système", Icon: Monitor },
+                      ] as { value: ThemeMode; label: string; desc: string; Icon: typeof Sun }[]).map(({ value, label, desc, Icon }) => {
+                        const active = theme === value;
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => setTheme(value)}
+                            className={`flex items-center gap-3 w-full p-2.5 rounded-lg border transition-colors text-left ${
+                              active
+                                ? "border-primary bg-primary/10"
+                                : "border-border bg-background hover:bg-muted"
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${active ? "bg-primary/20" : "bg-muted/60"}`}>
+                              <Icon className={`w-4 h-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-[14px] font-semibold block ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
+                              <span className="text-[11px] text-muted-foreground">{desc}</span>
+                            </div>
+                            {active && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </nav>
