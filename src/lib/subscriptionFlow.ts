@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
 
 export type MembershipPlanId = "free" | "pro" | "business" | "enterprise";
 export type MembershipBilling = "monthly" | "annual";
@@ -129,32 +130,12 @@ export async function activateMembership({
     if (error) throw error;
   }
 
-  let { data: { session } } = await supabase.auth.getSession();
-  // Force a refresh to ensure the access token isn't expired/stale
-  if (session?.refresh_token) {
-    const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
-    if (refreshed?.session) session = refreshed.session;
-  }
-  if (!session?.access_token) {
-    throw new Error("Session expirée. Veuillez vous reconnecter pour finaliser votre abonnement.");
-  }
-
-  const { data: subData, error: subscriptionError } = await supabase.functions.invoke(
-    "update-subscription",
-    {
-      body: {
-        plan: planId,
-        billing_period: billing,
-        payment_identifier: paymentProof?.identifier,
-        payment_tx_reference: paymentProof?.tx_reference,
-      },
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    }
-  );
-
-  if (subscriptionError) throw subscriptionError;
+  const subData = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
+    plan: planId,
+    billing_period: billing,
+    payment_identifier: paymentProof?.identifier,
+    payment_tx_reference: paymentProof?.tx_reference,
+  });
   if (subData?.error) throw new Error(subData.error);
 
   const celebration = buildCelebration(planId, maxProducts);

@@ -14,6 +14,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 import visaMcLogo from "@/assets/visa-mastercard.png";
@@ -118,13 +119,10 @@ const Plans = () => {
   const activateSubscription = useCallback(async (planId: string, paymentProof?: { identifier?: string; tx_reference?: string }) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
-    let { data: { session } } = await supabase.auth.getSession();
-    // Refresh to avoid 401 from a stale access token
-    if (session?.refresh_token) {
-      const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
-      if (refreshed?.session) session = refreshed.session;
-    }
-    if (!session?.access_token) {
+    let session;
+    try {
+      session = await getFreshAuthSession();
+    } catch {
       toast({
         title: "Session expirée",
         description: "Veuillez vous reconnecter pour finaliser votre abonnement.",
@@ -134,19 +132,13 @@ const Plans = () => {
       return;
     }
 
-    const { data, error } = await supabase.functions.invoke("update-subscription", {
-      body: {
-        plan: planId,
-        billing_period: "annual",
-        payment_identifier: paymentProof?.identifier,
-        payment_tx_reference: paymentProof?.tx_reference,
-      },
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
+    const data = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
+      plan: planId,
+      billing_period: "annual",
+      payment_identifier: paymentProof?.identifier,
+      payment_tx_reference: paymentProof?.tx_reference,
+    }, session);
 
-    if (error) throw error;
     if (data?.error) throw new Error(data.error);
 
     await supabase.from("notifications").insert({
@@ -161,17 +153,24 @@ const Plans = () => {
     setPaymentStep(null);
     setPollingEnabled(false);
     setSubscribing(null);
-  }, [refreshSubscription, toast]);
+  }, [navigate, refreshSubscription, toast]);
 
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     if (paymentStep) {
-      activateSubscription(paymentStep, {
+      void activateSubscription(paymentStep, {
         identifier: paymentIdentifier,
         tx_reference: data?.tx_reference,
+      }).catch((error: any) => {
+        setSubscribing(null);
+        toast({
+          title: "Erreur d'abonnement",
+          description: error?.message || "Impossible d'activer votre abonnement.",
+          variant: "destructive",
+        });
       });
     }
-  }, [paymentIdentifier, paymentStep, activateSubscription]);
+  }, [paymentIdentifier, paymentStep, activateSubscription, toast]);
 
   const handlePaymentFailed = useCallback(() => {
     setPollingEnabled(false);

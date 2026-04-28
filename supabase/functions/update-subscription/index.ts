@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
@@ -8,7 +8,10 @@ const corsHeaders = {
 };
 
 const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number; annualPrice: number }> = {
-  free: { maxProducts: 3, monthlyPrice: 0, annualPrice: 0 },
+  free: { maxProducts: 5, monthlyPrice: 0, annualPrice: 0 },
+  starter: { maxProducts: 15, monthlyPrice: 2500, annualPrice: 2500 },
+  standard: { maxProducts: 30, monthlyPrice: 5000, annualPrice: 5000 },
+  premium: { maxProducts: 9999, monthlyPrice: 10000, annualPrice: 10000 },
   pro: { maxProducts: 15, monthlyPrice: 5000, annualPrice: 50000 },
   business: { maxProducts: 9999, monthlyPrice: 15000, annualPrice: 150000 },
   enterprise: { maxProducts: 9999, monthlyPrice: 50000, annualPrice: 500000 },
@@ -17,7 +20,7 @@ const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number; a
 const PAYMENT_VALIDITY_WINDOW_MS = 30 * 60 * 1000;
 
 const BodySchema = z.object({
-  plan: z.enum(["free", "pro", "business", "enterprise"]),
+  plan: z.enum(["free", "starter", "standard", "premium", "pro", "business", "enterprise"]),
   billing_period: z.enum(["monthly", "annual"]),
   payment_identifier: z.string().min(1).max(255).optional(),
   payment_tx_reference: z.string().min(1).max(255).optional(),
@@ -41,17 +44,16 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace("Bearer ", "").trim();
+    const userClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = user.id;
+    const userId = claimsData.claims.sub;
 
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
