@@ -289,15 +289,39 @@ export default function NukuAIAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Recent questions list */}
+      {/* Filters + Export + Detailed list with pagination */}
       <Card>
         <CardHeader className="p-3 sm:p-4 pb-2">
-          <CardTitle className="text-sm">Questions récentes (avec auteur et lieu)</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="text-sm flex items-center gap-2"><Filter className="w-4 h-4 text-primary" />Discussions détaillées</CardTitle>
+              <CardDescription className="text-[11px]">{filteredQuestions.length} résultat(s) — page {page}/{totalPages}</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="outline" size="sm" className="text-[11px] gap-1 h-8" onClick={exportDays}>
+                <Download className="w-3 h-3" />Jours CSV
+              </Button>
+              <Button variant="outline" size="sm" className="text-[11px] gap-1 h-8" onClick={exportTopQuestions}>
+                <Download className="w-3 h-3" />Top questions CSV
+              </Button>
+              <Button variant="hero" size="sm" className="text-[11px] gap-1 h-8" onClick={exportDetails}>
+                <Download className="w-3 h-3" />Discussions CSV
+              </Button>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="p-3 sm:p-4 pt-0">
-          <ScrollArea className="h-[280px]">
+        <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Question / utilisateur" className="h-8 text-xs" />
+            <Input value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} placeholder="Pays" className="h-8 text-xs" />
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-8 text-xs" />
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-8 text-xs" />
+          </div>
+          <ScrollArea className="h-[320px]">
             <div className="space-y-1.5">
-              {questions.slice(0, 50).map((q) => (
+              {pageRows.length === 0 ? (
+                <p className="text-xs text-center text-muted-foreground py-6">Aucun résultat pour ces filtres.</p>
+              ) : pageRows.map((q) => (
                 <div key={q.id} className="p-2 rounded-md bg-muted/30 text-[11px]">
                   <p className="text-foreground/90 line-clamp-2">{q.question}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-[9px] text-muted-foreground">
@@ -309,6 +333,15 @@ export default function NukuAIAnalytics() {
               ))}
             </div>
           </ScrollArea>
+          <div className="flex items-center justify-between pt-1">
+            <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
+              <ChevronLeft className="w-3 h-3" />Précédent
+            </Button>
+            <span className="text-[10px] text-muted-foreground">Page {page} / {totalPages}</span>
+            <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
+              Suivant<ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
