@@ -230,6 +230,7 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       if (type === "product") {
         await sendModerationEmail(userId, itemName, "approved");
       }
+    } else {
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
