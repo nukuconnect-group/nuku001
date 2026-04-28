@@ -64,6 +64,16 @@ const Cart = () => {
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
   const pendingCheckoutRef = useRef<any>(null);
 
+  // Persistent payment status panel (visible above the form)
+  const [payStatus, setPayStatus] = useState<
+    | { kind: "idle" }
+    | { kind: "initiating" }
+    | { kind: "pending"; message: string }
+    | { kind: "success"; message: string; details?: { invoiceNumber?: string; amount: number; method: string; orderIds: string[] } }
+    | { kind: "failed"; message: string }
+    | { kind: "expired"; message: string }
+  >({ kind: "idle" });
+
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
     setBilling(prev => ({ ...prev, email: sessionUser.email || "" }));
