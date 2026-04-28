@@ -82,6 +82,28 @@ const FormationDetail = () => {
     load();
   }, [id]);
 
+  // For paid formations, fetch a short-lived signed URL for the PDF whenever enrollment is confirmed
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      if (!formation || !userId) { setSignedPdfUrl(null); return; }
+      if (!formation.is_paid || !isEnrolled || !formation.source_document_url) {
+        setSignedPdfUrl(null);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("formation-document-url", {
+        body: { formation_id: formation.id, expires_in: 600 },
+      });
+      if (!cancelled && !error && (data as any)?.url) {
+        setSignedPdfUrl((data as any).url as string);
+      }
+    };
+    refresh();
+    // Refresh signed URL every 8 minutes (URL valid 10 min)
+    const t = setInterval(refresh, 8 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [formation, userId, isEnrolled]);
+
   const enroll = async () => {
     if (!userId || !formation || enrolling) return;
     setEnrolling(true);
