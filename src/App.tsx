@@ -51,6 +51,7 @@ const LearnerDashboard = lazy(() => import("./pages/LearnerDashboard"));
 const Plans = lazy(() => import("./pages/Plans"));
 const Tokens = lazy(() => import("./pages/Tokens"));
 const DeliveryTracking = lazy(() => import("./pages/DeliveryTracking"));
+const PublicDeliveryTracking = lazy(() => import("./pages/PublicDeliveryTracking"));
 const About = lazy(() => import("./pages/About"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -211,6 +212,7 @@ const App = () => {
                   <Route path="/jetons" element={<Tokens />} />
                   <Route path="/tokens" element={<Tokens />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
+                  <Route path="/tracking/:token" element={<PublicDeliveryTracking />} />
                   <Route path="/a-propos" element={<About />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/favoris" element={<Favorites />} />
