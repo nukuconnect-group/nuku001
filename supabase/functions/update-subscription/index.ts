@@ -4,8 +4,15 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Max-Age": "86400",
 };
+
+const DEBUG = (Deno.env.get("DEBUG_EDGE") ?? "") === "1";
+function dbg(...args: unknown[]) {
+  if (DEBUG) console.log("[update-subscription]", ...args);
+}
 
 const VALID_PLANS: Record<string, { maxProducts: number; monthlyPrice: number; annualPrice: number }> = {
   free: { maxProducts: 5, monthlyPrice: 0, annualPrice: 0 },
@@ -28,13 +35,14 @@ const BodySchema = z.object({
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+    dbg("auth header present:", !!authHeader, "starts with Bearer:", authHeader?.startsWith("Bearer "));
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+      return new Response(JSON.stringify({ error: "Non autorisé", reason: "missing_bearer" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -46,14 +54,28 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "").trim();
     const userClient = createClient(supabaseUrl, supabaseAnonKey);
+
+    let userId: string | undefined;
     const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Non autorisé" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (claimsData?.claims?.sub) {
+      userId = claimsData.claims.sub;
+    } else {
+      // Fallback: validate by hitting auth.getUser with the bearer token
+      dbg("getClaims failed, falling back to getUser", claimsError?.message);
+      const tokenClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
       });
+      const { data: userData, error: userError } = await tokenClient.auth.getUser(token);
+      if (userError || !userData?.user?.id) {
+        dbg("getUser failed", userError?.message);
+        return new Response(
+          JSON.stringify({ error: "Non autorisé", reason: "invalid_token", debug: DEBUG ? (claimsError?.message ?? userError?.message) : undefined }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      userId = userData.user.id;
     }
-    const userId = claimsData.claims.sub;
+    dbg("userId resolved:", userId);
 
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
