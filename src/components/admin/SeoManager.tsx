@@ -118,6 +118,9 @@ const SeoManager = () => {
   const persist = async (extras: Partial<SeoRow> = {}) => {
     if (!selected) return false;
     setSaving(selected.id);
+    const cleanCanonical = selected.canonical_path
+      ? normalizeSeoSlug(selected.canonical_path)
+      : selected.canonical_path;
     const { error } = await (supabase as any)
       .from("seo_settings")
       .update({
@@ -125,44 +128,68 @@ const SeoManager = () => {
         description: selected.description,
         keywords: selected.keywords,
         og_image_url: selected.og_image_url,
-        canonical_path: selected.canonical_path,
+        canonical_path: cleanCanonical,
         no_index: selected.no_index,
         ...extras,
       })
       .eq("id", selected.id);
     setSaving(null);
     if (error) {
-      toast({ title: "Erreur d'enregistrement", description: error.message, variant: "destructive" });
+      const msg = error.message || "Erreur";
+      let friendly = msg;
+      if (msg.includes("unknown_route")) friendly = "Cette route n'existe pas dans l'application. Enregistrez en brouillon ou ajoutez-la à la liste autorisée.";
+      else if (msg.includes("invalid_slug")) friendly = "Le slug n'est pas valide.";
+      toast({ title: "Erreur d'enregistrement", description: friendly, variant: "destructive" });
       return false;
     }
     return true;
   };
 
-  // Save as draft (does not affect visitors)
+  // Save as draft (does not affect visitors). Cancels any pending schedule.
   const saveDraft = async () => {
-    const ok = await persist({ is_draft: true });
+    const ok = await persist({ is_draft: true, scheduled_publish_at: null } as any);
     if (ok) {
       toast({ title: "Brouillon enregistré", description: "Aucun changement public. Publiez quand vous êtes prêt." });
       load();
     }
   };
 
-  // Publish (validates first, requires confirmation, invalidates cache)
+  // Publish immediately
   const doPublish = async () => {
     if (!selected) return;
     if (!routeValidation.ok) {
       toast({ title: "Publication bloquée", description: routeValidation.message, variant: "destructive" });
       return;
     }
-    const ok = await persist({ is_draft: false, published_at: new Date().toISOString() } as any);
+    const ok = await persist({ is_draft: false, published_at: new Date().toISOString(), scheduled_publish_at: null } as any);
     if (!ok) return;
     clearSeoCache();
     toast({ title: "Publié", description: `${selected.route} • cache invalidé.` });
     load();
   };
 
+  // Schedule publication for later (kept as draft until time arrives)
+  const doSchedule = async () => {
+    if (!selected || !scheduleAt) return;
+    if (!routeValidation.ok) {
+      toast({ title: "Planification bloquée", description: routeValidation.message, variant: "destructive" });
+      return;
+    }
+    const iso = new Date(scheduleAt).toISOString();
+    if (new Date(iso).getTime() <= Date.now()) {
+      toast({ title: "Date invalide", description: "Choisissez une date dans le futur.", variant: "destructive" });
+      return;
+    }
+    const ok = await persist({ is_draft: true, scheduled_publish_at: iso } as any);
+    if (ok) {
+      toast({ title: "Publication planifiée", description: `Sera publié automatiquement le ${new Date(iso).toLocaleString()}.` });
+      setScheduleAt("");
+      load();
+    }
+  };
+
   const addRoute = async () => {
-    const route = newRoute.trim();
+    const route = normalizeSeoSlug(newRoute);
     if (!newRouteValidation.ok) {
       toast({ title: "Route invalide", description: newRouteValidation.message, variant: "destructive" });
       return;
