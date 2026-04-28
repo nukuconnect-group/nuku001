@@ -77,24 +77,61 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Helper: actually send the action link via the transactional email pipeline.
+    // generateLink() alone does NOT trigger any email — it just produces the URL.
+    const sendActionEmail = async (
+      kind: "recovery" | "magiclink" | "signup",
+      email: string,
+      actionLink: string,
+      name?: string,
+    ) => {
+      const idempotencyKey = `admin-${kind}-${targetId}-${Date.now()}`;
+      const { error } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "admin-account-link",
+          recipientEmail: email,
+          idempotencyKey,
+          templateData: {
+            name: name || "",
+            actionLink,
+            kind,
+          },
+        },
+      });
+      if (error) {
+        console.error(`send-transactional-email (${kind}) failed`, error);
+      }
+      return { idempotencyKey, send_error: error?.message || null };
+    };
+
     switch (body.action) {
       case "send_password_reset": {
         const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
         if (!targetUser?.user?.email) return json({ error: "User has no email" }, 400);
         const redirectTo = body.redirect_to || `${new URL(req.url).origin.replace("functions", "lovable")}/auth?type=recovery`;
-        // Generate magic recovery link
         const { data, error } = await admin.auth.admin.generateLink({
           type: "recovery",
           email: targetUser.user.email,
           options: { redirectTo },
         });
         if (error) return json({ error: error.message }, 400);
-        await audit("send_password_reset", { email: targetUser.user.email });
+        const actionLink = data?.properties?.action_link;
+        if (!actionLink) return json({ error: "Lien introuvable" }, 500);
+        const { send_error, idempotencyKey } = await sendActionEmail(
+          "recovery",
+          targetUser.user.email,
+          actionLink,
+          (targetUser.user.user_metadata as any)?.full_name,
+        );
+        await audit("send_password_reset", { email: targetUser.user.email, send_error, idempotencyKey });
         return json({
-          success: true,
-          message: "Lien de réinitialisation généré",
-          action_link: data?.properties?.action_link,
+          success: !send_error,
+          message: send_error
+            ? `Lien généré, mais l'envoi de l'email a échoué : ${send_error}`
+            : "Email de réinitialisation envoyé ✉️",
+          action_link: actionLink,
           email: targetUser.user.email,
+          email_idempotency_key: idempotencyKey,
         });
       }
 
@@ -158,8 +195,6 @@ Deno.serve(async (req) => {
 
       case "resend_confirmation_email": {
         // Re-send the email-confirmation link for users whose email is not yet confirmed.
-        // Uses generateLink(type: "signup") which triggers the auth-email-hook with the
-        // signup template — same flow as the original confirmation email.
         const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
         if (!targetUser?.user?.email) return json({ error: "L'utilisateur n'a pas d'email" }, 400);
         if (targetUser.user.email_confirmed_at) {
@@ -171,17 +206,27 @@ Deno.serve(async (req) => {
         const { data, error } = await admin.auth.admin.generateLink({
           type: "signup",
           email: targetUser.user.email,
-          // password is required by GoTrue API for signup links — value is unused since the user already exists
           password: crypto.randomUUID() + "Aa1!",
           options: { redirectTo },
         });
         if (error) return json({ error: error.message }, 400);
-        await audit("resend_confirmation_email", { email: targetUser.user.email });
+        const actionLink = data?.properties?.action_link;
+        if (!actionLink) return json({ error: "Lien introuvable" }, 500);
+        const { send_error, idempotencyKey } = await sendActionEmail(
+          "signup",
+          targetUser.user.email,
+          actionLink,
+          (targetUser.user.user_metadata as any)?.full_name,
+        );
+        await audit("resend_confirmation_email", { email: targetUser.user.email, send_error, idempotencyKey });
         return json({
-          success: true,
-          message: "Email de confirmation renvoyé",
-          action_link: data?.properties?.action_link,
+          success: !send_error,
+          message: send_error
+            ? `Lien généré, mais l'envoi a échoué : ${send_error}`
+            : "Email de confirmation envoyé ✉️",
+          action_link: actionLink,
           email: targetUser.user.email,
+          email_idempotency_key: idempotencyKey,
         });
       }
 
@@ -198,12 +243,23 @@ Deno.serve(async (req) => {
           options: { redirectTo },
         });
         if (error) return json({ error: error.message }, 400);
-        await audit("send_magic_link", { email: targetUser.user.email });
+        const actionLink = data?.properties?.action_link;
+        if (!actionLink) return json({ error: "Lien introuvable" }, 500);
+        const { send_error, idempotencyKey } = await sendActionEmail(
+          "magiclink",
+          targetUser.user.email,
+          actionLink,
+          (targetUser.user.user_metadata as any)?.full_name,
+        );
+        await audit("send_magic_link", { email: targetUser.user.email, send_error, idempotencyKey });
         return json({
-          success: true,
-          message: "Lien magique envoyé",
-          action_link: data?.properties?.action_link,
+          success: !send_error,
+          message: send_error
+            ? `Lien généré, mais l'envoi a échoué : ${send_error}`
+            : "Lien magique envoyé par email ✨",
+          action_link: actionLink,
           email: targetUser.user.email,
+          email_idempotency_key: idempotencyKey,
         });
       }
 
