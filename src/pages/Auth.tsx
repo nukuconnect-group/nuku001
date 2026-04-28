@@ -173,11 +173,19 @@ const Auth = () => {
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
 
   // Capture referral code from URL and persist it — switch to signup tab
+  const [activeRefCode, setActiveRefCode] = useState<string | null>(
+    typeof window !== "undefined" ? localStorage.getItem("nukuconnect-ref") : null
+  );
   useEffect(() => {
     const refCode = new URLSearchParams(window.location.search).get("ref");
     if (refCode) {
       localStorage.setItem("nukuconnect-ref", refCode);
+      setActiveRefCode(refCode);
       setAuthMode("signup"); // Show signup form when opening a referral link
+      toast({
+        title: "🎁 Invitation parrainage détectée",
+        description: `Code « ${refCode} » appliqué. Créez votre compte pour activer votre parrainage.`,
+      });
     }
   }, []);
 
