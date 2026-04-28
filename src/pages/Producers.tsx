@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import networkHeroImg from "@/assets/network-hero.jpg";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import LocationBadge from "@/components/profile/LocationBadge";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -86,7 +87,7 @@ const Producers = () => {
         name: p.business_name?.trim() || p.full_name?.trim() || t("net.suppliers"),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
-        location: p.location || "Non spécifié",
+        location: p.location || "",
         verified: p.is_verified,
         products: productCounts[p.id] || 0,
         sales: salesCounts[p.id] || 0,
@@ -298,9 +299,8 @@ const Producers = () => {
                         <h3 className="font-heading font-bold text-foreground text-xs sm:text-sm truncate">
                           {producer.name}
                         </h3>
-                        <div className="flex items-center justify-center gap-1 text-muted-foreground text-[9px] sm:text-[10px]">
-                          <MapPin className="w-2.5 h-2.5" />
-                          <span className="truncate">{producer.location}</span>
+                        <div className="flex justify-center">
+                          <LocationBadge location={producer.location} size="sm" />
                         </div>
 
                         {/* Stats row */}
