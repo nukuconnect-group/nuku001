@@ -577,16 +577,6 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                         <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
                         <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                       </button>
-                      <button
-                        onClick={copyLink}
-                        className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                          <Copy className="w-4 h-4 text-secondary" />
-                        </div>
-                        <span className="flex-1 text-[15px] font-medium tracking-tight">Copier le lien</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-                      </button>
                     </>
                   );
                 })()}
