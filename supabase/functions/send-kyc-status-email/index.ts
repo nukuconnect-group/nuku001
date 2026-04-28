@@ -75,15 +75,16 @@ Deno.serve(async (req: Request) => {
     const loginUrl = "https://nukuconnect.com/mon-compte";
 
     // Forward to send-transactional-email with idempotency to prevent dupes.
-    // Use direct fetch with service-role key so we (a) always have a valid JWT
-    // for the verify_jwt=true target and (b) can surface the actual error body.
+    // The target function has gateway JWT verification enabled, so reuse the
+    // already-validated admin user's Authorization header. Service-role keys are
+    // secrets for database access, not valid gateway user JWTs in this project.
     const idempotencyKey = `kyc-${body.kyc_id}-${body.decision}`;
     const sendResp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceKey}`,
-        apikey: serviceKey,
+        Authorization: authHeader,
+        apikey: anonKey,
       },
       body: JSON.stringify({
         templateName: "kyc-status",
