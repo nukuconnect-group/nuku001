@@ -216,6 +216,7 @@ const App = () => {
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />
