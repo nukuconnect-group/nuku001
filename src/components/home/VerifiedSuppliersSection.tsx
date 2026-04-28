@@ -68,13 +68,7 @@ const VerifiedSuppliersSection = () => {
 
   if (loading || suppliers.length === 0) return null;
 
-  // Extraire le pays — uniquement à partir de location, sinon vide (jamais "Afrique" générique)
-  const extractCountry = (location: string | null): string | null => {
-    if (!location) return null;
-    const parts = location.split(",").map((s) => s.trim()).filter(Boolean);
-    if (parts.length === 0) return null;
-    return parts[parts.length - 1];
-  };
+  // (Pays extrait par LocationBadge via parseLocation)
 
   const getInitials = (name: string): string =>
     name
