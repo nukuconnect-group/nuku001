@@ -341,9 +341,15 @@ const FormationDetail = () => {
 
                   {isExpanded && (
                     <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 border-t border-border space-y-3">
-                      {mod.description && (
-                        <p className="text-xs text-muted-foreground whitespace-pre-line">{mod.description}</p>
-                      )}
+                      {mod.description ? (
+                        <div className="rounded-md bg-muted/40 p-3">
+                          <p className="text-xs sm:text-sm text-foreground whitespace-pre-line leading-relaxed">{mod.description}</p>
+                        </div>
+                      ) : !mod.content_url ? (
+                        <p className="text-xs text-muted-foreground italic">
+                          Contenu textuel à venir pour ce chapitre.
+                        </p>
+                      ) : null}
 
                       {/* Content viewer — self-paced learning */}
                       {mod.content_url && mod.content_type === "video" && (() => {
