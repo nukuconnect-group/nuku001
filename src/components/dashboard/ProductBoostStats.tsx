@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import {
   Rocket, Clock, CalendarDays, TrendingUp, Eye, MousePointerClick,
   ShieldCheck, QrCode, Sparkles, CheckCircle2, MessageCircle, ShoppingCart,
-  AlertTriangle, Users, XCircle,
+  AlertTriangle, Users, XCircle, History, Filter, Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProductBoosts } from "@/hooks/useBoosts";
