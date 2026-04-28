@@ -260,6 +260,9 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       } else {
         await supabase.from("demands").update({ status: "rejected" }).eq("id", id);
       }
+      if (type === "product") {
+        await sendModerationEmail(userId, itemName, "rejected", modResult.reason);
+      }
     }
 
     return new Response(JSON.stringify({
