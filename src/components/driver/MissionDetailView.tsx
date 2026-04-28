@@ -626,15 +626,42 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
         {/* GPS status banner */}
         {gpsError && (
-          <div className="absolute top-16 left-3 right-3 z-[11] bg-amber-500/95 text-white text-[11px] font-medium rounded-xl px-3 py-2 shadow-md flex items-center gap-2">
+          <button
+            onClick={() => setShowGpsHelp(true)}
+            className="absolute top-16 left-3 right-3 z-[11] bg-amber-500/95 text-white text-[11px] font-medium rounded-xl px-3 py-2 shadow-md flex items-center gap-2 text-left hover:bg-amber-600 transition"
+          >
             <Crosshair className="w-4 h-4 flex-shrink-0" />
-            <span>{gpsError}</span>
-          </div>
+            <span className="flex-1">{gpsError}</span>
+            <span className="text-[10px] underline opacity-90">Aide</span>
+          </button>
         )}
         {!gpsError && gpsAccuracy != null && (
           <div className="absolute bottom-4 left-3 z-[10] bg-background/90 backdrop-blur rounded-full px-3 py-1 shadow-md text-[10px] font-medium flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full ${gpsAccuracy < 20 ? "bg-emerald-500" : gpsAccuracy < 50 ? "bg-amber-500" : "bg-red-500"} animate-pulse`} />
             GPS ±{Math.round(gpsAccuracy)}m
+            {batterySaver && <span className="ml-1 text-emerald-600">🔋 éco</span>}
+          </div>
+        )}
+
+        {/* GPS help modal */}
+        {showGpsHelp && (
+          <div className="absolute inset-0 z-[100] bg-background/95 backdrop-blur flex items-center justify-center p-4">
+            <div className="max-w-sm w-full bg-card rounded-2xl shadow-2xl p-5 space-y-3 border border-border">
+              <div className="flex items-center gap-2">
+                <Crosshair className="w-5 h-5 text-primary" />
+                <h3 className="text-sm font-bold">Activer la localisation</h3>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-2">
+                <p><b className="text-foreground">1.</b> Vérifiez que le GPS de votre appareil est activé (paramètres → Localisation).</p>
+                <p><b className="text-foreground">2.</b> Dans votre navigateur, cliquez sur l'icône 🔒 à gauche de l'URL et autorisez la <b>localisation</b> pour ce site.</p>
+                <p><b className="text-foreground">3.</b> Sortez à l'air libre si possible — le GPS est moins précis à l'intérieur.</p>
+                <p><b className="text-foreground">4.</b> Rechargez la page après avoir autorisé l'accès.</p>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowGpsHelp(false)}>Fermer</Button>
+                <Button size="sm" className="flex-1" onClick={() => window.location.reload()}>Recharger</Button>
+              </div>
+            </div>
           </div>
         )}
 
