@@ -80,6 +80,8 @@ const Moderation = lazy(() => import("./pages/Moderation"));
 const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
 const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
 const AccountAccess = lazy(() => import("./pages/AccountAccess"));
+const Refunds = lazy(() => import("./pages/Refunds"));
+const Invoices = lazy(() => import("./pages/Invoices"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
