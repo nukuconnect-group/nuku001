@@ -524,39 +524,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   />
                 </div>
 
-                {/* Partager cette application — natif si dispo, sinon copie de lien */}
+                {/* Partager cette application */}
                 {(() => {
                   const SHARE_URL = "https://nukuconnect.com";
                   const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
-
-                  const copyLink = async () => {
-                    try {
-                      if (navigator.clipboard?.writeText) {
-                        await navigator.clipboard.writeText(SHARE_URL);
-                      } else {
-                        // Fallback ancien iOS / WebView : textarea + execCommand
-                        const ta = document.createElement("textarea");
-                        ta.value = SHARE_URL;
-                        ta.style.position = "fixed";
-                        ta.style.opacity = "0";
-                        document.body.appendChild(ta);
-                        ta.focus();
-                        ta.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(ta);
-                      }
-                      toast({
-                        title: "✅ Lien copié",
-                        description: "Vous pouvez maintenant le coller où vous voulez.",
-                      });
-                    } catch {
-                      toast({
-                        title: "Impossible de copier",
-                        description: SHARE_URL,
-                        variant: "destructive",
-                      });
-                    }
-                  };
 
                   const handleShare = async () => {
                     const shareData = { title: "NUKUCONNECT", text: SHARE_TEXT, url: SHARE_URL };
@@ -565,27 +536,24 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                         await navigator.share(shareData);
                         return;
                       } catch (err: any) {
-                        // L'utilisateur a annulé → on s'arrête sans rien faire
                         if (err?.name === "AbortError") return;
                       }
                     }
-                    // Pas de partage natif (ou échec non-AbortError) → copie
-                    copyLink();
+                    // Pas de partage natif → ouvrir le menu de partage personnalisé
+                    setShareOpen(true);
                   };
 
                   return (
-                    <>
-                      <button
-                        onClick={handleShare}
-                        className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Share2 className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-                      </button>
-                    </>
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Share2 className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                    </button>
                   );
                 })()}
 
