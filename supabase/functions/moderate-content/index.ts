@@ -101,6 +101,7 @@ serve(async (req) => {
     let userId: string = "";
     let imageUrl: string | null = null;
     let itemName: string = "";
+    let alreadyModerated: "approved" | "rejected" | null = null;
 
     if (type === "product") {
       const { data } = await supabase.from("products").select("*, profiles!products_producer_id_fkey(user_id, full_name)").eq("id", id).single();
@@ -109,6 +110,9 @@ serve(async (req) => {
       userId = data.profiles?.user_id || "";
       imageUrl = data.images?.[0] || null;
       itemName = data.name;
+      if (data.moderation_status === "approved" || data.moderation_status === "rejected") {
+        alreadyModerated = data.moderation_status;
+      }
     } else {
       const { data } = await supabase.from("demands").select("*").eq("id", id).single();
       if (!data) throw new Error("Demand not found");
@@ -116,6 +120,22 @@ serve(async (req) => {
       userId = data.user_id;
       imageUrl = data.image_url || null;
       itemName = data.title;
+      if (data.status === "rejected" || data.status === "active") {
+        // demands: 'active' acts as approved here — skip re-notification
+        alreadyModerated = data.status === "rejected" ? "rejected" : "approved";
+      }
+    }
+
+    // Idempotence: if the item has already been moderated, do NOT re-run AI,
+    // do NOT re-send notifications or emails. Simply return the existing decision.
+    if (alreadyModerated) {
+      return new Response(JSON.stringify({
+        approved: alreadyModerated === "approved",
+        already_moderated: true,
+        reason: content?.moderation_reason || null,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Verify caller owns the content (or is admin) — service calls bypass ownership
@@ -263,6 +283,24 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       }
       if (type === "product") {
         await sendModerationEmail(userId, itemName, "rejected", modResult.reason);
+      }
+    }
+
+    // Append a moderation log entry (for products only — table has product_id FK)
+    if (type === "product") {
+      try {
+        await supabase.from("moderation_logs").insert({
+          product_id: id,
+          decision: isApproved ? "approved" : "rejected",
+          reason: modResult.reason || null,
+          category_check: modResult.category_check || null,
+          content_safety: modResult.content_safety || null,
+          confidence: modResult.confidence ?? null,
+          raw_response: aiData,
+          prompt_summary: contentDescription.slice(0, 500),
+        });
+      } catch (e) {
+        console.warn("Failed to write moderation log:", e);
       }
     }
 
