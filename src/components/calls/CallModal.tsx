@@ -28,7 +28,12 @@ export default function CallModal() {
   const isInCall = status === "in-call";
 
   return (
-    <div className="fixed inset-0 z-[100] bg-gradient-to-b from-emerald-900/95 to-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-between py-12 px-6 animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={isIncoming ? `Appel entrant de ${meta.peerName}` : isOutgoing ? `Appel sortant vers ${meta.peerName}` : `En communication avec ${meta.peerName}`}
+      className="fixed inset-0 z-[100] bg-gradient-to-b from-emerald-900/95 to-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-between py-12 px-6 animate-fade-in"
+    >
       {/* Hidden audio element for remote stream */}
       <audio ref={audioRef} autoPlay playsInline />
 
@@ -41,13 +46,13 @@ export default function CallModal() {
           {meta.peerAvatar ? (
             <img src={meta.peerAvatar} alt={meta.peerName} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-emerald-700 flex items-center justify-center text-4xl font-bold">
+            <div className="w-full h-full bg-emerald-700 flex items-center justify-center text-4xl font-bold" aria-hidden="true">
               {meta.peerName.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
         <h2 className="text-2xl font-semibold">{meta.peerName}</h2>
-        <p className="text-sm text-white/70">
+        <p className="text-sm text-white/70" aria-live="assertive" aria-atomic="true">
           {isIncoming && "📞 Appel entrant…"}
           {isOutgoing && "Appel en cours…"}
           {isInCall && fmtDuration(durationSec)}
