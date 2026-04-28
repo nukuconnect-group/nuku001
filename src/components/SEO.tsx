@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useSeoSettings } from "@/hooks/useSeoSettings";
 
 const BASE_URL = "https://www.nukuconnect.com";
 const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
@@ -24,22 +25,32 @@ const SEO = ({
   jsonLd,
   noIndex = false,
 }: SEOProps) => {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Marketplace Agricole Intelligent d'Afrique`;
-  const canonicalUrl = url ? `${BASE_URL}${url}` : undefined;
-  const ogImage = image || DEFAULT_IMAGE;
+  // Override from DB (admin-editable). Falls back silently to coded values.
+  const override = useSeoSettings(url);
+  const finalTitle = override?.title || title;
+  const finalDescription = override?.description || description;
+  const finalImage = override?.og_image_url || image;
+  const finalUrl = override?.canonical_path || url;
+  const finalNoIndex = override?.no_index ?? noIndex;
+  const keywords = override?.keywords;
+
+  const fullTitle = finalTitle ? `${finalTitle} | ${SITE_NAME}` : `${SITE_NAME} - Marketplace Agricole Intelligent d'Afrique`;
+  const canonicalUrl = finalUrl ? `${BASE_URL}${finalUrl}` : undefined;
+  const ogImage = finalImage || DEFAULT_IMAGE;
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      <meta name="description" content={description} />
-      {noIndex && <meta name="robots" content="noindex, nofollow" />}
+      <meta name="description" content={finalDescription} />
+      {keywords && <meta name="keywords" content={keywords} />}
+      {finalNoIndex && <meta name="robots" content="noindex, nofollow" />}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={finalDescription} />
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
@@ -49,7 +60,7 @@ const SEO = ({
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={finalDescription} />
       <meta name="twitter:image" content={ogImage} />
 
       {/* JSON-LD */}
