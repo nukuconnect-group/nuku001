@@ -285,7 +285,7 @@ const Producers = () => {
 
                       {/* Avatar overlapping cover - toujours avatar réel ou défaut, jamais image aléatoire */}
                       <div className="flex justify-center -mt-8 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-3 border-card shadow-lg bg-card">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-none overflow-hidden border-3 border-card shadow-lg bg-card">
                           <img
                             src={producer.avatar || defaultAvatar}
                             alt={producer.name}

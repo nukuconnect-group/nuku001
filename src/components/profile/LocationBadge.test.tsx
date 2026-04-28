@@ -29,6 +29,13 @@ describe("LocationBadge — non-regression", () => {
     expect(screen.getByTestId("location-badge").textContent).toContain("🇬🇭");
   });
 
+  it("uses square borders (no rounded-full)", () => {
+    render(<LocationBadge location="Lomé, Togo" />);
+    const el = screen.getByTestId("location-badge");
+    expect(el.className).toContain("rounded-none");
+    expect(el.className).not.toContain("rounded-full");
+  });
+
   it("supports both sm and md sizes (responsive)", () => {
     const { rerender } = render(<LocationBadge location="Kara, Togo" size="sm" />);
     expect(screen.getByTestId("location-badge")).toBeInTheDocument();
