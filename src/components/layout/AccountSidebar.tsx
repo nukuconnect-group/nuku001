@@ -357,12 +357,12 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     key={item.href + item.label}
                     to={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20"
+                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       <item.icon className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <span className="flex-1 text-[13px] font-medium tracking-tight text-foreground">{item.label}</span>
+                    <span className="flex-1 text-[15px] font-medium tracking-tight text-foreground">{item.label}</span>
                     {item.badge && (
                       <span className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
                     )}
