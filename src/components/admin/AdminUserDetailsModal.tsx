@@ -93,6 +93,28 @@ export default function AdminUserDetailsModal({ user, open, onClose, onUpdated }
     }
   };
 
+  const handleResendConfirmation = async () => {
+    const data = await callAction({ action: "resend_confirmation_email" }, "resend_confirm");
+    if (data) {
+      setResetLink((data as any).action_link || null);
+      toast({
+        title: "✉️ Email de confirmation renvoyé",
+        description: "L'utilisateur recevra à nouveau l'email pour activer son compte.",
+      });
+    }
+  };
+
+  const handleSendMagicLink = async () => {
+    const data = await callAction({ action: "send_magic_link" }, "magic");
+    if (data) {
+      setResetLink((data as any).action_link || null);
+      toast({
+        title: "🔗 Lien magique envoyé",
+        description: "Un lien de connexion sans mot de passe a été envoyé à l'utilisateur.",
+      });
+    }
+  };
+
   const handleSetPassword = async () => {
     if (newPassword.length < 8) {
       toast({ title: "Mot de passe trop court", description: "Min 8 caractères", variant: "destructive" });
