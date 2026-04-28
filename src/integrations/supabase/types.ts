@@ -1100,6 +1100,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_audit_log: {
+        Row: {
+          admin_id: string
+          created_at: string
+          decision: string
+          email_idempotency_key: string | null
+          id: string
+          kyc_id: string
+          kyc_type: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          decision: string
+          email_idempotency_key?: string | null
+          id?: string
+          kyc_id: string
+          kyc_type: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          decision?: string
+          email_idempotency_key?: string | null
+          id?: string
+          kyc_id?: string
+          kyc_type?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -2568,6 +2604,7 @@ export type Database = {
         Args: { p_product_id: string }
         Returns: Json
       }
+      send_buyer_seller_validation_reminders: { Args: never; Returns: number }
       spend_user_tokens: {
         Args: {
           p_amount: number
