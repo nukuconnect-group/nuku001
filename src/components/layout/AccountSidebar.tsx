@@ -783,37 +783,60 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Partager NUKUCONNECT</DialogTitle>
-          <DialogDescription>Choisissez une application pour partager le lien.</DialogDescription>
+          <DialogDescription>Choisissez un réseau, le partage du téléphone ou un QR code.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-3 py-2">
+          <button
+            type="button"
+            onClick={openNativeShare}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+              <Share2 className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-medium text-center">Téléphone</span>
+          </button>
           {shareTargets.map((t) => (
-            <a
+            <button
+              type="button"
               key={t.name}
-              href={t.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setShareOpen(false)}
+              onClick={() => openExternalShare(t.url)}
               className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
             >
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${t.color}`}>
                 <t.icon className="w-5 h-5" />
               </div>
               <span className="text-xs font-medium text-center">{t.name}</span>
-            </a>
+            </button>
           ))}
         </div>
         <button
-          onClick={copyShareLink}
+          onClick={generateQrCode}
           className="flex items-center gap-3 w-full p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors"
         >
           <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-            <Copy className="w-4 h-4 text-secondary" />
+            <QrCode className="w-4 h-4 text-secondary" />
           </div>
           <div className="flex-1 text-left">
-            <div className="text-sm font-medium">Copier le lien</div>
-            <div className="text-xs text-muted-foreground truncate">{SHARE_URL}</div>
+            <div className="text-sm font-medium">Générer un QR code partageable</div>
+            <div className="text-xs text-muted-foreground truncate">Scanner pour ouvrir {SHARE_URL}</div>
           </div>
         </button>
+        {showQrCode && qrCodeDataUrl && (
+          <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3">
+            <img src={qrCodeDataUrl} alt="QR code de partage NUKUCONNECT" className="mx-auto h-48 w-48 rounded-lg bg-background p-2" />
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" variant="outline" onClick={downloadQrCode} className="gap-2">
+                <Download className="h-4 w-4" />
+                Image
+              </Button>
+              <Button type="button" variant="secondary" onClick={copyShareLink} className="gap-2">
+                <Copy className="h-4 w-4" />
+                Lien
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
     </>
