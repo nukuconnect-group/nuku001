@@ -445,6 +445,19 @@ const SeoManager = () => {
                 <Input value={selected.canonical_path || ""} onChange={e => setSelected({ ...selected, canonical_path: e.target.value })} placeholder="/ma-page" />
               </div>
             </div>
+            <div className="flex items-center justify-between rounded-md border p-3 bg-muted/30">
+              <div className="pr-3">
+                <Label className="text-xs flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Régénération auto de l'image OG
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Quand le titre ou la description change (brouillon uniquement), l'IA recrée automatiquement les images OG (toutes tailles) après 2,5 s.
+                  {autoRegenPending && <span className="ml-1 text-amber-600">• régénération en attente…</span>}
+                  {aiBusy === "image" && autoRegenOg && <span className="ml-1 text-primary">• génération en cours…</span>}
+                </p>
+              </div>
+              <Switch checked={autoRegenOg} onCheckedChange={setAutoRegenOg} />
+            </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div>
                 <Label className="text-xs">Désindexer (noindex)</Label>
