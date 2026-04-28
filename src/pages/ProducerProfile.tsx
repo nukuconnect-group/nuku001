@@ -15,8 +15,9 @@ import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
-  Package, ShoppingBag, Truck, User
+  Package, ShoppingBag, Truck, User, Globe, Share2, Navigation, Clock
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/data/marketplace";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -85,6 +86,7 @@ const demoProducts: Record<string, any[]> = {
 const ProducerProfile = () => {
   const { name } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
 
@@ -311,7 +313,27 @@ const ProducerProfile = () => {
                     )}
                   </div>
 
-                  {/* Stats horizontales style Alibaba */}
+                  {/* Localisation TOUJOURS visible — ville, pays, fallback */}
+                  {(() => {
+                    const rawLoc = (producer.location || "").trim();
+                    const parts = rawLoc.split(",").map((s: string) => s.trim()).filter(Boolean);
+                    const city = parts[0] || "";
+                    const country = parts[1] || (rawLoc ? "" : "Togo");
+                    const displayLoc = rawLoc || "Localisation à confirmer";
+                    const flag = /ghana/i.test(country) ? "🇬🇭" : /bénin|benin/i.test(country) ? "🇧🇯" : /ivoire/i.test(country) ? "🇨🇮" : /sénégal|senegal/i.test(country) ? "🇸🇳" : "🇹🇬";
+                    return (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary mb-2.5">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="text-[11px] sm:text-xs font-semibold">
+                          <span className="mr-1">{flag}</span>
+                          {city || displayLoc}
+                          {country && city && <span className="text-primary/70">, {country}</span>}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Stats horizontales secondaires */}
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs text-muted-foreground mb-2.5">
                     {rating > 0 && (
                       <span className="flex items-center gap-1">
@@ -319,12 +341,12 @@ const ProducerProfile = () => {
                         <span className="font-bold text-foreground">{rating.toFixed(1)}</span>/5
                       </span>
                     )}
-                    {producer.location && (
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{producer.location}</span>
-                    )}
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       Depuis {new Date(producer.created_at).getFullYear()}
+                    </span>
+                    <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                      <Clock className="w-3 h-3" />~ {(producer as any).response_time_hours || 2}h
                     </span>
                     <span className="flex items-center gap-1 text-emerald-600 font-medium">
                       ✓ {(producer as any).response_rate || 95}% réponse
@@ -339,6 +361,35 @@ const ProducerProfile = () => {
                     </Button>
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
                       <Star className="w-3.5 h-3.5" />Suivre
+                    </Button>
+                    {producer.location && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-xs h-8"
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(producer.location)}`, "_blank", "noopener")}
+                      >
+                        <Navigation className="w-3.5 h-3.5" />Itinéraire
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs h-8"
+                      onClick={async () => {
+                        const url = window.location.href;
+                        const title = (producer as any).business_name || producer.full_name || "Profil";
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({ title, url });
+                          } else {
+                            await navigator.clipboard.writeText(url);
+                            toast({ title: "Lien copié", description: "Le lien du profil a été copié." });
+                          }
+                        } catch {/* user cancel */}
+                      }}
+                    >
+                      <Share2 className="w-3.5 h-3.5" />Partager
                     </Button>
                   </div>
                 </div>
