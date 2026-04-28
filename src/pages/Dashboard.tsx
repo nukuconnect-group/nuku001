@@ -296,6 +296,13 @@ const Dashboard = () => {
             <CategoryPieInfo orders={orders} />
           </div>
 
+          {/* Seller orders awaiting validation (real-time) */}
+          {profile?.id && (
+            <div className="mb-4 sm:mb-6">
+              <SellerOrdersToValidate sellerProfileId={profile.id} />
+            </div>
+          )}
+
           {/* Quick actions row — Independent icon cards */}
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
             <LayoutDashboard className="w-4 h-4 text-primary" /> Actions rapides
