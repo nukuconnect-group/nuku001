@@ -14,6 +14,8 @@ interface CallOptionsSheetProps {
   availabilityEnd?: string;
   isVerified?: boolean;
   yearsActive?: number;
+  /** Présence temps réel : true = connecté à NukuConnect maintenant */
+  isOnline?: boolean;
   onVoiceCall: () => void;
   onVideoCall?: () => void;
   onScheduleCall?: () => void;
