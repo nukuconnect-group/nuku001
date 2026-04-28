@@ -10,7 +10,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin } from "lucide-react";
+import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
@@ -63,6 +63,16 @@ const Cart = () => {
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
   const pendingCheckoutRef = useRef<any>(null);
+
+  // Persistent payment status panel (visible above the form)
+  const [payStatus, setPayStatus] = useState<
+    | { kind: "idle" }
+    | { kind: "initiating" }
+    | { kind: "pending"; message: string }
+    | { kind: "success"; message: string; details?: { invoiceNumber?: string; amount: number; method: string; orderIds: string[] } }
+    | { kind: "failed"; message: string }
+    | { kind: "expired"; message: string }
+  >({ kind: "idle" });
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
@@ -297,6 +307,16 @@ const Cart = () => {
       }).then(() => {});
 
       toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers vos commandes..." });
+      setPayStatus({
+        kind: "success",
+        message: "Votre commande est confirmée. Le montant a été prélevé et votre facture PDF a été téléchargée.",
+        details: {
+          invoiceNumber,
+          amount: finalTotal,
+          method: selectedPayment?.name || "Mobile Money",
+          orderIds,
+        },
+      });
       clearCart();
 
       // Navigate to order detail if we have a single order, otherwise to delivery tracking
@@ -307,6 +327,10 @@ const Cart = () => {
       }
     } catch (err: any) {
       console.error("Finalize order error:", err);
+      setPayStatus({
+        kind: "failed",
+        message: err.message || "Une erreur est survenue lors de la finalisation. Le montant peut avoir été débité — contactez le support.",
+      });
       toast({ title: "Erreur lors de la finalisation", description: err.message || "Une erreur est survenue. Contactez le support.", variant: "destructive" });
     }
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
@@ -353,6 +377,10 @@ const Cart = () => {
     await markOrdersFailed(`Paiement échoué | tx_ref: ${paymentIdentifier}`);
     setPendingCheckoutData(null);
     pendingCheckoutRef.current = null;
+    setPayStatus({
+      kind: "failed",
+      message: "La transaction n'a pas abouti — aucun montant n'a été débité. Vos commandes ont été annulées. Vous pouvez relancer le paiement.",
+    });
     toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Vos commandes ont été annulées. Réessayez.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
@@ -362,6 +390,10 @@ const Cart = () => {
     await markOrdersFailed(`Paiement expiré (timeout) | tx_ref: ${paymentIdentifier}`);
     setPendingCheckoutData(null);
     pendingCheckoutRef.current = null;
+    setPayStatus({
+      kind: "expired",
+      message: "Le paiement n'a pas été confirmé dans le délai imparti. Vos commandes ont été annulées — relancez le paiement pour réessayer.",
+    });
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
@@ -403,6 +435,7 @@ const Cart = () => {
     }
 
     setIsCheckingOut(true);
+    setPayStatus({ kind: "initiating" });
     try {
       const { data: buyerProfile } = await supabase
         .from("profiles").select("id").eq("user_id", user.id).single();
@@ -473,10 +506,18 @@ const Cart = () => {
 
       if (data?.mode === "redirect" && data?.payment_url) {
         window.open(data.payment_url, "_blank");
+        setPayStatus({
+          kind: "pending",
+          message: "Complétez le paiement dans la fenêtre ouverte. Nous vérifions le statut Paygate automatiquement toutes les 5 secondes.",
+        });
         toast({ title: "💳 Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
       } else if (selectedNetwork === "CARD") {
         throw new Error("Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.");
       } else {
+        setPayStatus({
+          kind: "pending",
+          message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Le statut sera confirmé automatiquement.`,
+        });
         toast({ title: "💳 Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
       }
 
@@ -486,6 +527,10 @@ const Cart = () => {
       setIsCheckingOut(false);
       setPendingCheckoutData(null);
       pendingCheckoutRef.current = null;
+      setPayStatus({
+        kind: "failed",
+        message: error.message || "Impossible d'initier le paiement. Aucun montant n'a été débité.",
+      });
       toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };
@@ -552,6 +597,62 @@ const Cart = () => {
                 </Link>
               </CardContent>
             </Card>
+          )}
+
+          {/* Persistent payment status panel — surfaces success/pending/failure across the full UI */}
+          {payStatus.kind !== "idle" && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`mb-4 rounded-lg border p-3 sm:p-4 text-xs sm:text-sm flex items-start gap-3 ${
+                payStatus.kind === "success"
+                  ? "border-primary/40 bg-primary/10"
+                  : payStatus.kind === "failed"
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : payStatus.kind === "expired"
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-accent/40 bg-accent/10"
+              }`}
+            >
+              {payStatus.kind === "initiating" || payStatus.kind === "pending" ? (
+                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-0.5" />
+              ) : payStatus.kind === "success" ? (
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" />
+              ) : (
+                <ShoppingCart className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold mb-1">
+                  {payStatus.kind === "initiating" && "Initialisation du paiement…"}
+                  {payStatus.kind === "pending" && "Paiement en attente de confirmation"}
+                  {payStatus.kind === "success" && "✅ Paiement réussi — commande confirmée"}
+                  {payStatus.kind === "failed" && "❌ Échec du paiement"}
+                  {payStatus.kind === "expired" && "⏰ Session de paiement expirée"}
+                </p>
+                {"message" in payStatus && (
+                  <p className="opacity-90 leading-relaxed break-words">{payStatus.message}</p>
+                )}
+                {payStatus.kind === "success" && payStatus.details && (
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] sm:text-xs bg-background/60 rounded-md p-2 border border-primary/10">
+                    {payStatus.details.invoiceNumber && (
+                      <div><span className="text-muted-foreground">Facture :</span> <span className="font-medium">{payStatus.details.invoiceNumber}</span></div>
+                    )}
+                    <div><span className="text-muted-foreground">Montant débité :</span> <span className="font-medium">{payStatus.details.amount.toLocaleString("fr-FR")} FCFA</span></div>
+                    <div><span className="text-muted-foreground">Mode :</span> <span className="font-medium">{payStatus.details.method}</span></div>
+                    <div><span className="text-muted-foreground">Commandes :</span> <span className="font-medium">{payStatus.details.orderIds.length}</span></div>
+                  </div>
+                )}
+                {(payStatus.kind === "failed" || payStatus.kind === "expired") && (
+                  <button
+                    type="button"
+                    onClick={() => setPayStatus({ kind: "idle" })}
+                    className="mt-2 underline font-medium"
+                  >
+                    Réessayer
+                  </button>
+                )}
+              </div>
+            </div>
           )}
 
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
