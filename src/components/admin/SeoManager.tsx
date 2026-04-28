@@ -322,9 +322,13 @@ const SeoManager = () => {
                 {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 Remplir automatiquement (IA)
               </Button>
-              <Button size="sm" onClick={save} disabled={saving === selected.id}>
+              <Button variant="secondary" size="sm" onClick={save} disabled={saving === selected.id}>
                 {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Enregistrer
+              </Button>
+              <Button size="sm" onClick={publish} disabled={saving === selected.id}>
+                {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+                Publier sur la route
               </Button>
             </div>
           </CardContent>
