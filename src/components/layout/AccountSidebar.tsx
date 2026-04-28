@@ -38,7 +38,7 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
