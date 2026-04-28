@@ -1,13 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import {
   Rocket, Clock, CalendarDays, TrendingUp, Eye, MousePointerClick,
   ShieldCheck, QrCode, Sparkles, CheckCircle2, MessageCircle, ShoppingCart,
-  AlertTriangle, Users, XCircle,
+  AlertTriangle, Users, XCircle, History, Filter, Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProductBoosts } from "@/hooks/useBoosts";
@@ -37,6 +41,13 @@ interface BoostMetrics {
 const ProductBoostStats = ({ productId, productName, successMode = false }: Props) => {
   const { data: boosts = [], isLoading } = useProductBoosts(productId);
   const [metrics, setMetrics] = useState<BoostMetrics | null>(null);
+  const [history, setHistory] = useState<Array<{ id: string; type: string; label: string; at: string }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Filtres date pour la section historique
+  const [filterFrom, setFilterFrom] = useState<string>("");
+  const [filterTo, setFilterTo] = useState<string>("");
+  const [tick, setTick] = useState(0); // déclencheur d'auto-refresh
 
   const now = Date.now();
   const active = boosts.find(
@@ -51,14 +62,32 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
 
   const reference = active || lastFinished;
 
+  // Période effective utilisée pour metrics + historique (filtres > boost)
+  const period = useMemo(() => {
+    if (!reference) return null;
+    const defaultFrom = reference.started_at;
+    const defaultTo = new Date(reference.expires_at).getTime() < now
+      ? reference.expires_at
+      : new Date().toISOString();
+    return {
+      from: filterFrom ? new Date(filterFrom).toISOString() : defaultFrom,
+      to: filterTo ? new Date(filterTo + "T23:59:59").toISOString() : defaultTo,
+    };
+  }, [reference?.id, filterFrom, filterTo, tick]);
+
+  // Auto-refresh toutes les 30s tant que le boost est actif
   useEffect(() => {
-    if (!reference) { setMetrics(null); return; }
+    if (!active) return;
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, [active?.id]);
+
+  useEffect(() => {
+    if (!reference || !period) { setMetrics(null); return; }
     let cancelled = false;
     (async () => {
-      const since = reference.started_at;
-      const until = new Date(reference.expires_at).getTime() < now
-        ? reference.expires_at
-        : new Date().toISOString();
+      const since = period.from;
+      const until = period.to;
 
       // Vues / impressions
       const { data: visits } = await supabase
@@ -102,7 +131,68 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
       });
     })();
     return () => { cancelled = true; };
-  }, [reference?.id, productId]);
+  }, [reference?.id, productId, period?.from, period?.to]);
+
+  // Historique détaillé (conversations, commandes, visites) sur la période
+  useEffect(() => {
+    if (!reference || !period) { setHistory([]); return; }
+    let cancelled = false;
+    setHistoryLoading(true);
+    (async () => {
+      const since = period.from;
+      const until = period.to;
+
+      const [convRes, orderRes, visitRes] = await Promise.all([
+        supabase
+          .from("conversations")
+          .select("id, created_at")
+          .eq("product_id", productId)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("orders")
+          .select("id, created_at, total_price, status, quantity")
+          .eq("product_id", productId)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("analytics_visits")
+          .select("id, created_at, page_path")
+          .ilike("page_path", `%${productId}%`)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+
+      const items: Array<{ id: string; type: string; label: string; at: string }> = [];
+      (convRes.data || []).forEach((c: any) =>
+        items.push({ id: `c-${c.id}`, type: "Discussion", label: "Nouvelle conversation ouverte", at: c.created_at })
+      );
+      (orderRes.data || []).forEach((o: any) =>
+        items.push({
+          id: `o-${o.id}`,
+          type: o.status === "cancelled" || o.status === "failed" ? "Essai d'achat" : "Commande",
+          label: `${o.quantity || 1} unité(s) — ${(Number(o.total_price) || 0).toLocaleString("fr-FR")} F · ${o.status}`,
+          at: o.created_at,
+        })
+      );
+      (visitRes.data || []).forEach((v: any) =>
+        items.push({ id: `v-${v.id}`, type: "Visite", label: "Vue de la fiche produit", at: v.created_at })
+      );
+
+      items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+      if (!cancelled) {
+        setHistory(items.slice(0, 100));
+        setHistoryLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reference?.id, productId, period?.from, period?.to]);
 
   if (isLoading) return null;
 
@@ -251,6 +341,123 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
             <p className="text-[10px] text-muted-foreground mt-2 italic">
               Pas encore de données — donnez quelques heures au boost pour générer du trafic.
             </p>
+          )}
+        </div>
+
+        {/* Tableau détaillé par métrique (auto-refresh pendant boost actif) */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> Tableau détaillé
+            </p>
+            {active && (
+              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Mise à jour auto
+              </Badge>
+            )}
+          </div>
+          <div className="rounded-md border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[10px] h-8">Métrique</TableHead>
+                  <TableHead className="text-[10px] h-8 text-right">Valeur</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Eye className="w-3 h-3 text-primary" />Impressions</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.impressions ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Users className="w-3 h-3 text-blue-500" />Visiteurs uniques</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.uniqueVisitors ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3 text-amber-500" />Clics fiche</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.clicks ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3 h-3 text-green-600" />Discussions</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.conversations ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><ShoppingCart className="w-3 h-3 text-primary" />Commandes</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.orders ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-emerald-600" />Revenus générés</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">
+                    {m ? `${(m.revenue || 0).toLocaleString("fr-FR")} F` : "…"}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Historique produit avec filtres date */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <History className="w-3 h-3" /> Historique produit ({history.length})
+            </p>
+            <div className="flex items-center gap-1">
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              <Input
+                type="date"
+                value={filterFrom}
+                onChange={(e) => setFilterFrom(e.target.value)}
+                className="h-6 text-[10px] px-1.5 w-[110px]"
+                aria-label="Date de début"
+              />
+              <span className="text-[10px] text-muted-foreground">→</span>
+              <Input
+                type="date"
+                value={filterTo}
+                onChange={(e) => setFilterTo(e.target.value)}
+                className="h-6 text-[10px] px-1.5 w-[110px]"
+                aria-label="Date de fin"
+              />
+              {(filterFrom || filterTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[9px] px-1.5"
+                  onClick={() => { setFilterFrom(""); setFilterTo(""); }}
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+          {historyLoading ? (
+            <p className="text-[10px] text-muted-foreground italic py-2">Chargement de l'historique…</p>
+          ) : history.length === 0 ? (
+            <p className="text-[10px] text-muted-foreground italic py-2">Aucune activité sur cette période.</p>
+          ) : (
+            <ul className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {history.map((h) => {
+                const Icon =
+                  h.type === "Discussion" ? MessageCircle :
+                  h.type === "Commande" ? ShoppingCart :
+                  h.type === "Essai d'achat" ? AlertTriangle :
+                  h.type === "Appel" ? Phone : Eye;
+                return (
+                  <li key={h.id} className="flex items-start gap-2 text-[10px] py-1 px-2 rounded bg-muted/30">
+                    <Icon className="w-3 h-3 mt-0.5 text-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">{h.type}</p>
+                      <p className="text-muted-foreground truncate">{h.label}</p>
+                    </div>
+                    <span className="text-muted-foreground whitespace-nowrap text-[9px]">
+                      {formatDateTime(h.at)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
 

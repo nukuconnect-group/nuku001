@@ -43,6 +43,10 @@ import {
   Trash2, Eye, Rocket, BarChart3, Users, Loader2, MessageCircle,
   QrCode, TrendingUp, MapPin, Truck, Calendar, User, Settings, Wallet, Gift, ShieldCheck, LayoutDashboard, Sparkles, ChevronDown, Coins
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -57,6 +61,8 @@ const Dashboard = () => {
   const [showAddFormation, setShowAddFormation] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
   const { balance: tokenBalance } = useTokens();
@@ -96,7 +102,21 @@ const Dashboard = () => {
     loadData();
     return () => { isMounted = false; };
   }, [isReady, profileLoading, user, profile, navigate]);
-  
+
+  // Realtime: sync products list across tabs/devices when CRUD happens
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`dashboard-products-${profile.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products", filter: `producer_id=eq.${profile.id}` },
+        () => { fetchProducts(profile.id); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id]);
+
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const completedOrders = orders.filter(o => o.status === "completed").length;
@@ -114,17 +134,25 @@ const Dashboard = () => {
     { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm("Supprimer définitivement ce produit ? Il sera retiré de la marketplace immédiatement.")) return;
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+    const productId = productToDelete.id;
+    // Optimistic update — disparaît immédiatement de la liste locale
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
     const { error } = await supabase.from("products").delete().eq("id", productId);
-    if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    else {
-      toast({ title: "Produit supprimé", description: "Le produit a été retiré de la marketplace." });
+    setIsDeleting(false);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      // Recharge en cas d'échec pour rétablir l'état réel
       fetchProducts(profile.id);
+    } else {
+      toast({ title: "Produit supprimé", description: "Le produit a été retiré de la marketplace." });
       // Invalidate marketplace caches so changes appear immediately everywhere
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product", productId] });
     }
+    setProductToDelete(null);
   };
 
   if (isLoading || profileLoading) {
@@ -536,7 +564,7 @@ const Dashboard = () => {
                               <QrCode className="w-3 h-3 text-blue-500" /><span className="hidden sm:inline">QR</span>
                             </Button>
                             <Button variant="outline" size="sm" className="h-8 px-1 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1 text-[10px]"
-                              onClick={() => handleDeleteProduct(product.id)} aria-label="Supprimer">
+                              onClick={() => setProductToDelete(product)} aria-label="Supprimer">
                               <Trash2 className="w-3 h-3" /><span className="hidden sm:inline">Suppr.</span>
                             </Button>
                           </div>
@@ -627,6 +655,28 @@ const Dashboard = () => {
         product={boostProduct}
         onBoostSuccess={() => { if (profile) fetchProducts(profile.id); }}
       />
+
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => { if (!open) setProductToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-semibold text-foreground">{productToDelete?.name}</span> sera retiré <strong>immédiatement</strong> de la marketplace et de votre tableau de bord. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDeleteProduct(); }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Suppression…" : "Oui, supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       {!profile?.is_verified && (
