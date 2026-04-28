@@ -390,6 +390,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           delivery_fee: number
+          delivery_otp: string | null
           distance_km: number | null
           driver_current_lat: number | null
           driver_current_lng: number | null
@@ -401,11 +402,13 @@ export type Database = {
           estimated_minutes: number | null
           id: string
           order_id: string
+          otp_verified_at: string | null
           picked_up_at: string | null
           pickup_address: string | null
           pickup_lat: number | null
           pickup_lng: number | null
           platform_fee: number
+          share_token: string | null
           status: string
           updated_at: string
         }
@@ -414,6 +417,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_fee?: number
+          delivery_otp?: string | null
           distance_km?: number | null
           driver_current_lat?: number | null
           driver_current_lng?: number | null
@@ -425,11 +429,13 @@ export type Database = {
           estimated_minutes?: number | null
           id?: string
           order_id: string
+          otp_verified_at?: string | null
           picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           platform_fee?: number
+          share_token?: string | null
           status?: string
           updated_at?: string
         }
@@ -438,6 +444,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_fee?: number
+          delivery_otp?: string | null
           distance_km?: number | null
           driver_current_lat?: number | null
           driver_current_lng?: number | null
@@ -449,11 +456,13 @@ export type Database = {
           estimated_minutes?: number | null
           id?: string
           order_id?: string
+          otp_verified_at?: string | null
           picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           platform_fee?: number
+          share_token?: string | null
           status?: string
           updated_at?: string
         }
@@ -554,6 +563,44 @@ export type Database = {
           sender_role?: string
         }
         Relationships: []
+      }
+      delivery_track_points: {
+        Row: {
+          accuracy: number | null
+          delivery_id: string
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          delivery_id: string
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          delivery_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_track_points_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demands: {
         Row: {
@@ -2695,6 +2742,7 @@ export type Database = {
         Returns: Json
       }
       get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
+      get_my_delivery_otp: { Args: { p_delivery_id: string }; Returns: string }
       get_products_due_for_moderation: {
         Args: { p_limit?: number }
         Returns: {
@@ -2728,6 +2776,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_public_delivery_trace: {
+        Args: { p_token: string }
+        Returns: {
+          lat: number
+          lng: number
+          recorded_at: string
+        }[]
+      }
+      get_public_delivery_tracking: { Args: { p_token: string }; Returns: Json }
       get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
       get_route_performance_stats: {
         Args: { _days?: number }
@@ -2823,6 +2880,10 @@ export type Database = {
           api_key_id: string
           user_id: string
         }[]
+      }
+      verify_delivery_otp: {
+        Args: { p_delivery_id: string; p_otp: string }
+        Returns: Json
       }
     }
     Enums: {
