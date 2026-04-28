@@ -238,9 +238,70 @@ const FormationDetail = () => {
                   </button>
 
                   {isExpanded && (
-                    <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-3">{mod.description}</p>
-                      <div className="flex gap-2">
+                    <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 border-t border-border space-y-3">
+                      {mod.description && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-line">{mod.description}</p>
+                      )}
+
+                      {/* Content viewer — self-paced learning */}
+                      {mod.content_url && mod.content_type === "video" && (() => {
+                        const url = mod.content_url as string;
+                        const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                        if (ytMatch) {
+                          return (
+                            <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                                title={mod.title}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          );
+                        }
+                        if (vimeoMatch) {
+                          return (
+                            <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
+                              <iframe
+                                src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                                title={mod.title}
+                                className="w-full h-full"
+                                allow="autoplay; fullscreen; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          );
+                        }
+                        // Direct video file
+                        if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
+                          return (
+                            <video
+                              src={url}
+                              controls
+                              className="w-full rounded-lg bg-black aspect-video"
+                            >
+                              Votre navigateur ne supporte pas la lecture vidéo.
+                            </video>
+                          );
+                        }
+                        return (
+                          <a href={url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                            <Video className="w-3.5 h-3.5" /> Ouvrir la vidéo
+                          </a>
+                        );
+                      })()}
+
+                      {mod.content_url && mod.content_type !== "video" && (
+                        <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                          <FileText className="w-3.5 h-3.5" /> Ouvrir la ressource
+                        </a>
+                      )}
+
+                      <div className="flex flex-wrap gap-2 pt-1">
                         {userId ? (
                           <>
                             <Button
@@ -250,15 +311,15 @@ const FormationDetail = () => {
                               onClick={(e) => { e.stopPropagation(); toggleModuleComplete(mod.id); }}
                             >
                               {isCompleted ? (
-                                <><CheckCircle2 className="w-3 h-3" />Terminé</>
+                                <><CheckCircle2 className="w-3 h-3" />Terminé — annuler</>
                               ) : (
-                                <><Play className="w-3 h-3" />Commencer</>
+                                <><CheckCircle2 className="w-3 h-3" />Marquer comme terminé</>
                               )}
                             </Button>
-                            {!isCompleted && (
+                            {idx < modules.length - 1 && isCompleted && (
                               <Button variant="outline" size="sm" className="text-xs gap-1"
-                                onClick={(e) => { e.stopPropagation(); toggleModuleComplete(mod.id); }}>
-                                <CheckCircle2 className="w-3 h-3" />Marquer comme terminé
+                                onClick={(e) => { e.stopPropagation(); setExpandedModule(modules[idx + 1].id); }}>
+                                <Play className="w-3 h-3" /> Chapitre suivant
                               </Button>
                             )}
                           </>

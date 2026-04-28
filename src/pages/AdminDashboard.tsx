@@ -16,7 +16,7 @@ import {
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
   Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet,
-  Truck, ShoppingBag, Leaf, Trash2, UserX
+  Truck, ShoppingBag, Leaf, Trash2, UserX, Cookie
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -34,6 +34,7 @@ import DemandsManager from "@/components/admin/DemandsManager";
 import FinanceManager from "@/components/admin/FinanceManager";
 import EmailStatsManager from "@/components/admin/EmailStatsManager";
 import EmailLogsManager from "@/components/admin/EmailLogsManager";
+import CookieConsentsManager from "@/components/admin/CookieConsentsManager";
 import KYCManager from "@/components/admin/KYCManager";
 import AIModerationHistory from "@/components/admin/AIModerationHistory";
 import NukuAIAnalytics from "@/components/admin/NukuAIAnalytics";
@@ -306,6 +307,7 @@ const AdminDashboard = () => {
     { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
+    { id: "cookies", label: "Cookies", icon: Cookie },
   ];
 
   return (
@@ -1172,6 +1174,9 @@ const AdminDashboard = () => {
 
             {/* Unified recent actions feed */}
             {activeTab === "recent-actions" && <AdminRecentActions />}
+
+            {/* Cookie consents */}
+            {activeTab === "cookies" && <CookieConsentsManager />}
         </main>
       </div>
       <Footer />
