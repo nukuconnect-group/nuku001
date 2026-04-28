@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Copy, ArrowRight, Share2, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatNumber } from "@/lib/formatNumber";
+import { formatAmount } from "@/lib/formatNumber";
 
 interface Props {
   userId?: string;
