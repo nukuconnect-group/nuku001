@@ -7,6 +7,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -350,6 +351,7 @@ const DriverDashboard = () => {
         onTabChange={setActiveTab}
       >
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
+        {user?.id && <AffiliationCard userId={user.id} />}
         {/* Wallet Card */}
         <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
           <CardContent className="p-4 sm:p-6">
