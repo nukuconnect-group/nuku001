@@ -20,6 +20,80 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Vérifier le keystore et l'alias (nukuconnect_keystore / nukuconnect)
+        script: |
+          set -e
+          EXPECTED_ALIAS="nukuconnect"
+          EXPECTED_REF="nukuconnect_keystore"
+
+          echo "🔍 Vérification de la configuration de signature Android..."
+
+          # 1) Vérifier que Codemagic a bien injecté les variables du keystore
+          if [ -z "$CM_KEYSTORE_PATH" ] || [ ! -f "$CM_KEYSTORE_PATH" ]; then
+            echo "❌ ERREUR: Aucun keystore trouvé."
+            echo "   → Allez dans Codemagic → Teams → Personal account → Code signing identities"
+            echo "   → Android keystores → ajoutez un keystore avec Reference name = '$EXPECTED_REF'"
+            exit 1
+          fi
+          echo "✅ Fichier keystore présent : $CM_KEYSTORE_PATH"
+
+          if [ -z "$CM_KEYSTORE_PASSWORD" ]; then
+            echo "❌ ERREUR: CM_KEYSTORE_PASSWORD vide. Vérifiez le mot de passe du keystore dans Codemagic."
+            exit 1
+          fi
+          if [ -z "$CM_KEY_PASSWORD" ]; then
+            echo "❌ ERREUR: CM_KEY_PASSWORD vide. Vérifiez le mot de passe de la clé dans Codemagic."
+            exit 1
+          fi
+          if [ -z "$CM_KEY_ALIAS" ]; then
+            echo "❌ ERREUR: CM_KEY_ALIAS vide. Vérifiez le champ Key alias dans Codemagic."
+            exit 1
+          fi
+
+          # 2) Vérifier que l'alias attendu correspond
+          if [ "$CM_KEY_ALIAS" != "$EXPECTED_ALIAS" ]; then
+            echo "❌ ERREUR: Alias incorrect."
+            echo "   Attendu : '$EXPECTED_ALIAS'"
+            echo "   Reçu    : '$CM_KEY_ALIAS'"
+            echo "   → Corrigez le Key alias dans Codemagic ou modifiez EXPECTED_ALIAS dans codemagic.yaml"
+            exit 1
+          fi
+          echo "✅ Key alias correct : $CM_KEY_ALIAS"
+
+          # 3) Vérifier que le keystore contient bien l'alias et que les mots de passe fonctionnent
+          if ! keytool -list -keystore "$CM_KEYSTORE_PATH" \
+                -storepass "$CM_KEYSTORE_PASSWORD" \
+                -alias "$EXPECTED_ALIAS" > /tmp/keystore_check.log 2>&1; then
+            echo "❌ ERREUR: Impossible de lire l'alias '$EXPECTED_ALIAS' dans le keystore."
+            echo "   Causes possibles :"
+            echo "   • Mot de passe du keystore (storepass) incorrect"
+            echo "   • L'alias '$EXPECTED_ALIAS' n'existe pas dans ce keystore"
+            cat /tmp/keystore_check.log
+            exit 1
+          fi
+          echo "✅ Alias '$EXPECTED_ALIAS' trouvé dans le keystore."
+
+          # 4) Vérifier la validité du certificat (date d'expiration)
+          EXPIRY=$(keytool -list -v -keystore "$CM_KEYSTORE_PATH" \
+                    -storepass "$CM_KEYSTORE_PASSWORD" \
+                    -alias "$EXPECTED_ALIAS" 2>/dev/null \
+                    | grep -i "until:" | head -1 | sed 's/.*until: //')
+          if [ -n "$EXPIRY" ]; then
+            echo "📅 Certificat valide jusqu'au : $EXPIRY"
+          fi
+
+          # 5) Calculer et afficher l'empreinte SHA-256 (utile pour Play Console)
+          SHA256=$(keytool -list -v -keystore "$CM_KEYSTORE_PATH" \
+                    -storepass "$CM_KEYSTORE_PASSWORD" \
+                    -alias "$EXPECTED_ALIAS" 2>/dev/null \
+                    | grep "SHA256:" | head -1 | awk '{print $2}')
+          if [ -n "$SHA256" ]; then
+            echo "🔑 Empreinte SHA-256 : $SHA256"
+            echo "   → Conservez cette empreinte (utile pour Google Play & Firebase)"
+          fi
+
+          echo "✅ Toutes les vérifications du keystore sont passées. Lancement de la compilation..."
+
       - name: Installer les dépendances npm
         script: |
           npm install
