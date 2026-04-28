@@ -12,8 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Clock, Users, Play, Star, BookOpen, Award, Lock,
   Loader2, CheckCircle2, ChevronDown, ChevronUp, FileText, Video,
-  GraduationCap, CalendarClock, Download,
+  GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 
 const FormationDetail = () => {
   const { id } = useParams<{ id: string }>();
