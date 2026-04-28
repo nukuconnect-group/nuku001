@@ -560,7 +560,8 @@ const Cart = () => {
           identifier,
           ...(selectedNetwork !== "CARD" && phoneDigits ? { phone_number: phoneDigits } : {}),
           ...(selectedNetwork && selectedNetwork !== "CARD" ? { network: selectedNetwork } : {}),
-          use_redirect: selectedNetwork === "CARD",
+          // Toujours rediriger vers la page Paygate (carte ET mobile money)
+          use_redirect: true,
         },
       });
 
@@ -571,23 +572,22 @@ const Cart = () => {
       }
 
       if (data?.mode === "redirect" && data?.payment_url) {
-        window.open(data.payment_url, "_blank");
+        // Active le polling AVANT la redirection (au retour, le statut sera vérifié)
+        setPollingEnabled(true);
         setPayStatus({
           kind: "pending",
-          message: "Complétez le paiement dans la fenêtre ouverte. Nous vérifions le statut Paygate automatiquement toutes les 5 secondes.",
+          message: "Redirection vers la page sécurisée Paygate. Le statut sera vérifié automatiquement à votre retour.",
         });
-        toast({ title: "💳 Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
-      } else if (selectedNetwork === "CARD") {
-        throw new Error("Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.");
-      } else {
-        setPayStatus({
-          kind: "pending",
-          message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Le statut sera confirmé automatiquement.`,
-        });
-        toast({ title: "💳 Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
+        toast({ title: "💳 Redirection vers Paygate", description: "Finalisez le paiement sur la page sécurisée." });
+        // Léger délai pour laisser apparaître le toast, puis redirection dans le même onglet
+        setTimeout(() => {
+          window.location.href = data.payment_url;
+        }, 500);
+        return;
       }
 
-      setPollingEnabled(true);
+      throw new Error("Impossible d'ouvrir la page de paiement Paygate. Veuillez réessayer.");
+
     } catch (error: any) {
       console.error("Checkout error:", error);
       setIsCheckingOut(false);
