@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { getProfileDisplayName } from "@/lib/displayName";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -525,12 +526,12 @@ const Header = () => {
                                 <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <span className="text-xs font-bold text-primary-foreground">
-                                  {(profile?.full_name || user.email)?.charAt(0)?.toUpperCase()}
+                                  {(getProfileDisplayName(profile, user.email || "?")).charAt(0).toUpperCase()}
                                 </span>
                               )}
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium text-xs">{profile?.full_name || user.email?.split("@")[0]}</p>
+                              <p className="font-medium text-xs">{getProfileDisplayName(profile, user.email?.split("@")[0] || "Mon compte")}</p>
                               <p className="text-[10px] text-muted-foreground">{t("auth.myAccount")}</p>
                             </div>
                           </Link>
