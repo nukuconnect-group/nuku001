@@ -114,36 +114,76 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     setProfileCountry(parts[parts.length - 1] || loc || "");
   }, [profile?.location]);
 
-  // Auto-detect country via geolocation + reverse geocoding (only if not set)
+  // Auto-detect country: fast IP-based first, geolocation as fallback
   useEffect(() => {
     if (!user?.id || !profile?.id) return;
-    if (profileCountry && profileCountry.length > 0) return;
-    if (!("geolocation" in navigator)) return;
+    // Skip if profile.location already explicitly saved by user
+    if ((profile?.location || "").trim().length > 0) return;
 
     let cancelled = false;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+
+    const persist = async (countryName: string) => {
+      if (cancelled || !countryName) return;
+      setProfileCountry(countryName);
+      try {
+        await supabase.from("profiles").update({ location: countryName }).eq("id", profile.id);
+      } catch { /* silent */ }
+    };
+
+    // 1) Fast path: IP-based geo (no permission, ~100-300ms)
+    const tryIpGeo = async (): Promise<boolean> => {
+      const endpoints = [
+        { url: "https://ipapi.co/json/", key: "country_name" },
+        { url: "https://ipwho.is/", key: "country" },
+        { url: "https://get.geojs.io/v1/ip/country/full.json", key: "country" },
+      ];
+      for (const ep of endpoints) {
         try {
-          const { latitude, longitude } = pos.coords;
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=fr&zoom=3`,
-            { headers: { "Accept": "application/json" } }
-          );
-          if (!res.ok) return;
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 3000);
+          const res = await fetch(ep.url, { signal: ctrl.signal });
+          clearTimeout(t);
+          if (!res.ok) continue;
           const data = await res.json();
-          const detected = data?.address?.country as string | undefined;
-          if (!detected || cancelled) return;
-          setProfileCountry(detected);
-          await supabase.from("profiles").update({ location: detected }).eq("id", profile.id);
-        } catch {
-          /* silent */
-        }
-      },
-      () => { /* user denied — silent */ },
-      { timeout: 8000, maximumAge: 24 * 60 * 60 * 1000 }
-    );
+          const country = data?.[ep.key];
+          if (typeof country === "string" && country.length > 0) {
+            await persist(country);
+            return true;
+          }
+        } catch { /* try next */ }
+      }
+      return false;
+    };
+
+    // 2) Fallback: precise geolocation + reverse geocoding
+    const tryBrowserGeo = () => {
+      if (!("geolocation" in navigator)) return;
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const { latitude, longitude } = pos.coords;
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=fr&zoom=3`,
+              { headers: { "Accept": "application/json" } }
+            );
+            if (!res.ok) return;
+            const data = await res.json();
+            const detected = data?.address?.country as string | undefined;
+            if (detected) await persist(detected);
+          } catch { /* silent */ }
+        },
+        () => { /* denied — silent */ },
+        { timeout: 8000, maximumAge: 24 * 60 * 60 * 1000 }
+      );
+    };
+
+    (async () => {
+      const ok = await tryIpGeo();
+      if (!ok && !cancelled) tryBrowserGeo();
+    })();
+
     return () => { cancelled = true; };
-  }, [user?.id, profile?.id, profileCountry]);
+  }, [user?.id, profile?.id, profile?.location]);
 
   const handleSaveCountry = async (newCountry: string) => {
     if (!user?.id || !profile?.id) return;
