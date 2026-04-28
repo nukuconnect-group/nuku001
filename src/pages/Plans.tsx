@@ -126,13 +126,19 @@ const Plans = () => {
     let session;
     try {
       session = await getFreshAuthSession();
+      setSessionExpired(false);
     } catch {
+      // Persist intent so we can resume after reconnection
+      try {
+        sessionStorage.setItem(PENDING_PLAN_KEY, JSON.stringify({ planId, paymentProof, ts: Date.now() }));
+      } catch { /* noop */ }
+      setSessionExpired(true);
+      setSubscribing(null);
       toast({
         title: "Session expirée",
         description: "Veuillez vous reconnecter pour finaliser votre abonnement.",
         variant: "destructive",
       });
-      navigate("/auth");
       return;
     }
 
@@ -144,6 +150,8 @@ const Plans = () => {
     }, session);
 
     if (data?.error) throw new Error(data.error);
+
+    try { sessionStorage.removeItem(PENDING_PLAN_KEY); } catch { /* noop */ }
 
     await supabase.from("notifications").insert({
       user_id: session.user.id,
@@ -157,7 +165,38 @@ const Plans = () => {
     setPaymentStep(null);
     setPollingEnabled(false);
     setSubscribing(null);
-  }, [navigate, refreshSubscription, toast]);
+  }, [refreshSubscription, toast]);
+
+  // Auto-resume after returning from /auth
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let pending: { planId: string; paymentProof?: { identifier?: string; tx_reference?: string }; ts: number } | null = null;
+      try {
+        const raw = sessionStorage.getItem(PENDING_PLAN_KEY);
+        if (raw) pending = JSON.parse(raw);
+      } catch { /* noop */ }
+      if (!pending) return;
+      // Stale > 30 min
+      if (Date.now() - pending.ts > 30 * 60 * 1000) {
+        sessionStorage.removeItem(PENDING_PLAN_KEY);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || cancelled) return;
+      setSessionExpired(false);
+      try {
+        await activateSubscription(pending.planId, pending.paymentProof);
+      } catch (err: any) {
+        toast({ title: "Reprise impossible", description: err?.message || "Réessayez.", variant: "destructive" });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activateSubscription, toast]);
+
+  const handleReconnect = useCallback(() => {
+    navigate("/auth?redirect=/plans");
+  }, [navigate]);
 
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
