@@ -149,6 +149,7 @@ const Auth = () => {
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerLocation, setBuyerLocation] = useState("");
   const [buyerCountry, setBuyerCountry] = useState("");
+  const [buyerCompany, setBuyerCompany] = useState(""); // Optionnel — nom d'entreprise pour acheteurs/apprenants
 
   useEffect(() => {
     if (buyerCountry) return;
