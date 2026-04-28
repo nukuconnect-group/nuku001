@@ -541,18 +541,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Cover */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Label>Image de couverture</Label>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <Label className="text-xs sm:text-sm">Image de couverture</Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateCover}
                 disabled={coverGenerating || !form.title.trim() || !form.description.trim()}
-                className="gap-1.5 text-[11px] h-8"
+                className="gap-1.5 text-[10px] sm:text-[11px] h-7 sm:h-8 px-2"
               >
                 {coverGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5 text-primary" />}
-                Générer une image de couverture
+                <span className="hidden xs:inline">Générer une image de couverture</span>
+                <span className="xs:hidden">Générer image IA</span>
               </Button>
             </div>
             <input id="cover" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
