@@ -363,7 +363,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
     } else if (payload.type === "decline") {
       finalizeCall("declined");
     }
-  }, [user?.id, profile?.id, sendSignal, playRingtone, stopRingtone, startTimer, cleanupCall, finalizeCall]);
+  }, [
+    user?.id,
+    profile?.id,
+    sendSignal,
+    playRingtone,
+    stopRingtone,
+    startTimer,
+    cleanupCall,
+    finalizeCall,
+    startIncomingAlerts,
+  ]);
 
   // Subscribe to my call channel
   useEffect(() => {
