@@ -445,33 +445,51 @@ const FormationDetail = () => {
           )}
 
           {/* Source PDF preview */}
-          {formation.source_document_url && (!formation.is_paid || isEnrolled) && (
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    Document de la formation
-                  </h2>
-                  <a href={formation.source_document_url} target="_blank" rel="noopener noreferrer" download>
-                    <Button variant="outline" size="sm" className="text-xs gap-1">
-                      <Download className="w-3 h-3" /> Télécharger
-                    </Button>
-                  </a>
-                </div>
-                {formation.source_document_name && (
-                  <p className="text-[11px] text-muted-foreground mb-2 truncate">{formation.source_document_name}</p>
-                )}
-                <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "60vh", minHeight: 320 }}>
-                  <iframe
-                    src={`${formation.source_document_url}#view=FitH`}
-                    title={formation.source_document_name || "Document"}
-                    className="w-full h-full"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {formation.source_document_url && (!formation.is_paid || isEnrolled) && (() => {
+            // For paid formations, only use a freshly-signed URL (never the raw source URL)
+            const docUrl = formation.is_paid ? signedPdfUrl : formation.source_document_url;
+            return (
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Document de la formation
+                    </h2>
+                    {docUrl && (
+                      <a href={docUrl} target="_blank" rel="noopener noreferrer" download>
+                        <Button variant="outline" size="sm" className="text-xs gap-1">
+                          <Download className="w-3 h-3" /> Télécharger
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                  {formation.source_document_name && (
+                    <p className="text-[11px] text-muted-foreground mb-2 truncate">{formation.source_document_name}</p>
+                  )}
+                  <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "60vh", minHeight: 320 }}>
+                    {docUrl ? (
+                      <iframe
+                        src={`${docUrl}#view=FitH`}
+                        title={formation.source_document_name || "Document"}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Chargement sécurisé du document…
+                      </div>
+                    )}
+                  </div>
+                  {formation.is_paid && (
+                    <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5 text-primary" /> Lien sécurisé temporaire — réservé aux apprenants inscrits.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
         </div>
       </section>
 
