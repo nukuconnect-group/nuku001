@@ -527,7 +527,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-accent" />
@@ -941,9 +941,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={closeAndKeepDraft}>Reprendre plus tard</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end pt-2 sticky bottom-0 bg-background pb-1">
+            <Button type="button" variant="outline" onClick={closeAndKeepDraft} className="w-full sm:w-auto text-xs sm:text-sm">Reprendre plus tard</Button>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating} className="w-full sm:w-auto text-xs sm:text-sm">
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>
