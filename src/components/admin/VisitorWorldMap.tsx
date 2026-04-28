@@ -1,7 +1,8 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Globe } from "lucide-react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, Marker, Tooltip, LayersControl, ZoomControl } from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }> = {
@@ -82,37 +83,97 @@ const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
           <p className="text-xs text-muted-foreground text-center py-8">Les données apparaîtront après quelques visites</p>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-xl overflow-hidden border border-border" style={{ height: 350 }}>
+            <div className="rounded-xl overflow-hidden border border-border relative" style={{ height: 450 }}>
               <MapContainer
-                center={[8.6, 1.2]}
-                zoom={3}
+                center={[15, 10]}
+                zoom={2}
+                minZoom={2}
+                maxZoom={10}
+                worldCopyJump={true}
                 scrollWheelZoom={true}
-                style={{ height: "100%", width: "100%" }}
-                attributionControl={false}
+                zoomControl={false}
+                style={{ height: "100%", width: "100%", background: "hsl(var(--muted))" }}
+                attributionControl={true}
               >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {markers.map((m, i) => (
-                  <CircleMarker
-                    key={i}
-                    center={[m.coords.lat, m.coords.lng]}
-                    radius={m.radius}
-                    pathOptions={{
-                      fillColor: "#1a6b35",
-                      fillOpacity: 0.6,
-                      color: "#1a6b35",
-                      weight: 2,
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-center font-sans">
-                        <span className="text-lg">{m.coords.flag}</span>
-                        <div className="font-semibold">{m.country}</div>
-                        <div className="text-sm text-muted-foreground">{m.count} visites</div>
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                ))}
+                <ZoomControl position="topright" />
+                <LayersControl position="topleft">
+                  <LayersControl.BaseLayer checked name="Détaillée (Voyager)">
+                    <TileLayer
+                      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; OpenStreetMap &copy; CARTO'
+                      subdomains="abcd"
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="Satellite">
+                    <TileLayer
+                      url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                      attribution="Tiles &copy; Esri"
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="Sombre">
+                    <TileLayer
+                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; OpenStreetMap &copy; CARTO'
+                      subdomains="abcd"
+                    />
+                  </LayersControl.BaseLayer>
+                </LayersControl>
+
+                {markers.map((m, i) => {
+                  const badgeIcon = L.divIcon({
+                    className: "visitor-badge-icon",
+                    html: `<div style="display:flex;align-items:center;gap:4px;background:hsl(var(--background));border:2px solid hsl(var(--primary));border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:700;color:hsl(var(--foreground));box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;font-family:system-ui;">
+                      <span style="font-size:13px;">${m.coords.flag}</span>
+                      <span>${m.count}</span>
+                    </div>`,
+                    iconSize: [60, 24],
+                    iconAnchor: [30, 12],
+                  });
+                  return (
+                    <div key={i}>
+                      <CircleMarker
+                        center={[m.coords.lat, m.coords.lng]}
+                        radius={m.radius}
+                        pathOptions={{
+                          fillColor: "hsl(var(--primary))",
+                          fillOpacity: 0.35,
+                          color: "hsl(var(--primary))",
+                          weight: 2,
+                        }}
+                      />
+                      <Marker position={[m.coords.lat, m.coords.lng]} icon={badgeIcon}>
+                        <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+                          <div className="font-sans text-xs">
+                            <strong>{m.country}</strong> — {m.count} visites
+                          </div>
+                        </Tooltip>
+                        <Popup>
+                          <div className="text-center font-sans">
+                            <span className="text-2xl">{m.coords.flag}</span>
+                            <div className="font-semibold mt-1">{m.country}</div>
+                            <div className="text-sm text-muted-foreground">{m.count} visites</div>
+                            <div className="text-[11px] text-muted-foreground mt-1">
+                              {totalVisits > 0 ? Math.round((m.count / totalVisits) * 100) : 0}% du total
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    </div>
+                  );
+                })}
               </MapContainer>
+
+              <div className="absolute bottom-2 left-2 z-[1000] bg-background/95 backdrop-blur border border-border rounded-lg px-2.5 py-1.5 text-[10px] shadow-lg">
+                <div className="font-semibold mb-1">Légende</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-primary/40 border border-primary" />
+                  <span className="text-muted-foreground">Cercle = volume</span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="px-1 py-0.5 rounded-full border border-primary text-[9px] font-bold">12</span>
+                  <span className="text-muted-foreground">Badge = nb visites</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
