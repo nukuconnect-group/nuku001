@@ -190,7 +190,7 @@ const PaymentMethodSelect = ({
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span className="text-[10px] text-muted-foreground">
-                  {selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre..." : "Validez sur votre téléphone..."}
+                  Validez sur votre téléphone...
                 </span>
               </div>
             </div>
