@@ -6,6 +6,8 @@ export const APP_ROUTES: string[] = [
   "/",
   "/a-propos",
   "/admin",
+  "/admin/seo-canonical",
+  "/admin/seo-preview",
   "/adresse-livraison",
   "/affiliation",
   "/aide",
