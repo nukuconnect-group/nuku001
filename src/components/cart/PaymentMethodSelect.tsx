@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, ShieldCheck, Loader2, Phone, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Wallet, ShieldCheck, Loader2, Phone, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +11,40 @@ import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 
-
 const paymentMethods = [
-  { id: "paygate", name: "Paygate", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
+  { id: "mobile_money", name: "Mobile Money", description: "Moov Money, Mixx by Yas", icon: Wallet, tag: "Recommandé" },
 ];
 export { paymentMethods };
+
+// Préfixes Mobile Money au Togo (numéros à 8 chiffres, sans indicatif)
+const FLOOZ_PREFIXES = ["90", "91", "96", "97", "98", "99"]; // Moov Money / Flooz
+const YAS_PREFIXES = ["70", "71", "79", "92", "93", "94"];   // Mixx by Yas / T-Money
+
+/** Nettoie le numéro: garde les chiffres, retire l'indicatif 228 si présent */
+const normalizePhone = (raw: string): string => {
+  const digits = (raw || "").replace(/[^\d]/g, "");
+  return digits.startsWith("228") ? digits.slice(3) : digits;
+};
+
+/** Détecte le réseau (FLOOZ | TMONEY) à partir du numéro */
+export const detectNetworkFromPhone = (raw: string): "FLOOZ" | "TMONEY" | "" => {
+  const local = normalizePhone(raw);
+  if (local.length < 2) return "";
+  const prefix = local.slice(0, 2);
+  if (FLOOZ_PREFIXES.includes(prefix)) return "FLOOZ";
+  if (YAS_PREFIXES.includes(prefix)) return "TMONEY";
+  return "";
+};
+
+/** Validation complète d'un numéro Togo Mobile Money */
+export const validateMobileMoneyPhone = (raw: string): { valid: boolean; reason?: string; network?: "FLOOZ" | "TMONEY" } => {
+  const local = normalizePhone(raw);
+  if (!local) return { valid: false, reason: "Veuillez entrer un numéro de téléphone." };
+  if (local.length !== 8) return { valid: false, reason: "Le numéro doit comporter 8 chiffres (sans l'indicatif)." };
+  const network = detectNetworkFromPhone(raw);
+  if (!network) return { valid: false, reason: "Préfixe inconnu. Utilisez un numéro Moov ou Mixx by Yas." };
+  return { valid: true, network };
+};
 
 interface PaymentMethodSelectProps {
   paymentMethod: string;
@@ -41,12 +70,19 @@ const PaymentMethodSelect = ({
   onNetworkChange,
 }: PaymentMethodSelectProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState<string>("");
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const { toast } = useToast();
 
-  // Only use internal polling when NOT in hidePayButton mode (standalone usage)
+  // Auto-détection du réseau depuis le numéro
+  const detectedNetwork = useMemo(() => detectNetworkFromPhone(mobileNumber), [mobileNumber]);
+  const validation = useMemo(() => validateMobileMoneyPhone(mobileNumber), [mobileNumber]);
+
+  // Propage le réseau détecté au parent
+  useEffect(() => {
+    onNetworkChange?.(detectedNetwork);
+  }, [detectedNetwork, onNetworkChange]);
+
   const handleCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     setIsProcessing(false);
@@ -66,7 +102,7 @@ const PaymentMethodSelect = ({
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé dans le délai imparti.", variant: "destructive" });
   }, [toast]);
 
-  const { status: pollingStatus, attempts } = usePaygatePolling({
+  usePaygatePolling({
     identifier: paymentIdentifier,
     enabled: pollingEnabled && !hidePayButton,
     intervalMs: 5000,
@@ -76,18 +112,13 @@ const PaymentMethodSelect = ({
     onExpired: handleExpired,
   });
 
-  const networks = [
-    { id: "FLOOZ", label: "Moov Money / Flooz", logo: moovFloozLogo },
-    { id: "TMONEY", label: "Mixx by Yas (T-Money)", logo: mixxYasLogo },
-  ];
-
   const showPolling = hidePayButton ? isPolling : pollingEnabled;
   const isDisabled = isProcessing || showPolling;
 
   const openPayment = async () => {
     if (!amount || amount <= 0) return;
-    if (!mobileNumber) {
-      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
+    if (!validation.valid) {
+      toast({ title: "Numéro invalide", description: validation.reason || "Vérifiez votre numéro.", variant: "destructive" });
       return;
     }
 
@@ -101,8 +132,8 @@ const PaymentMethodSelect = ({
           amount,
           description: `Commande NUKUCONNECT - ${amount} FCFA`,
           identifier,
-          phone_number: mobileNumber.replace(/\s/g, ""),
-          network: selectedNetwork,
+          phone_number: normalizePhone(mobileNumber),
+          network: validation.network,
           use_redirect: false,
         },
       });
@@ -110,12 +141,18 @@ const PaymentMethodSelect = ({
       if (error) throw error;
 
       setPollingEnabled(true);
-      toast({ title: "Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
+      toast({
+        title: "Paiement initié",
+        description: `Validez la transaction sur votre téléphone ${validation.network === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
+      });
     } catch (err: any) {
       setIsProcessing(false);
       toast({ title: "Erreur de paiement", description: err.message || "Réessayez plus tard.", variant: "destructive" });
     }
   };
+
+  const networkLabel = detectedNetwork === "FLOOZ" ? "Moov Money / Flooz" : detectedNetwork === "TMONEY" ? "Mixx by Yas" : "";
+  const networkLogo = detectedNetwork === "FLOOZ" ? moovFloozLogo : detectedNetwork === "TMONEY" ? mixxYasLogo : null;
 
   return (
     <Card>
@@ -128,55 +165,59 @@ const PaymentMethodSelect = ({
       <CardContent className="p-4 pt-2 space-y-4">
         <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
               <ShieldCheck className="w-5 h-5 text-primary" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">Paygate Global</p>
+                <p className="font-semibold text-sm text-foreground">Mobile Money</p>
                 <Badge className="text-[9px] bg-primary/20 text-primary border-0">Sécurisé</Badge>
               </div>
-              <p className="text-[11px] text-muted-foreground">Paiement sécurisé Mobile Money & Carte bancaire</p>
+              <p className="text-[11px] text-muted-foreground">Paiement Moov Money & Mixx by Yas</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {networks.map((n) => (
-              <button
-                key={n.id}
-                type="button"
-                onClick={() => {
-                  if (!isDisabled) {
-                    setSelectedNetwork(n.id);
-                    onNetworkChange?.(n.id);
-                  }
-                }}
-                className={`rounded-xl bg-background border-2 p-2 text-center transition-all ${
-                  selectedNetwork === n.id
-                    ? "border-primary shadow-sm ring-1 ring-primary/30"
-                    : "border-border hover:border-primary/40"
-                } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <img src={n.logo} alt={n.label} className="h-8 sm:h-10 mx-auto object-contain mb-1" />
-                <p className="text-[9px] sm:text-[10px] font-medium text-foreground leading-tight">{n.label}</p>
-              </button>
-            ))}
+          {/* Réseaux supportés — affichage informatif aligné */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
+              <img src={moovFloozLogo} alt="Moov Money / Flooz" className="max-h-10 max-w-full object-contain" />
+            </div>
+            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
+              <img src={mixxYasLogo} alt="Mixx by Yas" className="max-h-10 max-w-full object-contain" />
+            </div>
           </div>
 
-          {selectedNetwork && !showPolling && (
+          {/* Champ numéro avec auto-détection */}
+          {!showPolling && (
             <div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" />
-                Numéro {selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}
+                Numéro Mobile Money
               </Label>
               <Input
                 type="tel"
-                placeholder="+228 XX XX XX XX"
+                inputMode="tel"
+                placeholder="Ex : 90 12 34 56"
                 value={mobileNumber}
                 onChange={(e) => onMobileNumberChange(e.target.value)}
+                maxLength={20}
                 className="h-9 text-sm"
                 disabled={isDisabled}
               />
+              {/* Feedback auto-détection */}
+              {mobileNumber && detectedNetwork && networkLogo && (
+                <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/20 px-2 py-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <img src={networkLogo} alt={networkLabel} className="h-5 object-contain" />
+                  <span className="text-[11px] text-foreground">Réseau détecté : <span className="font-medium">{networkLabel}</span></span>
+                </div>
+              )}
+              {mobileNumber && !validation.valid && validation.reason && (
+                <div className="flex items-center gap-2 rounded-lg bg-destructive/5 border border-destructive/20 px-2 py-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                  <span className="text-[11px] text-destructive">{validation.reason}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -189,20 +230,18 @@ const PaymentMethodSelect = ({
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] text-muted-foreground">
-                  Validez sur votre téléphone...
-                </span>
+                <span className="text-[10px] text-muted-foreground">Validez sur votre téléphone...</span>
               </div>
             </div>
           )}
 
           <p className="text-[10px] text-muted-foreground text-center">
-            🔒 Transaction chiffrée et sécurisée via Paygate Global
+            🔒 Transaction chiffrée et sécurisée
           </p>
         </div>
 
-        {/* Only show standalone pay button when not in cart mode */}
-        {!hidePayButton && amount && amount > 0 && selectedNetwork && !pollingEnabled && (
+        {/* Bouton de paiement standalone (hors panier) */}
+        {!hidePayButton && amount && amount > 0 && validation.valid && !pollingEnabled && (
           <Button
             variant="hero"
             className="w-full gap-2"
