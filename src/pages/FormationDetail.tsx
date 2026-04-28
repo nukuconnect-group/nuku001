@@ -206,13 +206,16 @@ const FormationDetail = () => {
           </div>
 
           {/* Overall progress */}
-          {userId && overallProgress > 0 && (
+          {userId && isEnrolled && (
             <div className="max-w-md mb-4">
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="text-muted-foreground">Votre progression</span>
                 <span className="font-semibold text-primary">{overallProgress}%</span>
               </div>
               <Progress value={overallProgress} className="h-2" />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {Object.values(progress).filter(Boolean).length} / {modules.length} chapitres terminés
+              </p>
             </div>
           )}
         </div>
