@@ -344,6 +344,123 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
           )}
         </div>
 
+        {/* Tableau détaillé par métrique (auto-refresh pendant boost actif) */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> Tableau détaillé
+            </p>
+            {active && (
+              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Mise à jour auto
+              </Badge>
+            )}
+          </div>
+          <div className="rounded-md border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-[10px] h-8">Métrique</TableHead>
+                  <TableHead className="text-[10px] h-8 text-right">Valeur</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Eye className="w-3 h-3 text-primary" />Impressions</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.impressions ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Users className="w-3 h-3 text-blue-500" />Visiteurs uniques</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.uniqueVisitors ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3 text-amber-500" />Clics fiche</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.clicks ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3 h-3 text-green-600" />Discussions</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.conversations ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><ShoppingCart className="w-3 h-3 text-primary" />Commandes</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.orders ?? "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-emerald-600" />Revenus générés</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">
+                    {m ? `${(m.revenue || 0).toLocaleString("fr-FR")} F` : "…"}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Historique produit avec filtres date */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+              <History className="w-3 h-3" /> Historique produit ({history.length})
+            </p>
+            <div className="flex items-center gap-1">
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              <Input
+                type="date"
+                value={filterFrom}
+                onChange={(e) => setFilterFrom(e.target.value)}
+                className="h-6 text-[10px] px-1.5 w-[110px]"
+                aria-label="Date de début"
+              />
+              <span className="text-[10px] text-muted-foreground">→</span>
+              <Input
+                type="date"
+                value={filterTo}
+                onChange={(e) => setFilterTo(e.target.value)}
+                className="h-6 text-[10px] px-1.5 w-[110px]"
+                aria-label="Date de fin"
+              />
+              {(filterFrom || filterTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[9px] px-1.5"
+                  onClick={() => { setFilterFrom(""); setFilterTo(""); }}
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+          {historyLoading ? (
+            <p className="text-[10px] text-muted-foreground italic py-2">Chargement de l'historique…</p>
+          ) : history.length === 0 ? (
+            <p className="text-[10px] text-muted-foreground italic py-2">Aucune activité sur cette période.</p>
+          ) : (
+            <ul className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {history.map((h) => {
+                const Icon =
+                  h.type === "Discussion" ? MessageCircle :
+                  h.type === "Commande" ? ShoppingCart :
+                  h.type === "Essai d'achat" ? AlertTriangle :
+                  h.type === "Appel" ? Phone : Eye;
+                return (
+                  <li key={h.id} className="flex items-start gap-2 text-[10px] py-1 px-2 rounded bg-muted/30">
+                    <Icon className="w-3 h-3 mt-0.5 text-primary flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">{h.type}</p>
+                      <p className="text-muted-foreground truncate">{h.label}</p>
+                    </div>
+                    <span className="text-muted-foreground whitespace-nowrap text-[9px]">
+                      {formatDateTime(h.at)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         {/* Actions traçabilité + historique */}
         <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
           <Button asChild size="sm" variant="outline" className="flex-1 text-xs h-8">
