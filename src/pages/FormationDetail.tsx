@@ -551,6 +551,41 @@ const FormationDetail = () => {
             </Card>
           )}
 
+          {/* Locked PDF teaser for paid formations when not yet enrolled */}
+          {formation.source_document_url && formation.is_paid && !isEnrolled && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-heading text-sm sm:text-base font-bold text-foreground mb-0.5 flex items-center gap-1.5">
+                      Document de la formation
+                      <Lock className="w-3.5 h-3.5 text-primary" />
+                    </h2>
+                    {formation.source_document_name && (
+                      <p className="text-[11px] text-muted-foreground truncate mb-1">{formation.source_document_name}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Le support PDF complet ({formation.source_document_name ? "ci-dessus" : "de cette formation"}) sera téléchargeable et consultable dès que votre paiement de{" "}
+                      <span className="font-semibold text-foreground">{Number(formation.price || 0).toLocaleString("fr-FR")} FCFA</span> sera confirmé.
+                    </p>
+                  </div>
+                  {userId ? (
+                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-shrink-0" onClick={() => setPayOpen(true)}>
+                      <CreditCard className="w-3.5 h-3.5" /> Payer
+                    </Button>
+                  ) : (
+                    <Link to="/auth" className="flex-shrink-0">
+                      <Button variant="hero" size="sm" className="text-xs">Se connecter</Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Source PDF preview */}
           {formation.source_document_url && (!formation.is_paid || isEnrolled) && (() => {
             // For paid formations, only use a freshly-signed URL (never the raw source URL)
