@@ -680,7 +680,7 @@ const Marketplace = () => {
           <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
             {sponsoredProducts.map((product) => (
               <div key={product.id} className="flex-shrink-0 w-[180px] snap-start">
-                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} minimal />
+                <SponsoredProductCard product={product} />
               </div>
             ))}
           </div>
@@ -816,8 +816,8 @@ const Marketplace = () => {
             </div>
             <div ref={sponsoredRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {sponsoredProducts.map((product) => (
-                <div key={`sp-mob-${product.id}`} className="flex-shrink-0 w-[140px] snap-start">
-                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} minimal />
+                <div key={`sp-mob-${product.id}`} className="flex-shrink-0 w-[150px] snap-start">
+                  <SponsoredProductCard product={product} />
                 </div>
               ))}
             </div>
