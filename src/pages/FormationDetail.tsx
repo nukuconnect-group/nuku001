@@ -54,11 +54,13 @@ const FormationDetail = () => {
           .eq("user_id", session.user.id)
           .eq("formation_id", formationId);
 
+        const rows = (progData as any[]) || [];
         const progMap: Record<string, boolean> = {};
-        ((progData as any[]) || []).forEach((p: any) => {
+        rows.forEach((p: any) => {
           if (p.module_id) progMap[p.module_id] = p.completed;
         });
         setProgress(progMap);
+        setIsEnrolled(rows.length > 0);
 
         const completedCount = Object.values(progMap).filter(Boolean).length;
         const total = (modRes.data as any[])?.length || 1;
