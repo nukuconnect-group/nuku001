@@ -75,6 +75,7 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Moderation = lazy(() => import("./pages/Moderation"));
 const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
 const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
+const AccountAccess = lazy(() => import("./pages/AccountAccess"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -215,6 +216,7 @@ const App = () => {
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />

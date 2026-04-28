@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonner } from "sonner";
 import {
   CheckCircle2, XCircle, Clock, FileText, Loader2, Eye, User, ShieldCheck, Truck, Store,
-  ZoomIn,
+  ZoomIn, Mail, MailWarning, MailCheck, Send, History,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -26,6 +27,41 @@ const statusBadge = (status: string) => {
   }
 };
 
+type EmailInfo = { status: string; created_at: string; error?: string | null };
+
+const emailStatusBadge = (info?: EmailInfo) => {
+  if (!info) {
+    return (
+      <Badge variant="outline" className="text-[10px] gap-1">
+        <Mail className="w-3 h-3" /> Aucun
+      </Badge>
+    );
+  }
+  const date = new Date(info.created_at).toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+  if (info.status === "sent") {
+    return (
+      <Badge className="bg-green-100 text-green-800 text-[10px] gap-1" title={`Envoyé le ${date}`}>
+        <MailCheck className="w-3 h-3" /> Envoyé · {date}
+      </Badge>
+    );
+  }
+  if (info.status === "pending") {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-800 text-[10px] gap-1" title={`En file depuis ${date}`}>
+        <Mail className="w-3 h-3 animate-pulse" /> En attente · {date}
+      </Badge>
+    );
+  }
+  // failed / dlq / suppressed / bounced / complained
+  return (
+    <Badge className="bg-red-100 text-red-800 text-[10px] gap-1" title={info.error || info.status}>
+      <MailWarning className="w-3 h-3" /> {info.status} · {date}
+    </Badge>
+  );
+};
+
 const KYCManager = () => {
   const { toast } = useToast();
   const [driverSubs, setDriverSubs] = useState<any[]>([]);
@@ -35,8 +71,38 @@ const KYCManager = () => {
   const [selectedType, setSelectedType] = useState<"driver" | "supplier">("driver");
   const [adminNote, setAdminNote] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  // Map: idempotency key (kyc-<id>-<decision>) -> latest email row
+  const [emailStatuses, setEmailStatuses] = useState<Record<string, EmailInfo>>({});
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const knownKeys = useRef<Set<string>>(new Set());
+
+  const loadEmailStatuses = async (kycIds: string[]) => {
+    if (!kycIds.length) return;
+    const keys = kycIds.flatMap((id) => [`kyc-${id}-approved`, `kyc-${id}-rejected`]);
+    const { data } = await supabase
+      .from("email_send_log")
+      .select("message_id, status, created_at, error_message")
+      .in("message_id", keys)
+      .order("created_at", { ascending: false });
+    if (!data) return;
+    const map: Record<string, EmailInfo> = {};
+    for (const row of data) {
+      // Latest first → keep the first occurrence per key
+      if (!map[row.message_id]) {
+        map[row.message_id] = {
+          status: row.status,
+          created_at: row.created_at,
+          error: row.error_message,
+        };
+      }
+    }
+    setEmailStatuses(map);
+    knownKeys.current = new Set(keys);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -61,10 +127,95 @@ const KYCManager = () => {
         setProfiles(map);
       }
     }
+
+    await loadEmailStatuses(allData.map((s: any) => s.id));
     setLoading(false);
   };
 
+  const loadAuditLog = async () => {
+    const { data } = await supabase
+      .from("kyc_audit_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setAuditLog(data || []);
+  };
+
   useEffect(() => { loadData(); }, []);
+
+  // Realtime: listen for KYC email status updates even if the modal is closed
+  useEffect(() => {
+    const channel = supabase
+      .channel("kyc-email-status")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "email_send_log" },
+        (payload: any) => {
+          const row = payload.new;
+          if (!row?.message_id || !row.message_id.startsWith("kyc-")) return;
+          if (!knownKeys.current.has(row.message_id) && !row.message_id) return;
+          setEmailStatuses((prev) => {
+            const existing = prev[row.message_id];
+            // Always keep latest by created_at
+            if (existing && new Date(existing.created_at) > new Date(row.created_at)) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [row.message_id]: {
+                status: row.status,
+                created_at: row.created_at,
+                error: row.error_message,
+              },
+            };
+          });
+          if (row.status === "sent") {
+            sonner.success("Email KYC livré ✓", {
+              description: `Confirmé par le serveur · ${row.message_id}`,
+            });
+          } else if (["dlq", "failed", "bounced"].includes(row.status)) {
+            sonner.error(`Email KYC échoué (${row.status})`, {
+              description: row.error_message || row.message_id,
+            });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const sendKycEmail = async (kyc: any, type: "driver" | "supplier", decision: "approved" | "rejected", note: string) => {
+    const profile = profiles[kyc.user_id];
+    return supabase.functions.invoke("send-kyc-status-email", {
+      body: {
+        user_id: kyc.user_id,
+        kyc_id: kyc.id,
+        kyc_type: type,
+        decision,
+        admin_note: decision === "rejected" ? note : "",
+        name: profile?.full_name || "",
+      },
+    });
+  };
+
+  const handleResend = async (kyc: any, type: "driver" | "supplier") => {
+    if (kyc.status === "pending") {
+      toast({ title: "Décision requise", description: "Approuvez ou refusez d'abord la soumission.", variant: "destructive" });
+      return;
+    }
+    setResending(kyc.id);
+    try {
+      const { error } = await sendKycEmail(kyc, type, kyc.status, kyc.admin_note || "");
+      if (error) throw error;
+      toast({ title: "Email renvoyé ✉️", description: "Le statut va se mettre à jour en temps réel." });
+      // Refresh email statuses for this kyc
+      await loadEmailStatuses([kyc.id]);
+    } catch (err: any) {
+      toast({ title: "Erreur d'envoi", description: err.message, variant: "destructive" });
+    } finally {
+      setResending(null);
+    }
+  };
 
   const handleDecision = async (kyc: any, type: "driver" | "supplier", decision: "approved" | "rejected") => {
     setProcessing(true);
@@ -103,17 +254,7 @@ const KYCManager = () => {
       });
 
       // Send branded KYC status email (real-time, idempotent via Edge Function)
-      const profile = profiles[kyc.user_id];
-      supabase.functions.invoke("send-kyc-status-email", {
-        body: {
-          user_id: kyc.user_id,
-          kyc_id: kyc.id,
-          kyc_type: type,
-          decision,
-          admin_note: decision === "rejected" ? adminNote : "",
-          name: profile?.full_name || "",
-        },
-      }).then(({ error: emailErr }) => {
+      sendKycEmail(kyc, type, decision, adminNote).then(({ error: emailErr }) => {
         if (emailErr) console.error("KYC email send failed (non-blocking):", emailErr);
       });
 
@@ -145,41 +286,55 @@ const KYCManager = () => {
   }
 
   const renderList = (submissions: any[], type: "driver" | "supplier") => {
-    const pending = submissions.filter((s) => s.status === "pending");
     return (
       <div className="space-y-2">
-        {pending.length > 0 && (
-          <Badge className="bg-yellow-100 text-yellow-800 text-[10px] mb-2">{pending.length} en attente</Badge>
-        )}
         {submissions.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Aucune soumission</p>
         ) : (
           submissions.map((kyc) => {
             const profile = profiles[kyc.user_id];
+            const emailKey = kyc.status !== "pending" ? `kyc-${kyc.id}-${kyc.status}` : null;
+            const emailInfo = emailKey ? emailStatuses[emailKey] : undefined;
             return (
-              <div key={kyc.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <div key={kyc.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors flex-wrap gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <User className="w-4 h-4 text-primary" />
                     )}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">{profile?.full_name || (type === "driver" ? "Livreur" : "Fournisseur")}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {kyc.id_type?.toUpperCase()} • {kyc.id_number || "—"} • {new Date(kyc.created_at).toLocaleDateString("fr-FR")}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{profile?.full_name || (type === "driver" ? "Livreur" : "Fournisseur")}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {kyc.id_type?.toUpperCase()} • {new Date(kyc.created_at).toLocaleDateString("fr-FR")}
                       {type === "supplier" && kyc.business_name ? ` • ${kyc.business_name}` : ""}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {statusBadge(kyc.status)}
+                  <span className="hidden sm:inline-flex">{emailStatusBadge(emailInfo)}</span>
+                  {kyc.status !== "pending" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1"
+                      onClick={() => handleResend(kyc, type)}
+                      disabled={resending === kyc.id}
+                      title="Renvoyer l'email KYC"
+                    >
+                      {resending === kyc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      Renvoyer
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => { setSelectedKyc(kyc); setSelectedType(type); setAdminNote(kyc.admin_note || ""); }}>
                     <Eye className="w-3 h-3" /> Voir
                   </Button>
                 </div>
+                {/* Mobile email status row */}
+                <div className="sm:hidden w-full">{emailStatusBadge(emailInfo)}</div>
               </div>
             );
           })
@@ -194,11 +349,19 @@ const KYCManager = () => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary" />
             Vérifications KYC
           </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1"
+            onClick={() => { loadAuditLog(); setShowHistory(true); }}
+          >
+            <History className="w-3 h-3" /> Journal
+          </Button>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="drivers">
@@ -240,8 +403,24 @@ const KYCManager = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{profiles[selectedKyc.user_id]?.full_name || "Utilisateur"}</p>
-                  <div className="flex items-center gap-2 mt-1">{statusBadge(selectedKyc.status)}</div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {statusBadge(selectedKyc.status)}
+                    {selectedKyc.status !== "pending" &&
+                      emailStatusBadge(emailStatuses[`kyc-${selectedKyc.id}-${selectedKyc.status}`])}
+                  </div>
                 </div>
+                {selectedKyc.status !== "pending" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1"
+                    onClick={() => handleResend(selectedKyc, selectedType)}
+                    disabled={resending === selectedKyc.id}
+                  >
+                    {resending === selectedKyc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                    Renvoyer email
+                  </Button>
+                )}
               </div>
 
               {/* Details grid */}
@@ -361,6 +540,44 @@ const KYCManager = () => {
           {zoomImage && (
             <img src={zoomImage} alt="Document KYC" className="w-full h-auto max-h-[80vh] object-contain rounded-lg" />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* KYC audit journal */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <History className="w-4 h-4" /> Journal des décisions KYC
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {auditLog.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Aucune décision enregistrée.</p>
+            ) : (
+              auditLog.map((row) => (
+                <div key={row.id} className="p-3 rounded-lg border border-border text-xs space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      {row.kyc_type === "driver"
+                        ? <Truck className="w-3 h-3 text-muted-foreground" />
+                        : <Store className="w-3 h-3 text-muted-foreground" />}
+                      <span className="font-medium">{profiles[row.user_id]?.full_name || row.user_id.slice(0, 8)}</span>
+                      {statusBadge(row.decision)}
+                    </div>
+                    <span className="text-muted-foreground">{new Date(row.created_at).toLocaleString("fr-FR")}</span>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Admin: <span className="font-mono">{row.admin_id.slice(0, 8)}…</span>
+                    {row.email_idempotency_key && <> · Email key: <span className="font-mono">{row.email_idempotency_key}</span></>}
+                  </p>
+                  {row.reason && (
+                    <p><span className="text-muted-foreground">Motif :</span> {row.reason}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -70,9 +70,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const recipientEmail = targetUser.user.email;
-    const loginUrl = body.kyc_type === "driver"
-      ? "https://nukuconnect.com/driver-dashboard"
-      : "https://nukuconnect.com/dashboard";
+    // Smart redirect: /mon-compte sends approved users to their dashboard
+    // and pending/rejected ones to the right KYC screen.
+    const loginUrl = "https://nukuconnect.com/mon-compte";
 
     // Forward to send-transactional-email with idempotency to prevent dupes
     const idempotencyKey = `kyc-${body.kyc_id}-${body.decision}`;
@@ -100,6 +100,17 @@ Deno.serve(async (req: Request) => {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Append to KYC audit journal (admin + decision + reason + timestamp)
+    await admin.from("kyc_audit_log").insert({
+      kyc_id: body.kyc_id,
+      kyc_type: body.kyc_type,
+      user_id: body.user_id,
+      admin_id: caller.id,
+      decision: body.decision,
+      reason: body.admin_note || null,
+      email_idempotency_key: idempotencyKey,
+    });
 
     return new Response(JSON.stringify({ success: true, recipientEmail, idempotencyKey }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
