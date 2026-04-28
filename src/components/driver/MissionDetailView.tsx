@@ -344,6 +344,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         });
       }
 
+      // Disable nav mode if user pans the map manually (Google Maps UX)
+      map.on("dragstart", () => {
+        setNavMode(false);
+      });
+
       mapInstanceRef.current = map;
 
       // Pulse CSS
