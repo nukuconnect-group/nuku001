@@ -149,6 +149,7 @@ const Auth = () => {
   const [buyerPhone, setBuyerPhone] = useState("");
   const [buyerLocation, setBuyerLocation] = useState("");
   const [buyerCountry, setBuyerCountry] = useState("");
+  const [buyerCompany, setBuyerCompany] = useState(""); // Optionnel — nom d'entreprise pour acheteurs/apprenants
 
   useEffect(() => {
     if (buyerCountry) return;
@@ -313,9 +314,13 @@ const Auth = () => {
       const fullName = (userType === "buyer" || userType === "learner") ? `${buyerFirstName} ${buyerLastName}` : producerName;
       const phone = (userType === "buyer" || userType === "learner") ? buyerPhone : producerPhone;
       const location = (userType === "buyer" || userType === "learner") ? `${buyerLocation}, ${buyerCountry}` : producerLocation;
+      const isCompany = userType === "producer" || userType === "trainer";
+      const businessName = isCompany
+        ? producerCompany.trim()
+        : ((userType === "buyer" || userType === "learner") && buyerCompany.trim() ? buyerCompany.trim() : null);
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail, password: signupPassword,
-        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, sector: userType === "producer" ? producerSector : null } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: businessName, sector: userType === "producer" ? producerSector : null } },
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
@@ -336,7 +341,7 @@ const Auth = () => {
         }
 
         const needsConfirmation = !authData.session;
-        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
+        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: businessName, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
         // Link referral if present — only remove localStorage AFTER successful claim
         const savedRef = localStorage.getItem("nukuconnect-ref");
@@ -620,6 +625,14 @@ const Auth = () => {
                 {/* Profile-specific fields */}
                 {(userType === "producer" || userType === "trainer") && (
                   <div className="space-y-3">
+                    <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] text-foreground flex items-start gap-2">
+                      <Building className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>
+                        {userType === "trainer"
+                          ? "Saisissez le nom de votre organisme/institution — c'est ce nom qui sera affiché publiquement, pas votre nom personnel."
+                          : "Saisissez le nom de votre entreprise/exploitation — c'est ce nom qui sera affiché publiquement sur votre profil et vos produits, pas votre nom personnel."}
+                      </span>
+                    </div>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input type="text" placeholder="Nom complet" value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
@@ -732,6 +745,25 @@ const Auth = () => {
                       <SelectTrigger><SelectValue placeholder="Choisir un pays" /></SelectTrigger>
                       <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
+
+                    {/* Optionnel : nom d'entreprise pour les acheteurs (B2B) */}
+                    <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground flex items-start gap-2">
+                      <Building className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>
+                        <strong className="text-foreground">Optionnel</strong> — Si vous achetez au nom d'une entreprise,
+                        renseignez-la ci-dessous. Elle sera affichée à la place de votre nom personnel.
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Nom de l'entreprise (optionnel)"
+                        value={buyerCompany}
+                        onChange={(e) => setBuyerCompany(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
                 )}
 
