@@ -5,6 +5,7 @@ import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import footerBg from "@/assets/footer-bg.webp";
 import badgeGooglePlay from "@/assets/badge-google-play.png";
 import badgeAppStore from "@/assets/badge-app-store.png";
+import TrustBadges from "@/components/cart/TrustBadges";
 
 const Footer = () => {
   const { t } = useLanguage();
