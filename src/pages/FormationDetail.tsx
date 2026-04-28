@@ -136,16 +136,25 @@ const FormationDetail = () => {
     });
     const result = (data as any) || {};
     if (error || !result.success) {
-      const state = result.state || "unknown";
-      const msg = result.user_message || result.error || error?.message || "Le paiement n'a pas encore été confirmé.";
-      const isPending = state === "pending";
+      const state = (result.state || "unknown") as
+        | "pending" | "expired" | "failed" | "unknown" | string;
+      const msg =
+        result.user_message ||
+        result.error ||
+        error?.message ||
+        "Le paiement n'a pas encore été confirmé. Si le montant a été débité, le service va se synchroniser sous peu.";
+      const kind: "pending" | "expired" | "failed" | "unknown" =
+        state === "pending" ? "pending" :
+        state === "expired" ? "expired" :
+        state === "failed" ? "failed" : "unknown";
+      setPayState({ kind, message: msg });
       toast({
         title:
-          state === "expired" ? "Paiement expiré" :
-          state === "failed" ? "Paiement échoué" :
-          isPending ? "Paiement en attente" : "Inscription non confirmée",
+          kind === "expired" ? "Paiement expiré" :
+          kind === "failed" ? "Paiement échoué" :
+          kind === "pending" ? "Paiement en attente" : "Statut inconnu",
         description: msg,
-        variant: isPending ? "default" : "destructive",
+        variant: kind === "pending" || kind === "unknown" ? "default" : "destructive",
       });
       return;
     }
@@ -153,9 +162,11 @@ const FormationDetail = () => {
     setPayOpen(false);
     setPayIdentifier(null);
     setPayTxRef(null);
+    const successMsg = result.user_message || "Vous avez désormais accès à la formation.";
+    setPayState({ kind: "success", message: successMsg });
     toast({
       title: result.state === "already_enrolled" ? "Déjà inscrit" : "Paiement confirmé ✅",
-      description: result.user_message || "Vous avez désormais accès à la formation.",
+      description: successMsg,
     });
   };
 
@@ -164,8 +175,24 @@ const FormationDetail = () => {
     tx_reference: payTxRef || undefined,
     enabled: !!payIdentifier,
     onCompleted: () => confirmPaidEnrollment(payIdentifier!, payTxRef || undefined),
-    onFailed: () => toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" }),
-    onExpired: () => toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" }),
+    onFailed: () => {
+      setPayState({
+        kind: "failed",
+        message: "Le paiement a été refusé ou annulé. Aucun montant n'a été débité. Vous pouvez relancer le paiement.",
+      });
+      setPayIdentifier(null);
+      setPayTxRef(null);
+      toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
+    },
+    onExpired: () => {
+      setPayState({
+        kind: "expired",
+        message: "La session de paiement a expiré sans confirmation. Relancez le paiement pour réessayer.",
+      });
+      setPayIdentifier(null);
+      setPayTxRef(null);
+      toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" });
+    },
   });
 
   const initiatePayment = async () => {
@@ -175,6 +202,7 @@ const FormationDetail = () => {
       return;
     }
     setPayInitiating(true);
+    setPayState({ kind: "initiating" });
     const identifier = `formation-${formation.id}-${userId}-${Date.now()}`;
     const { data, error } = await supabase.functions.invoke("paygate-init", {
       body: {
@@ -188,15 +216,25 @@ const FormationDetail = () => {
     });
     setPayInitiating(false);
     if (error || (data as any)?.error) {
-      toast({ title: "Erreur paiement", description: (data as any)?.error || error?.message || "Impossible d'initier le paiement.", variant: "destructive" });
+      const errMsg = (data as any)?.error || error?.message || "Impossible d'initier le paiement.";
+      setPayState({ kind: "failed", message: errMsg });
+      toast({ title: "Erreur paiement", description: errMsg, variant: "destructive" });
       return;
     }
     setPayIdentifier(identifier);
     if ((data as any)?.tx_reference) setPayTxRef((data as any).tx_reference);
     if ((data as any)?.payment_url) {
       window.open((data as any).payment_url, "_blank", "noopener,noreferrer");
+      setPayState({
+        kind: "pending",
+        message: "Terminez le paiement dans la nouvelle fenêtre. L'inscription sera automatique après confirmation Paygate.",
+      });
       toast({ title: "Paiement ouvert", description: "Terminez le paiement dans la nouvelle fenêtre. Vous serez inscrit automatiquement." });
     } else {
+      setPayState({
+        kind: "pending",
+        message: `Validez la demande sur votre téléphone ${payNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Nous vérifions le statut automatiquement toutes les 5 secondes.`,
+      });
       toast({ title: "Paiement en attente", description: "Validez la demande sur votre téléphone Mobile Money." });
     }
   };
