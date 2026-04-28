@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles, AlertTriangle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,8 @@ import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunc
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 import visaMcLogo from "@/assets/visa-mastercard.png";
+
+const PENDING_PLAN_KEY = "nuku:pendingPlan";
 
 // Plans alignés sur la nouvelle politique tarifaire NukuConnect
 const plans = [
