@@ -105,7 +105,10 @@ const SeoPreview = () => {
 
   useEffect(() => { if (authorized) fetchRow(); /* eslint-disable-next-line */ }, [authorized]);
 
-  const known = isKnownRoute(route);
+  const normalizedRoute = useMemo(() => normalizeSeoSlug(route), [route]);
+  const slugShapeOk = useMemo(() => isValidSlugShape(route), [route]);
+  const known = isKnownRoute(normalizedRoute);
+  const routeOk = slugShapeOk && known;
   const suggestions = useMemo(() => suggestRoutes(route, 8), [route]);
 
   const computed = useMemo(() => {
