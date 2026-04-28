@@ -74,10 +74,13 @@ const SeoManager = () => {
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      setRows((data as SeoRow[]) || []);
+      const list = (data as SeoRow[]) || [];
+      setRows(list);
       setSelected(prev => {
-        if (!prev) return (data?.[0] as SeoRow) || null;
-        return (data as SeoRow[])?.find(r => r.id === prev.id) || prev;
+        const next = prev ? list.find(r => r.id === prev.id) || list[0] : list[0];
+        // Refresh the original snapshot whenever we reload from the server
+        setOriginal(next ? { ...next } : null);
+        return next || null;
       });
     }
     setLoading(false);
