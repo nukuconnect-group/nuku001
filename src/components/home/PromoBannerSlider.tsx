@@ -170,8 +170,8 @@ const PromoBannerSlider = () => {
 
   return (
     <div>
-      {/* Banner Slider - all devices (mobile format preserved) */}
-      <div className="px-3 pt-2 pb-1 max-w-xl mx-auto">
+      {/* Banner Slider - mobile only */}
+      <div className="md:hidden px-3 pt-2 pb-1">
         <div className="relative overflow-hidden rounded-none shadow-lg"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
