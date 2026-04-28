@@ -92,21 +92,27 @@ const Cart = () => {
     }
   };
 
+  const filledRef = useRef(false);
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
-      if (session?.user) await fillBillingFromUser(session.user);
+      if (session?.user && !filledRef.current) {
+        filledRef.current = true;
+        await fillBillingFromUser(session.user);
+      }
     };
     init();
 
-    // Listen for auth changes - re-fill billing when user logs in
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const prev = user;
+    // Listen for auth changes - only auto-fill on first sign in (not on token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
-      // If user just logged in (was null, now has session), auto-fill billing
-      if (session?.user && !prev) {
+      if (event === "SIGNED_IN" && session?.user && !filledRef.current) {
+        filledRef.current = true;
         await fillBillingFromUser(session.user);
+      }
+      if (event === "SIGNED_OUT") {
+        filledRef.current = false;
       }
     });
     return () => subscription.unsubscribe();

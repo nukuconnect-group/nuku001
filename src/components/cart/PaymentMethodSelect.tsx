@@ -72,13 +72,20 @@ const PaymentMethodSelect = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
+  const [manualNetwork, setManualNetwork] = useState<"FLOOZ" | "TMONEY" | "">("");
   const { toast } = useToast();
 
-  // Auto-détection du réseau depuis le numéro
-  const detectedNetwork = useMemo(() => detectNetworkFromPhone(mobileNumber), [mobileNumber]);
-  const validation = useMemo(() => validateMobileMoneyPhone(mobileNumber), [mobileNumber]);
+  // Auto-détection depuis le numéro
+  const autoNetwork = useMemo(() => detectNetworkFromPhone(mobileNumber), [mobileNumber]);
+  // Réseau effectif : priorité au choix manuel, sinon auto-détection
+  const detectedNetwork = manualNetwork || autoNetwork;
+  const validation = useMemo(() => {
+    const base = validateMobileMoneyPhone(mobileNumber);
+    if (base.valid && manualNetwork) return { ...base, network: manualNetwork };
+    return base;
+  }, [mobileNumber, manualNetwork]);
 
-  // Propage le réseau détecté au parent
+  // Propage le réseau au parent
   useEffect(() => {
     onNetworkChange?.(detectedNetwork);
   }, [detectedNetwork, onNetworkChange]);
@@ -177,13 +184,36 @@ const PaymentMethodSelect = ({
             </div>
           </div>
 
-          {/* Réseaux supportés — affichage informatif aligné */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
-              <img src={moovFloozLogo} alt="Moov Money / Flooz" className="max-h-10 max-w-full object-contain" />
-            </div>
-            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
-              <img src={mixxYasLogo} alt="Mixx by Yas" className="max-h-10 max-w-full object-contain" />
+          {/* Sélection manuelle du réseau (cliquable) */}
+          <div>
+            <Label className="text-xs mb-1.5 block">Choisir votre opérateur</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setManualNetwork(manualNetwork === "FLOOZ" ? "" : "FLOOZ")}
+                disabled={isDisabled}
+                className={`rounded-xl bg-background p-2.5 flex items-center justify-center h-16 transition-all ${
+                  detectedNetwork === "FLOOZ"
+                    ? "border-2 border-primary ring-2 ring-primary/20"
+                    : "border border-border hover:border-primary/50"
+                }`}
+                aria-label="Choisir Moov Money"
+              >
+                <img src={moovFloozLogo} alt="Moov Money / Flooz" className="max-h-10 max-w-full object-contain" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setManualNetwork(manualNetwork === "TMONEY" ? "" : "TMONEY")}
+                disabled={isDisabled}
+                className={`rounded-xl bg-background p-2.5 flex items-center justify-center h-16 transition-all ${
+                  detectedNetwork === "TMONEY"
+                    ? "border-2 border-primary ring-2 ring-primary/20"
+                    : "border border-border hover:border-primary/50"
+                }`}
+                aria-label="Choisir Mixx by Yas"
+              >
+                <img src={mixxYasLogo} alt="Mixx by Yas" className="max-h-10 max-w-full object-contain" />
+              </button>
             </div>
           </div>
 
