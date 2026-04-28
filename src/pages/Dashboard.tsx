@@ -4,6 +4,7 @@ import SupplierKYCSection from "@/components/supplier/SupplierKYCSection";
 import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -45,6 +46,7 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -112,9 +114,16 @@ const Dashboard = () => {
   ];
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!window.confirm("Supprimer définitivement ce produit ? Il sera retiré de la marketplace immédiatement.")) return;
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    else { toast({ title: "Produit supprimé" }); fetchProducts(profile.id); }
+    else {
+      toast({ title: "Produit supprimé", description: "Le produit a été retiré de la marketplace." });
+      fetchProducts(profile.id);
+      // Invalidate marketplace caches so changes appear immediately everywhere
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+    }
   };
 
   if (isLoading || profileLoading) {
