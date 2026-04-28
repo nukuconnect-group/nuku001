@@ -83,8 +83,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const peerChannelRef = useRef<any>(null); // outgoing channel to peer
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
-  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+  const ringtoneRef = useRef<{ ctx: AudioContext; stop: () => void } | null>(null);
   const ringTimeoutRef = useRef<number | null>(null);
+  const titleFlashRef = useRef<number | null>(null);
+  const originalTitleRef = useRef<string>("");
+  const browserNotifRef = useRef<Notification | null>(null);
+  const vibrationIntervalRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
   const callStartRef = useRef<number>(0);
   // Refs to avoid stale closures inside setTimeout / signal handlers
@@ -94,27 +98,64 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => { statusRef.current = status; }, [status]);
 
   // ----- helpers -----
-  const playRingtone = useCallback(() => {
+  /**
+   * Sonnerie type "téléphone qui sonne" (style WhatsApp) :
+   * 2 tons rapides (ring-ring) puis 1.5s de silence, en boucle, jusqu'à stopRingtone.
+   * Joue même si l'app est en arrière-plan (tant que l'onglet est vivant).
+   */
+  const playRingtone = useCallback((mode: "incoming" | "outgoing" = "incoming") => {
     try {
-      if (!ringtoneRef.current) {
-        // Simple beep loop using oscillator-encoded data URI is overkill.
-        // Use a public free ringtone via WebAudio: generate a short beep loop.
-        const ctx = new AudioContext();
-        const buffer = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) {
-          // Two quick beeps then silence
-          const t = i / ctx.sampleRate;
-          if ((t > 0 && t < 0.25) || (t > 0.35 && t < 0.6)) {
-            data[i] = Math.sin(2 * Math.PI * 800 * t) * 0.25;
-          }
+      // Audio
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx: AudioContext = new AudioCtx();
+      // Resume si suspendu (autoplay policy)
+      ctx.resume?.().catch(() => {});
+
+      let cancelled = false;
+      const playPattern = () => {
+        if (cancelled) return;
+        const now = ctx.currentTime;
+        // Deux "rings" successifs (440Hz pour entrant, 480Hz/620Hz alterné pour sortant)
+        const freqs = mode === "incoming" ? [880, 880] : [480, 620];
+        const ringDuration = 0.4;
+        const gap = 0.15;
+        freqs.forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = f;
+          osc.type = "sine";
+          const start = now + i * (ringDuration + gap);
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(0.35, start + 0.02);
+          gain.gain.setValueAtTime(0.35, start + ringDuration - 0.05);
+          gain.gain.linearRampToValueAtTime(0, start + ringDuration);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + ringDuration + 0.02);
+        });
+        // Replay toute les ~2s (rythme téléphone)
+        if (!cancelled) {
+          window.setTimeout(playPattern, 2000);
         }
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-        source.connect(ctx.destination);
-        source.start();
-        ringtoneRef.current = { ctx, source } as any;
+      };
+      playPattern();
+
+      ringtoneRef.current = {
+        ctx,
+        stop: () => {
+          cancelled = true;
+          try { ctx.close(); } catch {}
+        },
+      };
+
+      // Vibration mobile en pattern téléphone (appel entrant uniquement)
+      if (mode === "incoming" && typeof navigator !== "undefined" && "vibrate" in navigator) {
+        const pattern = [600, 400, 600, 1500];
+        navigator.vibrate?.(pattern);
+        vibrationIntervalRef.current = window.setInterval(() => {
+          navigator.vibrate?.(pattern);
+        }, 3100);
       }
     } catch (e) {
       console.warn("ringtone error", e);
@@ -123,13 +164,62 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const stopRingtone = useCallback(() => {
     try {
-      const r: any = ringtoneRef.current;
-      if (r?.source) {
-        r.source.stop();
-        r.ctx?.close?.();
-      }
+      ringtoneRef.current?.stop();
     } catch {}
     ringtoneRef.current = null;
+    if (vibrationIntervalRef.current) {
+      clearInterval(vibrationIntervalRef.current);
+      vibrationIntervalRef.current = null;
+      try { navigator.vibrate?.(0); } catch {}
+    }
+  }, []);
+
+  /**
+   * Titre clignotant + notification système pour avertir même si l'onglet
+   * n'est pas actif (style notification d'appel WhatsApp Web).
+   */
+  const startIncomingAlerts = useCallback((callerName: string) => {
+    if (typeof document === "undefined") return;
+    originalTitleRef.current = document.title;
+    let on = false;
+    titleFlashRef.current = window.setInterval(() => {
+      on = !on;
+      document.title = on ? `📞 Appel entrant — ${callerName}` : originalTitleRef.current;
+    }, 1000);
+
+    // Notification navigateur (visible même si app en arrière-plan)
+    try {
+      if ("Notification" in window) {
+        const show = () => {
+          try {
+            const n = new Notification(`📞 Appel entrant`, {
+              body: `${callerName} vous appelle sur NukuConnect`,
+              tag: "nuku-call-incoming",
+              requireInteraction: true,
+              silent: false,
+            });
+            n.onclick = () => { window.focus(); n.close(); };
+            browserNotifRef.current = n;
+          } catch {}
+        };
+        if (Notification.permission === "granted") show();
+        else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((p) => { if (p === "granted") show(); });
+        }
+      }
+    } catch {}
+  }, []);
+
+  const stopIncomingAlerts = useCallback(() => {
+    if (titleFlashRef.current) {
+      clearInterval(titleFlashRef.current);
+      titleFlashRef.current = null;
+    }
+    if (originalTitleRef.current && typeof document !== "undefined") {
+      document.title = originalTitleRef.current;
+    }
+    try { browserNotifRef.current?.close(); } catch {}
+    browserNotifRef.current = null;
   }, []);
 
   const cleanupCall = useCallback(() => {
