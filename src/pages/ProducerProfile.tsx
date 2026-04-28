@@ -289,11 +289,11 @@ const ProducerProfile = () => {
                   <img
                     src={producer.avatar_url || defaultAvatar}
                     alt={(producer as any).business_name || producer.full_name || ""}
-                    className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border-2 border-card shadow-md bg-card"
+                    className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-none object-cover border-2 border-card shadow-md bg-card"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
                   />
                   {producer.is_verified && (
-                    <span className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-emerald-600 border-2 border-card flex items-center justify-center shadow-lg animate-pulse">
+                    <span className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-9 sm:h-9 rounded-none bg-emerald-600 border-2 border-card flex items-center justify-center shadow-lg animate-pulse">
                       <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
                     </span>
                   )}
