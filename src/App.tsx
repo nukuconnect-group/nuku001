@@ -75,6 +75,7 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Moderation = lazy(() => import("./pages/Moderation"));
 const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
 const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
+const AccountAccess = lazy(() => import("./pages/AccountAccess"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
