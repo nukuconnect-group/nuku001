@@ -183,11 +183,10 @@ const PromoBannerSlider = () => {
           >
             {banners.map((banner, i) => (
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
-                <div className="relative h-48 sm:h-56 bg-primary">
-                  <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover brightness-110 contrast-105 saturate-50 mix-blend-luminosity" />
-                  {/* Brand tint overlay — harmonizes any image color into the logo palette */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-secondary/35" />
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-secondary/55 via-secondary/15 to-transparent" />
+                <div className="relative h-48 sm:h-56 bg-muted">
+                  <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
+                  {/* Light bottom shade only — for text legibility, image stays natural */}
+                  <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
                     <h3 className="text-primary-foreground font-heading font-extrabold text-lg sm:text-xl leading-tight uppercase tracking-tight drop-shadow-lg">{banner.title}</h3>
                     <p className="text-primary-foreground/85 text-xs sm:text-sm mt-0.5 italic drop-shadow-md">{banner.subtitle}</p>
