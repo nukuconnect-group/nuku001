@@ -506,10 +506,18 @@ const Cart = () => {
 
       if (data?.mode === "redirect" && data?.payment_url) {
         window.open(data.payment_url, "_blank");
+        setPayStatus({
+          kind: "pending",
+          message: "Complétez le paiement dans la fenêtre ouverte. Nous vérifions le statut Paygate automatiquement toutes les 5 secondes.",
+        });
         toast({ title: "💳 Paiement initié", description: "Complétez le paiement dans la fenêtre ouverte." });
       } else if (selectedNetwork === "CARD") {
         throw new Error("Impossible d'ouvrir la page de paiement par carte. Essayez Mobile Money.");
       } else {
+        setPayStatus({
+          kind: "pending",
+          message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Le statut sera confirmé automatiquement.`,
+        });
         toast({ title: "💳 Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
       }
 
@@ -519,6 +527,10 @@ const Cart = () => {
       setIsCheckingOut(false);
       setPendingCheckoutData(null);
       pendingCheckoutRef.current = null;
+      setPayStatus({
+        kind: "failed",
+        message: error.message || "Impossible d'initier le paiement. Aucun montant n'a été débité.",
+      });
       toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     }
   };
