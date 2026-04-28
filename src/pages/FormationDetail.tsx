@@ -94,6 +94,69 @@ const FormationDetail = () => {
     setEnrolling(false);
   };
 
+  // Confirm enrollment after a successful payment via the secured edge function
+  const confirmPaidEnrollment = async (identifier: string, tx_reference?: string) => {
+    if (!formation) return;
+    const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
+      body: { formation_id: formation.id, identifier, tx_reference },
+    });
+    if (error || !(data as any)?.success) {
+      toast({
+        title: "Inscription en attente",
+        description: (data as any)?.error || error?.message || "Le paiement n'a pas encore été confirmé.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsEnrolled(true);
+    setPayOpen(false);
+    setPayIdentifier(null);
+    setPayTxRef(null);
+    toast({ title: "Paiement confirmé ✅", description: "Vous avez désormais accès à la formation." });
+  };
+
+  usePaygatePolling({
+    identifier: payIdentifier || undefined,
+    tx_reference: payTxRef || undefined,
+    enabled: !!payIdentifier,
+    onCompleted: () => confirmPaidEnrollment(payIdentifier!, payTxRef || undefined),
+    onFailed: () => toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" }),
+    onExpired: () => toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" }),
+  });
+
+  const initiatePayment = async () => {
+    if (!userId || !formation || payInitiating) return;
+    if (payNetwork !== "CARD" && !payPhone.trim()) {
+      toast({ title: "Numéro requis", description: "Entrez un numéro Mobile Money.", variant: "destructive" });
+      return;
+    }
+    setPayInitiating(true);
+    const identifier = `formation-${formation.id}-${userId}-${Date.now()}`;
+    const { data, error } = await supabase.functions.invoke("paygate-init", {
+      body: {
+        amount: Number(formation.price) || 0,
+        description: `Formation : ${formation.title}`.slice(0, 200),
+        identifier,
+        phone_number: payNetwork !== "CARD" ? payPhone : undefined,
+        network: payNetwork,
+        use_redirect: payNetwork === "CARD",
+      },
+    });
+    setPayInitiating(false);
+    if (error || (data as any)?.error) {
+      toast({ title: "Erreur paiement", description: (data as any)?.error || error?.message || "Impossible d'initier le paiement.", variant: "destructive" });
+      return;
+    }
+    setPayIdentifier(identifier);
+    if ((data as any)?.tx_reference) setPayTxRef((data as any).tx_reference);
+    if ((data as any)?.payment_url) {
+      window.open((data as any).payment_url, "_blank", "noopener,noreferrer");
+      toast({ title: "Paiement ouvert", description: "Terminez le paiement dans la nouvelle fenêtre. Vous serez inscrit automatiquement." });
+    } else {
+      toast({ title: "Paiement en attente", description: "Validez la demande sur votre téléphone Mobile Money." });
+    }
+  };
+
   const toggleModuleComplete = async (moduleId: string) => {
     if (!userId || !formation) return;
     if (!isEnrolled) await enroll();
