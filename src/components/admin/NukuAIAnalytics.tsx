@@ -93,7 +93,75 @@ export default function NukuAIAnalytics() {
   useEffect(() => { setPage(1); }, [search, countryFilter, dateFrom, dateTo]);
 
   const stats = useMemo(() => {
-    const total = questions.length;
+    const src = filteredQuestions;
+    const total = src.length;
+    const uniqueUsers = new Set(src.filter(q => q.user_id).map(q => q.user_id)).size;
+    const anonymous = src.filter(q => !q.user_id).length;
+    const counts: Record<string, number> = {};
+    src.forEach(q => {
+      const key = (q.question || "").trim().toLowerCase().slice(0, 80);
+      if (!key) return;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const topQuestions = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([q, n]) => ({ question: q, count: n }));
+    const locCounts: Record<string, number> = {};
+    src.forEach(q => {
+      const loc = [q.city, q.country].filter(Boolean).join(", ") || "Inconnu";
+      locCounts[loc] = (locCounts[loc] || 0) + 1;
+    });
+    const topLocations = Object.entries(locCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([loc, n]) => ({ location: loc, count: n }));
+    const days: { date: string; label: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({ date: key, label: d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), count: 0 });
+    }
+    const dayMap = new Map(days.map(d => [d.date, d]));
+    src.forEach(q => {
+      const k = (q.created_at || "").slice(0, 10);
+      const entry = dayMap.get(k);
+      if (entry) entry.count += 1;
+    });
+    const countryAgg: Record<string, { country: string; questions: number; uniqueUsers: Set<string> }> = {};
+    src.forEach(q => {
+      const c = q.country || "Inconnu";
+      if (!countryAgg[c]) countryAgg[c] = { country: c, questions: 0, uniqueUsers: new Set() };
+      countryAgg[c].questions += 1;
+      countryAgg[c].uniqueUsers.add(q.user_id || q.session_id || q.id);
+    });
+    const countries = Object.values(countryAgg)
+      .map(c => ({ country: c.country, questions: c.questions, users: c.uniqueUsers.size }))
+      .sort((a, b) => b.questions - a.questions)
+      .slice(0, 12);
+    return { total, uniqueUsers, anonymous, topQuestions, topLocations, days, countries };
+  }, [filteredQuestions]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / PAGE_SIZE));
+  const pageRows = filteredQuestions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const exportDays = () => downloadCSV(`nuku-ai-requetes-par-jour-${new Date().toISOString().slice(0,10)}.csv`,
+    stats.days.map(d => ({ date: d.date, requetes: d.count })));
+  const exportDetails = () => downloadCSV(`nuku-ai-discussions-${new Date().toISOString().slice(0,10)}.csv`,
+    filteredQuestions.map(q => ({
+      date: q.created_at,
+      utilisateur: q.user_name || (q.user_id ? "Compte" : "Anonyme"),
+      user_id: q.user_id || "",
+      pays: q.country || "",
+      ville: q.city || "",
+      session_id: q.session_id || "",
+      question: q.question || "",
+    })));
+  const exportTopQuestions = () => downloadCSV(`nuku-ai-top-questions-${new Date().toISOString().slice(0,10)}.csv`,
+    stats.topQuestions.map(q => ({ question: q.question, occurrences: q.count })));
+
     const uniqueUsers = new Set(questions.filter(q => q.user_id).map(q => q.user_id)).size;
     const anonymous = questions.filter(q => !q.user_id).length;
     // Top 10 questions par fréquence (normalisées)
