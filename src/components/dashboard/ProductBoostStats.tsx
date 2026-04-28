@@ -41,6 +41,13 @@ interface BoostMetrics {
 const ProductBoostStats = ({ productId, productName, successMode = false }: Props) => {
   const { data: boosts = [], isLoading } = useProductBoosts(productId);
   const [metrics, setMetrics] = useState<BoostMetrics | null>(null);
+  const [history, setHistory] = useState<Array<{ id: string; type: string; label: string; at: string }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Filtres date pour la section historique
+  const [filterFrom, setFilterFrom] = useState<string>("");
+  const [filterTo, setFilterTo] = useState<string>("");
+  const [tick, setTick] = useState(0); // déclencheur d'auto-refresh
 
   const now = Date.now();
   const active = boosts.find(
@@ -55,14 +62,32 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
 
   const reference = active || lastFinished;
 
+  // Période effective utilisée pour metrics + historique (filtres > boost)
+  const period = useMemo(() => {
+    if (!reference) return null;
+    const defaultFrom = reference.started_at;
+    const defaultTo = new Date(reference.expires_at).getTime() < now
+      ? reference.expires_at
+      : new Date().toISOString();
+    return {
+      from: filterFrom ? new Date(filterFrom).toISOString() : defaultFrom,
+      to: filterTo ? new Date(filterTo + "T23:59:59").toISOString() : defaultTo,
+    };
+  }, [reference?.id, filterFrom, filterTo, tick]);
+
+  // Auto-refresh toutes les 30s tant que le boost est actif
   useEffect(() => {
-    if (!reference) { setMetrics(null); return; }
+    if (!active) return;
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, [active?.id]);
+
+  useEffect(() => {
+    if (!reference || !period) { setMetrics(null); return; }
     let cancelled = false;
     (async () => {
-      const since = reference.started_at;
-      const until = new Date(reference.expires_at).getTime() < now
-        ? reference.expires_at
-        : new Date().toISOString();
+      const since = period.from;
+      const until = period.to;
 
       // Vues / impressions
       const { data: visits } = await supabase
@@ -106,7 +131,68 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
       });
     })();
     return () => { cancelled = true; };
-  }, [reference?.id, productId]);
+  }, [reference?.id, productId, period?.from, period?.to]);
+
+  // Historique détaillé (conversations, commandes, visites) sur la période
+  useEffect(() => {
+    if (!reference || !period) { setHistory([]); return; }
+    let cancelled = false;
+    setHistoryLoading(true);
+    (async () => {
+      const since = period.from;
+      const until = period.to;
+
+      const [convRes, orderRes, visitRes] = await Promise.all([
+        supabase
+          .from("conversations")
+          .select("id, created_at")
+          .eq("product_id", productId)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("orders")
+          .select("id, created_at, total_price, status, quantity")
+          .eq("product_id", productId)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("analytics_visits")
+          .select("id, created_at, page_path")
+          .ilike("page_path", `%${productId}%`)
+          .gte("created_at", since)
+          .lte("created_at", until)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+
+      const items: Array<{ id: string; type: string; label: string; at: string }> = [];
+      (convRes.data || []).forEach((c: any) =>
+        items.push({ id: `c-${c.id}`, type: "Discussion", label: "Nouvelle conversation ouverte", at: c.created_at })
+      );
+      (orderRes.data || []).forEach((o: any) =>
+        items.push({
+          id: `o-${o.id}`,
+          type: o.status === "cancelled" || o.status === "failed" ? "Essai d'achat" : "Commande",
+          label: `${o.quantity || 1} unité(s) — ${(Number(o.total_price) || 0).toLocaleString("fr-FR")} F · ${o.status}`,
+          at: o.created_at,
+        })
+      );
+      (visitRes.data || []).forEach((v: any) =>
+        items.push({ id: `v-${v.id}`, type: "Visite", label: "Vue de la fiche produit", at: v.created_at })
+      );
+
+      items.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+      if (!cancelled) {
+        setHistory(items.slice(0, 100));
+        setHistoryLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reference?.id, productId, period?.from, period?.to]);
 
   if (isLoading) return null;
 
