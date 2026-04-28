@@ -51,14 +51,16 @@ function isWithinHours(start: string, end: string, now: string): boolean {
 export default function CallOptionsSheet({
   open, onClose, peerName, peerAvatar, peerLocation, peerTimezone,
   availabilityStart = "08:00", availabilityEnd = "20:00",
-  isVerified, yearsActive,
+  isVerified, yearsActive, isOnline,
   onVoiceCall, onVideoCall, onScheduleCall,
 }: CallOptionsSheetProps) {
   const { time: localTime } = useMemo(() => getLocalTime(peerTimezone), [peerTimezone]);
-  const available = useMemo(
+  const withinHours = useMemo(
     () => isWithinHours(availabilityStart, availabilityEnd, localTime),
     [availabilityStart, availabilityEnd, localTime]
   );
+  // Disponibilité réelle : on est dispo si on est ONLINE, peu importe l'heure
+  const available = !!isOnline || withinHours;
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -73,7 +75,7 @@ export default function CallOptionsSheet({
 
         {/* Header with avatar (kept inside the sheet, fully visible) */}
         <SheetHeader className="pt-3 pb-4 px-4 sm:px-6 text-center space-y-2">
-          <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-background shadow-xl bg-card ring-1 ring-border">
+          <div className="mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-background shadow-xl bg-card ring-1 ring-border relative">
             {peerAvatar ? (
               <img src={peerAvatar} alt={peerName} className="w-full h-full object-cover" />
             ) : (
@@ -81,6 +83,13 @@ export default function CallOptionsSheet({
                 {peerName.charAt(0).toUpperCase()}
               </div>
             )}
+            {/* Pastille présence en direct */}
+            <span
+              className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${
+                isOnline ? "bg-emerald-500" : "bg-muted-foreground/40"
+              }`}
+              title={isOnline ? "En ligne maintenant" : "Hors ligne"}
+            />
           </div>
           <h2 className="text-base font-semibold text-foreground break-words">{peerName}</h2>
 
@@ -99,6 +108,14 @@ export default function CallOptionsSheet({
                 Vérifié
               </span>
             )}
+            {isOnline ? (
+              <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                En ligne
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Hors ligne</span>
+            )}
           </div>
         </SheetHeader>
 
@@ -109,10 +126,12 @@ export default function CallOptionsSheet({
               ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
               : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300"
           }`}>
-            {available ? (
-              <>N'hésitez pas à m'appeler. Il est actuellement <strong>{localTime}</strong> chez moi.</>
+            {isOnline ? (
+              <><strong>{peerName.split(" ")[0]}</strong> est <strong>connecté(e) maintenant</strong> sur NukuConnect — appelez directement, ça va sonner sur son téléphone.</>
+            ) : withinHours ? (
+              <>Hors ligne pour l'instant. Il est <strong>{localTime}</strong> chez lui — vous pouvez essayer, il sera notifié.</>
             ) : (
-              <>Je suis hors ligne pour le moment. Il est <strong>{localTime}</strong> chez moi (dispo {availabilityStart} – {availabilityEnd}).</>
+              <>Hors ligne. Il est <strong>{localTime}</strong> chez lui (dispo {availabilityStart} – {availabilityEnd}).</>
             )}
           </div>
         </div>
