@@ -404,6 +404,74 @@ const Cart = () => {
     onExpired: handlePaymentExpired,
   });
 
+  // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
+  const handleVerifyNow = useCallback(async () => {
+    if (!paymentIdentifier) return;
+    setVerifyingPay(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reconcile-order", {
+        body: { identifier: paymentIdentifier },
+      });
+      if (error) throw error;
+      const result = (data as any) || {};
+      const kind = mapBackendStateToKind(result.state);
+      const orderIds = pendingCheckoutRef.current?.orderIds || [];
+      const baseDetails = {
+        amount: result.amount ?? finalTotal,
+        method: pendingCheckoutRef.current?.selectedPayment?.name || "Mobile Money",
+        identifier: paymentIdentifier,
+        orderIds,
+      };
+      if (kind === "success") {
+        // Trigger the same finalize path used by polling
+        setPollingEnabled(false);
+        if (pendingCheckoutRef.current) {
+          await finalizeOrder(pendingCheckoutRef.current);
+        } else {
+          setPayStatus({
+            kind: "success",
+            message: result.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES.success,
+            details: baseDetails,
+          });
+        }
+      } else {
+        setPayStatus({
+          kind,
+          message: result.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES[kind],
+          details: baseDetails,
+        });
+      }
+    } catch (e: any) {
+      toast({ title: "Vérification impossible", description: e.message || "Réessayez dans un instant.", variant: "destructive" });
+    } finally {
+      setVerifyingPay(false);
+    }
+  }, [paymentIdentifier, finalTotal, toast, finalizeOrder]);
+
+  const handleContactSupport = useCallback(async () => {
+    if (!paymentIdentifier && !pendingCheckoutRef.current?.orderIds?.length) return;
+    setContactingSupport(true);
+    try {
+      const orderIds = pendingCheckoutRef.current?.orderIds || [];
+      const { data, error } = await supabase.functions.invoke("report-payment-mismatch", {
+        body: {
+          identifier: paymentIdentifier || undefined,
+          order_id: orderIds[0],
+          observed_state: payStatus.kind,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Support contacté",
+        description: (data as any)?.user_message || "Un agent vous répondra rapidement.",
+      });
+    } catch (e: any) {
+      toast({ title: "Échec de l'envoi", description: e.message || "Réessayez.", variant: "destructive" });
+    } finally {
+      setContactingSupport(false);
+    }
+  }, [paymentIdentifier, payStatus.kind, toast]);
+
   const handleCheckout = async () => {
     if (!user) {
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
