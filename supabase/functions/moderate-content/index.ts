@@ -286,6 +286,24 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       }
     }
 
+    // Append a moderation log entry (for products only — table has product_id FK)
+    if (type === "product") {
+      try {
+        await supabase.from("moderation_logs").insert({
+          product_id: id,
+          decision: isApproved ? "approved" : "rejected",
+          reason: modResult.reason || null,
+          category_check: modResult.category_check || null,
+          content_safety: modResult.content_safety || null,
+          confidence: modResult.confidence ?? null,
+          raw_response: aiData,
+          prompt_summary: contentDescription.slice(0, 500),
+        });
+      } catch (e) {
+        console.warn("Failed to write moderation log:", e);
+      }
+    }
+
     return new Response(JSON.stringify({
       approved: isApproved,
       reason: modResult.reason || null,
