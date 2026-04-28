@@ -356,10 +356,19 @@ const FormationDetail = () => {
                       })()}
 
                       {mod.content_url && mod.content_type !== "video" && (
-                        <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-                          <FileText className="w-3.5 h-3.5" /> Ouvrir la ressource
-                        </a>
+                        <div className="space-y-2">
+                          <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "55vh", minHeight: 300 }}>
+                            <iframe
+                              src={`${mod.content_url}#view=FitH`}
+                              title={mod.title}
+                              className="w-full h-full"
+                            />
+                          </div>
+                          <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                            <FileText className="w-3.5 h-3.5" /> Ouvrir dans un nouvel onglet
+                          </a>
+                        </div>
                       )}
 
                       <div className="flex flex-wrap gap-2 pt-1">
