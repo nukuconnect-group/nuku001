@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket, AlertTriangle, CheckCircle2, FileEdit } from "lucide-react";
+import { Loader2, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket, AlertTriangle, CheckCircle2, FileEdit, CalendarClock, GitCompare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
+import { normalizeSeoSlug } from "@/lib/seoSlug";
 
 interface SeoRow {
   id: string;
@@ -30,7 +30,18 @@ interface SeoRow {
   no_index: boolean;
   is_draft?: boolean;
   published_at?: string | null;
+  scheduled_publish_at?: string | null;
 }
+
+// Fields that matter for the diff view
+const DIFFABLE: Array<{ key: keyof SeoRow; label: string }> = [
+  { key: "title", label: "Titre" },
+  { key: "description", label: "Description" },
+  { key: "keywords", label: "Mots-clés" },
+  { key: "og_image_url", label: "Image OG" },
+  { key: "canonical_path", label: "URL canonique" },
+  { key: "no_index", label: "Désindexer" },
+];
 
 const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 
@@ -48,6 +59,9 @@ const SeoManager = () => {
   const [aiBusy, setAiBusy] = useState<"autofill" | "image" | null>(null);
   const [uploading, setUploading] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState<string>(""); // datetime-local string
+  // Snapshot of the last-loaded values, used for the diff view
+  const [original, setOriginal] = useState<SeoRow | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
