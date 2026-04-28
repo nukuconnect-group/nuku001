@@ -558,10 +558,10 @@ const Cart = () => {
           amount: finalTotal,
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
-          ...(selectedNetwork !== "CARD" && phoneDigits ? { phone_number: phoneDigits } : {}),
-          ...(selectedNetwork && selectedNetwork !== "CARD" ? { network: selectedNetwork } : {}),
-          // Toujours rediriger vers la page Paygate (carte ET mobile money)
-          use_redirect: true,
+          phone_number: phoneDigits,
+          network: selectedNetwork,
+          // Mobile Money: paiement direct via push USSD (pas de redirection)
+          use_redirect: false,
         },
       });
 
@@ -571,22 +571,16 @@ const Cart = () => {
         throw new Error(data?.error || "Échec de l'initialisation du paiement.");
       }
 
-      if (data?.mode === "redirect" && data?.payment_url) {
-        // Active le polling AVANT la redirection (au retour, le statut sera vérifié)
-        setPollingEnabled(true);
-        setPayStatus({
-          kind: "pending",
-          message: "Redirection vers la page sécurisée Paygate. Le statut sera vérifié automatiquement à votre retour.",
-        });
-        toast({ title: "💳 Redirection vers Paygate", description: "Finalisez le paiement sur la page sécurisée." });
-        // Léger délai pour laisser apparaître le toast, puis redirection dans le même onglet
-        setTimeout(() => {
-          window.location.href = data.payment_url;
-        }, 500);
-        return;
-      }
-
-      throw new Error("Impossible d'ouvrir la page de paiement Paygate. Veuillez réessayer.");
+      // Mobile Money direct: l'utilisateur reçoit une notification push sur son téléphone
+      setPollingEnabled(true);
+      setPayStatus({
+        kind: "pending",
+        message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
+      });
+      toast({
+        title: "📱 Paiement initié",
+        description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
+      });
 
     } catch (error: any) {
       console.error("Checkout error:", error);
