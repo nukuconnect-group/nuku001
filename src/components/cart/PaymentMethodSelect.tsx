@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
-import visaMcLogo from "@/assets/visa-mastercard.png";
+
 
 const paymentMethods = [
   { id: "paygate", name: "Paygate", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
@@ -79,7 +79,6 @@ const PaymentMethodSelect = ({
   const networks = [
     { id: "FLOOZ", label: "Moov Money / Flooz", logo: moovFloozLogo },
     { id: "TMONEY", label: "Mixx by Yas (T-Money)", logo: mixxYasLogo },
-    { id: "CARD", label: "Visa / Mastercard", logo: visaMcLogo },
   ];
 
   const showPolling = hidePayButton ? isPolling : pollingEnabled;
@@ -87,7 +86,7 @@ const PaymentMethodSelect = ({
 
   const openPayment = async () => {
     if (!amount || amount <= 0) return;
-    if (selectedNetwork !== "CARD" && !mobileNumber) {
+    if (!mobileNumber) {
       toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
       return;
     }
@@ -103,18 +102,15 @@ const PaymentMethodSelect = ({
           description: `Commande NUKUCONNECT - ${amount} FCFA`,
           identifier,
           phone_number: mobileNumber.replace(/\s/g, ""),
-          network: selectedNetwork === "CARD" ? "" : selectedNetwork,
+          network: selectedNetwork,
+          use_redirect: false,
         },
       });
 
       if (error) throw error;
 
-      if (data?.mode === "redirect" && data?.payment_url) {
-        window.open(data.payment_url, "_blank");
-      }
-
       setPollingEnabled(true);
-      toast({ title: "Paiement initié", description: selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre ouverte." : "Validez la transaction sur votre téléphone." });
+      toast({ title: "Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
     } catch (err: any) {
       setIsProcessing(false);
       toast({ title: "Erreur de paiement", description: err.message || "Réessayez plus tard.", variant: "destructive" });
@@ -167,7 +163,7 @@ const PaymentMethodSelect = ({
             ))}
           </div>
 
-          {selectedNetwork && selectedNetwork !== "CARD" && !showPolling && (
+          {selectedNetwork && !showPolling && (
             <div className="space-y-1.5">
               <Label className="text-xs flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" />
@@ -194,7 +190,7 @@ const PaymentMethodSelect = ({
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3 h-3 text-muted-foreground" />
                 <span className="text-[10px] text-muted-foreground">
-                  {selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre..." : "Validez sur votre téléphone..."}
+                  Validez sur votre téléphone...
                 </span>
               </div>
             </div>
