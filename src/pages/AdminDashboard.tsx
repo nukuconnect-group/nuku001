@@ -1199,6 +1199,9 @@ const AdminDashboard = () => {
 
             {/* Cookie consents */}
             {activeTab === "cookies" && <CookieConsentsManager />}
+
+            {/* SEO management */}
+            {activeTab === "seo" && <SeoManager />}
         </main>
       </div>
       <Footer />
