@@ -15,6 +15,8 @@ import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
+import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
 const BillingForm = lazy(() => import("@/components/cart/BillingForm"));
 const DeliveryZoneMap = lazy(() => import("@/components/cart/DeliveryZoneMap"));
@@ -64,15 +66,10 @@ const Cart = () => {
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
   const pendingCheckoutRef = useRef<any>(null);
 
-  // Persistent payment status panel (visible above the form)
-  const [payStatus, setPayStatus] = useState<
-    | { kind: "idle" }
-    | { kind: "initiating" }
-    | { kind: "pending"; message: string }
-    | { kind: "success"; message: string; details?: { invoiceNumber?: string; amount: number; method: string; orderIds: string[] } }
-    | { kind: "failed"; message: string }
-    | { kind: "expired"; message: string }
-  >({ kind: "idle" });
+  // Persistent payment status panel (shared model with FormationDetail)
+  const [payStatus, setPayStatus] = useState<PaymentStatus>({ kind: "idle" });
+  const [verifyingPay, setVerifyingPay] = useState(false);
+  const [contactingSupport, setContactingSupport] = useState(false);
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
@@ -407,6 +404,74 @@ const Cart = () => {
     onExpired: handlePaymentExpired,
   });
 
+  // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
+  const handleVerifyNow = useCallback(async () => {
+    if (!paymentIdentifier) return;
+    setVerifyingPay(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reconcile-order", {
+        body: { identifier: paymentIdentifier },
+      });
+      if (error) throw error;
+      const result = (data as any) || {};
+      const kind = mapBackendStateToKind(result.state);
+      const orderIds = pendingCheckoutRef.current?.orderIds || [];
+      const baseDetails = {
+        amount: result.amount ?? finalTotal,
+        method: pendingCheckoutRef.current?.selectedPayment?.name || "Mobile Money",
+        identifier: paymentIdentifier,
+        orderIds,
+      };
+      if (kind === "success") {
+        // Trigger the same finalize path used by polling
+        setPollingEnabled(false);
+        if (pendingCheckoutRef.current) {
+          await finalizeOrder(pendingCheckoutRef.current);
+        } else {
+          setPayStatus({
+            kind: "success",
+            message: result.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES.success,
+            details: baseDetails,
+          });
+        }
+      } else {
+        setPayStatus({
+          kind,
+          message: result.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES[kind],
+          details: baseDetails,
+        });
+      }
+    } catch (e: any) {
+      toast({ title: "Vérification impossible", description: e.message || "Réessayez dans un instant.", variant: "destructive" });
+    } finally {
+      setVerifyingPay(false);
+    }
+  }, [paymentIdentifier, finalTotal, toast, finalizeOrder]);
+
+  const handleContactSupport = useCallback(async () => {
+    if (!paymentIdentifier && !pendingCheckoutRef.current?.orderIds?.length) return;
+    setContactingSupport(true);
+    try {
+      const orderIds = pendingCheckoutRef.current?.orderIds || [];
+      const { data, error } = await supabase.functions.invoke("report-payment-mismatch", {
+        body: {
+          identifier: paymentIdentifier || undefined,
+          order_id: orderIds[0],
+          observed_state: payStatus.kind,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Support contacté",
+        description: (data as any)?.user_message || "Un agent vous répondra rapidement.",
+      });
+    } catch (e: any) {
+      toast({ title: "Échec de l'envoi", description: e.message || "Réessayez.", variant: "destructive" });
+    } finally {
+      setContactingSupport(false);
+    }
+  }, [paymentIdentifier, payStatus.kind, toast]);
+
   const handleCheckout = async () => {
     if (!user) {
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
@@ -599,61 +664,17 @@ const Cart = () => {
             </Card>
           )}
 
-          {/* Persistent payment status panel — surfaces success/pending/failure across the full UI */}
-          {payStatus.kind !== "idle" && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={`mb-4 rounded-lg border p-3 sm:p-4 text-xs sm:text-sm flex items-start gap-3 ${
-                payStatus.kind === "success"
-                  ? "border-primary/40 bg-primary/10"
-                  : payStatus.kind === "failed"
-                  ? "border-destructive/40 bg-destructive/10 text-destructive"
-                  : payStatus.kind === "expired"
-                  ? "border-destructive/30 bg-destructive/5 text-destructive"
-                  : "border-accent/40 bg-accent/10"
-              }`}
-            >
-              {payStatus.kind === "initiating" || payStatus.kind === "pending" ? (
-                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-0.5" />
-              ) : payStatus.kind === "success" ? (
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" />
-              ) : (
-                <ShoppingCart className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold mb-1">
-                  {payStatus.kind === "initiating" && "Initialisation du paiement…"}
-                  {payStatus.kind === "pending" && "Paiement en attente de confirmation"}
-                  {payStatus.kind === "success" && "✅ Paiement réussi — commande confirmée"}
-                  {payStatus.kind === "failed" && "❌ Échec du paiement"}
-                  {payStatus.kind === "expired" && "⏰ Session de paiement expirée"}
-                </p>
-                {"message" in payStatus && (
-                  <p className="opacity-90 leading-relaxed break-words">{payStatus.message}</p>
-                )}
-                {payStatus.kind === "success" && payStatus.details && (
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] sm:text-xs bg-background/60 rounded-md p-2 border border-primary/10">
-                    {payStatus.details.invoiceNumber && (
-                      <div><span className="text-muted-foreground">Facture :</span> <span className="font-medium">{payStatus.details.invoiceNumber}</span></div>
-                    )}
-                    <div><span className="text-muted-foreground">Montant débité :</span> <span className="font-medium">{payStatus.details.amount.toLocaleString("fr-FR")} FCFA</span></div>
-                    <div><span className="text-muted-foreground">Mode :</span> <span className="font-medium">{payStatus.details.method}</span></div>
-                    <div><span className="text-muted-foreground">Commandes :</span> <span className="font-medium">{payStatus.details.orderIds.length}</span></div>
-                  </div>
-                )}
-                {(payStatus.kind === "failed" || payStatus.kind === "expired") && (
-                  <button
-                    type="button"
-                    onClick={() => setPayStatus({ kind: "idle" })}
-                    className="mt-2 underline font-medium"
-                  >
-                    Réessayer
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Persistent payment status panel — shared model with FormationDetail */}
+          <div className="mb-4">
+            <PaymentStatusPanel
+              status={payStatus}
+              onVerifyNow={paymentIdentifier ? handleVerifyNow : undefined}
+              isVerifying={verifyingPay}
+              onContactSupport={handleContactSupport}
+              isContactingSupport={contactingSupport}
+              onRetry={() => setPayStatus({ kind: "idle" })}
+            />
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left: Billing + Delivery + Payment */}
