@@ -264,5 +264,5 @@ function computeSavings(base: number, tier: number): number {
 }
 
 function formatNum(n: number): string {
-  return new Intl.NumberFormat("fr-FR").format(n);
+  return new Intl.NumberFormat("en-US").format(n);
 }

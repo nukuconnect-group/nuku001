@@ -75,7 +75,7 @@ const Formations = () => {
     return matchesSearch && matchesCategory && matchesAuthor && matchesFree;
   });
 
-  const formatPrice = (price: number) => new Intl.NumberFormat("fr-FR").format(price);
+  const formatPrice = (price: number) => new Intl.NumberFormat("en-US").format(price);
   const formatDuration = (mins: number) => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
