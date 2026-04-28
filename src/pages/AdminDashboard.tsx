@@ -43,7 +43,8 @@ import AdminUserDetailsModal from "@/components/admin/AdminUserDetailsModal";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminRecentActions from "@/components/admin/AdminRecentActions";
 import SeoManager from "@/components/admin/SeoManager";
-import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon } from "lucide-react";
+import RefundsManager from "@/components/admin/RefundsManager";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon, RotateCcw } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -315,6 +316,7 @@ const AdminDashboard = () => {
     { id: "products", label: "Produits", icon: Package },
     { id: "deliveries", label: "Livraisons", icon: Truck },
     { id: "demands", label: "Demandes", icon: ShoppingBag },
+    { id: "refunds", label: "Remboursements", icon: RotateCcw },
     { id: "kyc", label: "Vérification KYC", icon: Shield },
     { id: "subscriptions", label: "Abonnements", icon: Crown },
     { id: "finances", label: "Finances", icon: HandCoins },
@@ -955,6 +957,11 @@ const AdminDashboard = () => {
             {/* Demands Tab */}
             {activeTab === "demands" && (
               <DemandsManager />
+            )}
+
+            {/* Refunds Tab */}
+            {activeTab === "refunds" && (
+              <RefundsManager />
             )}
 
             {/* Subscriptions Tab */}
