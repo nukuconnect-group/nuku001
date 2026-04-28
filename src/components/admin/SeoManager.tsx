@@ -60,7 +60,7 @@ const SeoManager = () => {
   useEffect(() => { load(); }, []);
 
   const save = async () => {
-    if (!selected) return;
+    if (!selected) return null;
     setSaving(selected.id);
     const { error } = await (supabase as any)
       .from("seo_settings")
@@ -76,11 +76,24 @@ const SeoManager = () => {
     setSaving(null);
     if (error) {
       toast({ title: "Erreur d'enregistrement", description: error.message, variant: "destructive" });
-    } else {
-      clearSeoCache(selected.route);
-      toast({ title: "SEO enregistré", description: `Mise à jour de ${selected.route}` });
-      load();
+      return false;
     }
+    clearSeoCache(selected.route);
+    toast({ title: "SEO enregistré", description: `Mise à jour de ${selected.route}` });
+    load();
+    return true;
+  };
+
+  const publish = async () => {
+    if (!selected) return;
+    const ok = await save();
+    if (!ok) return;
+    // Clear local cache for ALL routes so any open tab refetches
+    clearSeoCache();
+    toast({
+      title: "Publié sur la route",
+      description: `${selected.route} • Cache SEO invalidé. Les visiteurs verront les nouvelles balises au prochain chargement.`,
+    });
   };
 
   const addRoute = async () => {
