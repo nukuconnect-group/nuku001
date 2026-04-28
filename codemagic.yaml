@@ -207,6 +207,7 @@ workflows:
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/mapping.txt
+      - android/app/build/outputs/signature_sha256.txt
 
     publishing:
       email:
