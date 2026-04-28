@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, DbCategory } from "@/hooks/useCategories";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Edit, LayoutGrid, Loader2, GripVertical, Save, X, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Edit, LayoutGrid, Loader2, GripVertical, Save, X, ChevronDown, ImagePlus } from "lucide-react";
 
 const CategoryManager = () => {
   const { toast } = useToast();
@@ -24,8 +24,11 @@ const CategoryManager = () => {
   const [editEmoji, setEditEmoji] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editSubcategories, setEditSubcategories] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
 
@@ -58,10 +61,54 @@ const CategoryManager = () => {
       emoji: editEmoji.trim() || "📦",
       description: editDescription.trim() || null,
       subcategories: subs,
+      image_url: editImageUrl,
     } as any).eq("id", id);
     setSaving(false);
     setEditingId(null);
     toast({ title: "Catégorie modifiée" });
+    refresh();
+  };
+
+  const uploadImage = async (id: string, file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Format invalide", description: "Choisissez une image (JPG, PNG, WebP).", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image trop lourde", description: "Maximum 5 Mo.", variant: "destructive" });
+      return;
+    }
+    setUploadingId(id);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${id}/${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("category-images")
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+    if (uploadError) {
+      setUploadingId(null);
+      toast({ title: "Échec de l'upload", description: uploadError.message, variant: "destructive" });
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("category-images").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl;
+    if (editingId === id) {
+      setEditImageUrl(publicUrl);
+    } else {
+      await supabase.from("categories").update({ image_url: publicUrl } as any).eq("id", id);
+    }
+    setUploadingId(null);
+    toast({ title: "Image mise à jour" });
+    refresh();
+  };
+
+  const removeImage = async (id: string) => {
+    if (!confirm("Retirer l'image de cette catégorie ?")) return;
+    if (editingId === id) {
+      setEditImageUrl(null);
+    } else {
+      await supabase.from("categories").update({ image_url: null } as any).eq("id", id);
+    }
+    toast({ title: "Image retirée" });
     refresh();
   };
 
@@ -83,6 +130,7 @@ const CategoryManager = () => {
     setEditEmoji(cat.emoji || "");
     setEditDescription(cat.description || "");
     setEditSubcategories((cat.subcategories || []).join(", "));
+    setEditImageUrl(cat.image_url || null);
   };
 
   return (
@@ -117,6 +165,7 @@ const CategoryManager = () => {
             <Label className="text-[10px]">Sous-catégories (séparées par virgule)</Label>
             <Input value={newSubcategories} onChange={(e) => setNewSubcategories(e.target.value)} placeholder="Ex: Maïs, Riz, Sorgho" className="h-8 text-xs" />
           </div>
+          <p className="text-[10px] text-muted-foreground">💡 Vous pourrez ajouter une image après création (icône image en mode édition).</p>
           <Button size="sm" onClick={addCategory} disabled={!newName.trim() || saving} className="gap-1.5 h-8 text-xs w-full sm:w-auto">
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
             Ajouter la catégorie
@@ -145,6 +194,55 @@ const CategoryManager = () => {
                       <Label className="text-[10px]">Sous-catégories (virgule)</Label>
                       <Input value={editSubcategories} onChange={(e) => setEditSubcategories(e.target.value)} placeholder="Maïs, Riz, Sorgho" className="h-8 text-xs" />
                     </div>
+                    {/* Image management */}
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px]">Image de la catégorie (page d'accueil)</Label>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-16 rounded-md overflow-hidden border border-border bg-muted flex-shrink-0 flex items-center justify-center">
+                          {editImageUrl ? (
+                            <img src={editImageUrl} alt="aperçu" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5 flex-1">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadImage(cat.id, file);
+                              e.target.value = "";
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[11px] gap-1"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingId === cat.id}
+                          >
+                            {uploadingId === cat.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
+                            {editImageUrl ? "Remplacer" : "Téléverser"}
+                          </Button>
+                          {editImageUrl && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-[11px] text-destructive gap-1"
+                              onClick={() => removeImage(cat.id)}
+                            >
+                              <Trash2 className="w-3 h-3" /> Retirer
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">JPG, PNG ou WebP — 5 Mo max. Si vide, une image par défaut s'affiche.</p>
+                    </div>
                     <div className="flex gap-1.5">
                       <Button size="sm" className="h-7 text-xs gap-1" onClick={() => updateCategory(cat.id)}>
                         <Save className="w-3 h-3" /> Enregistrer
@@ -158,7 +256,11 @@ const CategoryManager = () => {
                   <>
                     <div className="flex items-center gap-2 p-2.5 hover:bg-muted/30 transition-colors">
                       <GripVertical className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="text-lg flex-shrink-0">{cat.emoji || "📦"}</span>
+                      {cat.image_url ? (
+                        <img src={cat.image_url} alt={cat.name} className="w-9 h-9 rounded object-cover flex-shrink-0 border border-border" />
+                      ) : (
+                        <span className="text-lg flex-shrink-0">{cat.emoji || "📦"}</span>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium">{cat.name}</p>
                         {cat.description && <p className="text-[10px] text-muted-foreground truncate">{cat.description}</p>}

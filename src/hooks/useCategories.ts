@@ -9,6 +9,7 @@ export interface DbCategory {
   is_active: boolean;
   sort_order: number;
   subcategories: string[];
+  image_url?: string | null;
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
