@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, Phone, MapPin, Calendar, ShieldCheck, Ban, KeyRound, Send, Save, Copy } from "lucide-react";
+import { Loader2, Mail, Phone, MapPin, Calendar, ShieldCheck, Ban, KeyRound, Send, Save, Copy, MailCheck, Sparkles } from "lucide-react";
 
 interface AdminUser {
   user_id: string;
@@ -90,6 +90,28 @@ export default function AdminUserDetailsModal({ user, open, onClose, onUpdated }
     if (data) {
       setResetLink((data as any).action_link || null);
       toast({ title: "✅ Lien généré", description: "Copiez et envoyez-le à l'utilisateur." });
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const data = await callAction({ action: "resend_confirmation_email" }, "resend_confirm");
+    if (data) {
+      setResetLink((data as any).action_link || null);
+      toast({
+        title: "✉️ Email de confirmation renvoyé",
+        description: "L'utilisateur recevra à nouveau l'email pour activer son compte.",
+      });
+    }
+  };
+
+  const handleSendMagicLink = async () => {
+    const data = await callAction({ action: "send_magic_link" }, "magic");
+    if (data) {
+      setResetLink((data as any).action_link || null);
+      toast({
+        title: "🔗 Lien magique envoyé",
+        description: "Un lien de connexion sans mot de passe a été envoyé à l'utilisateur.",
+      });
     }
   };
 
@@ -264,7 +286,38 @@ export default function AdminUserDetailsModal({ user, open, onClose, onUpdated }
 
         {/* Password & ban actions */}
         <div className="space-y-3 pt-3 border-t border-border">
-          <h3 className="text-xs font-semibold text-foreground">Sécurité du compte</h3>
+          <h3 className="text-xs font-semibold text-foreground">Sécurité du compte & accès</h3>
+
+          {/* Email confirmation / access recovery — useful when the original email failed */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleResendConfirmation}
+              disabled={loading === "resend_confirm" || !user.email || !!user.email_confirmed_at}
+              className="h-8 gap-2 text-xs"
+              title={user.email_confirmed_at ? "Email déjà confirmé" : "Renvoyer le lien d'activation du compte"}
+            >
+              {loading === "resend_confirm" ? <Loader2 className="w-3 h-3 animate-spin" /> : <MailCheck className="w-3 h-3" />}
+              Renvoyer email de confirmation
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSendMagicLink}
+              disabled={loading === "magic" || !user.email || !user.email_confirmed_at}
+              className="h-8 gap-2 text-xs"
+              title={!user.email_confirmed_at ? "Confirmez d'abord l'email" : "Envoyer un lien magique de connexion"}
+            >
+              {loading === "magic" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              Lien magique de connexion
+            </Button>
+          </div>
+          {!user.email_confirmed_at && user.email && (
+            <p className="text-[10px] text-amber-600 -mt-1">
+              ⚠️ Email non confirmé — l'utilisateur ne peut pas se connecter tant qu'il n'a pas activé son compte.
+            </p>
+          )}
 
           <div className="space-y-2">
             <Button
