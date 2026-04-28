@@ -345,7 +345,12 @@ const Auth = () => {
             .then(({ error }) => {
               if (!error) {
                 localStorage.removeItem("nukuconnect-ref");
+                setActiveRefCode(null);
                 console.log("[Referral] Claimed successfully:", savedRef);
+                toast({
+                  title: "✅ Parrainage confirmé",
+                  description: `Votre parrain a été crédité grâce au code « ${savedRef} ». Merci !`,
+                });
               } else {
                 console.warn("[Referral] Claim failed:", error.message);
               }
