@@ -15,8 +15,9 @@ import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
-  Package, ShoppingBag, Truck, User
+  Package, ShoppingBag, Truck, User, Globe, Share2, Navigation, Clock
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/data/marketplace";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -85,6 +86,7 @@ const demoProducts: Record<string, any[]> = {
 const ProducerProfile = () => {
   const { name } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
 
