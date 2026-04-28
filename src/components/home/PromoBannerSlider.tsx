@@ -25,7 +25,6 @@ import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 const banners = [
   {
     image: awardImage,
-    brandBg: true,
     title: "🏆 Meilleure Innovation 2025",
     subtitle: "NukuConnect sacrée par Togo Top Impact",
     cta: "Découvrir",
@@ -33,6 +32,7 @@ const banners = [
   },
   {
     image: heroShopping,
+    brandBg: true,
     title: "Achat en ligne simplifié",
     subtitle: "Commandez vos produits frais depuis chez vous",
     cta: "Commander",
@@ -187,19 +187,17 @@ const PromoBannerSlider = () => {
                 <div className="relative h-48 sm:h-56 bg-muted">
                   {(banner as any).brandBg ? (
                     <>
-                      {/* Brand-only background — no red, full logo palette */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-secondary" />
-                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--accent))_0%,transparent_55%)]" />
+                      <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover saturate-0 brightness-110 contrast-110" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/45 via-primary/35 to-secondary/50" />
+                      <div className="absolute inset-0 bg-secondary/20" />
                     </>
                   ) : (
                     <>
-                      <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover saturate-[0.35] brightness-105" />
-                      {/* Subtle brand tint to neutralize stray colors */}
-                      <div className="absolute inset-0 bg-primary/10" />
+                      <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105" />
+                      <div className="absolute inset-0 bg-foreground/5" />
                     </>
                   )}
-                  {/* Strong bottom shade for crisp text legibility */}
-                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-foreground/85 via-foreground/45 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-foreground/90 via-foreground/50 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
                     <h3 className="text-primary-foreground font-heading font-extrabold text-lg sm:text-xl leading-tight uppercase tracking-tight drop-shadow-lg">{banner.title}</h3>
                     <p className="text-primary-foreground/85 text-xs sm:text-sm mt-0.5 italic drop-shadow-md">{banner.subtitle}</p>
