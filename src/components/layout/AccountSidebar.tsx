@@ -16,6 +16,13 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -31,7 +38,7 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -73,6 +80,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -308,7 +316,44 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: Truck, label: "Suivi de livraison", href: "/suivi-livraison", show: currentUserType !== "driver" },
   ];
 
+  const SHARE_URL = "https://nukuconnect.com";
+  const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
+  const encodedUrl = encodeURIComponent(SHARE_URL);
+  const encodedText = encodeURIComponent(SHARE_TEXT);
+
+  const copyShareLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(SHARE_URL);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = SHARE_URL;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      toast({ title: "✅ Lien copié", description: "Vous pouvez maintenant le coller où vous voulez." });
+      setShareOpen(false);
+    } catch {
+      toast({ title: "Impossible de copier", description: SHARE_URL, variant: "destructive" });
+    }
+  };
+
+  const shareTargets = [
+    { name: "WhatsApp", icon: MessageCircle, color: "bg-[#25D366]/10 text-[#25D366]", url: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
+    { name: "Facebook", icon: Facebook, color: "bg-[#1877F2]/10 text-[#1877F2]", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "X (Twitter)", icon: Twitter, color: "bg-foreground/10 text-foreground", url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
+    { name: "Telegram", icon: Send, color: "bg-[#0088cc]/10 text-[#0088cc]", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
+    { name: "LinkedIn", icon: Linkedin, color: "bg-[#0A66C2]/10 text-[#0A66C2]", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodeURIComponent("NUKUCONNECT")}&body=${encodedText}%20${encodedUrl}` },
+  ];
+
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[85%] sm:max-w-md p-0 flex flex-col h-full overflow-hidden">
         {isAccountPending ? (
@@ -516,39 +561,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   />
                 </div>
 
-                {/* Partager cette application — natif si dispo, sinon copie de lien */}
+                {/* Partager cette application */}
                 {(() => {
                   const SHARE_URL = "https://nukuconnect.com";
                   const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
-
-                  const copyLink = async () => {
-                    try {
-                      if (navigator.clipboard?.writeText) {
-                        await navigator.clipboard.writeText(SHARE_URL);
-                      } else {
-                        // Fallback ancien iOS / WebView : textarea + execCommand
-                        const ta = document.createElement("textarea");
-                        ta.value = SHARE_URL;
-                        ta.style.position = "fixed";
-                        ta.style.opacity = "0";
-                        document.body.appendChild(ta);
-                        ta.focus();
-                        ta.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(ta);
-                      }
-                      toast({
-                        title: "✅ Lien copié",
-                        description: "Vous pouvez maintenant le coller où vous voulez.",
-                      });
-                    } catch {
-                      toast({
-                        title: "Impossible de copier",
-                        description: SHARE_URL,
-                        variant: "destructive",
-                      });
-                    }
-                  };
 
                   const handleShare = async () => {
                     const shareData = { title: "NUKUCONNECT", text: SHARE_TEXT, url: SHARE_URL };
@@ -557,27 +573,24 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                         await navigator.share(shareData);
                         return;
                       } catch (err: any) {
-                        // L'utilisateur a annulé → on s'arrête sans rien faire
                         if (err?.name === "AbortError") return;
                       }
                     }
-                    // Pas de partage natif (ou échec non-AbortError) → copie
-                    copyLink();
+                    // Pas de partage natif → ouvrir le menu de partage personnalisé
+                    setShareOpen(true);
                   };
 
                   return (
-                    <>
-                      <button
-                        onClick={handleShare}
-                        className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Share2 className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-                      </button>
-                    </>
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Share2 className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                    </button>
                   );
                 })()}
 
@@ -737,6 +750,45 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         )}
       </SheetContent>
     </Sheet>
+
+    <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Partager NUKUCONNECT</DialogTitle>
+          <DialogDescription>Choisissez une application pour partager le lien.</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-3 py-2">
+          {shareTargets.map((t) => (
+            <a
+              key={t.name}
+              href={t.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setShareOpen(false)}
+              className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${t.color}`}>
+                <t.icon className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-medium text-center">{t.name}</span>
+            </a>
+          ))}
+        </div>
+        <button
+          onClick={copyShareLink}
+          className="flex items-center gap-3 w-full p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <Copy className="w-4 h-4 text-secondary" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-medium">Copier le lien</div>
+            <div className="text-xs text-muted-foreground truncate">{SHARE_URL}</div>
+          </div>
+        </button>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
