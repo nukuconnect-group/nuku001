@@ -63,6 +63,7 @@ const Help = lazy(() => import("./pages/Help"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SeoPreview = lazy(() => import("./pages/admin/SeoPreview"));
+const SeoCanonical = lazy(() => import("./pages/admin/SeoCanonical"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
