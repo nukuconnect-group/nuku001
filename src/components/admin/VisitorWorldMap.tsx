@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Globe } from "lucide-react";
+import { Globe, Radio } from "lucide-react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Marker, Tooltip, LayersControl, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { supabase } from "@/integrations/supabase/client";
 
 const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }> = {
   "Togo": { lat: 8.6, lng: 1.2, flag: "🇹🇬" },
