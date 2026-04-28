@@ -62,6 +62,12 @@ const SeoManager = () => {
   const [scheduleAt, setScheduleAt] = useState<string>(""); // datetime-local string
   // Snapshot of the last-loaded values, used for the diff view
   const [original, setOriginal] = useState<SeoRow | null>(null);
+  // Auto-regenerate OG images when title/description change (debounced)
+  const [autoRegenOg, setAutoRegenOg] = useState<boolean>(() => {
+    try { return localStorage.getItem("seo_auto_regen_og") === "1"; } catch { return false; }
+  });
+  const [autoRegenPending, setAutoRegenPending] = useState(false);
+  const autoRegenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
