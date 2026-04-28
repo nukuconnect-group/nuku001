@@ -35,6 +35,16 @@ const FormationDetail = () => {
   const [payPhone, setPayPhone] = useState("");
   const [payInitiating, setPayInitiating] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  // Persistent payment status (visible panel, not just toast)
+  const [payState, setPayState] = useState<
+    | { kind: "idle" }
+    | { kind: "initiating" }
+    | { kind: "pending"; message: string }
+    | { kind: "success"; message: string }
+    | { kind: "failed"; message: string }
+    | { kind: "expired"; message: string }
+    | { kind: "unknown"; message: string }
+  >({ kind: "idle" });
   // Signed URL for paid-formation PDF (refreshed when enrollment changes)
   const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
 
