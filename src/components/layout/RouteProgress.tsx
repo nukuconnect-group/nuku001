@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 /**
- * Barre de progression top affichée lors des changements de route
- * et pendant le chargement Suspense des pages lazy.
+ * Barre de progression discrète : n'apparaît qu'après 250 ms.
+ * Pour les navigations rapides (cache, prefetch), rien ne s'affiche
+ * → la transition paraît instantanée.
  */
 export const RouteProgress = () => {
   const location = useLocation();
@@ -11,25 +12,32 @@ export const RouteProgress = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setVisible(true);
-    setProgress(15);
+    let cancelled = false;
+    const showTimer = setTimeout(() => {
+      if (cancelled) return;
+      setVisible(true);
+      setProgress(40);
+    }, 250);
 
-    const t1 = setTimeout(() => setProgress(45), 80);
-    const t2 = setTimeout(() => setProgress(75), 250);
-    const t3 = setTimeout(() => setProgress(95), 500);
-    const t4 = setTimeout(() => {
+    const t1 = setTimeout(() => !cancelled && setProgress(70), 500);
+    const t2 = setTimeout(() => !cancelled && setProgress(92), 900);
+    const t3 = setTimeout(() => {
+      if (cancelled) return;
       setProgress(100);
       setTimeout(() => {
-        setVisible(false);
-        setProgress(0);
-      }, 200);
-    }, 750);
+        if (!cancelled) {
+          setVisible(false);
+          setProgress(0);
+        }
+      }, 180);
+    }, 1200);
 
     return () => {
+      cancelled = true;
+      clearTimeout(showTimer);
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      clearTimeout(t4);
     };
   }, [location.pathname]);
 
@@ -37,12 +45,12 @@ export const RouteProgress = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-transparent pointer-events-none"
+      className="fixed top-0 left-0 right-0 z-[9999] h-[2px] bg-transparent pointer-events-none"
       role="progressbar"
       aria-label="Chargement de la page"
     >
       <div
-        className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary shadow-[0_0_10px_hsl(var(--primary))] transition-all duration-200 ease-out"
+        className="h-full bg-primary/80 transition-all duration-200 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>

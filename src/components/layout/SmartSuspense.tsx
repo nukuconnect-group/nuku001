@@ -9,16 +9,21 @@ import { Button } from "@/components/ui/button";
  * - >8s  : UI de récupération avec bouton "Réessayer"
  */
 const SmartLoader = () => {
-  const [phase, setPhase] = useState<"loading" | "slow" | "stuck">("loading");
+  const [phase, setPhase] = useState<"hidden" | "loading" | "slow" | "stuck">("hidden");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("slow"), 2500);
-    const t2 = setTimeout(() => setPhase("stuck"), 8000);
+    // Pas d'écran de chargement avant 350ms : navigation instantanée perçue
+    const t0 = setTimeout(() => setPhase("loading"), 350);
+    const t1 = setTimeout(() => setPhase("slow"), 3000);
+    const t2 = setTimeout(() => setPhase("stuck"), 9000);
     return () => {
+      clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
     };
   }, []);
+
+  if (phase === "hidden") return null;
 
   const handleRetry = () => {
     window.location.reload();
@@ -64,20 +69,12 @@ const SmartLoader = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 animate-in fade-in duration-200 px-4">
-      <div className="relative">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <div className="absolute inset-0 w-10 h-10 rounded-full border-2 border-primary/20 animate-ping" />
-      </div>
-      <div className="text-center space-y-1">
-        <p className="text-sm text-muted-foreground animate-pulse">
-          {phase === "slow" ? "Chargement plus long que prévu…" : "Chargement…"}
-        </p>
-        {phase === "slow" && (
-          <p className="text-xs text-muted-foreground/70">
-            Connexion lente détectée, merci de patienter
-          </p>
-        )}
+    <div className="fixed inset-x-0 top-0 z-[9998] flex items-center justify-center pointer-events-none">
+      <div className="mt-3 px-3 py-1.5 rounded-full bg-card/95 border border-border shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+        <span className="text-xs text-muted-foreground">
+          {phase === "slow" ? "Chargement plus long…" : "Chargement…"}
+        </span>
       </div>
     </div>
   );
