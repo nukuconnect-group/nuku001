@@ -3,8 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, MessageCircle, Users, MapPin, TrendingUp, Loader2, CalendarDays, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Bot, MessageCircle, Users, MapPin, TrendingUp, Loader2, CalendarDays, Globe, Download, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
+
+// Convert an array of objects to a CSV string and trigger a download
+function downloadCSV(filename: string, rows: Record<string, any>[]) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const escape = (v: any) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v).replace(/"/g, '""');
+    return /[",\n;]/.test(s) ? `"${s}"` : s;
+  };
+  const csv = [headers.join(","), ...rows.map(r => headers.map(h => escape(r[h])).join(","))].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
 
 /**
  * Analytics du chatbot Nuku AI : nombre de conversations, top questions,
@@ -14,13 +34,20 @@ export default function NukuAIAnalytics() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [liveCount, setLiveCount] = useState(0);
+  // Filters & pagination
+  const [search, setSearch] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const fetchQuestions = async () => {
     const { data } = await supabase
       .from("nuku_ai_questions" as any)
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(2000);
     setQuestions((data as any) || []);
     setLoading(false);
   };
@@ -35,7 +62,7 @@ export default function NukuAIAnalytics() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "nuku_ai_questions" },
         (payload) => {
-          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 500));
+          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 2000));
           setLiveCount((c) => c + 1);
         }
       )
@@ -43,13 +70,35 @@ export default function NukuAIAnalytics() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Apply user-selected filters across all derived stats and lists
+  const filteredQuestions = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const cf = countryFilter.trim().toLowerCase();
+    const fromTs = dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null;
+    const toTs = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return questions.filter((q) => {
+      if (s) {
+        const hay = `${q.question || ""} ${q.user_name || ""} ${q.user_id || ""}`.toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
+      if (cf && !(q.country || "").toLowerCase().includes(cf)) return false;
+      const t = q.created_at ? new Date(q.created_at).getTime() : 0;
+      if (fromTs && t < fromTs) return false;
+      if (toTs && t > toTs) return false;
+      return true;
+    });
+  }, [questions, search, countryFilter, dateFrom, dateTo]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setPage(1); }, [search, countryFilter, dateFrom, dateTo]);
+
   const stats = useMemo(() => {
-    const total = questions.length;
-    const uniqueUsers = new Set(questions.filter(q => q.user_id).map(q => q.user_id)).size;
-    const anonymous = questions.filter(q => !q.user_id).length;
-    // Top 10 questions par fréquence (normalisées)
+    const src = filteredQuestions;
+    const total = src.length;
+    const uniqueUsers = new Set(src.filter(q => q.user_id).map(q => q.user_id)).size;
+    const anonymous = src.filter(q => !q.user_id).length;
     const counts: Record<string, number> = {};
-    questions.forEach(q => {
+    src.forEach(q => {
       const key = (q.question || "").trim().toLowerCase().slice(0, 80);
       if (!key) return;
       counts[key] = (counts[key] || 0) + 1;
@@ -58,9 +107,8 @@ export default function NukuAIAnalytics() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([q, n]) => ({ question: q, count: n }));
-    // Top localisations
     const locCounts: Record<string, number> = {};
-    questions.forEach(q => {
+    src.forEach(q => {
       const loc = [q.city, q.country].filter(Boolean).join(", ") || "Inconnu";
       locCounts[loc] = (locCounts[loc] || 0) + 1;
     });
@@ -68,28 +116,22 @@ export default function NukuAIAnalytics() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([loc, n]) => ({ location: loc, count: n }));
-    // Per-day series (last 14 days)
     const days: { date: string; label: string; count: number }[] = [];
     const now = new Date();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      days.push({
-        date: key,
-        label: d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
-        count: 0,
-      });
+      days.push({ date: key, label: d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), count: 0 });
     }
     const dayMap = new Map(days.map(d => [d.date, d]));
-    questions.forEach(q => {
+    src.forEach(q => {
       const k = (q.created_at || "").slice(0, 10);
       const entry = dayMap.get(k);
       if (entry) entry.count += 1;
     });
-    // Per-country breakdown with unique visitors
     const countryAgg: Record<string, { country: string; questions: number; uniqueUsers: Set<string> }> = {};
-    questions.forEach(q => {
+    src.forEach(q => {
       const c = q.country || "Inconnu";
       if (!countryAgg[c]) countryAgg[c] = { country: c, questions: 0, uniqueUsers: new Set() };
       countryAgg[c].questions += 1;
@@ -100,7 +142,27 @@ export default function NukuAIAnalytics() {
       .sort((a, b) => b.questions - a.questions)
       .slice(0, 12);
     return { total, uniqueUsers, anonymous, topQuestions, topLocations, days, countries };
-  }, [questions]);
+  }, [filteredQuestions]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / PAGE_SIZE));
+  const pageRows = filteredQuestions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const exportDays = () => downloadCSV(`nuku-ai-requetes-par-jour-${new Date().toISOString().slice(0,10)}.csv`,
+    stats.days.map(d => ({ date: d.date, requetes: d.count })));
+  const exportDetails = () => downloadCSV(`nuku-ai-discussions-${new Date().toISOString().slice(0,10)}.csv`,
+    filteredQuestions.map(q => ({
+      date: q.created_at,
+      utilisateur: q.user_name || (q.user_id ? "Compte" : "Anonyme"),
+      user_id: q.user_id || "",
+      pays: q.country || "",
+      ville: q.city || "",
+      session_id: q.session_id || "",
+      question: q.question || "",
+    })));
+  const exportTopQuestions = () => downloadCSV(`nuku-ai-top-questions-${new Date().toISOString().slice(0,10)}.csv`,
+    stats.topQuestions.map(q => ({ question: q.question, occurrences: q.count })));
+
+
 
   if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>;
@@ -227,15 +289,39 @@ export default function NukuAIAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Recent questions list */}
+      {/* Filters + Export + Detailed list with pagination */}
       <Card>
         <CardHeader className="p-3 sm:p-4 pb-2">
-          <CardTitle className="text-sm">Questions récentes (avec auteur et lieu)</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="text-sm flex items-center gap-2"><Filter className="w-4 h-4 text-primary" />Discussions détaillées</CardTitle>
+              <CardDescription className="text-[11px]">{filteredQuestions.length} résultat(s) — page {page}/{totalPages}</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="outline" size="sm" className="text-[11px] gap-1 h-8" onClick={exportDays}>
+                <Download className="w-3 h-3" />Jours CSV
+              </Button>
+              <Button variant="outline" size="sm" className="text-[11px] gap-1 h-8" onClick={exportTopQuestions}>
+                <Download className="w-3 h-3" />Top questions CSV
+              </Button>
+              <Button variant="hero" size="sm" className="text-[11px] gap-1 h-8" onClick={exportDetails}>
+                <Download className="w-3 h-3" />Discussions CSV
+              </Button>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="p-3 sm:p-4 pt-0">
-          <ScrollArea className="h-[280px]">
+        <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Question / utilisateur" className="h-8 text-xs" />
+            <Input value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} placeholder="Pays" className="h-8 text-xs" />
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-8 text-xs" />
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-8 text-xs" />
+          </div>
+          <ScrollArea className="h-[320px]">
             <div className="space-y-1.5">
-              {questions.slice(0, 50).map((q) => (
+              {pageRows.length === 0 ? (
+                <p className="text-xs text-center text-muted-foreground py-6">Aucun résultat pour ces filtres.</p>
+              ) : pageRows.map((q) => (
                 <div key={q.id} className="p-2 rounded-md bg-muted/30 text-[11px]">
                   <p className="text-foreground/90 line-clamp-2">{q.question}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-[9px] text-muted-foreground">
@@ -247,6 +333,15 @@ export default function NukuAIAnalytics() {
               ))}
             </div>
           </ScrollArea>
+          <div className="flex items-center justify-between pt-1">
+            <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
+              <ChevronLeft className="w-3 h-3" />Précédent
+            </Button>
+            <span className="text-[10px] text-muted-foreground">Page {page} / {totalPages}</span>
+            <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>
+              Suivant<ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -935,6 +935,48 @@ export type Database = {
           },
         ]
       }
+      formation_payments: {
+        Row: {
+          amount: number | null
+          created_at: string
+          formation_id: string
+          id: string
+          identifier: string
+          paygate_status: string | null
+          raw_response: Json | null
+          status: string
+          tx_reference: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          formation_id: string
+          id?: string
+          identifier: string
+          paygate_status?: string | null
+          raw_response?: Json | null
+          status?: string
+          tx_reference?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          formation_id?: string
+          id?: string
+          identifier?: string
+          paygate_status?: string | null
+          raw_response?: Json | null
+          status?: string
+          tx_reference?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       formation_progress: {
         Row: {
           completed: boolean | null
@@ -2344,6 +2386,10 @@ export type Database = {
             }
             Returns: Json
           }
+      can_access_formation_document: {
+        Args: { p_formation_id: string }
+        Returns: boolean
+      }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
       clear_conversation_messages: {
         Args: { p_conversation_id: string }

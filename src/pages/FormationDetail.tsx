@@ -35,6 +35,8 @@ const FormationDetail = () => {
   const [payPhone, setPayPhone] = useState("");
   const [payInitiating, setPayInitiating] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  // Signed URL for paid-formation PDF (refreshed when enrollment changes)
+  const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -80,6 +82,28 @@ const FormationDetail = () => {
     load();
   }, [id]);
 
+  // For paid formations, fetch a short-lived signed URL for the PDF whenever enrollment is confirmed
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      if (!formation || !userId) { setSignedPdfUrl(null); return; }
+      if (!formation.is_paid || !isEnrolled || !formation.source_document_url) {
+        setSignedPdfUrl(null);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("formation-document-url", {
+        body: { formation_id: formation.id, expires_in: 600 },
+      });
+      if (!cancelled && !error && (data as any)?.url) {
+        setSignedPdfUrl((data as any).url as string);
+      }
+    };
+    refresh();
+    // Refresh signed URL every 8 minutes (URL valid 10 min)
+    const t = setInterval(refresh, 8 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [formation, userId, isEnrolled]);
+
   const enroll = async () => {
     if (!userId || !formation || enrolling) return;
     setEnrolling(true);
@@ -100,11 +124,18 @@ const FormationDetail = () => {
     const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
       body: { formation_id: formation.id, identifier, tx_reference },
     });
-    if (error || !(data as any)?.success) {
+    const result = (data as any) || {};
+    if (error || !result.success) {
+      const state = result.state || "unknown";
+      const msg = result.user_message || result.error || error?.message || "Le paiement n'a pas encore été confirmé.";
+      const isPending = state === "pending";
       toast({
-        title: "Inscription en attente",
-        description: (data as any)?.error || error?.message || "Le paiement n'a pas encore été confirmé.",
-        variant: "destructive",
+        title:
+          state === "expired" ? "Paiement expiré" :
+          state === "failed" ? "Paiement échoué" :
+          isPending ? "Paiement en attente" : "Inscription non confirmée",
+        description: msg,
+        variant: isPending ? "default" : "destructive",
       });
       return;
     }
@@ -112,7 +143,10 @@ const FormationDetail = () => {
     setPayOpen(false);
     setPayIdentifier(null);
     setPayTxRef(null);
-    toast({ title: "Paiement confirmé ✅", description: "Vous avez désormais accès à la formation." });
+    toast({
+      title: result.state === "already_enrolled" ? "Déjà inscrit" : "Paiement confirmé ✅",
+      description: result.user_message || "Vous avez désormais accès à la formation.",
+    });
   };
 
   usePaygatePolling({
@@ -411,33 +445,51 @@ const FormationDetail = () => {
           )}
 
           {/* Source PDF preview */}
-          {formation.source_document_url && (!formation.is_paid || isEnrolled) && (
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    Document de la formation
-                  </h2>
-                  <a href={formation.source_document_url} target="_blank" rel="noopener noreferrer" download>
-                    <Button variant="outline" size="sm" className="text-xs gap-1">
-                      <Download className="w-3 h-3" /> Télécharger
-                    </Button>
-                  </a>
-                </div>
-                {formation.source_document_name && (
-                  <p className="text-[11px] text-muted-foreground mb-2 truncate">{formation.source_document_name}</p>
-                )}
-                <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "60vh", minHeight: 320 }}>
-                  <iframe
-                    src={`${formation.source_document_url}#view=FitH`}
-                    title={formation.source_document_name || "Document"}
-                    className="w-full h-full"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {formation.source_document_url && (!formation.is_paid || isEnrolled) && (() => {
+            // For paid formations, only use a freshly-signed URL (never the raw source URL)
+            const docUrl = formation.is_paid ? signedPdfUrl : formation.source_document_url;
+            return (
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h2 className="font-heading text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Document de la formation
+                    </h2>
+                    {docUrl && (
+                      <a href={docUrl} target="_blank" rel="noopener noreferrer" download>
+                        <Button variant="outline" size="sm" className="text-xs gap-1">
+                          <Download className="w-3 h-3" /> Télécharger
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                  {formation.source_document_name && (
+                    <p className="text-[11px] text-muted-foreground mb-2 truncate">{formation.source_document_name}</p>
+                  )}
+                  <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "60vh", minHeight: 320 }}>
+                    {docUrl ? (
+                      <iframe
+                        src={`${docUrl}#view=FitH`}
+                        title={formation.source_document_name || "Document"}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Chargement sécurisé du document…
+                      </div>
+                    )}
+                  </div>
+                  {formation.is_paid && (
+                    <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5 text-primary" /> Lien sécurisé temporaire — réservé aux apprenants inscrits.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
         </div>
       </section>
 
