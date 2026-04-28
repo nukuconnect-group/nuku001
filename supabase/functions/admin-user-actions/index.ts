@@ -86,22 +86,31 @@ Deno.serve(async (req) => {
       name?: string,
     ) => {
       const idempotencyKey = `admin-${kind}-${targetId}-${Date.now()}`;
-      const { error } = await userClient.functions.invoke("send-transactional-email", {
-        body: {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+          apikey: serviceKey,
+        },
+        body: JSON.stringify({
           templateName: "admin-account-link",
           recipientEmail: email,
           idempotencyKey,
-          templateData: {
-            name: name || "",
-            actionLink,
-            kind,
-          },
-        },
+          templateData: { name: name || "", actionLink, kind },
+        }),
       });
-      if (error) {
-        console.error(`send-transactional-email (${kind}) failed`, error);
+      let send_error: string | null = null;
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error(`send-transactional-email (${kind}) failed`, resp.status, text);
+        send_error = `${resp.status}: ${text}`;
+      } else {
+        await resp.text();
       }
-      return { idempotencyKey, send_error: error?.message || null };
+      return { idempotencyKey, send_error };
     };
 
     switch (body.action) {

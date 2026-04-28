@@ -74,31 +74,38 @@ Deno.serve(async (req: Request) => {
     // and pending/rejected ones to the right KYC screen.
     const loginUrl = "https://nukuconnect.com/mon-compte";
 
-    // Forward to send-transactional-email with idempotency to prevent dupes
+    // Forward to send-transactional-email with idempotency to prevent dupes.
+    // Use direct fetch with service-role key so we (a) always have a valid JWT
+    // for the verify_jwt=true target and (b) can surface the actual error body.
     const idempotencyKey = `kyc-${body.kyc_id}-${body.decision}`;
-    const { data: sendData, error: sendErr } = await userClient.functions.invoke(
-      "send-transactional-email",
-      {
-        body: {
-          templateName: "kyc-status",
-          recipientEmail,
-          idempotencyKey,
-          templateData: {
-            name: body.name || targetUser.user.user_metadata?.full_name || "",
-            decision: body.decision,
-            kycType: body.kyc_type,
-            adminNote: body.admin_note || "",
-            loginUrl,
-          },
-        },
+    const sendResp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
       },
-    );
+      body: JSON.stringify({
+        templateName: "kyc-status",
+        recipientEmail,
+        idempotencyKey,
+        templateData: {
+          name: body.name || targetUser.user.user_metadata?.full_name || "",
+          decision: body.decision,
+          kycType: body.kyc_type,
+          adminNote: body.admin_note || "",
+          loginUrl,
+        },
+      }),
+    });
 
-    if (sendErr) {
-      console.error("send-transactional-email failed:", sendErr);
-      return new Response(JSON.stringify({ error: sendErr.message, details: sendData }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const sendBodyText = await sendResp.text();
+    if (!sendResp.ok) {
+      console.error("send-transactional-email failed:", sendResp.status, sendBodyText);
+      return new Response(
+        JSON.stringify({ error: "send-transactional-email failed", status: sendResp.status, details: sendBodyText }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Append to KYC audit journal (admin + decision + reason + timestamp)
