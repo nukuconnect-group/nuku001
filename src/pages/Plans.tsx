@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles, AlertTriangle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,8 @@ import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunc
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
 import visaMcLogo from "@/assets/visa-mastercard.png";
+
+const PENDING_PLAN_KEY = "nuku:pendingPlan";
 
 // Plans alignés sur la nouvelle politique tarifaire NukuConnect
 const plans = [
@@ -112,6 +115,7 @@ const Plans = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
@@ -122,13 +126,19 @@ const Plans = () => {
     let session;
     try {
       session = await getFreshAuthSession();
+      setSessionExpired(false);
     } catch {
+      // Persist intent so we can resume after reconnection
+      try {
+        sessionStorage.setItem(PENDING_PLAN_KEY, JSON.stringify({ planId, paymentProof, ts: Date.now() }));
+      } catch { /* noop */ }
+      setSessionExpired(true);
+      setSubscribing(null);
       toast({
         title: "Session expirée",
         description: "Veuillez vous reconnecter pour finaliser votre abonnement.",
         variant: "destructive",
       });
-      navigate("/auth");
       return;
     }
 
@@ -140,6 +150,8 @@ const Plans = () => {
     }, session);
 
     if (data?.error) throw new Error(data.error);
+
+    try { sessionStorage.removeItem(PENDING_PLAN_KEY); } catch { /* noop */ }
 
     await supabase.from("notifications").insert({
       user_id: session.user.id,
@@ -153,7 +165,38 @@ const Plans = () => {
     setPaymentStep(null);
     setPollingEnabled(false);
     setSubscribing(null);
-  }, [navigate, refreshSubscription, toast]);
+  }, [refreshSubscription, toast]);
+
+  // Auto-resume after returning from /auth
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let pending: { planId: string; paymentProof?: { identifier?: string; tx_reference?: string }; ts: number } | null = null;
+      try {
+        const raw = sessionStorage.getItem(PENDING_PLAN_KEY);
+        if (raw) pending = JSON.parse(raw);
+      } catch { /* noop */ }
+      if (!pending) return;
+      // Stale > 30 min
+      if (Date.now() - pending.ts > 30 * 60 * 1000) {
+        sessionStorage.removeItem(PENDING_PLAN_KEY);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || cancelled) return;
+      setSessionExpired(false);
+      try {
+        await activateSubscription(pending.planId, pending.paymentProof);
+      } catch (err: any) {
+        toast({ title: "Reprise impossible", description: err?.message || "Réessayez.", variant: "destructive" });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activateSubscription, toast]);
+
+  const handleReconnect = useCallback(() => {
+    navigate("/auth?redirect=/plans");
+  }, [navigate]);
 
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
@@ -298,6 +341,25 @@ const Plans = () => {
           </p>
         </div>
       </section>
+
+      {sessionExpired && (
+        <section className="py-3">
+          <div className="container mx-auto px-3 sm:px-4 max-w-3xl">
+            <Alert variant="destructive" role="alert" aria-live="polite">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Session expirée</AlertTitle>
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                <span className="text-xs sm:text-sm">
+                  Votre session a expiré. Reconnectez-vous : votre paiement reprendra automatiquement.
+                </span>
+                <Button size="sm" variant="outline" onClick={handleReconnect} className="self-start sm:self-auto">
+                  Se reconnecter
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </section>
+      )}
 
       <section className="py-6 sm:py-12">
         <div className="container mx-auto px-3 sm:px-4">
