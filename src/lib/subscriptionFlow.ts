@@ -129,6 +129,11 @@ export async function activateMembership({
     if (error) throw error;
   }
 
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Session expirée. Veuillez vous reconnecter pour finaliser votre abonnement.");
+  }
+
   const { data: subData, error: subscriptionError } = await supabase.functions.invoke(
     "update-subscription",
     {
@@ -137,6 +142,9 @@ export async function activateMembership({
         billing_period: billing,
         payment_identifier: paymentProof?.identifier,
         payment_tx_reference: paymentProof?.tx_reference,
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
       },
     }
   );

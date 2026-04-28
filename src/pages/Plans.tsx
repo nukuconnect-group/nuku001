@@ -128,6 +128,9 @@ const Plans = () => {
         payment_identifier: paymentProof?.identifier,
         payment_tx_reference: paymentProof?.tx_reference,
       },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
     });
 
     if (error) throw error;
