@@ -435,6 +435,7 @@ const Cart = () => {
     }
 
     setIsCheckingOut(true);
+    setPayStatus({ kind: "initiating" });
     try {
       const { data: buyerProfile } = await supabase
         .from("profiles").select("id").eq("user_id", user.id).single();
