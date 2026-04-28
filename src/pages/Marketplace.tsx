@@ -37,7 +37,6 @@ import OfflineFallback from "@/components/layout/OfflineFallback";
 import { Product } from "@/data/marketplace";
 import { ProductGridSkeleton } from "@/components/marketplace/ProductCardSkeleton";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
-import SponsoredProductCard from "@/components/marketplace/SponsoredProductCard";
 
 const locationsByCountry: { country: string; flag: string; cities: string[] }[] = [
   // Afrique de l'Ouest
@@ -681,7 +680,7 @@ const Marketplace = () => {
           <div ref={sponsoredRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
             {sponsoredProducts.map((product) => (
               <div key={product.id} className="flex-shrink-0 w-[180px] snap-start">
-                <SponsoredProductCard product={product} />
+                <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} minimal />
               </div>
             ))}
           </div>
@@ -817,8 +816,8 @@ const Marketplace = () => {
             </div>
             <div ref={sponsoredRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {sponsoredProducts.map((product) => (
-                <div key={`sp-mob-${product.id}`} className="flex-shrink-0 w-[150px] snap-start">
-                  <SponsoredProductCard product={product} />
+                <div key={`sp-mob-${product.id}`} className="flex-shrink-0 w-[140px] snap-start">
+                  <ProductCard product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} minimal />
                 </div>
               ))}
             </div>
