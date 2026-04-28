@@ -31,7 +31,7 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
@@ -87,6 +87,49 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [company, setCompany] = useState("");
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("Togo");
+
+  // UI state for new interactions
+  const [isCountryEditing, setIsCountryEditing] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [isSavingCountry, setIsSavingCountry] = useState(false);
+  const [profileCountry, setProfileCountry] = useState<string>("");
+
+  // Sync profile country
+  useEffect(() => {
+    const loc = (profile?.location || "").trim();
+    // Try extract country (last comma part) else raw
+    const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
+    setProfileCountry(parts[parts.length - 1] || loc || "Togo");
+  }, [profile?.location]);
+
+  const handleSaveCountry = async (newCountry: string) => {
+    if (!user?.id || !profile?.id) return;
+    setIsSavingCountry(true);
+    try {
+      // Preserve city if present
+      const loc = (profile?.location || "").trim();
+      const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
+      let newLocation = newCountry;
+      if (parts.length > 1) {
+        parts[parts.length - 1] = newCountry;
+        newLocation = parts.join(", ");
+      } else if (parts.length === 1 && parts[0] !== profileCountry) {
+        newLocation = `${parts[0]}, ${newCountry}`;
+      }
+      const { error } = await supabase
+        .from("profiles")
+        .update({ location: newLocation })
+        .eq("id", profile.id);
+      if (error) throw error;
+      setProfileCountry(newCountry);
+      setIsCountryEditing(false);
+      toast({ title: "Pays mis à jour", description: newLocation });
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err?.message || "Impossible de mettre à jour", variant: "destructive" });
+    } finally {
+      setIsSavingCountry(false);
+    }
+  };
 
   useEffect(() => {
     if (!isReady) return;
@@ -246,6 +289,12 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     { icon: ShoppingCart, label: "Panier d'achat", href: "/panier", show: currentUserType === "buyer" },
     { icon: Heart, label: "Mes favoris", href: "/favoris", show: currentUserType === "buyer" },
     { icon: MapPin, label: "Adresse de livraison", href: "/adresse-livraison", show: currentUserType === "buyer" },
+    { icon: RotateCcw, label: "Remboursements & Retours", href: "/aide?topic=remboursement", show: true },
+    { icon: FileText, label: "Mes factures", href: "/buyer-dashboard?tab=invoices", show: currentUserType === "buyer" },
+    { icon: Wallet, label: "Portefeuille & Paiements", href: "/buyer-dashboard?tab=wallet", show: true },
+    { icon: Bell, label: "Notifications", href: "/notifications", show: true },
+    { icon: Users, label: "Parrainage & Affiliation", href: "/affiliation", show: true },
+    { icon: Star, label: "Mes avis", href: "/buyer-dashboard?tab=reviews", show: currentUserType === "buyer" },
     { icon: Store, label: "Devenir vendeur", href: "/devenir-fournisseur", show: currentUserType === "buyer" },
     { icon: ShoppingBag, label: "Gérer les commandes", href: "/suivi-livraison", show: currentUserType === "producer" || currentUserType === "trainer" },
     { icon: Crown, label: "Mon abonnement", href: "/plans", show: currentUserType === "producer" || currentUserType === "trainer" },
@@ -308,12 +357,12 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                     key={item.href + item.label}
                     to={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20"
+                    className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       <item.icon className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <span className="flex-1 text-[13px] font-medium tracking-tight text-foreground">{item.label}</span>
+                    <span className="flex-1 text-[15px] font-medium tracking-tight text-foreground">{item.label}</span>
                     {item.badge && (
                       <span className="w-2.5 h-2.5 rounded-full bg-destructive flex-shrink-0" />
                     )}
@@ -368,89 +417,136 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               <div className="h-2 bg-muted/40" />
 
-              {/* Country */}
+              {/* Country — inline editable */}
               <div className="py-1">
-                <div className="px-4 py-3.5 border-b border-border/20">
-                  <div className="flex items-center gap-3.5 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                <div className="px-4 py-3 border-b border-border/20">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       <Globe className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <span className="text-[13px] font-medium tracking-tight">Pays</span>
-                  </div>
-                  <div className="ml-12">
-                    <p className="text-[12px] text-muted-foreground">📍 {profile?.location || "Togo"}</p>
+                    <span className="text-[15px] font-medium tracking-tight flex-shrink-0">Pays</span>
+                    <div className="flex-1 min-w-0 flex items-center justify-end gap-2">
+                      {isCountryEditing ? (
+                        <Select
+                          value={profileCountry}
+                          onValueChange={(v) => handleSaveCountry(v)}
+                          disabled={isSavingCountry}
+                        >
+                          <SelectTrigger className="h-8 text-[14px] w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <span className="text-[14px] text-muted-foreground truncate">📍 {profileCountry || "Togo"}</span>
+                          <button
+                            onClick={() => setIsCountryEditing(true)}
+                            className="text-[12px] font-semibold text-primary hover:underline flex-shrink-0"
+                          >
+                            Modifier
+                          </button>
+                        </>
+                      )}
+                      {isSavingCountry && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                    </div>
                   </div>
                 </div>
 
                 {/* Help, Support & Settings */}
                 <Link to="/aide" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
-                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                     <HelpCircle className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Centre d'assistance</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Centre d'assistance</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
                 <button
                   onClick={() => { onClose(); window.open("https://wa.me/22891201468", "_blank"); }}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
                     <Phone className="w-4 h-4 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <span className="text-[13px] font-medium tracking-tight block">Support WhatsApp</span>
-                    <span className="text-[10px] text-muted-foreground">+228 91 20 14 68</span>
+                    <span className="text-[15px] font-medium tracking-tight block">Support WhatsApp</span>
+                    <span className="text-[11px] text-muted-foreground">+228 91 20 14 68</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </button>
                 <button
                   onClick={() => { onClose(); navigate("/aide?chat=1"); }}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Headphones className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Support client</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Support client</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </button>
                 <Link to="/settings" onClick={onClose}
-                  className="flex items-center gap-3.5 px-4 py-3 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
-                  <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20">
+                  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                     <Settings className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <span className="flex-1 text-[13px] font-medium tracking-tight">Paramètres</span>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Paramètres</span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
 
-                {/* Theme selector */}
-                <div className="px-4 py-3 border-b border-border/20">
-                  <div className="flex items-center gap-3.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                {/* Apparence — collapsible: user clicks first, then chooses */}
+                <div className="border-b border-border/20">
+                  <button
+                    onClick={() => setAppearanceOpen((v) => !v)}
+                    className="flex items-center gap-3.5 px-4 py-3.5 w-full text-left hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
                       {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : theme === "light" ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Monitor className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                    <span className="flex-1 text-[13px] font-medium tracking-tight">Apparence</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 ml-12">
-                    {([
-                      { value: "light", label: "Clair", Icon: Sun },
-                      { value: "dark", label: "Sombre", Icon: Moon },
-                      { value: "system", label: "Auto", Icon: Monitor },
-                    ] as { value: ThemeMode; label: string; Icon: typeof Sun }[]).map(({ value, label, Icon }) => (
-                      <button
-                        key={value}
-                        onClick={() => setTheme(value)}
-                        className={`flex flex-col items-center gap-1 py-2 px-1 rounded-md border text-[10px] transition-colors ${
-                          theme === value
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background hover:bg-muted text-foreground"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        <span className="font-medium">{label}</span>
-                      </button>
-                    ))}
-                  </div>
+                    <div className="flex-1">
+                      <span className="text-[15px] font-medium tracking-tight block">Apparence</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {theme === "dark" ? "Sombre" : theme === "light" ? "Clair" : "Auto (système)"}
+                      </span>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-muted-foreground/40 flex-shrink-0 transition-transform ${appearanceOpen ? "rotate-90" : ""}`} />
+                  </button>
+
+                  {appearanceOpen && (
+                    <div className="px-4 pb-3 -mt-1 space-y-1.5">
+                      {([
+                        { value: "light", label: "Clair", desc: "Fond clair en permanence", Icon: Sun },
+                        { value: "dark", label: "Sombre", desc: "Fond sombre en permanence", Icon: Moon },
+                        { value: "system", label: "Auto", desc: "Suit le réglage du système", Icon: Monitor },
+                      ] as { value: ThemeMode; label: string; desc: string; Icon: typeof Sun }[]).map(({ value, label, desc, Icon }) => {
+                        const active = theme === value;
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => setTheme(value)}
+                            className={`flex items-center gap-3 w-full p-2.5 rounded-lg border transition-colors text-left ${
+                              active
+                                ? "border-primary bg-primary/10"
+                                : "border-border bg-background hover:bg-muted"
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${active ? "bg-primary/20" : "bg-muted/60"}`}>
+                              <Icon className={`w-4 h-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className={`text-[14px] font-semibold block ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
+                              <span className="text-[11px] text-muted-foreground">{desc}</span>
+                            </div>
+                            {active && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </nav>
