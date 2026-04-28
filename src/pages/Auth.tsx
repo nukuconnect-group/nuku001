@@ -447,6 +447,17 @@ const Auth = () => {
       <div className="flex-1 flex items-start lg:items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <div className="w-full max-w-md">
           {/* Mode toggle */}
+          {activeRefCode && (
+            <div className="mb-4 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground">Parrainage activé 🎁</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">
+                  Code <span className="font-mono font-bold text-primary">{activeRefCode}</span> appliqué — votre parrain recevra ses récompenses dès la finalisation de votre inscription.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex gap-1 mb-6 bg-muted rounded-xl p-1">
             <button
               onClick={() => { setAuthMode("login"); setSignupStep("select"); }}
