@@ -490,11 +490,11 @@ const Cart = () => {
     }
 
     if (!selectedNetwork) {
-      toast({ title: "Mode de paiement requis", description: "Veuillez sélectionner un mode de paiement (Moov, T-Money ou Carte bancaire).", variant: "destructive" });
+      toast({ title: "Mode de paiement requis", description: "Veuillez sélectionner Moov Money ou T-Money.", variant: "destructive" });
       return;
     }
 
-    if (selectedNetwork !== "CARD" && !mobileNumber.trim()) {
+    if (!mobileNumber.trim()) {
       toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
       return;
     }
