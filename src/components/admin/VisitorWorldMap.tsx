@@ -51,9 +51,14 @@ const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }>
 
 interface VisitorWorldMapProps {
   countryData: { country: string; count: number }[];
+  onLiveVisit?: (country: string | null) => void;
 }
 
-const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
+const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => {
+  const [livePulse, setLivePulse] = useState(false);
+  const [lastLiveCountry, setLastLiveCountry] = useState<string | null>(null);
+  const [liveCounter, setLiveCounter] = useState(0);
+
   const totalVisits = useMemo(() => countryData.reduce((s, c) => s + c.count, 0), [countryData]);
   const maxCount = useMemo(() => Math.max(...countryData.map(c => c.count), 1), [countryData]);
 
@@ -68,15 +73,41 @@ const VisitorWorldMap = ({ countryData }: VisitorWorldMapProps) => {
     [countryData, maxCount]
   );
 
+  // Realtime subscription — listen for new visits and trigger refresh + pulse
+  useEffect(() => {
+    const channel = supabase
+      .channel("visitor-map-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "analytics_visits" },
+        (payload: any) => {
+          const country = payload?.new?.country || null;
+          setLastLiveCountry(country);
+          setLiveCounter(c => c + 1);
+          setLivePulse(true);
+          setTimeout(() => setLivePulse(false), 1500);
+          onLiveVisit?.(country);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [onLiveVisit]);
+
   return (
     <Card>
       <CardHeader className="p-3 sm:p-4 pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <Globe className="w-4 h-4 text-primary" />
           Carte des visiteurs
+          <span className={`inline-flex items-center gap-1 ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full ${livePulse ? "bg-destructive/15 text-destructive animate-pulse" : "bg-primary/10 text-primary"}`}>
+            <Radio className="w-2.5 h-2.5" /> LIVE
+          </span>
         </CardTitle>
         <CardDescription className="text-[11px]">
           {countryData.length} pays • {totalVisits} visites totales
+          {liveCounter > 0 && (
+            <span className="ml-1 text-primary">• +{liveCounter} en direct{lastLiveCountry ? ` (dernier: ${lastLiveCountry})` : ""}</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-3 sm:p-4 pt-0">
