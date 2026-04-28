@@ -561,7 +561,7 @@ const Cart = () => {
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
           phone_number: phoneDigits,
-          network: selectedNetwork,
+          network: detectedNetwork,
           // Mobile Money: paiement direct via push USSD (pas de redirection)
           use_redirect: false,
         },
