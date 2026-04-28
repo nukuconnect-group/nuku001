@@ -28,6 +28,7 @@ import RouteProgress from "./components/layout/RouteProgress";
 import SmartSuspense from "./components/layout/SmartSuspense";
 import PerformanceTracker from "./components/PerformanceTracker";
 import LinkPrefetcher from "./components/LinkPrefetcher";
+import CookieConsent from "./components/CookieConsent";
 
 // Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
@@ -229,6 +230,7 @@ const App = () => {
                 </Routes>
               </SmartSuspense>
             </BrowserRouter>
+            <CookieConsent />
             <CallModal />
           </TooltipProvider>
         </CartProvider>
