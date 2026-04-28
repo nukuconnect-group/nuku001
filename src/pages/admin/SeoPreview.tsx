@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, RefreshCw, ExternalLink, Copy, AlertTriangle, CheckCircle2, History, Globe, Smartphone, RotateCcw } from "lucide-react";
 import { APP_ROUTES, isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
+import { normalizeSeoSlug, isValidSlugShape } from "@/lib/seoSlug";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
 
 interface SeoRow {
