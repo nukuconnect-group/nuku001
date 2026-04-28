@@ -87,13 +87,12 @@ Deno.serve(async (req) => {
     ) => {
       const idempotencyKey = `admin-${kind}-${targetId}-${Date.now()}`;
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${serviceKey}`,
-          apikey: serviceKey,
+          Authorization: authHeader,
+          apikey: ANON_KEY,
         },
         body: JSON.stringify({
           templateName: "admin-account-link",
