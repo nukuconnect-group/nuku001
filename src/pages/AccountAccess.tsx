@@ -16,7 +16,7 @@ const AccountAccess = () => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/auth?redirect=/mon-compte", { replace: true });
+        navigate("/auth?returnTo=/mon-compte", { replace: true });
         return;
       }
 
