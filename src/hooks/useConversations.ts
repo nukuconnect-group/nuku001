@@ -348,6 +348,7 @@ export function useConversations() {
       .channel("conversations-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const m = payload.new as any;
+        logDiag("message", "insert", { conv: m.conversation_id, from: m.sender_id });
         // Update local instantly
         if (cache.profileId) {
           mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
@@ -358,6 +359,7 @@ export function useConversations() {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "delivery_messages" }, (payload) => {
         const m = payload.new as any;
+        logDiag("message", "delivery-insert", { delivery: m.delivery_id, from: m.sender_id });
         if (cache.userId) {
           mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
         }
@@ -368,6 +370,7 @@ export function useConversations() {
       .on("postgres_changes", { event: "*", schema: "public", table: "user_presence" }, (payload) => {
         const row = (payload.new || payload.old) as any;
         if (!row?.user_id) return;
+        logDiag("presence", row.is_online ? "online" : "offline", { user: row.user_id });
         setConversations((prev) => {
           const next = prev.map((c) => {
             if (c.participant.userId !== row.user_id) return c;
@@ -377,7 +380,9 @@ export function useConversations() {
           return next;
         });
       })
-      .subscribe();
+      .subscribe((s) => {
+        logDiag("presence", `channel:${s}`);
+      });
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
