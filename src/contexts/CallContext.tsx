@@ -304,6 +304,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   // ----- incoming signal handler -----
   const handleSignal = useCallback(async (payload: any) => {
     if (!user?.id || payload?.from === user.id) return;
+    logDiag("call", `signal:${payload?.type}`, { from: payload?.from, callId: payload?.callId });
 
     if (payload.type === "offer") {
       // Incoming call
