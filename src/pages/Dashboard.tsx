@@ -61,6 +61,8 @@ const Dashboard = () => {
   const [showAddFormation, setShowAddFormation] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [boostProduct, setBoostProduct] = useState<any>(null);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { data: activeBoosts = [] } = useActiveBoosts();
   const { subscription } = useSubscription();
   const { balance: tokenBalance } = useTokens();
