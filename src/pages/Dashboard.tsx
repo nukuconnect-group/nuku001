@@ -523,7 +523,11 @@ const Dashboard = () => {
 
       {profile && (
         <AddProductModal open={showAddProduct} onOpenChange={(open) => { setShowAddProduct(open); if (!open) setEditingProduct(null); }}
-          profileId={profile.id} onProductAdded={() => fetchProducts(profile.id)}
+          profileId={profile.id} onProductAdded={() => {
+            fetchProducts(profile.id);
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+            if (editingProduct?.id) queryClient.invalidateQueries({ queryKey: ["product", editingProduct.id] });
+          }}
           editProduct={editingProduct} />
       )}
 
