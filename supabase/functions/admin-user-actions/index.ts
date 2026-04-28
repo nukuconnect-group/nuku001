@@ -109,19 +109,29 @@ Deno.serve(async (req) => {
         const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
         if (!targetUser?.user?.email) return json({ error: "User has no email" }, 400);
         const redirectTo = body.redirect_to || `${new URL(req.url).origin.replace("functions", "lovable")}/auth?type=recovery`;
-        // Generate magic recovery link
         const { data, error } = await admin.auth.admin.generateLink({
           type: "recovery",
           email: targetUser.user.email,
           options: { redirectTo },
         });
         if (error) return json({ error: error.message }, 400);
-        await audit("send_password_reset", { email: targetUser.user.email });
+        const actionLink = data?.properties?.action_link;
+        if (!actionLink) return json({ error: "Lien introuvable" }, 500);
+        const { send_error, idempotencyKey } = await sendActionEmail(
+          "recovery",
+          targetUser.user.email,
+          actionLink,
+          (targetUser.user.user_metadata as any)?.full_name,
+        );
+        await audit("send_password_reset", { email: targetUser.user.email, send_error, idempotencyKey });
         return json({
-          success: true,
-          message: "Lien de réinitialisation généré",
-          action_link: data?.properties?.action_link,
+          success: !send_error,
+          message: send_error
+            ? `Lien généré, mais l'envoi de l'email a échoué : ${send_error}`
+            : "Email de réinitialisation envoyé ✉️",
+          action_link: actionLink,
           email: targetUser.user.email,
+          email_idempotency_key: idempotencyKey,
         });
       }
 
