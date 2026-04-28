@@ -1893,6 +1893,54 @@ export type Database = {
           },
         ]
       }
+      seo_settings: {
+        Row: {
+          canonical_path: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_global: boolean
+          json_ld: Json | null
+          keywords: string | null
+          no_index: boolean
+          og_image_url: string | null
+          route: string
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          canonical_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          json_ld?: Json | null
+          keywords?: string | null
+          no_index?: boolean
+          og_image_url?: string | null
+          route: string
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          canonical_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          json_ld?: Json | null
+          keywords?: string | null
+          no_index?: boolean
+          og_image_url?: string | null
+          route?: string
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           billing_period: string
