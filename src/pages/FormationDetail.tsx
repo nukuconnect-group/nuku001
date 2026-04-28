@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Clock, Users, Play, Star, BookOpen, Award, Lock,
   Loader2, CheckCircle2, ChevronDown, ChevronUp, FileText, Video,
-  GraduationCap,
+  GraduationCap, CalendarClock, Download,
 } from "lucide-react";
 
 const FormationDetail = () => {
