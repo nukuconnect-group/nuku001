@@ -12,8 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Clock, Users, Play, Star, BookOpen, Award, Lock,
   Loader2, CheckCircle2, ChevronDown, ChevronUp, FileText, Video,
-  GraduationCap, CalendarClock, Download,
+  GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 
 const FormationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,13 @@ const FormationDetail = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  // Paid formation payment flow
+  const [payIdentifier, setPayIdentifier] = useState<string | null>(null);
+  const [payTxRef, setPayTxRef] = useState<string | null>(null);
+  const [payNetwork, setPayNetwork] = useState<"FLOOZ" | "TMONEY" | "CARD">("CARD");
+  const [payPhone, setPayPhone] = useState("");
+  const [payInitiating, setPayInitiating] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +92,69 @@ const FormationDetail = () => {
     } as any, { onConflict: "user_id,formation_id,module_id" });
     if (!error) setIsEnrolled(true);
     setEnrolling(false);
+  };
+
+  // Confirm enrollment after a successful payment via the secured edge function
+  const confirmPaidEnrollment = async (identifier: string, tx_reference?: string) => {
+    if (!formation) return;
+    const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
+      body: { formation_id: formation.id, identifier, tx_reference },
+    });
+    if (error || !(data as any)?.success) {
+      toast({
+        title: "Inscription en attente",
+        description: (data as any)?.error || error?.message || "Le paiement n'a pas encore été confirmé.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsEnrolled(true);
+    setPayOpen(false);
+    setPayIdentifier(null);
+    setPayTxRef(null);
+    toast({ title: "Paiement confirmé ✅", description: "Vous avez désormais accès à la formation." });
+  };
+
+  usePaygatePolling({
+    identifier: payIdentifier || undefined,
+    tx_reference: payTxRef || undefined,
+    enabled: !!payIdentifier,
+    onCompleted: () => confirmPaidEnrollment(payIdentifier!, payTxRef || undefined),
+    onFailed: () => toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" }),
+    onExpired: () => toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" }),
+  });
+
+  const initiatePayment = async () => {
+    if (!userId || !formation || payInitiating) return;
+    if (payNetwork !== "CARD" && !payPhone.trim()) {
+      toast({ title: "Numéro requis", description: "Entrez un numéro Mobile Money.", variant: "destructive" });
+      return;
+    }
+    setPayInitiating(true);
+    const identifier = `formation-${formation.id}-${userId}-${Date.now()}`;
+    const { data, error } = await supabase.functions.invoke("paygate-init", {
+      body: {
+        amount: Number(formation.price) || 0,
+        description: `Formation : ${formation.title}`.slice(0, 200),
+        identifier,
+        phone_number: payNetwork !== "CARD" ? payPhone : undefined,
+        network: payNetwork,
+        use_redirect: payNetwork === "CARD",
+      },
+    });
+    setPayInitiating(false);
+    if (error || (data as any)?.error) {
+      toast({ title: "Erreur paiement", description: (data as any)?.error || error?.message || "Impossible d'initier le paiement.", variant: "destructive" });
+      return;
+    }
+    setPayIdentifier(identifier);
+    if ((data as any)?.tx_reference) setPayTxRef((data as any).tx_reference);
+    if ((data as any)?.payment_url) {
+      window.open((data as any).payment_url, "_blank", "noopener,noreferrer");
+      toast({ title: "Paiement ouvert", description: "Terminez le paiement dans la nouvelle fenêtre. Vous serez inscrit automatiquement." });
+    } else {
+      toast({ title: "Paiement en attente", description: "Validez la demande sur votre téléphone Mobile Money." });
+    }
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
@@ -252,6 +324,77 @@ const FormationDetail = () => {
             </div>
           )}
 
+          {/* Paid formation: payment required before enrollment */}
+          {userId && !isEnrolled && formation.is_paid && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="text-xs sm:text-sm flex-1">
+                  <p className="font-semibold text-foreground mb-0.5">Formation payante — {Number(formation.price || 0).toLocaleString("fr-FR")} FCFA</p>
+                  <p className="text-muted-foreground">L'accès aux chapitres, vidéos et au document PDF est débloqué automatiquement après confirmation du paiement.</p>
+                </div>
+                {!payOpen && (
+                  <Button variant="hero" size="sm" className="text-xs gap-1" onClick={() => setPayOpen(true)}>
+                    <CreditCard className="w-3.5 h-3.5" /> Payer & accéder
+                  </Button>
+                )}
+              </div>
+
+              {payOpen && (
+                <div className="border-t border-primary/20 pt-3 space-y-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {(["CARD", "TMONEY", "FLOOZ"] as const).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPayNetwork(n)}
+                        className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
+                          payNetwork === n ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
+                        }`}
+                      >
+                        {n === "CARD" ? "Carte bancaire" : n === "TMONEY" ? "T-Money" : "Flooz"}
+                      </button>
+                    ))}
+                  </div>
+                  {payNetwork !== "CARD" && (
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="Numéro Mobile Money (ex: 90000000)"
+                      value={payPhone}
+                      onChange={(e) => setPayPhone(e.target.value)}
+                      className="w-full text-xs px-3 py-2 rounded-md border border-border bg-background"
+                    />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating || !!payIdentifier}>
+                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : payIdentifier ? "Paiement en cours…" : <><CreditCard className="w-3 h-3" /> Confirmer le paiement</>}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setPayOpen(false); setPayIdentifier(null); setPayTxRef(null); }}>
+                      Annuler
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Paygate. L'inscription est automatique après confirmation.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Visitors not logged-in on a paid formation */}
+          {!userId && formation.is_paid && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4 flex items-center gap-3">
+              <Lock className="w-5 h-5 text-primary flex-shrink-0" />
+              <div className="text-xs sm:text-sm flex-1">
+                <p className="font-semibold text-foreground">Connectez-vous pour acheter cette formation</p>
+                <p className="text-muted-foreground">Accédez aux chapitres, vidéos et document PDF après paiement.</p>
+              </div>
+              <Link to="/auth"><Button variant="hero" size="sm" className="text-xs">Se connecter</Button></Link>
+            </div>
+          )}
+
+
           {/* Summary */}
           {formation.summary && (
             <Card>
@@ -268,7 +411,7 @@ const FormationDetail = () => {
           )}
 
           {/* Source PDF preview */}
-          {formation.source_document_url && (
+          {formation.source_document_url && (!formation.is_paid || isEnrolled) && (
             <Card>
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
