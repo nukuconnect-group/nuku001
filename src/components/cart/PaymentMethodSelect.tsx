@@ -79,7 +79,6 @@ const PaymentMethodSelect = ({
   const networks = [
     { id: "FLOOZ", label: "Moov Money / Flooz", logo: moovFloozLogo },
     { id: "TMONEY", label: "Mixx by Yas (T-Money)", logo: mixxYasLogo },
-    { id: "CARD", label: "Visa / Mastercard", logo: visaMcLogo },
   ];
 
   const showPolling = hidePayButton ? isPolling : pollingEnabled;
@@ -87,7 +86,7 @@ const PaymentMethodSelect = ({
 
   const openPayment = async () => {
     if (!amount || amount <= 0) return;
-    if (selectedNetwork !== "CARD" && !mobileNumber) {
+    if (!mobileNumber) {
       toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
       return;
     }
@@ -103,18 +102,15 @@ const PaymentMethodSelect = ({
           description: `Commande NUKUCONNECT - ${amount} FCFA`,
           identifier,
           phone_number: mobileNumber.replace(/\s/g, ""),
-          network: selectedNetwork === "CARD" ? "" : selectedNetwork,
+          network: selectedNetwork,
+          use_redirect: false,
         },
       });
 
       if (error) throw error;
 
-      if (data?.mode === "redirect" && data?.payment_url) {
-        window.open(data.payment_url, "_blank");
-      }
-
       setPollingEnabled(true);
-      toast({ title: "Paiement initié", description: selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre ouverte." : "Validez la transaction sur votre téléphone." });
+      toast({ title: "Paiement initié", description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov" : "Togocel"}.` });
     } catch (err: any) {
       setIsProcessing(false);
       toast({ title: "Erreur de paiement", description: err.message || "Réessayez plus tard.", variant: "destructive" });
