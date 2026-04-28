@@ -34,13 +34,20 @@ export default function NukuAIAnalytics() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [liveCount, setLiveCount] = useState(0);
+  // Filters & pagination
+  const [search, setSearch] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   const fetchQuestions = async () => {
     const { data } = await supabase
       .from("nuku_ai_questions" as any)
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(2000);
     setQuestions((data as any) || []);
     setLoading(false);
   };
@@ -55,13 +62,35 @@ export default function NukuAIAnalytics() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "nuku_ai_questions" },
         (payload) => {
-          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 500));
+          setQuestions((prev) => [payload.new as any, ...prev].slice(0, 2000));
           setLiveCount((c) => c + 1);
         }
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  // Apply user-selected filters across all derived stats and lists
+  const filteredQuestions = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const cf = countryFilter.trim().toLowerCase();
+    const fromTs = dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null;
+    const toTs = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return questions.filter((q) => {
+      if (s) {
+        const hay = `${q.question || ""} ${q.user_name || ""} ${q.user_id || ""}`.toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
+      if (cf && !(q.country || "").toLowerCase().includes(cf)) return false;
+      const t = q.created_at ? new Date(q.created_at).getTime() : 0;
+      if (fromTs && t < fromTs) return false;
+      if (toTs && t > toTs) return false;
+      return true;
+    });
+  }, [questions, search, countryFilter, dateFrom, dateTo]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setPage(1); }, [search, countryFilter, dateFrom, dateTo]);
 
   const stats = useMemo(() => {
     const total = questions.length;
