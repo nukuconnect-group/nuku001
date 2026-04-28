@@ -655,6 +655,28 @@ const Dashboard = () => {
         product={boostProduct}
         onBoostSuccess={() => { if (profile) fetchProducts(profile.id); }}
       />
+
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => { if (!open) setProductToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce produit ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-semibold text-foreground">{productToDelete?.name}</span> sera retiré <strong>immédiatement</strong> de la marketplace et de votre tableau de bord. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDeleteProduct(); }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Suppression…" : "Oui, supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
       {!profile?.is_verified && (
