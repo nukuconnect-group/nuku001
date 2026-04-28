@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowRight, MapPin } from "lucide-react";
+import { ShieldCheck, ArrowRight } from "lucide-react";
+import LocationBadge from "@/components/profile/LocationBadge";
 
 interface Supplier {
   id: string;
@@ -67,13 +68,7 @@ const VerifiedSuppliersSection = () => {
 
   if (loading || suppliers.length === 0) return null;
 
-  // Extraire le pays — uniquement à partir de location, sinon vide (jamais "Afrique" générique)
-  const extractCountry = (location: string | null): string | null => {
-    if (!location) return null;
-    const parts = location.split(",").map((s) => s.trim()).filter(Boolean);
-    if (parts.length === 0) return null;
-    return parts[parts.length - 1];
-  };
+  // (Pays extrait par LocationBadge via parseLocation)
 
   const getInitials = (name: string): string =>
     name
@@ -97,7 +92,7 @@ const VerifiedSuppliersSection = () => {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between mb-3 sm:mb-5 gap-3">
           <div className="min-w-0 flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-none bg-primary/15 flex items-center justify-center flex-shrink-0">
               <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="min-w-0">
@@ -121,7 +116,6 @@ const VerifiedSuppliersSection = () => {
           {suppliers.map((s, idx) => {
             const displayName =
               s.business_name?.trim() || s.full_name?.trim() || "Fournisseur";
-            const country = extractCountry(s.location);
             const coverImage =
               s.cover_url || (s.cover_images && s.cover_images[0]) || null;
             const coverFallback = COVER_GRADIENTS[idx % COVER_GRADIENTS.length];
@@ -132,10 +126,10 @@ const VerifiedSuppliersSection = () => {
             return (
               <Link
                 key={s.id}
-                to={`/producteur/${s.id}`}
+                to={`/producteurs/${s.id}`}
                 className="flex-shrink-0 w-[150px] sm:w-[170px] snap-start group"
               >
-                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg hover:border-primary/30 transition-all flex flex-col h-full">
+                <div className="rounded-none overflow-hidden border border-border bg-card hover:shadow-lg hover:border-primary/30 transition-all flex flex-col h-full">
                   {/* Cover (bannière) — hauteur fixe */}
                   <div
                     className="relative w-full h-14 sm:h-16 overflow-hidden"
@@ -152,14 +146,13 @@ const VerifiedSuppliersSection = () => {
                         }}
                       />
                     )}
-                    {/* Voile dégradé pour lisibilité */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
                   </div>
 
-                  {/* Avatar rond superposé (style LinkedIn) */}
+                  {/* Avatar carré superposé */}
                   <div className="relative px-2 -mt-7 flex justify-center">
                     <div className="relative">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-card bg-muted overflow-hidden shadow-md">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-none border-[3px] border-card bg-muted overflow-hidden shadow-md">
                         {s.avatar_url ? (
                           <img
                             src={s.avatar_url}
@@ -176,7 +169,7 @@ const VerifiedSuppliersSection = () => {
                         )}
                       </div>
                       {s.is_verified && (
-                        <span className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-0.5 shadow ring-2 ring-card">
+                        <span className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-none p-0.5 shadow ring-2 ring-card">
                           <ShieldCheck className="w-2.5 h-2.5" />
                         </span>
                       )}
@@ -193,12 +186,10 @@ const VerifiedSuppliersSection = () => {
                         {tagline}
                       </p>
                     </div>
-                    {country && (
-                      <p className="text-[9px] sm:text-[10px] text-muted-foreground flex items-center justify-center gap-0.5 mt-1 w-full">
-                        <MapPin className="w-2.5 h-2.5 flex-shrink-0 text-primary/70" />
-                        <span className="truncate font-medium">{country}</span>
-                      </p>
-                    )}
+                    {/* Localisation TOUJOURS visible (badge unifié + fallback) */}
+                    <div className="mt-1 flex justify-center w-full">
+                      <LocationBadge location={s.location} size="sm" />
+                    </div>
                   </div>
                 </div>
               </Link>
