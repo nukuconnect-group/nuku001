@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
 
     // Forward to send-transactional-email with idempotency to prevent dupes
     const idempotencyKey = `kyc-${body.kyc_id}-${body.decision}`;
-    const { data: sendData, error: sendErr } = await admin.functions.invoke(
+    const { data: sendData, error: sendErr } = await userClient.functions.invoke(
       "send-transactional-email",
       {
         body: {

@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       name?: string,
     ) => {
       const idempotencyKey = `admin-${kind}-${targetId}-${Date.now()}`;
-      const { error } = await admin.functions.invoke("send-transactional-email", {
+      const { error } = await userClient.functions.invoke("send-transactional-email", {
         body: {
           templateName: "admin-account-link",
           recipientEmail: email,
