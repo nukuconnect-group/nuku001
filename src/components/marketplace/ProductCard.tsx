@@ -44,9 +44,10 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const lowestTierPrice = tiers.length > 0 ? Math.min(...tiers.map((t) => t.price)) : null;
   const shippingDays = product.shippingDelayDays;
 
-  // Promo : pour les produits sponsorisés sans promo réelle, on génère une remise visuelle déterministe (10–25%)
+  // Promo : remise visuelle déterministe pour TOUS les produits sans promo réelle
+  // Sponsorisés : 10–25% (plus visible). Autres : 5–15%.
   const hashId = (product.id || product.name || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const syntheticDiscount = isBoosted ? 10 + (hashId % 16) : 0; // 10..25
+  const syntheticDiscount = isBoosted ? 10 + (hashId % 16) : 5 + (hashId % 11); // 10..25 vs 5..15
   const computedOriginalPrice =
     product.originalPrice ??
     (syntheticDiscount > 0 ? Math.round(product.price / (1 - syntheticDiscount / 100)) : undefined);
@@ -228,13 +229,13 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
         </div>
 
         <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-0.5 min-h-0 overflow-hidden">
-          {/* Price — single line in minimal mode (no wrap, smaller) */}
-          <div className={`flex items-baseline gap-1 ${minimal ? 'flex-nowrap whitespace-nowrap overflow-hidden' : 'flex-wrap'}`}>
+          {/* Price — aligned single line, promo barrée à côté du prix */}
+          <div className="flex items-baseline gap-1 flex-nowrap whitespace-nowrap overflow-hidden">
             <span className={`font-heading font-bold text-destructive ${minimal ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>
               {formatPrice(product.price)}
             </span>
             {computedOriginalPrice && computedOriginalPrice > product.price && (
-              <span className={`text-muted-foreground line-through ${minimal ? 'text-[8px]' : 'text-[9px]'}`}>
+              <span className={`text-muted-foreground line-through ${minimal ? 'text-[8px]' : 'text-[9px] sm:text-[10px]'}`}>
                 {formatPrice(computedOriginalPrice)}
               </span>
             )}
