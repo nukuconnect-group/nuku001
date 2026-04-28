@@ -496,16 +496,16 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <CardContent className="p-2.5 sm:p-3">
-                          <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 mb-0.5 cursor-pointer hover:text-primary transition-colors"
+                          <h3 className="font-semibold text-[13px] sm:text-sm text-foreground line-clamp-2 leading-tight mb-1 cursor-pointer hover:text-primary transition-colors break-words"
                             onClick={() => navigate(`/produit/${product.id}`)}>{product.name}</h3>
-                          <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5" />{product.location || product.category}
+                          <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1 truncate">
+                            <MapPin className="w-2.5 h-2.5 flex-shrink-0" /><span className="truncate">{product.location || product.category}</span>
                           </p>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="font-heading text-sm sm:text-base font-bold text-primary">
+                          <div className="flex items-baseline justify-between mb-2 gap-1">
+                            <span className="font-heading text-sm sm:text-base font-bold text-primary truncate">
                               {Number(product.price).toLocaleString("en-US")} F
                             </span>
-                            <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
+                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">/{product.unit}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-1 mb-2">
                             <div className="bg-muted/50 rounded-md p-1.5 text-center">
@@ -514,25 +514,30 @@ const Dashboard = () => {
                             </div>
                             <div className="bg-muted/50 rounded-md p-1.5 text-center">
                               <p className="text-[9px] text-muted-foreground">Revenus</p>
-                              <p className="text-xs font-bold text-primary">{productRevenue > 0 ? `${(productRevenue / 1000).toFixed(0)}K` : "0"} F</p>
+                              <p className="text-xs font-bold text-primary truncate">{productRevenue > 0 ? `${(productRevenue / 1000).toFixed(0)}K` : "0"} F</p>
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Button variant="outline" size="sm" className="flex-1 gap-1 text-[10px] h-7"
-                              onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
-                              <Edit className="w-2.5 h-2.5" />Modifier
-                            </Button>
-                            {!isProductBoosted(activeBoosts, product.id) && (
-                              <Button variant="ghost" size="sm" className="h-7 px-2 text-primary" onClick={() => setBoostProduct(product)}>
-                                <Rocket className="w-3 h-3" />
+                          {/* Actions: Modifier en pleine largeur + ligne d'icônes équilibrée */}
+                          <Button variant="outline" size="sm" className="w-full gap-1 text-[11px] h-8 mb-1.5"
+                            onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
+                            <Edit className="w-3 h-3" />Modifier
+                          </Button>
+                          <div className="grid grid-cols-3 gap-1">
+                            {!isProductBoosted(activeBoosts, product.id) ? (
+                              <Button variant="outline" size="sm" className="h-8 px-1 text-primary gap-1 text-[10px]" onClick={() => setBoostProduct(product)} aria-label="Booster">
+                                <Rocket className="w-3 h-3" /><span className="hidden sm:inline">Boost</span>
+                              </Button>
+                            ) : (
+                              <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" disabled aria-label="Boosté">
+                                <Rocket className="w-3 h-3 text-primary" /><span className="hidden sm:inline">Actif</span>
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate(`/tracabilite`)}>
-                              <QrCode className="w-3 h-3 text-blue-500" />
+                            <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" onClick={() => navigate(`/tracabilite`)} aria-label="Traçabilité">
+                              <QrCode className="w-3 h-3 text-blue-500" /><span className="hidden sm:inline">QR</span>
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-destructive h-7 px-2"
-                              onClick={() => handleDeleteProduct(product.id)}>
-                              <Trash2 className="w-3 h-3" />
+                            <Button variant="outline" size="sm" className="h-8 px-1 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1 text-[10px]"
+                              onClick={() => handleDeleteProduct(product.id)} aria-label="Supprimer">
+                              <Trash2 className="w-3 h-3" /><span className="hidden sm:inline">Suppr.</span>
                             </Button>
                           </div>
                         </CardContent>
