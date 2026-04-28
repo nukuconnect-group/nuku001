@@ -8,8 +8,9 @@ import {
   MapPin, Navigation, Package, CheckCircle2,
   Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield,
   Locate, Layers, PauseCircle, PlayCircle, RotateCcw, Edit3,
-  ChevronUp, ChevronDown
+  ChevronUp, ChevronDown, Crosshair, Compass
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface MissionDetailViewProps {
   delivery: any;
