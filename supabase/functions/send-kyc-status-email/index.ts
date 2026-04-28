@@ -101,6 +101,17 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Append to KYC audit journal (admin + decision + reason + timestamp)
+    await admin.from("kyc_audit_log").insert({
+      kyc_id: body.kyc_id,
+      kyc_type: body.kyc_type,
+      user_id: body.user_id,
+      admin_id: caller.id,
+      decision: body.decision,
+      reason: body.admin_note || null,
+      email_idempotency_key: idempotencyKey,
+    });
+
     return new Response(JSON.stringify({ success: true, recipientEmail, idempotencyKey }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
