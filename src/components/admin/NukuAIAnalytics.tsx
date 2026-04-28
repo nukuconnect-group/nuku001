@@ -68,7 +68,38 @@ export default function NukuAIAnalytics() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([loc, n]) => ({ location: loc, count: n }));
-    return { total, uniqueUsers, anonymous, topQuestions, topLocations };
+    // Per-day series (last 14 days)
+    const days: { date: string; label: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({
+        date: key,
+        label: d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+        count: 0,
+      });
+    }
+    const dayMap = new Map(days.map(d => [d.date, d]));
+    questions.forEach(q => {
+      const k = (q.created_at || "").slice(0, 10);
+      const entry = dayMap.get(k);
+      if (entry) entry.count += 1;
+    });
+    // Per-country breakdown with unique visitors
+    const countryAgg: Record<string, { country: string; questions: number; uniqueUsers: Set<string> }> = {};
+    questions.forEach(q => {
+      const c = q.country || "Inconnu";
+      if (!countryAgg[c]) countryAgg[c] = { country: c, questions: 0, uniqueUsers: new Set() };
+      countryAgg[c].questions += 1;
+      countryAgg[c].uniqueUsers.add(q.user_id || q.session_id || q.id);
+    });
+    const countries = Object.values(countryAgg)
+      .map(c => ({ country: c.country, questions: c.questions, users: c.uniqueUsers.size }))
+      .sort((a, b) => b.questions - a.questions)
+      .slice(0, 12);
+    return { total, uniqueUsers, anonymous, topQuestions, topLocations, days, countries };
   }, [questions]);
 
   if (loading) {
