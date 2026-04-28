@@ -33,12 +33,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import { useQueryClient } from "@tanstack/react-query";
+import QRCode from "qrcode";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin, QrCode
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -81,6 +82,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -318,8 +321,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const SHARE_URL = "https://nukuconnect.com";
   const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
+  const SHARE_TITLE = "NUKUCONNECT";
   const encodedUrl = encodeURIComponent(SHARE_URL);
   const encodedText = encodeURIComponent(SHARE_TEXT);
+  const encodedTitle = encodeURIComponent(SHARE_TITLE);
 
   const copyShareLink = async () => {
     try {
@@ -337,19 +342,63 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         document.body.removeChild(ta);
       }
       toast({ title: "✅ Lien copié", description: "Vous pouvez maintenant le coller où vous voulez." });
-      setShareOpen(false);
     } catch {
       toast({ title: "Impossible de copier", description: SHARE_URL, variant: "destructive" });
     }
   };
 
+  const openExternalShare = (url: string) => {
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) window.location.href = url;
+  };
+
+  const openNativeShare = async () => {
+    if (!navigator.share) {
+      toast({ title: "Choisissez un réseau", description: "Votre navigateur n'affiche pas le partage natif." });
+      return;
+    }
+
+    try {
+      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_URL });
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        toast({ title: "Partage indisponible", description: "Choisissez un réseau ci-dessous." });
+      }
+    }
+  };
+
+  const generateQrCode = async () => {
+    try {
+      const dataUrl = await QRCode.toDataURL(SHARE_URL, {
+        width: 360,
+        margin: 2,
+        errorCorrectionLevel: "H",
+      });
+      setQrCodeDataUrl(dataUrl);
+      setShowQrCode(true);
+    } catch {
+      toast({ title: "Erreur QR code", description: "Impossible de générer le QR code.", variant: "destructive" });
+    }
+  };
+
+  const downloadQrCode = async () => {
+    const dataUrl = qrCodeDataUrl || await QRCode.toDataURL(SHARE_URL, { width: 360, margin: 2, errorCorrectionLevel: "H" });
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "nukuconnect-qr-code.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: "QR code téléchargé", description: "L'image est prête à être partagée." });
+  };
+
   const shareTargets = [
-    { name: "WhatsApp", icon: MessageCircle, color: "bg-[#25D366]/10 text-[#25D366]", url: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
-    { name: "Facebook", icon: Facebook, color: "bg-[#1877F2]/10 text-[#1877F2]", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "WhatsApp", icon: MessageCircle, color: "bg-primary/10 text-primary", url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}` },
+    { name: "Facebook", icon: Facebook, color: "bg-primary/10 text-primary", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}` },
     { name: "X (Twitter)", icon: Twitter, color: "bg-foreground/10 text-foreground", url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
-    { name: "Telegram", icon: Send, color: "bg-[#0088cc]/10 text-[#0088cc]", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
-    { name: "LinkedIn", icon: Linkedin, color: "bg-[#0A66C2]/10 text-[#0A66C2]", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
-    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodeURIComponent("NUKUCONNECT")}&body=${encodedText}%20${encodedUrl}` },
+    { name: "Telegram", icon: Send, color: "bg-primary/10 text-primary", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
+    { name: "LinkedIn", icon: Linkedin, color: "bg-primary/10 text-primary", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodedTitle}&body=${encodedText}%20${encodedUrl}` },
   ];
 
   return (
@@ -562,37 +611,16 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                 </div>
 
                 {/* Partager cette application */}
-                {(() => {
-                  const SHARE_URL = "https://nukuconnect.com";
-                  const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
-
-                  const handleShare = async () => {
-                    const shareData = { title: "NUKUCONNECT", text: SHARE_TEXT, url: SHARE_URL };
-                    if (navigator.share) {
-                      try {
-                        await navigator.share(shareData);
-                        return;
-                      } catch (err: any) {
-                        if (err?.name === "AbortError") return;
-                      }
-                    }
-                    // Pas de partage natif → ouvrir le menu de partage personnalisé
-                    setShareOpen(true);
-                  };
-
-                  return (
-                    <button
-                      onClick={handleShare}
-                      className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Share2 className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-                    </button>
-                  );
-                })()}
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Share2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                </button>
 
               </div>
             </nav>
@@ -755,37 +783,60 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Partager NUKUCONNECT</DialogTitle>
-          <DialogDescription>Choisissez une application pour partager le lien.</DialogDescription>
+          <DialogDescription>Choisissez un réseau, le partage du téléphone ou un QR code.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-3 py-2">
+          <button
+            type="button"
+            onClick={openNativeShare}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
+          >
+            <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+              <Share2 className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-medium text-center">Téléphone</span>
+          </button>
           {shareTargets.map((t) => (
-            <a
+            <button
+              type="button"
               key={t.name}
-              href={t.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setShareOpen(false)}
+              onClick={() => openExternalShare(t.url)}
               className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted/60 transition-colors"
             >
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${t.color}`}>
                 <t.icon className="w-5 h-5" />
               </div>
               <span className="text-xs font-medium text-center">{t.name}</span>
-            </a>
+            </button>
           ))}
         </div>
         <button
-          onClick={copyShareLink}
+          onClick={generateQrCode}
           className="flex items-center gap-3 w-full p-3 rounded-xl border border-border hover:bg-muted/60 transition-colors"
         >
           <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-            <Copy className="w-4 h-4 text-secondary" />
+            <QrCode className="w-4 h-4 text-secondary" />
           </div>
           <div className="flex-1 text-left">
-            <div className="text-sm font-medium">Copier le lien</div>
-            <div className="text-xs text-muted-foreground truncate">{SHARE_URL}</div>
+            <div className="text-sm font-medium">Générer un QR code partageable</div>
+            <div className="text-xs text-muted-foreground truncate">Scanner pour ouvrir {SHARE_URL}</div>
           </div>
         </button>
+        {showQrCode && qrCodeDataUrl && (
+          <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-3">
+            <img src={qrCodeDataUrl} alt="QR code de partage NUKUCONNECT" className="mx-auto h-48 w-48 rounded-lg bg-background p-2" />
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" variant="outline" onClick={downloadQrCode} className="gap-2">
+                <Download className="h-4 w-4" />
+                Image
+              </Button>
+              <Button type="button" variant="secondary" onClick={copyShareLink} className="gap-2">
+                <Copy className="h-4 w-4" />
+                Lien
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
     </>
