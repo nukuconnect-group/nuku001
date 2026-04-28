@@ -156,6 +156,57 @@ Deno.serve(async (req) => {
         return json({ success: true, message: "Profil mis à jour" });
       }
 
+      case "resend_confirmation_email": {
+        // Re-send the email-confirmation link for users whose email is not yet confirmed.
+        // Uses generateLink(type: "signup") which triggers the auth-email-hook with the
+        // signup template — same flow as the original confirmation email.
+        const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
+        if (!targetUser?.user?.email) return json({ error: "L'utilisateur n'a pas d'email" }, 400);
+        if (targetUser.user.email_confirmed_at) {
+          return json({ error: "Cet email est déjà confirmé — utilisez plutôt le lien magique." }, 400);
+        }
+        const redirectTo =
+          body.redirect_to ||
+          `${new URL(req.url).origin.replace("functions", "lovable")}/auth?type=signup`;
+        const { data, error } = await admin.auth.admin.generateLink({
+          type: "signup",
+          email: targetUser.user.email,
+          // password is required by GoTrue API for signup links — value is unused since the user already exists
+          password: crypto.randomUUID() + "Aa1!",
+          options: { redirectTo },
+        });
+        if (error) return json({ error: error.message }, 400);
+        await audit("resend_confirmation_email", { email: targetUser.user.email });
+        return json({
+          success: true,
+          message: "Email de confirmation renvoyé",
+          action_link: data?.properties?.action_link,
+          email: targetUser.user.email,
+        });
+      }
+
+      case "send_magic_link": {
+        // Sends a magic-link sign-in email to a user (already confirmed) so they can recover access.
+        const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
+        if (!targetUser?.user?.email) return json({ error: "L'utilisateur n'a pas d'email" }, 400);
+        const redirectTo =
+          body.redirect_to ||
+          `${new URL(req.url).origin.replace("functions", "lovable")}/auth?type=magiclink`;
+        const { data, error } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: targetUser.user.email,
+          options: { redirectTo },
+        });
+        if (error) return json({ error: error.message }, 400);
+        await audit("send_magic_link", { email: targetUser.user.email });
+        return json({
+          success: true,
+          message: "Lien magique envoyé",
+          action_link: data?.properties?.action_link,
+          email: targetUser.user.email,
+        });
+      }
+
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }
