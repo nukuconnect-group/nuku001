@@ -57,8 +57,10 @@ const WithdrawalPanel = () => {
       .select("total_price, status")
       .eq("seller_id", profile.id);
 
+    // Les gains tombent dès que le paiement est initié (statuts non annulés/refusés)
+    const EXCLUDED = new Set(["cancelled", "canceled", "refunded", "failed", "rejected"]);
     const earnings = (orderData || [])
-      .filter((o: any) => o.status === "completed" || o.status === "delivered")
+      .filter((o: any) => !EXCLUDED.has(String(o.status || "").toLowerCase()))
       .reduce((sum: number, o: any) => sum + (Number(o.total_price) || 0), 0);
     setTotalEarnings(earnings);
 
