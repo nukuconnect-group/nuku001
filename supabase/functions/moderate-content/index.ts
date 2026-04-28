@@ -62,6 +62,41 @@ serve(async (req) => {
     }
     const { type, id } = parsed.data;
 
+    // Helper: send a transactional email about product moderation result
+    const sendModerationEmail = async (
+      userIdToNotify: string,
+      productName: string,
+      status: "approved" | "rejected",
+      reason?: string,
+    ) => {
+      if (!userIdToNotify) return;
+      try {
+        const { data: userData } = await supabase.auth.admin.getUserById(userIdToNotify);
+        const recipientEmail = userData?.user?.email;
+        if (!recipientEmail) return;
+        const recipientName =
+          (userData?.user?.user_metadata as any)?.full_name ||
+          (userData?.user?.user_metadata as any)?.name ||
+          undefined;
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "product-moderation",
+            recipientEmail,
+            idempotencyKey: `product-mod:${id}:${status}`,
+            templateData: {
+              recipientName,
+              productName,
+              status,
+              reason: reason || undefined,
+              productUrl: "https://www.nukuconnect.com/dashboard",
+            },
+          },
+        });
+      } catch (e) {
+        console.warn("Failed to send moderation email:", e);
+      }
+    };
+
     let content: any = null;
     let userId: string = "";
     let imageUrl: string | null = null;
