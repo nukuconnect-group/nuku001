@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, RefreshCw, ExternalLink, Copy, AlertTriangle, CheckCircle2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, ArrowLeft, RefreshCw, ExternalLink, Copy, AlertTriangle, CheckCircle2, History, Globe, Smartphone, RotateCcw } from "lucide-react";
 import { APP_ROUTES, isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
+import { clearSeoCache } from "@/hooks/useSeoSettings";
 
 interface SeoRow {
+  id?: string;
   route: string;
   title: string | null;
   description: string | null;
@@ -20,20 +27,43 @@ interface SeoRow {
   no_index: boolean;
 }
 
+interface HistoryRow {
+  id: string;
+  seo_settings_id: string;
+  route: string;
+  title: string | null;
+  description: string | null;
+  keywords: string | null;
+  og_image_url: string | null;
+  og_image_sizes?: Record<string, string> | null;
+  canonical_path: string | null;
+  no_index: boolean;
+  is_draft: boolean;
+  action: string;
+  changed_by_email: string | null;
+  created_at: string;
+}
+
 const BASE_URL = "https://www.nukuconnect.com";
 const SITE_NAME = "NUKUCONNECT";
-const DEFAULT_DESC = "NUKUCONNECT : la marketplace agricole intelligente d'Afrique. Achetez et vendez des produits agricoles, connectez-vous avec des producteurs vérifiés.";
+const DEFAULT_DESC = "NUKUCONNECT : la marketplace agricole intelligente d'Afrique.";
 const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 
 const SeoPreview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [route, setRoute] = useState("/");
+  const [params] = useSearchParams();
+  const [route, setRoute] = useState(params.get("route") || "/");
   const [loading, setLoading] = useState(false);
   const [row, setRow] = useState<SeoRow | null>(null);
   const [globalRow, setGlobalRow] = useState<SeoRow | null>(null);
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [showSuggest, setShowSuggest] = useState(false);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [restoreCandidate, setRestoreCandidate] = useState<HistoryRow | null>(null);
+  const [liveTags, setLiveTags] = useState<any | null>(null);
+  const [liveBusy, setLiveBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -48,6 +78,7 @@ const SeoPreview = () => {
 
   const fetchRow = async () => {
     setLoading(true);
+    setLiveTags(null);
     const [{ data: r }, { data: g }] = await Promise.all([
       (supabase as any).from("seo_settings").select("*").eq("route", route).maybeSingle(),
       (supabase as any).from("seo_settings").select("*").eq("route", "__global__").maybeSingle(),
@@ -55,9 +86,23 @@ const SeoPreview = () => {
     setRow(r as SeoRow | null);
     setGlobalRow(g as SeoRow | null);
     setLoading(false);
+    if (r?.id) loadHistory(r.id);
+    else setHistory([]);
   };
 
-  useEffect(() => { if (authorized) fetchRow(); }, [authorized]);
+  const loadHistory = async (settingsId: string) => {
+    setHistoryLoading(true);
+    const { data } = await (supabase as any)
+      .from("seo_settings_history")
+      .select("*")
+      .eq("seo_settings_id", settingsId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setHistory((data as HistoryRow[]) || []);
+    setHistoryLoading(false);
+  };
+
+  useEffect(() => { if (authorized) fetchRow(); /* eslint-disable-next-line */ }, [authorized]);
 
   const known = isKnownRoute(route);
   const suggestions = useMemo(() => suggestRoutes(route, 8), [route]);
@@ -78,12 +123,8 @@ const SeoPreview = () => {
   }, [row, globalRow, route]);
 
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: computed.fullTitle,
-    description: computed.description,
-    url: computed.canonicalUrl,
-    image: computed.image,
+    "@context": "https://schema.org", "@type": "WebPage",
+    name: computed.fullTitle, description: computed.description, url: computed.canonicalUrl, image: computed.image,
   };
 
   const htmlSnippet = useMemo(() => {
@@ -96,25 +137,18 @@ const SeoPreview = () => {
       `<meta name="robots" content="${robots}" />`,
       `<link rel="canonical" href="${computed.canonicalUrl}" />`,
       ``,
-      `<!-- Open Graph -->`,
       `<meta property="og:type" content="website" />`,
       `<meta property="og:title" content="${esc(computed.fullTitle)}" />`,
       `<meta property="og:description" content="${esc(computed.description)}" />`,
       `<meta property="og:url" content="${computed.canonicalUrl}" />`,
       `<meta property="og:image" content="${computed.image}" />`,
-      `<meta property="og:image:width" content="1200" />`,
-      `<meta property="og:image:height" content="630" />`,
       `<meta property="og:image" content="${computed.imageSquare}" />`,
-      `<meta property="og:image:width" content="640" />`,
-      `<meta property="og:image:height" content="640" />`,
       ``,
-      `<!-- Twitter -->`,
       `<meta name="twitter:card" content="summary_large_image" />`,
       `<meta name="twitter:title" content="${esc(computed.fullTitle)}" />`,
       `<meta name="twitter:description" content="${esc(computed.description)}" />`,
       `<meta name="twitter:image" content="${computed.image}" />`,
       ``,
-      `<!-- JSON-LD -->`,
       `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`,
     ].filter(Boolean).join("\n");
   }, [computed, jsonLd]);
@@ -122,18 +156,53 @@ const SeoPreview = () => {
   const copyHtml = async () => {
     try {
       await navigator.clipboard.writeText(htmlSnippet);
-      toast({ title: "HTML copié", description: "Les balises SEO sont dans votre presse-papier." });
+      toast({ title: "HTML copié" });
     } catch {
-      toast({ title: "Copie échouée", description: "Sélectionnez et copiez manuellement.", variant: "destructive" });
+      toast({ title: "Copie échouée", variant: "destructive" });
     }
   };
 
-  if (authorized === false) {
-    return <div className="container py-10 text-center text-sm text-muted-foreground">Accès admin requis.</div>;
-  }
-  if (authorized === null) {
-    return <div className="container py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>;
-  }
+  const fetchLive = async () => {
+    setLiveBusy(true);
+    const { data, error } = await supabase.functions.invoke("seo-og-fetch", {
+      body: { url: `${BASE_URL}${route}` },
+    });
+    setLiveBusy(false);
+    if (error || !data?.success) {
+      toast({ title: "Récupération échouée", description: error?.message || data?.error || "Erreur", variant: "destructive" });
+      return;
+    }
+    setLiveTags(data.tags);
+    toast({ title: "Tags récupérés", description: `Status HTTP ${data.status}` });
+  };
+
+  const restoreVersion = async (h: HistoryRow) => {
+    if (!row?.id) return;
+    const { error } = await (supabase as any)
+      .from("seo_settings")
+      .update({
+        title: h.title,
+        description: h.description,
+        keywords: h.keywords,
+        og_image_url: h.og_image_url,
+        og_image_sizes: h.og_image_sizes,
+        canonical_path: h.canonical_path,
+        no_index: h.no_index,
+        is_draft: false,
+        published_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    if (error) {
+      toast({ title: "Restauration échouée", description: error.message, variant: "destructive" });
+      return;
+    }
+    clearSeoCache();
+    toast({ title: "Version restaurée et publiée" });
+    fetchRow();
+  };
+
+  if (authorized === false) return <div className="container py-10 text-center text-sm text-muted-foreground">Accès admin requis.</div>;
+  if (authorized === null) return <div className="container py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>;
 
   return (
     <div className="container max-w-5xl py-6 space-y-4">
@@ -147,7 +216,7 @@ const SeoPreview = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Route à inspecter</CardTitle>
-          <CardDescription>Saisissez ou choisissez une route existante de l'application.</CardDescription>
+          <CardDescription>Saisissez ou choisissez une route existante.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex flex-col sm:flex-row gap-2">
@@ -157,21 +226,15 @@ const SeoPreview = () => {
                 onChange={e => { setRoute(e.target.value); setShowSuggest(true); }}
                 onFocus={() => setShowSuggest(true)}
                 onBlur={() => setTimeout(() => setShowSuggest(false), 150)}
-                placeholder="/ma-page"
-                list="seo-routes"
+                placeholder="/ma-page" list="seo-routes"
               />
-              <datalist id="seo-routes">
-                {APP_ROUTES.map(r => <option key={r} value={r} />)}
-              </datalist>
+              <datalist id="seo-routes">{APP_ROUTES.map(r => <option key={r} value={r} />)}</datalist>
               {showSuggest && suggestions.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full bg-popover border rounded-md shadow-md max-h-56 overflow-y-auto">
                   {suggestions.map(s => (
-                    <button
-                      key={s}
-                      type="button"
+                    <button key={s} type="button"
                       className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted"
-                      onMouseDown={() => { setRoute(s); setShowSuggest(false); }}
-                    >{s}</button>
+                      onMouseDown={() => { setRoute(s); setShowSuggest(false); }}>{s}</button>
                   ))}
                 </div>
               )}
@@ -181,12 +244,12 @@ const SeoPreview = () => {
               Charger
             </Button>
             <Button variant="outline" asChild disabled={!known}>
-              <a href={route} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir la page</a>
+              <a href={route} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
             </Button>
           </div>
           {!known ? (
             <p className="text-[11px] text-amber-600 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> Route inconnue dans l'application. Vérifiez l'orthographe ou choisissez une suggestion.
+              <AlertTriangle className="w-3 h-3" /> Route inconnue. Vérifiez l'orthographe ou choisissez une suggestion.
             </p>
           ) : (
             <p className="text-[11px] text-emerald-600 flex items-center gap-1">
@@ -196,6 +259,7 @@ const SeoPreview = () => {
         </CardContent>
       </Card>
 
+      {/* Computed tags */}
       <Card>
         <CardHeader className="pb-3 flex-row items-center justify-between">
           <div>
@@ -203,60 +267,147 @@ const SeoPreview = () => {
             <CardDescription>Source : <span className="font-mono">{computed.source}</span></CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={copyHtml}>
-            <Copy className="w-4 h-4" /> Copier le HTML des balises
+            <Copy className="w-4 h-4" /> Copier le HTML
           </Button>
         </CardHeader>
         <CardContent className="space-y-3 text-xs font-mono">
           <Field label="title" value={computed.fullTitle} />
           <Field label="meta description" value={computed.description} />
           {computed.keywords && <Field label="meta keywords" value={computed.keywords} />}
-          <Field label="link rel=canonical" value={computed.canonicalUrl} />
-          <Field label="meta robots" value={computed.noIndex ? "noindex, nofollow" : "index, follow (par défaut)"} />
+          <Field label="canonical" value={computed.canonicalUrl} />
+          <Field label="robots" value={computed.noIndex ? "noindex, nofollow" : "index, follow"} />
           <div className="border-t pt-3 space-y-2">
-            <p className="font-semibold not-italic font-sans">Open Graph</p>
-            <Field label="og:title" value={computed.fullTitle} />
-            <Field label="og:description" value={computed.description} />
-            <Field label="og:image (1200x630)" value={computed.image} />
-            <Field label="og:image (640x640)" value={computed.imageSquare} />
-            <Field label="og:url" value={computed.canonicalUrl} />
-            <Field label="og:type" value="website" />
-          </div>
-          <div className="border-t pt-3 space-y-2">
-            <p className="font-semibold not-italic font-sans">Twitter</p>
-            <Field label="twitter:card" value="summary_large_image" />
-            <Field label="twitter:title" value={computed.fullTitle} />
-            <Field label="twitter:image" value={computed.image} />
+            <p className="font-semibold not-italic font-sans">Open Graph / Twitter</p>
+            <Field label="og:image (1200×630)" value={computed.image} />
+            <Field label="og:image (640×640)" value={computed.imageSquare} />
           </div>
           <div className="border-t pt-3">
-            <p className="font-semibold not-italic font-sans mb-2">JSON-LD</p>
-            <pre className="bg-muted p-3 rounded-md overflow-x-auto text-[11px]">{JSON.stringify(jsonLd, null, 2)}</pre>
-          </div>
-          <div className="border-t pt-3">
-            <p className="font-semibold not-italic font-sans mb-2">HTML brut (à coller dans &lt;head&gt;)</p>
+            <p className="font-semibold not-italic font-sans mb-2">HTML brut</p>
             <pre className="bg-muted p-3 rounded-md overflow-x-auto text-[11px] whitespace-pre-wrap">{htmlSnippet}</pre>
           </div>
         </CardContent>
       </Card>
 
+      {/* Mobile preview */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Aperçu images OG</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Smartphone className="w-4 h-4" /> Aperçu mobile</CardTitle>
+          <CardDescription>Rendu de la carte sociale comme sur smartphone (WhatsApp / Twitter mobile).</CardDescription>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-md border overflow-hidden">
-            <div className="aspect-[1200/630] bg-muted">
-              <img src={computed.image} alt="OG 1200x630" className="w-full h-full object-cover" />
+        <CardContent className="flex justify-center">
+          <div className="w-[320px] rounded-[2rem] border-4 border-foreground/10 bg-background shadow-xl overflow-hidden">
+            <div className="bg-muted/50 px-3 py-1.5 text-[10px] text-muted-foreground text-center border-b">{BASE_URL}{route}</div>
+            <div className="p-3 space-y-2">
+              <div className="rounded-lg border overflow-hidden">
+                <div className="aspect-square bg-muted">
+                  <img src={computed.imageSquare} alt="OG mobile" className="w-full h-full object-cover" />
+                </div>
+                <div className="p-2 bg-card">
+                  <p className="text-[9px] uppercase text-muted-foreground truncate">{BASE_URL.replace("https://", "")}</p>
+                  <p className="text-xs font-semibold line-clamp-2">{computed.fullTitle}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{computed.description}</p>
+                </div>
+              </div>
+              {/* Google mobile */}
+              <div className="border-t pt-2">
+                <p className="text-[9px] text-muted-foreground truncate">{BASE_URL.replace("https://", "")}{computed.canonicalUrl.replace(BASE_URL, "")}</p>
+                <p className="text-sm text-blue-700 line-clamp-2">{computed.fullTitle}</p>
+                <p className="text-[10px] text-muted-foreground line-clamp-3">{computed.description}</p>
+              </div>
             </div>
-            <p className="p-2 text-[11px] text-muted-foreground">1200 × 630 (Facebook, LinkedIn)</p>
-          </div>
-          <div className="rounded-md border overflow-hidden max-w-xs">
-            <div className="aspect-square bg-muted">
-              <img src={computed.imageSquare} alt="OG 640x640" className="w-full h-full object-cover" />
-            </div>
-            <p className="p-2 text-[11px] text-muted-foreground">640 × 640 (WhatsApp, Twitter)</p>
           </div>
         </CardContent>
       </Card>
+
+      {/* Live OG fetcher */}
+      <Card>
+        <CardHeader className="pb-3 flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" /> Tags réellement servis</CardTitle>
+            <CardDescription>Récupère le HTML public et extrait les balises (comme Facebook/Twitter).</CardDescription>
+          </div>
+          <Button size="sm" onClick={fetchLive} disabled={liveBusy || !known}>
+            {liveBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+            Récupérer
+          </Button>
+        </CardHeader>
+        <CardContent className="text-xs font-mono space-y-2">
+          {!liveTags && <p className="text-muted-foreground font-sans">Cliquez "Récupérer" pour comparer les balises servies au navigateur avec celles calculées ci-dessus.</p>}
+          {liveTags && (
+            <>
+              <Field label="title (live)" value={liveTags.title || "—"} />
+              <Field label="description (live)" value={liveTags.description || "—"} />
+              <Field label="canonical (live)" value={liveTags.canonical || "—"} />
+              <Field label="og:title (live)" value={liveTags.og?.title || "—"} />
+              <Field label="og:image (live)" value={liveTags.og?.image || "—"} />
+              <Field label="twitter:image (live)" value={liveTags.twitter?.image || "—"} />
+              {liveTags.jsonLd?.length > 0 && (
+                <div className="pt-2">
+                  <p className="font-sans font-semibold mb-1">JSON-LD ({liveTags.jsonLd.length})</p>
+                  <pre className="bg-muted p-2 rounded text-[10px] max-h-40 overflow-auto">{JSON.stringify(liveTags.jsonLd, null, 2)}</pre>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* History */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4" /> Historique des versions</CardTitle>
+          <CardDescription>{row?.id ? `${history.length} version(s) enregistrée(s)` : "Cette route n'a pas encore d'entrée SEO."}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {historyLoading ? (
+            <div className="flex justify-center py-4"><Loader2 className="w-4 h-4 animate-spin" /></div>
+          ) : history.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Aucun historique.</p>
+          ) : (
+            <div className="space-y-2 max-h-[420px] overflow-y-auto">
+              {history.map(h => (
+                <div key={h.id} className="border rounded-md p-3 text-xs space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={h.action === "publish" ? "default" : h.action === "create" ? "secondary" : "outline"} className="text-[10px]">
+                        {h.action}
+                      </Badge>
+                      {h.is_draft && <Badge variant="outline" className="text-[10px]">brouillon</Badge>}
+                      <span className="text-muted-foreground">{new Date(h.created_at).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground truncate max-w-[180px]">{h.changed_by_email || "système"}</span>
+                      <Button size="sm" variant="outline" onClick={() => setRestoreCandidate(h)} className="h-7">
+                        <RotateCcw className="w-3 h-3" /> Restaurer
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="font-medium truncate">{h.title || <span className="text-muted-foreground italic">sans titre</span>}</p>
+                  <p className="text-muted-foreground line-clamp-2">{h.description || "—"}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!restoreCandidate} onOpenChange={(o) => !o && setRestoreCandidate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restaurer cette version ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Les balises actuelles seront remplacées par celles de la version du {restoreCandidate && new Date(restoreCandidate.created_at).toLocaleString()} et publiées immédiatement.
+              La version actuelle reste consultable dans l'historique.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (restoreCandidate) restoreVersion(restoreCandidate); setRestoreCandidate(null); }}>
+              Restaurer & publier
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
