@@ -116,7 +116,7 @@ export default function AffiliationStatus() {
       <SEO
         title="Statut de parrainage | Nukuconnect"
         description="Suivez vos filleuls, vos gains validés et en attente, ainsi que le récapitulatif par période."
-        canonical="/affiliation/statut"
+        url="/affiliation/statut"
       />
       <div className="min-h-screen bg-background pb-20">
         <div className="max-w-5xl mx-auto p-4 space-y-5">
