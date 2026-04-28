@@ -185,14 +185,16 @@ const PromoBannerSlider = () => {
               <Link key={i} to={banner.link} className="w-full flex-shrink-0 block">
                 <div className="relative h-48 sm:h-56">
                   <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Brand gradient overlay (logo colors) — same identity as desktop hero */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
-                    <h3 className="text-white font-heading font-extrabold text-lg sm:text-xl leading-tight drop-shadow-lg">{banner.title}</h3>
-                    <p className="text-white/90 text-xs sm:text-sm mt-0.5 drop-shadow-md">{banner.subtitle}</p>
+                    <h3 className="text-primary-foreground font-heading font-extrabold text-lg sm:text-xl leading-tight uppercase tracking-tight drop-shadow-lg">{banner.title}</h3>
+                    <p className="text-primary-foreground/85 text-xs sm:text-sm mt-0.5 italic drop-shadow-md">{banner.subtitle}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="inline-block bg-white text-foreground font-bold text-[11px] sm:text-xs px-4 py-1.5 rounded-full shadow-sm">{banner.cta}</span>
+                      <span className="inline-block bg-accent text-accent-foreground font-bold text-[11px] sm:text-xs px-4 py-1.5 rounded-none uppercase tracking-wider shadow-sm">{banner.cta}</span>
                       {banner.code && (
-                        <span className="inline-block bg-white/20 backdrop-blur-sm text-white font-bold text-[11px] px-3 py-1.5 rounded-full border border-white/30 tracking-wider">{banner.code}</span>
+                        <span className="inline-block bg-primary-foreground/15 backdrop-blur-sm text-primary-foreground font-bold text-[11px] px-3 py-1.5 rounded-none border border-primary-foreground/40 tracking-wider">{banner.code}</span>
                       )}
                     </div>
                   </div>
