@@ -229,8 +229,8 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SmartSuspense>
+              <CookieConsent />
             </BrowserRouter>
-            <CookieConsent />
             <CallModal />
           </TooltipProvider>
         </CartProvider>
