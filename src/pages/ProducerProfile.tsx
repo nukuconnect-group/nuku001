@@ -13,6 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import LocationBadge from "@/components/profile/LocationBadge";
+import PresenceIndicator from "@/components/profile/PresenceIndicator";
+import { buildDirectionsUrl } from "@/lib/location";
 import { 
   ArrowLeft, MapPin, Star, ShieldCheck, MessageCircle, Calendar,
   Package, ShoppingBag, Truck, User, Globe, Share2, Navigation, Clock
@@ -313,25 +316,11 @@ const ProducerProfile = () => {
                     )}
                   </div>
 
-                  {/* Localisation TOUJOURS visible — ville, pays, fallback */}
-                  {(() => {
-                    const rawLoc = (producer.location || "").trim();
-                    const parts = rawLoc.split(",").map((s: string) => s.trim()).filter(Boolean);
-                    const city = parts[0] || "";
-                    const country = parts[1] || (rawLoc ? "" : "Togo");
-                    const displayLoc = rawLoc || "Localisation à confirmer";
-                    const flag = /ghana/i.test(country) ? "🇬🇭" : /bénin|benin/i.test(country) ? "🇧🇯" : /ivoire/i.test(country) ? "🇨🇮" : /sénégal|senegal/i.test(country) ? "🇸🇳" : "🇹🇬";
-                    return (
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary mb-2.5">
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span className="text-[11px] sm:text-xs font-semibold">
-                          <span className="mr-1">{flag}</span>
-                          {city || displayLoc}
-                          {country && city && <span className="text-primary/70">, {country}</span>}
-                        </span>
-                      </div>
-                    );
-                  })()}
+                  {/* Localisation TOUJOURS visible (composant unifié + fallback) */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                    <LocationBadge location={producer.location} />
+                    <PresenceIndicator lastActiveAt={(producer as any).last_seen_at || (producer as any).updated_at} />
+                  </div>
 
                   {/* Stats horizontales secondaires */}
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs text-muted-foreground mb-2.5">
