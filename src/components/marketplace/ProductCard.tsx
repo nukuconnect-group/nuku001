@@ -22,9 +22,10 @@ interface ProductCardProps {
   onCompare?: (product: Product) => void;
   hideProducer?: boolean;
   isBoosted?: boolean;
+  minimal?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false, minimal = false }: ProductCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -212,7 +213,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             {product.originalPrice && (
               <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
             )}
-            <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
+            {!minimal && <span className="text-[9px] text-muted-foreground">/{product.unit}</span>}
           </div>
 
           {/* Title */}
@@ -220,40 +221,44 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             {product.name}
           </h3>
 
-          {/* Min order + shipping delay */}
-          <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] text-muted-foreground truncate">
-            <span>Min. 1 {product.unit}</span>
-            <span className="text-border">•</span>
-            <ShippingDelayBadge days={shippingDays} />
-          </div>
+          {!minimal && (
+            <>
+              {/* Min order + shipping delay */}
+              <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] text-muted-foreground truncate">
+                <span>Min. 1 {product.unit}</span>
+                <span className="text-border">•</span>
+                <ShippingDelayBadge days={shippingDays} />
+              </div>
 
-          {/* Reviews + Sales */}
-          <div className="flex items-center gap-1 mt-auto">
-            <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
-            <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
-            <span className="text-[8px] text-muted-foreground">({reviewCount})</span>
-            <span className="text-border text-[8px]">|</span>
-            <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
-          </div>
+              {/* Reviews + Sales */}
+              <div className="flex items-center gap-1 mt-auto">
+                <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
+                <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
+                <span className="text-[8px] text-muted-foreground">({reviewCount})</span>
+                <span className="text-border text-[8px]">|</span>
+                <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
+              </div>
 
-          {/* Supplier info */}
-          {!hideProducer && (
-            <div className="flex items-center gap-1 pt-1 mt-0.5 border-t border-border/50 min-w-0">
-              <img
-                src={product.producer.avatar || defaultAvatar}
-                alt={product.producer.name}
-                className="w-4 h-4 rounded-sm object-cover border border-border/60 flex-shrink-0"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
-              />
-              {product.producer.verified && (
-                <ShieldCheck className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+              {/* Supplier info */}
+              {!hideProducer && (
+                <div className="flex items-center gap-1 pt-1 mt-0.5 border-t border-border/50 min-w-0">
+                  <img
+                    src={product.producer.avatar || defaultAvatar}
+                    alt={product.producer.name}
+                    className="w-4 h-4 rounded-sm object-cover border border-border/60 flex-shrink-0"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
+                  />
+                  {product.producer.verified && (
+                    <ShieldCheck className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                  )}
+                  <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
+                </div>
               )}
-              <span className="text-[9px] sm:text-[10px] text-foreground truncate font-medium">{product.producer.name}</span>
-            </div>
+            </>
           )}
 
           {/* Location */}
-          <div className="flex items-center gap-1 text-[8px] text-muted-foreground truncate">
+          <div className={`flex items-center gap-1 text-[8px] text-muted-foreground truncate ${minimal ? 'mt-auto' : ''}`}>
             <MapPin className="w-2 h-2 flex-shrink-0" />
             <span className="truncate">{product.location}</span>
           </div>
