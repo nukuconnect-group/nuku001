@@ -321,8 +321,10 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
   const SHARE_URL = "https://nukuconnect.com";
   const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
+  const SHARE_TITLE = "NUKUCONNECT";
   const encodedUrl = encodeURIComponent(SHARE_URL);
   const encodedText = encodeURIComponent(SHARE_TEXT);
+  const encodedTitle = encodeURIComponent(SHARE_TITLE);
 
   const copyShareLink = async () => {
     try {
@@ -340,19 +342,63 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
         document.body.removeChild(ta);
       }
       toast({ title: "✅ Lien copié", description: "Vous pouvez maintenant le coller où vous voulez." });
-      setShareOpen(false);
     } catch {
       toast({ title: "Impossible de copier", description: SHARE_URL, variant: "destructive" });
     }
   };
 
+  const openExternalShare = (url: string) => {
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) window.location.href = url;
+  };
+
+  const openNativeShare = async () => {
+    if (!navigator.share) {
+      toast({ title: "Choisissez un réseau", description: "Votre navigateur n'affiche pas le partage natif." });
+      return;
+    }
+
+    try {
+      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_URL });
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        toast({ title: "Partage indisponible", description: "Choisissez un réseau ci-dessous." });
+      }
+    }
+  };
+
+  const generateQrCode = async () => {
+    try {
+      const dataUrl = await QRCode.toDataURL(SHARE_URL, {
+        width: 360,
+        margin: 2,
+        errorCorrectionLevel: "H",
+      });
+      setQrCodeDataUrl(dataUrl);
+      setShowQrCode(true);
+    } catch {
+      toast({ title: "Erreur QR code", description: "Impossible de générer le QR code.", variant: "destructive" });
+    }
+  };
+
+  const downloadQrCode = async () => {
+    const dataUrl = qrCodeDataUrl || await QRCode.toDataURL(SHARE_URL, { width: 360, margin: 2, errorCorrectionLevel: "H" });
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "nukuconnect-qr-code.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: "QR code téléchargé", description: "L'image est prête à être partagée." });
+  };
+
   const shareTargets = [
-    { name: "WhatsApp", icon: MessageCircle, color: "bg-[#25D366]/10 text-[#25D366]", url: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
-    { name: "Facebook", icon: Facebook, color: "bg-[#1877F2]/10 text-[#1877F2]", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "WhatsApp", icon: MessageCircle, color: "bg-primary/10 text-primary", url: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}` },
+    { name: "Facebook", icon: Facebook, color: "bg-primary/10 text-primary", url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}` },
     { name: "X (Twitter)", icon: Twitter, color: "bg-foreground/10 text-foreground", url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
-    { name: "Telegram", icon: Send, color: "bg-[#0088cc]/10 text-[#0088cc]", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
-    { name: "LinkedIn", icon: Linkedin, color: "bg-[#0A66C2]/10 text-[#0A66C2]", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
-    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodeURIComponent("NUKUCONNECT")}&body=${encodedText}%20${encodedUrl}` },
+    { name: "Telegram", icon: Send, color: "bg-primary/10 text-primary", url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
+    { name: "LinkedIn", icon: Linkedin, color: "bg-primary/10 text-primary", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "Email", icon: Mail, color: "bg-primary/10 text-primary", url: `mailto:?subject=${encodedTitle}&body=${encodedText}%20${encodedUrl}` },
   ];
 
   return (
