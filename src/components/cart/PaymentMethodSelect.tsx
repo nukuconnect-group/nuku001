@@ -72,13 +72,20 @@ const PaymentMethodSelect = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentIdentifier, setPaymentIdentifier] = useState<string>("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
+  const [manualNetwork, setManualNetwork] = useState<"FLOOZ" | "TMONEY" | "">("");
   const { toast } = useToast();
 
-  // Auto-détection du réseau depuis le numéro
-  const detectedNetwork = useMemo(() => detectNetworkFromPhone(mobileNumber), [mobileNumber]);
-  const validation = useMemo(() => validateMobileMoneyPhone(mobileNumber), [mobileNumber]);
+  // Auto-détection depuis le numéro
+  const autoNetwork = useMemo(() => detectNetworkFromPhone(mobileNumber), [mobileNumber]);
+  // Réseau effectif : priorité au choix manuel, sinon auto-détection
+  const detectedNetwork = manualNetwork || autoNetwork;
+  const validation = useMemo(() => {
+    const base = validateMobileMoneyPhone(mobileNumber);
+    if (base.valid && manualNetwork) return { ...base, network: manualNetwork };
+    return base;
+  }, [mobileNumber, manualNetwork]);
 
-  // Propage le réseau détecté au parent
+  // Propage le réseau au parent
   useEffect(() => {
     onNetworkChange?.(detectedNetwork);
   }, [detectedNetwork, onNetworkChange]);
