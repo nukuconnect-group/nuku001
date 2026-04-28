@@ -29,6 +29,7 @@ import SmartSuspense from "./components/layout/SmartSuspense";
 import PerformanceTracker from "./components/PerformanceTracker";
 import LinkPrefetcher from "./components/LinkPrefetcher";
 import CookieConsent from "./components/CookieConsent";
+import CleanTrackingParams from "./components/CleanTrackingParams";
 
 // Lazy load all pages
 const Index = lazy(() => import("./pages/Index"));
@@ -175,6 +176,7 @@ const App = () => {
               <PerformanceTracker />
               <LinkPrefetcher />
               <ScrollToTop />
+              <CleanTrackingParams />
               <AnalyticsTracker />
               <PresenceTracker />
               <RealtimeNotifications />

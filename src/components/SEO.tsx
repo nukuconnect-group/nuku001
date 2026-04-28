@@ -1,7 +1,16 @@
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
 import { useSeoSettings } from "@/hooks/useSeoSettings";
 
 const BASE_URL = "https://www.nukuconnect.com";
+
+/** Build a canonical URL stripped of tracking params (srsltid, gclid, fbclid, utm_*, ...). */
+const buildCanonical = (path: string): string => {
+  // Keep only the pathname; drop query + hash entirely so Google consolidates
+  // /?srsltid=... and / on the same canonical entry.
+  const cleanPath = path.split("?")[0].split("#")[0] || "/";
+  return `${BASE_URL}${cleanPath}`;
+};
 const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 const SITE_NAME = "NUKUCONNECT";
 
@@ -34,8 +43,12 @@ const SEO = ({
   const finalNoIndex = override?.no_index ?? noIndex;
   const keywords = override?.keywords;
 
+  // Always compute a clean canonical: prefer explicit url/override, otherwise use current path.
+  const location = useLocation();
+  const canonicalPath = finalUrl || location.pathname || "/";
+  const canonicalUrl = buildCanonical(canonicalPath);
+
   const fullTitle = finalTitle ? `${finalTitle} | ${SITE_NAME}` : `${SITE_NAME} - Marketplace Agricole Intelligent d'Afrique`;
-  const canonicalUrl = finalUrl ? `${BASE_URL}${finalUrl}` : undefined;
   const ogImage = finalImage || DEFAULT_IMAGE;
 
   return (
@@ -44,7 +57,7 @@ const SEO = ({
       <meta name="description" content={finalDescription} />
       {keywords && <meta name="keywords" content={keywords} />}
       {finalNoIndex && <meta name="robots" content="noindex, nofollow" />}
-      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      <link rel="canonical" href={canonicalUrl} />
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
@@ -54,7 +67,7 @@ const SEO = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:locale" content="fr_FR" />
 
       {/* Twitter */}
