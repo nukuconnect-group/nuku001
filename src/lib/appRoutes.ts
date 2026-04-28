@@ -41,6 +41,8 @@ export const APP_ROUTES: string[] = [
   "/premium",
   "/privacy",
   "/producteurs",
+  "/factures",
+  "/remboursements",
   "/reset-password",
   "/settings",
   "/suivi-livraison",
