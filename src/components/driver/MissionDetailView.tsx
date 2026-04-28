@@ -371,11 +371,15 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     };
   }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverVehicle, currentStep, waypoints, addingWaypoint]);
 
-  // Update driver marker position in real time
+  // Update driver marker position in real time + auto-pan in nav mode
   useEffect(() => {
     if (!driverMarkerRef.current) return;
     driverMarkerRef.current.setLatLng([livePos[0], livePos[1]]);
-  }, [livePos]);
+    if (navMode && mapInstanceRef.current) {
+      // Smoothly pan the map to follow the driver (Google Maps style)
+      mapInstanceRef.current.panTo([livePos[0], livePos[1]], { animate: true, duration: 0.8 });
+    }
+  }, [livePos, navMode]);
 
   // Refresh route periodically when moving
   useEffect(() => {
