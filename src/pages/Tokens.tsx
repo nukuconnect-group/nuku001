@@ -231,7 +231,7 @@ const Tokens = () => {
                         <span className="font-heading text-lg font-bold">Gratuit</span>
                       ) : (
                         <>
-                          <span className="font-heading text-lg sm:text-xl font-bold">{p.price.toLocaleString("fr-FR")}</span>
+                          <span className="font-heading text-lg sm:text-xl font-bold">{p.price.toLocaleString("en-US")}</span>
                           <span className="text-[10px] text-muted-foreground"> FCFA/an</span>
                         </>
                       )}
@@ -306,7 +306,7 @@ const Tokens = () => {
                   <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="font-heading text-2xl sm:text-4xl font-bold">{pack.price_fcfa.toLocaleString("fr-FR")}</span>
+                        <span className="font-heading text-2xl sm:text-4xl font-bold">{pack.price_fcfa.toLocaleString("en-US")}</span>
                         <span className="text-xs sm:text-sm text-muted-foreground">FCFA</span>
                       </div>
                       <div className="mt-2 flex items-center gap-2">
@@ -320,7 +320,7 @@ const Tokens = () => {
                         )}
                       </div>
                       <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground">
-                        ≈ {pricePerToken.toLocaleString("fr-FR")} FCFA / jeton
+                        ≈ {pricePerToken.toLocaleString("en-US")} FCFA / jeton
                       </p>
                     </div>
 
@@ -372,7 +372,7 @@ const Tokens = () => {
                         {network && !pollingEnabled && (
                           <Button variant="hero" size="sm" className="w-full gap-1.5 text-xs h-8" disabled={submitting} onClick={() => initiatePayment(pack)}>
                             {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                            Payer {pack.price_fcfa.toLocaleString("fr-FR")} FCFA
+                            Payer {pack.price_fcfa.toLocaleString("en-US")} FCFA
                           </Button>
                         )}
 

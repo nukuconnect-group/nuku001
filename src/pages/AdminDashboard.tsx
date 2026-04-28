@@ -1017,7 +1017,7 @@ const AdminDashboard = () => {
                               </td>
                               <td className="py-2.5 px-2 text-center">
                                 <Badge variant="outline" className="text-[9px] gap-1">
-                                  <Coins className="w-2.5 h-2.5" />{Number(s.token_balance || 0).toLocaleString("fr-FR")}
+                                  <Coins className="w-2.5 h-2.5" />{Number(s.token_balance || 0).toLocaleString("en-US")}
                                 </Badge>
                               </td>
                               <td className="py-2.5 px-2 text-center hidden sm:table-cell">{s.max_products}</td>

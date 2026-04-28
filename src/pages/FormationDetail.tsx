@@ -342,7 +342,7 @@ const FormationDetail = () => {
             <Badge variant="secondary" className="text-[10px]">{formation.category}</Badge>
             <Badge variant="outline" className="text-[10px]">{formation.level === "beginner" ? "Débutant" : formation.level === "intermediate" ? "Intermédiaire" : "Avancé"}</Badge>
             <Badge className={formation.is_paid ? "bg-primary text-primary-foreground text-[10px]" : "bg-accent text-accent-foreground text-[10px]"}>
-              {formation.is_paid ? `${formation.price?.toLocaleString("fr-FR")} FCFA` : "Gratuit"}
+              {formation.is_paid ? `${formation.price?.toLocaleString("en-US")} FCFA` : "Gratuit"}
             </Badge>
           </div>
           <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">{formation.title}</h1>
@@ -408,7 +408,7 @@ const FormationDetail = () => {
               <div className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <div className="text-xs sm:text-sm flex-1">
-                  <p className="font-semibold text-foreground mb-0.5">Formation payante — {Number(formation.price || 0).toLocaleString("fr-FR")} FCFA</p>
+                  <p className="font-semibold text-foreground mb-0.5">Formation payante — {Number(formation.price || 0).toLocaleString("en-US")} FCFA</p>
                   <p className="text-muted-foreground">L'accès aux chapitres, vidéos et au document PDF est débloqué automatiquement après confirmation du paiement.</p>
                 </div>
                 {!payOpen && (
@@ -569,7 +569,7 @@ const FormationDetail = () => {
                     )}
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Le support PDF complet ({formation.source_document_name ? "ci-dessus" : "de cette formation"}) sera téléchargeable et consultable dès que votre paiement de{" "}
-                      <span className="font-semibold text-foreground">{Number(formation.price || 0).toLocaleString("fr-FR")} FCFA</span> sera confirmé.
+                      <span className="font-semibold text-foreground">{Number(formation.price || 0).toLocaleString("en-US")} FCFA</span> sera confirmé.
                     </p>
                   </div>
                   {userId ? (
@@ -702,7 +702,7 @@ const FormationDetail = () => {
                               {mod.content_type === "video" ? "Cette vidéo " : "Ce document "}
                               sera accessible après confirmation du paiement de{" "}
                               <span className="font-semibold text-foreground">
-                                {Number(formation.price || 0).toLocaleString("fr-FR")} FCFA
+                                {Number(formation.price || 0).toLocaleString("en-US")} FCFA
                               </span>.
                             </p>
                           </div>

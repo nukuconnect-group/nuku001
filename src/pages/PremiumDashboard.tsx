@@ -210,19 +210,19 @@ const PremiumDashboard = () => {
 <h1>Rapport Analytics — NukuConnect Premium</h1>
 <p>Plan : <strong>${planKey}</strong> · Période : 30 derniers jours · Généré le ${new Date().toLocaleString("fr-FR")}</p>
 <div>
-  <div class="kpi"><b>${Math.round(analytics.totalRevenue).toLocaleString("fr-FR")} F</b>Revenu</div>
+  <div class="kpi"><b>${Math.round(analytics.totalRevenue).toLocaleString("en-US")} F</b>Revenu</div>
   <div class="kpi"><b>${analytics.totalOrders}</b>Commandes</div>
-  <div class="kpi"><b>${Math.round(analytics.aov).toLocaleString("fr-FR")} F</b>Panier moyen</div>
+  <div class="kpi"><b>${Math.round(analytics.aov).toLocaleString("en-US")} F</b>Panier moyen</div>
   <div class="kpi"><b>${analytics.conversionRate.toFixed(1)}%</b>Conversion</div>
-  <div class="kpi"><b>${Math.round(analytics.forecast30).toLocaleString("fr-FR")} F</b>Prévision 30j (IA)</div>
+  <div class="kpi"><b>${Math.round(analytics.forecast30).toLocaleString("en-US")} F</b>Prévision 30j (IA)</div>
 </div>
 <h2>Top produits</h2>
 <table><thead><tr><th>Produit</th><th>Revenu</th><th>Commandes</th></tr></thead><tbody>
-${analytics.topProducts.map((p) => `<tr><td>${p.name}</td><td>${p.revenue.toLocaleString("fr-FR")} F</td><td>${p.count}</td></tr>`).join("")}
+${analytics.topProducts.map((p) => `<tr><td>${p.name}</td><td>${p.revenue.toLocaleString("en-US")} F</td><td>${p.count}</td></tr>`).join("")}
 </tbody></table>
 <h2>Évolution journalière</h2>
 <table><thead><tr><th>Date</th><th>Revenu</th><th>Commandes</th></tr></thead><tbody>
-${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleString("fr-FR")} F</td><td>${s.orders}</td></tr>`).join("")}
+${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleString("en-US")} F</td><td>${s.orders}</td></tr>`).join("")}
 </tbody></table>
 <p style="margin-top:32px;font-size:11px;color:#888">© NukuConnect — Rapport confidentiel.</p>
 <script>window.print()</script>
@@ -313,7 +313,7 @@ ${analytics.series.map((s) => `<tr><td>${s.date}</td><td>${s.revenue.toLocaleStr
       if (analytics.totalOrders === 0) {
         items.push({ icon: "📊", text: "Aucune commande sur 30j — boostez vos meilleurs produits pour générer du trafic.", cta: "Booster", href: "/dashboard" });
       } else {
-        items.push({ icon: "💵", text: `Revenu 30j : ${Math.round(analytics.totalRevenue).toLocaleString("fr-FR")} F · Prévision : ${Math.round(analytics.forecast30).toLocaleString("fr-FR")} F.` });
+        items.push({ icon: "💵", text: `Revenu 30j : ${Math.round(analytics.totalRevenue).toLocaleString("en-US")} F · Prévision : ${Math.round(analytics.forecast30).toLocaleString("en-US")} F.` });
         if (analytics.cancelRate > 15) items.push({ icon: "⚠️", text: `Annulations élevées (${analytics.cancelRate.toFixed(1)}%) — vérifiez stocks et délais.` });
         if (analytics.conversionRate > 60) items.push({ icon: "🚀", text: `Excellent taux de conversion (${analytics.conversionRate.toFixed(1)}%) !` });
         if (analytics.topProducts[0]) items.push({ icon: "🏆", text: `Top produit : "${analytics.topProducts[0].name}" (${analytics.topProducts[0].count} ventes).` });
@@ -520,10 +520,10 @@ ${apiUsage.map((u) => `<tr class="${(u.status_code ?? 0) >= 400 ? "err" : "ok"}"
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: "Revenu 30j", value: `${Math.round(analytics.totalRevenue).toLocaleString("fr-FR")} F`, color: "text-primary" },
+                { label: "Revenu 30j", value: `${Math.round(analytics.totalRevenue).toLocaleString("en-US")} F`, color: "text-primary" },
                 { label: "Commandes", value: analytics.totalOrders, color: "text-secondary" },
-                { label: "Panier moyen", value: `${Math.round(analytics.aov).toLocaleString("fr-FR")} F`, color: "text-amber-600" },
-                { label: "Prévision 30j", value: `${Math.round(analytics.forecast30).toLocaleString("fr-FR")} F`, color: "text-emerald-600" },
+                { label: "Panier moyen", value: `${Math.round(analytics.aov).toLocaleString("en-US")} F`, color: "text-amber-600" },
+                { label: "Prévision 30j", value: `${Math.round(analytics.forecast30).toLocaleString("en-US")} F`, color: "text-emerald-600" },
                 { label: "Conversion", value: `${analytics.conversionRate.toFixed(1)}%`, color: "text-blue-600" },
                 { label: "Annulations", value: `${analytics.cancelRate.toFixed(1)}%`, color: "text-destructive" },
                 { label: "Produits actifs", value: products.length, color: "text-foreground" },

@@ -110,8 +110,8 @@ const Dashboard = () => {
   const stats = [
     { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
     { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
-    { label: "Ventes brutes", value: totalSales.toLocaleString("fr-FR") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
-    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("fr-FR") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
+    { label: "Ventes brutes", value: totalSales.toLocaleString("en-US") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
+    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
 
   const handleDeleteProduct = async (productId: string) => {
@@ -242,15 +242,15 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Ventes brutes</p>
-                  <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString("fr-FR")} F</p>
+                  <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString("en-US")} F</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Commission ({commissionRate}%)</p>
-                  <p className="text-base sm:text-2xl font-bold">-{commissionAmount.toLocaleString("fr-FR")} F</p>
+                  <p className="text-base sm:text-2xl font-bold">-{commissionAmount.toLocaleString("en-US")} F</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Solde net</p>
-                  <p className="text-base sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString("fr-FR")} F</p>
+                  <p className="text-base sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString("en-US")} F</p>
                 </div>
                 <Link to="/jetons" className="block group">
                   <div className="rounded-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 p-2 transition-colors h-full">
@@ -503,7 +503,7 @@ const Dashboard = () => {
                           </p>
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="font-heading text-sm sm:text-base font-bold text-primary">
-                              {Number(product.price).toLocaleString("fr-FR")} F
+                              {Number(product.price).toLocaleString("en-US")} F
                             </span>
                             <span className="text-[9px] text-muted-foreground">/{product.unit}</span>
                           </div>

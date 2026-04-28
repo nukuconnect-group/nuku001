@@ -75,7 +75,7 @@ const Formations = () => {
     return matchesSearch && matchesCategory && matchesAuthor && matchesFree;
   });
 
-  const formatPrice = (price: number) => new Intl.NumberFormat("fr-FR").format(price);
+  const formatPrice = (price: number) => new Intl.NumberFormat("en-US").format(price);
   const formatDuration = (mins: number) => {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
@@ -141,7 +141,7 @@ const Formations = () => {
             </div>
             <div className="text-center p-4">
               <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">
-                {formations.reduce((s, f) => s + (f.students_count || 0), 0).toLocaleString("fr-FR")}+
+                {formations.reduce((s, f) => s + (f.students_count || 0), 0).toLocaleString("en-US")}+
               </div>
               <div className="text-sm text-muted-foreground">Étudiants inscrits</div>
             </div>

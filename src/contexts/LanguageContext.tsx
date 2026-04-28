@@ -1048,7 +1048,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const converted = priceXOF * exchangeRates[currency];
     const symbol = currencySymbols[currency];
     if (currency === "XOF") {
-      return `${new Intl.NumberFormat("fr-FR").format(Math.round(converted))} ${symbol}`;
+      // Use en-US so the thousand separator is a visible comma (e.g. "15,229 F CFA")
+      return `${new Intl.NumberFormat("en-US").format(Math.round(converted))} ${symbol}`;
     }
     return `${symbol}${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(converted)}`;
   };

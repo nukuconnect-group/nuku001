@@ -14,7 +14,7 @@
    const { items, removeItem, updateQuantity, total, itemCount } = useCart();
  
    const formatPrice = (price: number) => {
-     return new Intl.NumberFormat("fr-FR").format(price);
+     return new Intl.NumberFormat("en-US").format(price);
    };
  
    return (

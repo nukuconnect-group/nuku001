@@ -138,7 +138,7 @@ const SubscriptionCard = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] sm:text-xs font-medium">{Number(p.price_fcfa).toLocaleString("fr-FR")} FCFA</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{Number(p.price_fcfa).toLocaleString("en-US")} FCFA</span>
                     <Badge className={`text-[9px] ${
                       p.payment_status === "completed" ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/20 text-amber-700 dark:text-amber-400"
                     }`}>
