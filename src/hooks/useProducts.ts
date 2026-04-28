@@ -196,14 +196,14 @@ export const useProducts = () => {
         if (error) throw error;
         const allProducts = await enrichProductsWithPublicProfiles((data || []) as DbProduct[]);
         const products = filterOutFormations(allProducts);
-        cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 60 * 6); // 6h
+        cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 5); // 6h
         return products;
       } catch (e) {
         console.warn("Supabase client failed, trying direct fetch:", e);
         try {
           const allProducts = await fetchProductsDirect();
           const products = filterOutFormations(allProducts);
-          cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 60 * 6);
+          cacheSet(PRODUCTS_LIST_KEY, products, 1000 * 60 * 5);
           return products;
         } catch (fetchErr) {
           // Offline / network failure → ressers le cache local
@@ -246,7 +246,7 @@ export const useProduct = (id: string) => {
         if (error) throw error;
         if (!data) throw new Error("Product not found");
         const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
-        cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 60 * 6);
+        cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 5);
         return product;
       } catch (e) {
         console.warn("Supabase client failed for product, using direct fetch:", e);
@@ -262,7 +262,7 @@ export const useProduct = (id: string) => {
           const data = await res.json();
           if (!data?.[0]) throw new Error("Product not found");
           const [product] = await enrichProductsWithPublicProfiles([data[0] as DbProduct]);
-          cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 60 * 6);
+          cacheSet(PRODUCT_BY_ID_KEY(id), product, 1000 * 60 * 5);
           return product;
         } catch (err) {
           const cached = cacheGet<Product>(PRODUCT_BY_ID_KEY(id));
@@ -301,7 +301,7 @@ export const useProductBySlug = (slug: string) => {
         if (error) throw error;
         if (!data) throw new Error("Product not found");
         const [product] = await enrichProductsWithPublicProfiles([data as DbProduct]);
-        cacheSet(`product-slug:${slug}`, product, 1000 * 60 * 60 * 6);
+        cacheSet(`product-slug:${slug}`, product, 1000 * 60 * 5);
         return product;
       } catch (err) {
         const cached = cacheGet<Product>(`product-slug:${slug}`);
