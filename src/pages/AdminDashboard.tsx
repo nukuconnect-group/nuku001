@@ -42,7 +42,8 @@ import UserSubscriptionActions from "@/components/admin/UserSubscriptionActions"
 import AdminUserDetailsModal from "@/components/admin/AdminUserDetailsModal";
 import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminRecentActions from "@/components/admin/AdminRecentActions";
-import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins } from "lucide-react";
+import SeoManager from "@/components/admin/SeoManager";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -328,6 +329,7 @@ const AdminDashboard = () => {
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
     { id: "cookies", label: "Cookies", icon: Cookie },
+    { id: "seo", label: "Gestion SEO", icon: SearchIcon },
   ];
 
   return (
