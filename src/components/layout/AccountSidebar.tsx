@@ -111,8 +111,39 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     const loc = (profile?.location || "").trim();
     // Try extract country (last comma part) else raw
     const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
-    setProfileCountry(parts[parts.length - 1] || loc || "Togo");
+    setProfileCountry(parts[parts.length - 1] || loc || "");
   }, [profile?.location]);
+
+  // Auto-detect country via geolocation + reverse geocoding (only if not set)
+  useEffect(() => {
+    if (!user?.id || !profile?.id) return;
+    if (profileCountry && profileCountry.length > 0) return;
+    if (!("geolocation" in navigator)) return;
+
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=fr&zoom=3`,
+            { headers: { "Accept": "application/json" } }
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          const detected = data?.address?.country as string | undefined;
+          if (!detected || cancelled) return;
+          setProfileCountry(detected);
+          await supabase.from("profiles").update({ location: detected }).eq("id", profile.id);
+        } catch {
+          /* silent */
+        }
+      },
+      () => { /* user denied — silent */ },
+      { timeout: 8000, maximumAge: 24 * 60 * 60 * 1000 }
+    );
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.id, profileCountry]);
 
   const handleSaveCountry = async (newCountry: string) => {
     if (!user?.id || !profile?.id) return;
@@ -512,41 +543,18 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
 
               <div className="h-2 bg-muted/40" />
 
-              {/* Country — inline editable */}
+              {/* Country — auto-detected, read-only */}
               <div className="py-1">
                 <div className="px-4 py-3 border-b border-border/20">
                   <div className="flex items-center gap-3.5">
                     <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <span className="text-[15px] font-medium tracking-tight flex-shrink-0">Pays</span>
                     <div className="flex-1 min-w-0 flex items-center justify-end gap-2">
-                      {isCountryEditing ? (
-                        <Select
-                          value={profileCountry}
-                          onValueChange={(v) => handleSaveCountry(v)}
-                          disabled={isSavingCountry}
-                        >
-                          <SelectTrigger className="h-8 text-[14px] w-[160px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countries.map((c) => (
-                              <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <span className="text-[14px] text-muted-foreground truncate">📍 {profileCountry || "Togo"}</span>
-                          <button
-                            onClick={() => setIsCountryEditing(true)}
-                            className="text-[12px] font-semibold text-primary hover:underline flex-shrink-0"
-                          >
-                            Modifier
-                          </button>
-                        </>
-                      )}
+                      <span className="text-[14px] text-muted-foreground truncate">
+                        {profileCountry || "Détection en cours…"}
+                      </span>
                       {isSavingCountry && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
                     </div>
                   </div>
