@@ -31,7 +31,7 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -516,33 +516,80 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   />
                 </div>
 
-                {/* Partager cette application */}
-                <button
-                  onClick={async () => {
-                    const shareData = {
-                      title: "NUKUCONNECT",
-                      text: "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.",
-                      url: "https://nukuconnect.com",
-                    };
+                {/* Partager cette application — natif si dispo, sinon copie de lien */}
+                {(() => {
+                  const SHARE_URL = "https://nukuconnect.com";
+                  const SHARE_TEXT = "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.";
+
+                  const copyLink = async () => {
                     try {
-                      if (navigator.share) {
-                        await navigator.share(shareData);
+                      if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(SHARE_URL);
                       } else {
-                        await navigator.clipboard.writeText(shareData.url);
-                        toast({ title: "Lien copié", description: "Le lien de l'application a été copié." });
+                        // Fallback ancien iOS / WebView : textarea + execCommand
+                        const ta = document.createElement("textarea");
+                        ta.value = SHARE_URL;
+                        ta.style.position = "fixed";
+                        ta.style.opacity = "0";
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        document.execCommand("copy");
+                        document.body.removeChild(ta);
                       }
+                      toast({
+                        title: "✅ Lien copié",
+                        description: "Vous pouvez maintenant le coller où vous voulez.",
+                      });
                     } catch {
-                      // user cancelled — silent
+                      toast({
+                        title: "Impossible de copier",
+                        description: SHARE_URL,
+                        variant: "destructive",
+                      });
                     }
-                  }}
-                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Share2 className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
-                </button>
+                  };
+
+                  const handleShare = async () => {
+                    const shareData = { title: "NUKUCONNECT", text: SHARE_TEXT, url: SHARE_URL };
+                    if (navigator.share) {
+                      try {
+                        await navigator.share(shareData);
+                        return;
+                      } catch (err: any) {
+                        // L'utilisateur a annulé → on s'arrête sans rien faire
+                        if (err?.name === "AbortError") return;
+                      }
+                    }
+                    // Pas de partage natif (ou échec non-AbortError) → copie
+                    copyLink();
+                  };
+
+                  return (
+                    <>
+                      <button
+                        onClick={handleShare}
+                        className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Share2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                      </button>
+                      <button
+                        onClick={copyLink}
+                        className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                          <Copy className="w-4 h-4 text-secondary" />
+                        </div>
+                        <span className="flex-1 text-[15px] font-medium tracking-tight">Copier le lien</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                      </button>
+                    </>
+                  );
+                })()}
 
               </div>
             </nav>
