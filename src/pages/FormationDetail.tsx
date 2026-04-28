@@ -24,6 +24,8 @@ const FormationDetail = () => {
   const [loading, setLoading] = useState(true);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
