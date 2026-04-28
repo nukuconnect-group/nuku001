@@ -224,17 +224,33 @@ const FormationDetail = () => {
       {/* Self-paced banner + Summary + Source document */}
       <section className="py-3 sm:py-5">
         <div className="container mx-auto px-3 sm:px-4 space-y-3">
-          {/* Self-paced learning notice */}
-          <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
-            <CalendarClock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="text-xs sm:text-sm">
-              <p className="font-semibold text-foreground mb-0.5">Suivez à votre rythme</p>
-              <p className="text-muted-foreground leading-relaxed">
-                Vous pouvez avancer dans cette formation selon votre disponibilité.
-                Votre progression est sauvegardée automatiquement, vous pouvez reprendre à tout moment.
-              </p>
+          {/* Self-paced learning notice — visible only after enrollment */}
+          {userId && isEnrolled && (
+            <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+              <CalendarClock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-xs sm:text-sm">
+                <p className="font-semibold text-foreground mb-0.5">Suivez à votre rythme</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Vous pouvez avancer dans cette formation selon votre disponibilité.
+                  Votre progression est sauvegardée automatiquement, vous pouvez reprendre à tout moment.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Enroll CTA when logged in but not yet enrolled */}
+          {userId && !isEnrolled && (!formation.is_paid) && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 sm:p-4">
+              <GraduationCap className="w-5 h-5 text-primary flex-shrink-0" />
+              <div className="text-xs sm:text-sm flex-1">
+                <p className="font-semibold text-foreground mb-0.5">Inscrivez-vous gratuitement</p>
+                <p className="text-muted-foreground">Accédez au résumé, au document et suivez la formation à votre rythme.</p>
+              </div>
+              <Button variant="hero" size="sm" className="text-xs" onClick={enroll} disabled={enrolling}>
+                {enrolling ? <Loader2 className="w-3 h-3 animate-spin" /> : "Commencer la formation"}
+              </Button>
+            </div>
+          )}
 
           {/* Summary */}
           {formation.summary && (
