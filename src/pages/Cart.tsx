@@ -530,6 +530,7 @@ const Cart = () => {
           quantity: item.quantity,
           total_price: item.product.price * item.quantity,
           status: "pending",
+          delivery_method: deliveryMethod, // 'pickup' | 'livreur' | 'international'
           notes: [
             `Client: ${buyerFullName} | ${billing.phone}`,
             deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
@@ -538,7 +539,7 @@ const Cart = () => {
             mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
             `tx_ref: ${identifier}`,
           ].filter(Boolean).join(" | "),
-        }).select("id").single();
+        } as any).select("id").single();
 
         if (orderErr) {
           console.error("Order insert error:", orderErr);
