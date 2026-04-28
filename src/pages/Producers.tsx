@@ -87,7 +87,7 @@ const Producers = () => {
         name: p.business_name?.trim() || p.full_name?.trim() || t("net.suppliers"),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
-        location: p.location || "Non spécifié",
+        location: p.location || "",
         verified: p.is_verified,
         products: productCounts[p.id] || 0,
         sales: salesCounts[p.id] || 0,
