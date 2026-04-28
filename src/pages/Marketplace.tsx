@@ -37,6 +37,7 @@ import OfflineFallback from "@/components/layout/OfflineFallback";
 import { Product } from "@/data/marketplace";
 import { ProductGridSkeleton } from "@/components/marketplace/ProductCardSkeleton";
 import MarketplacePromoPopup from "@/components/marketplace/MarketplacePromoPopup";
+import SponsoredProductCard from "@/components/marketplace/SponsoredProductCard";
 
 const locationsByCountry: { country: string; flag: string; cities: string[] }[] = [
   // Afrique de l'Ouest
