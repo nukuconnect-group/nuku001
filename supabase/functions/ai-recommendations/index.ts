@@ -126,18 +126,16 @@ Maximum 5 éléments par catégorie.`;
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "rate_limited" }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "credits_exhausted" }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const empty = role === "buyer"
+        ? { recommended_products: [], similar_products: [], nearby_suppliers: [], recommended_formations: [] }
+        : { potential_clients: [], trending_products: [], ai_suggestions: [] };
+      const reason = response.status === 429 ? "rate_limited" : response.status === 402 ? "credits_exhausted" : `ai_error_${response.status}`;
+      console.warn("AI gateway unavailable, returning fallback:", reason);
+      return new Response(JSON.stringify({ recommendations: empty, context: {}, fallback: true, reason }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+      if (false) {
       throw new Error(`AI error: ${response.status}`);
     }
 
