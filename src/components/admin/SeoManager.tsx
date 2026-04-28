@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye } from "lucide-react";
+import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface SeoRow {
