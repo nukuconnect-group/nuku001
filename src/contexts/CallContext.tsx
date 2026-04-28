@@ -321,7 +321,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
         isCaller: false,
       });
       setStatus("incoming");
-      playRingtone();
+      playRingtone("incoming");
+      startIncomingAlerts(payload.callerName || "Appelant");
       // Auto-missed after 30s — receiver logs "missed" in their own thread,
       // caller will log "outgoing-missed" on its side via the hangup signal.
       ringTimeoutRef.current = window.setTimeout(() => {
@@ -416,7 +417,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         offer,
       });
 
-      playRingtone();
+      playRingtone("outgoing");
       // Auto-cancel if no answer in 35s
       ringTimeoutRef.current = window.setTimeout(() => {
         sendSignal(peerUserId, { type: "hangup", callId, from: user.id, reason: "missed" });
