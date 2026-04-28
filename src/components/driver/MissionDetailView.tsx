@@ -503,15 +503,36 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
   const handleOtpConfirm = async () => {
     if (otpInput.length < 4) return;
-    const { data: del } = await supabase
-      .from("deliveries")
-      .select("id")
-      .eq("id", delivery.id)
-      .maybeSingle();
-    if (del) {
-      onStatusUpdate(delivery.id, "delivered");
-      setShowOtp(false);
+    try {
+      const { data, error } = await supabase.rpc("verify_delivery_otp" as any, {
+        p_delivery_id: delivery.id,
+        p_otp: otpInput,
+      });
+      if (error) throw error;
+      const result = data as { success?: boolean; error?: string } | null;
+      if (result?.success) {
+        toast({ title: "Livraison confirmée ✅", description: "Vos gains sont activés." });
+        onStatusUpdate(delivery.id, "delivered");
+        setShowOtp(false);
+      } else {
+        toast({ title: "Code invalide", description: "Vérifiez le code OTP fourni par le client.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Erreur", description: e?.message || "Impossible de valider le code", variant: "destructive" });
     }
+  };
+
+  const handleShareTracking = async () => {
+    if (!delivery.share_token) {
+      toast({ title: "Lien indisponible", description: "Le lien de suivi sera généré sous peu." });
+      return;
+    }
+    const url = `${window.location.origin}/tracking/${delivery.share_token}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: "Suivi livraison Nukuconnect", url }); return; } catch {}
+    }
+    await navigator.clipboard.writeText(url);
+    toast({ title: "Lien de suivi copié", description: "Vous pouvez le partager au client." });
   };
 
   const handleEditPrice = async () => {
