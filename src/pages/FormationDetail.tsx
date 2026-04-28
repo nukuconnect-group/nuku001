@@ -28,6 +28,13 @@ const FormationDetail = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  // Paid formation payment flow
+  const [payIdentifier, setPayIdentifier] = useState<string | null>(null);
+  const [payTxRef, setPayTxRef] = useState<string | null>(null);
+  const [payNetwork, setPayNetwork] = useState<"FLOOZ" | "TMONEY" | "CARD">("CARD");
+  const [payPhone, setPayPhone] = useState("");
+  const [payInitiating, setPayInitiating] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
