@@ -227,7 +227,9 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
           description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été vérifié(e) et est maintenant visible sur la marketplace.`,
         });
       }
-    } else {
+      if (type === "product") {
+        await sendModerationEmail(userId, itemName, "approved");
+      }
       if (userId) {
         await supabase.from("notifications").insert({
           user_id: userId,
