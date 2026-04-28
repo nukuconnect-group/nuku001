@@ -189,7 +189,9 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
           description: `Votre ${type === "product" ? "produit" : "demande"} "${itemName}" a été approuvé(e).`,
         });
       }
-      return new Response(JSON.stringify({ approved: true, reason: "Modération automatique indisponible" }), {
+      if (type === "product") {
+        await sendModerationEmail(userId, itemName, "approved");
+      }
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
