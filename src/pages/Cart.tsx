@@ -599,6 +599,62 @@ const Cart = () => {
             </Card>
           )}
 
+          {/* Persistent payment status panel — surfaces success/pending/failure across the full UI */}
+          {payStatus.kind !== "idle" && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`mb-4 rounded-lg border p-3 sm:p-4 text-xs sm:text-sm flex items-start gap-3 ${
+                payStatus.kind === "success"
+                  ? "border-primary/40 bg-primary/10"
+                  : payStatus.kind === "failed"
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : payStatus.kind === "expired"
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-accent/40 bg-accent/10"
+              }`}
+            >
+              {payStatus.kind === "initiating" || payStatus.kind === "pending" ? (
+                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-0.5" />
+              ) : payStatus.kind === "success" ? (
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" />
+              ) : (
+                <ShoppingCart className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold mb-1">
+                  {payStatus.kind === "initiating" && "Initialisation du paiement…"}
+                  {payStatus.kind === "pending" && "Paiement en attente de confirmation"}
+                  {payStatus.kind === "success" && "✅ Paiement réussi — commande confirmée"}
+                  {payStatus.kind === "failed" && "❌ Échec du paiement"}
+                  {payStatus.kind === "expired" && "⏰ Session de paiement expirée"}
+                </p>
+                {"message" in payStatus && (
+                  <p className="opacity-90 leading-relaxed break-words">{payStatus.message}</p>
+                )}
+                {payStatus.kind === "success" && payStatus.details && (
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] sm:text-xs bg-background/60 rounded-md p-2 border border-primary/10">
+                    {payStatus.details.invoiceNumber && (
+                      <div><span className="text-muted-foreground">Facture :</span> <span className="font-medium">{payStatus.details.invoiceNumber}</span></div>
+                    )}
+                    <div><span className="text-muted-foreground">Montant débité :</span> <span className="font-medium">{payStatus.details.amount.toLocaleString("fr-FR")} FCFA</span></div>
+                    <div><span className="text-muted-foreground">Mode :</span> <span className="font-medium">{payStatus.details.method}</span></div>
+                    <div><span className="text-muted-foreground">Commandes :</span> <span className="font-medium">{payStatus.details.orderIds.length}</span></div>
+                  </div>
+                )}
+                {(payStatus.kind === "failed" || payStatus.kind === "expired") && (
+                  <button
+                    type="button"
+                    onClick={() => setPayStatus({ kind: "idle" })}
+                    className="mt-2 underline font-medium"
+                  >
+                    Réessayer
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left: Billing + Delivery + Payment */}
             <div className="lg:col-span-2 space-y-3 sm:space-y-4 min-w-0">
