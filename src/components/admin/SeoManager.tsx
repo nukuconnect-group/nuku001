@@ -283,7 +283,7 @@ const SeoManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.title, selected?.description, autoRegenOg]);
 
-
+  const handleUpload = async (file: File) => {
     if (!selected) return;
     setUploading(true);
     const safeRoute = selected.route.replace(/[^a-zA-Z0-9_-]/g, "_") || "global";
