@@ -688,95 +688,144 @@ const FormationDetail = () => {
                         </p>
                       ) : null}
 
-                      {/* Content viewer — self-paced learning */}
-                      {mod.content_url && mod.content_type === "video" && (() => {
-                        const url = mod.content_url as string;
-                        const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-                        if (ytMatch) {
-                          return (
-                            <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
-                              <iframe
-                                src={`https://www.youtube.com/embed/${ytMatch[1]}`}
-                                title={mod.title}
-                                className="w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
-                          );
-                        }
-                        if (vimeoMatch) {
-                          return (
-                            <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
-                              <iframe
-                                src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
-                                title={mod.title}
-                                className="w-full h-full"
-                                allow="autoplay; fullscreen; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
-                          );
-                        }
-                        // Direct video file
-                        if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
-                          return (
-                            <video
-                              src={url}
-                              controls
-                              className="w-full rounded-lg bg-black aspect-video"
-                            >
-                              Votre navigateur ne supporte pas la lecture vidéo.
-                            </video>
-                          );
-                        }
-                        return (
-                          <a href={url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-                            <Video className="w-3.5 h-3.5" /> Ouvrir la vidéo
-                          </a>
-                        );
-                      })()}
-
-                      {mod.content_url && mod.content_type !== "video" && (
-                        <div className="space-y-2">
-                          <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "55vh", minHeight: 300 }}>
-                            <iframe
-                              src={`${mod.content_url}#view=FitH`}
-                              title={mod.title}
-                              className="w-full h-full"
-                            />
+                      {/* PAID FORMATION GATE — block all video/PDF rendering until enrollment is confirmed by the backend */}
+                      {formation.is_paid && !isEnrolled && mod.content_url ? (
+                        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Lock className="w-5 h-5 text-primary" />
                           </div>
-                          <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-                            <FileText className="w-3.5 h-3.5" /> Ouvrir dans un nouvel onglet
-                          </a>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs sm:text-sm font-semibold text-foreground mb-0.5">
+                              Contenu verrouillé
+                            </p>
+                            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                              {mod.content_type === "video" ? "Cette vidéo " : "Ce document "}
+                              sera accessible après confirmation du paiement de{" "}
+                              <span className="font-semibold text-foreground">
+                                {Number(formation.price || 0).toLocaleString("fr-FR")} FCFA
+                              </span>.
+                            </p>
+                          </div>
+                          {userId ? (
+                            <Button
+                              variant="hero"
+                              size="sm"
+                              className="text-xs gap-1 flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPayOpen(true);
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                            >
+                              <CreditCard className="w-3.5 h-3.5" /> Payer pour accéder
+                            </Button>
+                          ) : (
+                            <Link to="/auth" className="flex-shrink-0">
+                              <Button variant="hero" size="sm" className="text-xs">
+                                Se connecter
+                              </Button>
+                            </Link>
+                          )}
                         </div>
+                      ) : (
+                        <>
+                          {/* Content viewer — self-paced learning */}
+                          {mod.content_url && mod.content_type === "video" && (() => {
+                            const url = mod.content_url as string;
+                            const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+                            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                            if (ytMatch) {
+                              return (
+                                <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
+                                  <iframe
+                                    src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                                    title={mod.title}
+                                    className="w-full h-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              );
+                            }
+                            if (vimeoMatch) {
+                              return (
+                                <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
+                                  <iframe
+                                    src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                                    title={mod.title}
+                                    className="w-full h-full"
+                                    allow="autoplay; fullscreen; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              );
+                            }
+                            // Direct video file
+                            if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
+                              return (
+                                <video
+                                  src={url}
+                                  controls
+                                  className="w-full rounded-lg bg-black aspect-video"
+                                >
+                                  Votre navigateur ne supporte pas la lecture vidéo.
+                                </video>
+                              );
+                            }
+                            return (
+                              <a href={url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                                <Video className="w-3.5 h-3.5" /> Ouvrir la vidéo
+                              </a>
+                            );
+                          })()}
+
+                          {mod.content_url && mod.content_type !== "video" && (
+                            <div className="space-y-2">
+                              <div className="w-full rounded-lg overflow-hidden border border-border bg-muted" style={{ height: "55vh", minHeight: 300 }}>
+                                <iframe
+                                  src={`${mod.content_url}#view=FitH`}
+                                  title={mod.title}
+                                  className="w-full h-full"
+                                />
+                              </div>
+                              <a href={mod.content_url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                                <FileText className="w-3.5 h-3.5" /> Ouvrir dans un nouvel onglet
+                              </a>
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div className="flex flex-wrap gap-2 pt-1">
                         {userId ? (
-                          <>
-                            <Button
-                              variant={isCompleted ? "outline" : "hero"}
-                              size="sm"
-                              className="text-xs gap-1"
-                              onClick={(e) => { e.stopPropagation(); toggleModuleComplete(mod.id); }}
-                            >
-                              {isCompleted ? (
-                                <><CheckCircle2 className="w-3 h-3" />Terminé — annuler</>
-                              ) : (
-                                <><CheckCircle2 className="w-3 h-3" />Marquer comme terminé</>
-                              )}
-                            </Button>
-                            {idx < modules.length - 1 && isCompleted && (
-                              <Button variant="outline" size="sm" className="text-xs gap-1"
-                                onClick={(e) => { e.stopPropagation(); setExpandedModule(modules[idx + 1].id); }}>
-                                <Play className="w-3 h-3" /> Chapitre suivant
+                          formation.is_paid && !isEnrolled ? (
+                            <p className="text-[10px] text-muted-foreground italic">
+                              Le suivi des chapitres sera activé après votre paiement.
+                            </p>
+                          ) : (
+                            <>
+                              <Button
+                                variant={isCompleted ? "outline" : "hero"}
+                                size="sm"
+                                className="text-xs gap-1"
+                                onClick={(e) => { e.stopPropagation(); toggleModuleComplete(mod.id); }}
+                              >
+                                {isCompleted ? (
+                                  <><CheckCircle2 className="w-3 h-3" />Terminé — annuler</>
+                                ) : (
+                                  <><CheckCircle2 className="w-3 h-3" />Marquer comme terminé</>
+                                )}
                               </Button>
-                            )}
-                          </>
+                              {idx < modules.length - 1 && isCompleted && (
+                                <Button variant="outline" size="sm" className="text-xs gap-1"
+                                  onClick={(e) => { e.stopPropagation(); setExpandedModule(modules[idx + 1].id); }}>
+                                  <Play className="w-3 h-3" /> Chapitre suivant
+                                </Button>
+                              )}
+                            </>
+                          )
                         ) : (
                           <Link to="/auth">
                             <Button variant="hero" size="sm" className="text-xs gap-1">
