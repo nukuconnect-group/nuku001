@@ -1174,6 +1174,9 @@ const AdminDashboard = () => {
 
             {/* Unified recent actions feed */}
             {activeTab === "recent-actions" && <AdminRecentActions />}
+
+            {/* Cookie consents */}
+            {activeTab === "cookies" && <CookieConsentsManager />}
         </main>
       </div>
       <Footer />
