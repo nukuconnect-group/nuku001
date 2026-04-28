@@ -19,3 +19,5 @@ project_id = "fpnhdihvnfsiymopbjgt"
     verify_jwt = false
   [functions.advisor-ai-reply]
     verify_jwt = true
+  [functions.referral-og-image]
+    verify_jwt = false
