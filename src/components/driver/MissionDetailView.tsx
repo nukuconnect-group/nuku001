@@ -56,38 +56,82 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [routeSteps, setRouteSteps] = useState<any[]>([]);
   const [livePos, setLivePos] = useState<[number, number]>(driverPosition);
+  const [navMode, setNavMode] = useState(true); // mode auto-suivi style Google Maps
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const lastDbWriteRef = useRef<number>(0);
 
   const currentStep = getStepIndex(delivery.status);
 
-  // Real GPS tracking
+  // Persist position to DB (throttled to 5s)
+  const persistPosition = useCallback(async (lat: number, lng: number) => {
+    if (!delivery.id) return;
+    const now = Date.now();
+    if (now - lastDbWriteRef.current < 5000) return;
+    lastDbWriteRef.current = now;
+    try {
+      await supabase.from("deliveries").update({
+        driver_current_lat: lat,
+        driver_current_lng: lng,
+      }).eq("id", delivery.id);
+      // Also update driver_profiles so others see the live location
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.user?.id) {
+        await supabase.from("driver_profiles")
+          .update({ current_lat: lat, current_lng: lng })
+          .eq("user_id", session.session.user.id);
+      }
+    } catch (e) {
+      console.warn("[GPS] persist error", e);
+    }
+  }, [delivery.id]);
+
+  // Real GPS tracking — watchPosition + interval fallback for reliability
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setGpsError("Géolocalisation non supportée par ce navigateur");
+      return;
+    }
 
     const onPos = (pos: GeolocationPosition) => {
       const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
       setLivePos(newPos);
-
-      // Update driver position in DB
-      if (delivery.id) {
-        supabase.from("deliveries").update({
-          driver_current_lat: newPos[0],
-          driver_current_lng: newPos[1],
-        }).eq("id", delivery.id).then(() => {});
-      }
+      setGpsAccuracy(pos.coords.accuracy);
+      setGpsError(null);
+      persistPosition(newPos[0], newPos[1]);
     };
 
-    gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, () => {}, {
+    const onErr = (err: GeolocationPositionError) => {
+      console.warn("[GPS]", err.code, err.message);
+      if (err.code === 1) setGpsError("Autorisez l'accès à votre position pour suivre la livraison");
+      else if (err.code === 2) setGpsError("Position GPS indisponible. Activez le GPS.");
+      else if (err.code === 3) setGpsError("Délai GPS dépassé. Réessai…");
+    };
+
+    // 1. Continuous watch (fires when position changes)
+    gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, onErr, {
       enableHighAccuracy: true,
-      maximumAge: 5000,
-      timeout: 15000,
+      maximumAge: 2000,
+      timeout: 20000,
     });
+
+    // 2. Periodic fallback every 5s — ensures the marker keeps moving even
+    //    if watchPosition is throttled by the browser (common on desktop / when stationary)
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(onPos, onErr, {
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 15000,
+      });
+    }, 5000);
 
     return () => {
       if (gpsWatchRef.current !== null) {
         navigator.geolocation.clearWatch(gpsWatchRef.current);
       }
+      clearInterval(interval);
     };
-  }, [delivery.id]);
+  }, [delivery.id, persistPosition]);
 
   // Fetch driver vehicle type
   useEffect(() => {
