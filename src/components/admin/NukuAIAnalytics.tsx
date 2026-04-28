@@ -145,6 +145,63 @@ export default function NukuAIAnalytics() {
         </CardContent></Card>
       </div>
 
+      {/* Per-day requests (last 14 days) */}
+      <Card>
+        <CardHeader className="p-3 sm:p-4 pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" />Requêtes par jour (14 derniers jours)</CardTitle>
+          <CardDescription className="text-[11px]">Volume quotidien de questions posées au chatbot Nuku AI</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-4 pt-0">
+          <div style={{ width: "100%", height: 200 }}>
+            <ResponsiveContainer>
+              <LineChart data={stats.days} margin={{ left: 4, right: 8, top: 6, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fontSize: 9 }} />
+                <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Per-country breakdown */}
+      <Card>
+        <CardHeader className="p-3 sm:p-4 pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Globe className="w-4 h-4 text-primary" />Utilisateurs par pays</CardTitle>
+          <CardDescription className="text-[11px]">Nombre d'utilisateurs uniques et de questions par pays</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-4 pt-0">
+          {stats.countries.length === 0 ? (
+            <p className="text-xs text-center text-muted-foreground py-6">Aucun pays détecté pour le moment.</p>
+          ) : (
+            <>
+              <div style={{ width: "100%", height: 220 }}>
+                <ResponsiveContainer>
+                  <BarChart data={stats.countries} margin={{ left: 4, right: 8, top: 4, bottom: 24 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="country" tick={{ fontSize: 9 }} interval={0} angle={-25} textAnchor="end" />
+                    <YAxis tick={{ fontSize: 9 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Bar dataKey="users" name="Utilisateurs" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="questions" name="Questions" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                {stats.countries.slice(0, 9).map((c) => (
+                  <div key={c.country} className="p-1.5 bg-muted/30 rounded-md text-[10px]">
+                    <p className="font-semibold truncate">{c.country}</p>
+                    <p className="text-muted-foreground">{c.users} utilisateurs · {c.questions} questions</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Top questions */}
       <Card>
         <CardHeader className="p-3 sm:p-4 pb-2">
