@@ -645,7 +645,7 @@ const Cart = () => {
             </div>
           </div>
         </main>
-        <TrustBadges />
+        {/* TrustBadges est rendu dans <Footer /> */}
         <Footer />
         <MobileBottomNav />
       </div>
@@ -809,7 +809,7 @@ const Cart = () => {
           </div>
         </div>
       </main>
-      <TrustBadges />
+      {/* TrustBadges est rendu dans <Footer /> */}
       <Footer />
       <MobileBottomNav />
     </div>
