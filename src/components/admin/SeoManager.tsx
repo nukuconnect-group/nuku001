@@ -332,7 +332,7 @@ const SeoManager = () => {
           {filtered.map(r => (
             <button
               key={r.id}
-              onClick={() => setSelected(r)}
+              onClick={() => { setSelected(r); setOriginal({ ...r }); setScheduleAt(""); }}
               className={`w-full text-left px-3 py-2 rounded-md text-xs transition-colors ${
                 selected?.id === r.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
               }`}
@@ -445,6 +445,34 @@ const SeoManager = () => {
               </div>
             </div>
 
+            {/* Scheduled publish info */}
+            {selected.scheduled_publish_at && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 p-3 flex items-center gap-2 text-xs">
+                <CalendarClock className="w-4 h-4 text-blue-600" />
+                <span>Publication planifiée : <strong>{new Date(selected.scheduled_publish_at).toLocaleString()}</strong></span>
+              </div>
+            )}
+
+            {/* Schedule input */}
+            <div className="rounded-md border p-3 space-y-2">
+              <Label className="text-xs flex items-center gap-1.5"><CalendarClock className="w-3.5 h-3.5" /> Planifier une publication</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={e => setScheduleAt(e.target.value)}
+                  min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                  className="h-9"
+                />
+                <Button size="sm" variant="outline" onClick={doSchedule} disabled={!scheduleAt || !routeValidation.ok || saving === selected.id}>
+                  <CalendarClock className="w-4 h-4" /> Planifier
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Reste en brouillon jusqu'à la date choisie, puis devient public automatiquement.
+              </p>
+            </div>
+
             <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={aiAutofill} disabled={aiBusy === "autofill"}>
                 {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -456,29 +484,66 @@ const SeoManager = () => {
               </Button>
               <Button size="sm" onClick={() => setConfirmPublish(true)} disabled={publishDisabled}>
                 <Rocket className="w-4 h-4" />
-                Publier
+                Publier maintenant
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <AlertDialog open={confirmPublish} onOpenChange={setConfirmPublish}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Publier les changements SEO ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Les nouvelles balises seront servies aux visiteurs et aux crawlers (Google, Facebook, Twitter) au prochain chargement.
-              Une copie est conservée dans l'historique pour pouvoir revenir en arrière.
-              {selected && <><br /><br /><span className="font-mono text-xs">{selected.route}</span></>}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setConfirmPublish(false); doPublish(); }}>Publier</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Diff + confirmation dialog */}
+      <Dialog open={confirmPublish} onOpenChange={setConfirmPublish}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><GitCompare className="w-4 h-4" /> Comparer & publier</DialogTitle>
+            <DialogDescription>
+              Vérifiez les changements avant qu'ils soient servis aux visiteurs et aux crawlers.
+              {selected && <><br /><span className="font-mono text-[11px]">{selected.route}</span></>}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selected && (
+            <div className="space-y-2 text-xs">
+              {(() => {
+                const changes = DIFFABLE.filter(({ key }) => {
+                  const a = (original?.[key] ?? "") as any;
+                  const b = (selected[key] ?? "") as any;
+                  return String(a) !== String(b);
+                });
+                if (changes.length === 0) {
+                  return <p className="text-muted-foreground italic">Aucun changement par rapport à la version actuelle.</p>;
+                }
+                return changes.map(({ key, label }) => {
+                  const oldVal = String(original?.[key] ?? "");
+                  const newVal = String(selected[key] ?? "");
+                  return (
+                    <div key={String(key)} className="border rounded-md overflow-hidden">
+                      <div className="px-3 py-1.5 bg-muted/50 font-semibold">{label}</div>
+                      <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x">
+                        <div className="p-2 bg-red-50 dark:bg-red-950/20">
+                          <p className="text-[10px] uppercase text-red-700 dark:text-red-400 mb-1">Actuel</p>
+                          <p className="break-all whitespace-pre-wrap font-mono">{oldVal || <span className="italic text-muted-foreground">vide</span>}</p>
+                        </div>
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20">
+                          <p className="text-[10px] uppercase text-emerald-700 dark:text-emerald-400 mb-1">Nouveau</p>
+                          <p className="break-all whitespace-pre-wrap font-mono">{newVal || <span className="italic text-muted-foreground">vide</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmPublish(false)}>Annuler</Button>
+            <Button onClick={() => { setConfirmPublish(false); doPublish(); }}>
+              <Rocket className="w-4 h-4" /> Publier maintenant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
