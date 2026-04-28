@@ -59,37 +59,76 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [navMode, setNavMode] = useState(true); // mode auto-suivi style Google Maps
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [gpsErrorCode, setGpsErrorCode] = useState<number | null>(null);
+  const [showGpsHelp, setShowGpsHelp] = useState(false);
+  const [batterySaver, setBatterySaver] = useState(false); // Active si livreur immobile
   const lastDbWriteRef = useRef<number>(0);
+  const lastTrackPointRef = useRef<number>(0);
+  const lastPositionRef = useRef<[number, number] | null>(null);
+  const stillSinceRef = useRef<number>(Date.now());
 
   const currentStep = getStepIndex(delivery.status);
 
-  // Persist position to DB (throttled to 5s)
-  const persistPosition = useCallback(async (lat: number, lng: number) => {
+  // Haversine distance in meters
+  const distanceMeters = (a: [number, number], b: [number, number]) => {
+    const toRad = (v: number) => (v * Math.PI) / 180;
+    const R = 6371000;
+    const dLat = toRad(b[0] - a[0]);
+    const dLng = toRad(b[1] - a[1]);
+    const lat1 = toRad(a[0]);
+    const lat2 = toRad(b[0]);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
+
+  // Persist live position (throttled) + record track point for history
+  const persistPosition = useCallback(async (lat: number, lng: number, accuracy?: number, speed?: number | null) => {
     if (!delivery.id) return;
     const now = Date.now();
-    if (now - lastDbWriteRef.current < 5000) return;
-    lastDbWriteRef.current = now;
-    try {
-      await supabase.from("deliveries").update({
-        driver_current_lat: lat,
-        driver_current_lng: lng,
-      }).eq("id", delivery.id);
-      // Also update driver_profiles so others see the live location
-      const { data: session } = await supabase.auth.getSession();
-      if (session?.session?.user?.id) {
-        await supabase.from("driver_profiles")
-          .update({ current_lat: lat, current_lng: lng })
-          .eq("user_id", session.session.user.id);
-      }
-    } catch (e) {
-      console.warn("[GPS] persist error", e);
-    }
-  }, [delivery.id]);
 
-  // Real GPS tracking — watchPosition + interval fallback for reliability
+    // Throttle live update — 5s normal, 20s in battery saver mode
+    const throttle = batterySaver ? 20000 : 5000;
+    if (now - lastDbWriteRef.current >= throttle) {
+      lastDbWriteRef.current = now;
+      try {
+        await supabase.from("deliveries").update({
+          driver_current_lat: lat,
+          driver_current_lng: lng,
+        }).eq("id", delivery.id);
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session?.user?.id) {
+          await supabase.from("driver_profiles")
+            .update({ current_lat: lat, current_lng: lng })
+            .eq("user_id", session.session.user.id);
+        }
+      } catch (e) {
+        console.warn("[GPS] persist error", e);
+      }
+    }
+
+    // Record one track point per 10s when moving (skip if battery saver and stationary)
+    const trackThrottle = batterySaver ? 60000 : 10000;
+    if (now - lastTrackPointRef.current >= trackThrottle) {
+      lastTrackPointRef.current = now;
+      try {
+        await supabase.from("delivery_track_points" as any).insert({
+          delivery_id: delivery.id,
+          lat,
+          lng,
+          accuracy: accuracy ?? null,
+          speed: speed ?? null,
+        });
+      } catch (e) {
+        console.warn("[GPS] track point error", e);
+      }
+    }
+  }, [delivery.id, batterySaver]);
+
+  // Real GPS tracking — watchPosition + smart interval (battery-aware)
   useEffect(() => {
     if (!navigator.geolocation) {
       setGpsError("Géolocalisation non supportée par ce navigateur");
+      setGpsErrorCode(0);
       return;
     }
 
@@ -98,32 +137,54 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       setLivePos(newPos);
       setGpsAccuracy(pos.coords.accuracy);
       setGpsError(null);
-      persistPosition(newPos[0], newPos[1]);
+      setGpsErrorCode(null);
+
+      // Battery saver detection : if barely moved in 60s, switch to low-frequency mode
+      const prev = lastPositionRef.current;
+      if (prev) {
+        const moved = distanceMeters(prev, newPos);
+        if (moved > 15) {
+          // Real movement → reset stillness timer + leave battery saver
+          stillSinceRef.current = Date.now();
+          if (batterySaver) setBatterySaver(false);
+        } else if (Date.now() - stillSinceRef.current > 60000 && !batterySaver) {
+          setBatterySaver(true);
+        }
+      }
+      lastPositionRef.current = newPos;
+
+      persistPosition(newPos[0], newPos[1], pos.coords.accuracy, pos.coords.speed);
     };
 
     const onErr = (err: GeolocationPositionError) => {
       console.warn("[GPS]", err.code, err.message);
-      if (err.code === 1) setGpsError("Autorisez l'accès à votre position pour suivre la livraison");
-      else if (err.code === 2) setGpsError("Position GPS indisponible. Activez le GPS.");
-      else if (err.code === 3) setGpsError("Délai GPS dépassé. Réessai…");
+      setGpsErrorCode(err.code);
+      if (err.code === 1) {
+        setGpsError("Autorisez l'accès à votre position pour suivre la livraison");
+        setShowGpsHelp(true);
+      } else if (err.code === 2) {
+        setGpsError("Position GPS indisponible. Activez le GPS de votre appareil.");
+      } else if (err.code === 3) {
+        setGpsError("Délai GPS dépassé. Réessai en cours…");
+      }
     };
 
-    // 1. Continuous watch (fires when position changes)
+    // 1. Continuous watch
     gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, onErr, {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
+      enableHighAccuracy: !batterySaver, // economise batterie quand immobile
+      maximumAge: batterySaver ? 15000 : 2000,
       timeout: 20000,
     });
 
-    // 2. Periodic fallback every 5s — ensures the marker keeps moving even
-    //    if watchPosition is throttled by the browser (common on desktop / when stationary)
+    // 2. Periodic fallback — 5s normal, 20s battery saver
+    const intervalDelay = batterySaver ? 20000 : 5000;
     const interval = setInterval(() => {
       navigator.geolocation.getCurrentPosition(onPos, onErr, {
-        enableHighAccuracy: true,
-        maximumAge: 3000,
+        enableHighAccuracy: !batterySaver,
+        maximumAge: batterySaver ? 15000 : 3000,
         timeout: 15000,
       });
-    }, 5000);
+    }, intervalDelay);
 
     return () => {
       if (gpsWatchRef.current !== null) {
@@ -131,7 +192,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
       }
       clearInterval(interval);
     };
-  }, [delivery.id, persistPosition]);
+  }, [delivery.id, persistPosition, batterySaver]);
 
   // Fetch driver vehicle type
   useEffect(() => {
