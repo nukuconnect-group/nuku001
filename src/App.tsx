@@ -61,6 +61,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Help = lazy(() => import("./pages/Help"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const SeoPreview = lazy(() => import("./pages/admin/SeoPreview"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
@@ -216,6 +217,7 @@ const App = () => {
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />

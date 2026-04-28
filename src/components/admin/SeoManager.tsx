@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search } from "lucide-react";
+import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface SeoRow {
   id: string;
@@ -32,6 +33,9 @@ const SeoManager = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SeoRow | null>(null);
   const [newRoute, setNewRoute] = useState("");
+  const [aiBusy, setAiBusy] = useState<"autofill" | "image" | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -44,7 +48,10 @@ const SeoManager = () => {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
       setRows((data as SeoRow[]) || []);
-      if (!selected && data?.length) setSelected(data[0] as SeoRow);
+      setSelected(prev => {
+        if (!prev) return (data?.[0] as SeoRow) || null;
+        return (data as SeoRow[])?.find(r => r.id === prev.id) || prev;
+      });
     }
     setLoading(false);
   };
@@ -95,17 +102,78 @@ const SeoManager = () => {
     }
   };
 
-  const autofill = () => {
+  // AI autofill via edge function
+  const aiAutofill = async () => {
     if (!selected) return;
-    const niceName = selected.route === "__global__" ? "NUKUCONNECT" : selected.route.replace(/^\//, "").replace(/-/g, " ");
+    setAiBusy("autofill");
+    const { data, error } = await supabase.functions.invoke("seo-ai-assist", {
+      body: { action: "autofill", route: selected.route, context: selected.description || selected.title || "" },
+    });
+    setAiBusy(null);
+    if (error || !data?.success) {
+      toast({ title: "Échec auto-remplissage", description: error?.message || data?.error || "Erreur IA", variant: "destructive" });
+      return;
+    }
+    const d = data.data || {};
     setSelected({
       ...selected,
-      title: selected.title || (niceName.charAt(0).toUpperCase() + niceName.slice(1)),
-      description: selected.description || `Découvrez ${niceName} sur NUKUCONNECT, la marketplace agricole intelligente d'Afrique.`,
-      keywords: selected.keywords || `nukuconnect, ${niceName}, agriculture, marketplace`,
+      title: d.title || selected.title,
+      description: d.description || selected.description,
+      keywords: d.keywords || selected.keywords,
+      canonical_path: d.canonical_path || selected.canonical_path || (selected.route === "__global__" ? "/" : selected.route),
       og_image_url: selected.og_image_url || DEFAULT_OG,
-      canonical_path: selected.canonical_path || (selected.route === "__global__" ? "/" : selected.route),
     });
+    toast({ title: "Champs remplis par l'IA", description: "Vérifiez puis enregistrez." });
+  };
+
+  // AI generate OG image via edge function (saves to bucket + DB)
+  const aiGenerateOg = async () => {
+    if (!selected) return;
+    setAiBusy("image");
+    const { data, error } = await supabase.functions.invoke("seo-ai-assist", {
+      body: { action: "generate_og", route: selected.route, context: selected.description || selected.title || "" },
+    });
+    setAiBusy(null);
+    if (error || !data?.success) {
+      toast({ title: "Échec génération image", description: error?.message || data?.error || "Erreur IA", variant: "destructive" });
+      return;
+    }
+    setSelected({ ...selected, og_image_url: data.og_image_url });
+    clearSeoCache(selected.route);
+    toast({ title: "Image OG générée", description: "Image sauvegardée et liée à la page." });
+    load();
+  };
+
+  // Direct upload of image to bucket
+  const handleUpload = async (file: File) => {
+    if (!selected) return;
+    setUploading(true);
+    const safeRoute = selected.route.replace(/[^a-zA-Z0-9_-]/g, "_") || "global";
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${safeRoute}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("seo-og-images").upload(path, file, {
+      contentType: file.type,
+      upsert: true,
+    });
+    if (upErr) {
+      setUploading(false);
+      toast({ title: "Échec de l'upload", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    const { data: pub } = supabase.storage.from("seo-og-images").getPublicUrl(path);
+    const { error: dbErr } = await (supabase as any)
+      .from("seo_settings")
+      .update({ og_image_url: pub.publicUrl })
+      .eq("id", selected.id);
+    setUploading(false);
+    if (dbErr) {
+      toast({ title: "Image envoyée mais non liée", description: dbErr.message, variant: "destructive" });
+      return;
+    }
+    setSelected({ ...selected, og_image_url: pub.publicUrl });
+    clearSeoCache(selected.route);
+    toast({ title: "Image OG mise à jour", description: "Sauvegardée dans le bucket." });
+    load();
   };
 
   const filtered = rows.filter(r =>
@@ -133,6 +201,9 @@ const SeoManager = () => {
             <Input value={newRoute} onChange={e => setNewRoute(e.target.value)} placeholder="/nouvelle-route" className="h-9" />
             <Button size="sm" onClick={addRoute}><Plus className="w-4 h-4" /></Button>
           </div>
+          <Link to="/admin/seo-preview" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1 pt-1">
+            <Eye className="w-3 h-3" /> Page de test SEO
+          </Link>
         </CardHeader>
         <CardContent className="p-2 max-h-[60vh] overflow-y-auto space-y-1">
           {filtered.map(r => (
@@ -174,6 +245,23 @@ const SeoManager = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs">Image OG (1200x630)</Label>
                 <Input value={selected.og_image_url || ""} onChange={e => setSelected({ ...selected, og_image_url: e.target.value })} placeholder="https://..." />
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                    {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                    Uploader
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={aiGenerateOg} disabled={aiBusy === "image"}>
+                    {aiBusy === "image" ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />}
+                    Générer l'image OG (IA)
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">URL canonique</Label>
@@ -214,8 +302,11 @@ const SeoManager = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={autofill}>Remplir automatiquement</Button>
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={aiAutofill} disabled={aiBusy === "autofill"}>
+                {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Remplir automatiquement (IA)
+              </Button>
               <Button size="sm" onClick={save} disabled={saving === selected.id}>
                 {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Enregistrer
