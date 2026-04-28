@@ -618,6 +618,7 @@ const Cart = () => {
             </div>
           </div>
         </main>
+        <TrustBadges />
         <Footer />
         <MobileBottomNav />
       </div>
