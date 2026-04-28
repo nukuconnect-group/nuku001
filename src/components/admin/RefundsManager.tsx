@@ -293,9 +293,17 @@ const RefundsManager = () => {
               {counts.pending} en attente • {counts.in_review} en examen • {counts.approved} approuvées • {counts.rejected} rejetées
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={load} disabled={loading}>
-            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Actualiser"}
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="outline" onClick={exportCSV} disabled={loading || filtered.length === 0} className="h-8 text-[11px]">
+              <Download className="w-3 h-3 mr-1" /> CSV
+            </Button>
+            <Button size="sm" variant="outline" onClick={exportPDF} disabled={loading || filtered.length === 0} className="h-8 text-[11px]">
+              <FileText className="w-3 h-3 mr-1" /> PDF
+            </Button>
+            <Button size="sm" variant="outline" onClick={load} disabled={loading} className="h-8 text-[11px]">
+              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Actualiser"}
+            </Button>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
           <div className="relative flex-1">
@@ -320,6 +328,26 @@ const RefundsManager = () => {
               <SelectItem value="resolved">Résolue</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
+          <div className="flex items-center gap-1.5 flex-1">
+            <label className="text-[11px] text-muted-foreground whitespace-nowrap">Du</label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 text-xs" />
+          </div>
+          <div className="flex items-center gap-1.5 flex-1">
+            <label className="text-[11px] text-muted-foreground whitespace-nowrap">Au</label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 text-xs" />
+          </div>
+          {(dateFrom || dateTo) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => { setDateFrom(""); setDateTo(""); }}
+              className="h-9 text-[11px]"
+            >
+              Réinitialiser dates
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-4 pt-2">
