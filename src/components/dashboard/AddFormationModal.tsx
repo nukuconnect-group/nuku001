@@ -527,7 +527,7 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-accent" />
@@ -541,18 +541,19 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Cover */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Label>Image de couverture</Label>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <Label className="text-xs sm:text-sm">Image de couverture</Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateCover}
                 disabled={coverGenerating || !form.title.trim() || !form.description.trim()}
-                className="gap-1.5 text-[11px] h-8"
+                className="gap-1.5 text-[10px] sm:text-[11px] h-7 sm:h-8 px-2"
               >
                 {coverGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5 text-primary" />}
-                Générer une image de couverture
+                <span className="hidden xs:inline">Générer une image de couverture</span>
+                <span className="xs:hidden">Générer image IA</span>
               </Button>
             </div>
             <input id="cover" type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
@@ -941,9 +942,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={closeAndKeepDraft}>Reprendre plus tard</Button>
-            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end pt-2 sticky bottom-0 bg-background pb-1">
+            <Button type="button" variant="outline" onClick={closeAndKeepDraft} className="w-full sm:w-auto text-xs sm:text-sm">Reprendre plus tard</Button>
+            <Button type="submit" variant="hero" disabled={isLoading || uploading || aiBusy || coverGenerating} className="w-full sm:w-auto text-xs sm:text-sm">
               {isLoading || aiBusy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {aiBusy ? "Génération IA…" : "Publication…"}</> : <><GraduationCap className="w-4 h-4 mr-2" /> Publier la formation</>}
             </Button>
           </div>
