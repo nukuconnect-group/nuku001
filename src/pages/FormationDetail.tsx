@@ -422,6 +422,60 @@ const FormationDetail = () => {
                 )}
               </div>
 
+              {/* Persistent payment status panel — visible during/after payment */}
+              {payState.kind !== "idle" && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className={`rounded-md border p-2.5 text-[11px] sm:text-xs flex items-start gap-2 ${
+                    payState.kind === "success"
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : payState.kind === "failed"
+                      ? "border-destructive/40 bg-destructive/10 text-destructive"
+                      : payState.kind === "expired"
+                      ? "border-destructive/30 bg-destructive/5 text-destructive"
+                      : payState.kind === "pending" || payState.kind === "initiating"
+                      ? "border-accent/40 bg-accent/10 text-foreground"
+                      : "border-muted bg-muted text-foreground"
+                  }`}
+                >
+                  {payState.kind === "initiating" || payState.kind === "pending" ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0 mt-0.5" />
+                  ) : payState.kind === "success" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-primary" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold mb-0.5">
+                      {payState.kind === "initiating" && "Initialisation du paiement…"}
+                      {payState.kind === "pending" && "Paiement en attente de confirmation"}
+                      {payState.kind === "success" && "Paiement confirmé"}
+                      {payState.kind === "failed" && "Paiement échoué"}
+                      {payState.kind === "expired" && "Session de paiement expirée"}
+                      {payState.kind === "unknown" &&
+                        "Statut de paiement non confirmé — vérification en cours"}
+                    </p>
+                    {"message" in payState && (
+                      <p className="opacity-90 leading-relaxed break-words">{payState.message}</p>
+                    )}
+                    {(payState.kind === "failed" || payState.kind === "expired" || payState.kind === "unknown") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPayIdentifier(null);
+                          setPayTxRef(null);
+                          setPayState({ kind: "idle" });
+                        }}
+                        className="mt-1 underline font-medium"
+                      >
+                        Relancer le paiement
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {payOpen && (
                 <div className="border-t border-primary/20 pt-3 space-y-2">
                   <div className="flex flex-wrap gap-1.5">
