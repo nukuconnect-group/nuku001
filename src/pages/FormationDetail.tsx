@@ -24,6 +24,8 @@ const FormationDetail = () => {
   const [loading, setLoading] = useState(true);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -52,11 +54,13 @@ const FormationDetail = () => {
           .eq("user_id", session.user.id)
           .eq("formation_id", formationId);
 
+        const rows = (progData as any[]) || [];
         const progMap: Record<string, boolean> = {};
-        ((progData as any[]) || []).forEach((p: any) => {
+        rows.forEach((p: any) => {
           if (p.module_id) progMap[p.module_id] = p.completed;
         });
         setProgress(progMap);
+        setIsEnrolled(rows.length > 0);
 
         const completedCount = Object.values(progMap).filter(Boolean).length;
         const total = (modRes.data as any[])?.length || 1;
@@ -67,8 +71,23 @@ const FormationDetail = () => {
     load();
   }, [id]);
 
+  const enroll = async () => {
+    if (!userId || !formation || enrolling) return;
+    setEnrolling(true);
+    const { error } = await supabase.from("formation_progress" as any).upsert({
+      user_id: userId,
+      formation_id: formation.id,
+      module_id: null,
+      completed: false,
+      progress_percent: 0,
+    } as any, { onConflict: "user_id,formation_id,module_id" });
+    if (!error) setIsEnrolled(true);
+    setEnrolling(false);
+  };
+
   const toggleModuleComplete = async (moduleId: string) => {
     if (!userId || !formation) return;
+    if (!isEnrolled) await enroll();
     const formationId = formation.id;
     const isCompleted = !progress[moduleId];
 
@@ -187,13 +206,16 @@ const FormationDetail = () => {
           </div>
 
           {/* Overall progress */}
-          {userId && overallProgress > 0 && (
+          {userId && isEnrolled && (
             <div className="max-w-md mb-4">
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="text-muted-foreground">Votre progression</span>
                 <span className="font-semibold text-primary">{overallProgress}%</span>
               </div>
               <Progress value={overallProgress} className="h-2" />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {Object.values(progress).filter(Boolean).length} / {modules.length} chapitres terminés
+              </p>
             </div>
           )}
         </div>
@@ -202,17 +224,33 @@ const FormationDetail = () => {
       {/* Self-paced banner + Summary + Source document */}
       <section className="py-3 sm:py-5">
         <div className="container mx-auto px-3 sm:px-4 space-y-3">
-          {/* Self-paced learning notice */}
-          <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
-            <CalendarClock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="text-xs sm:text-sm">
-              <p className="font-semibold text-foreground mb-0.5">Suivez à votre rythme</p>
-              <p className="text-muted-foreground leading-relaxed">
-                Vous pouvez avancer dans cette formation selon votre disponibilité.
-                Votre progression est sauvegardée automatiquement, vous pouvez reprendre à tout moment.
-              </p>
+          {/* Self-paced learning notice — visible only after enrollment */}
+          {userId && isEnrolled && (
+            <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+              <CalendarClock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-xs sm:text-sm">
+                <p className="font-semibold text-foreground mb-0.5">Suivez à votre rythme</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Vous pouvez avancer dans cette formation selon votre disponibilité.
+                  Votre progression est sauvegardée automatiquement, vous pouvez reprendre à tout moment.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Enroll CTA when logged in but not yet enrolled */}
+          {userId && !isEnrolled && (!formation.is_paid) && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 sm:p-4">
+              <GraduationCap className="w-5 h-5 text-primary flex-shrink-0" />
+              <div className="text-xs sm:text-sm flex-1">
+                <p className="font-semibold text-foreground mb-0.5">Inscrivez-vous gratuitement</p>
+                <p className="text-muted-foreground">Accédez au résumé, au document et suivez la formation à votre rythme.</p>
+              </div>
+              <Button variant="hero" size="sm" className="text-xs" onClick={enroll} disabled={enrolling}>
+                {enrolling ? <Loader2 className="w-3 h-3 animate-spin" /> : "Commencer la formation"}
+              </Button>
+            </div>
+          )}
 
           {/* Summary */}
           {formation.summary && (
@@ -289,10 +327,13 @@ const FormationDetail = () => {
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                         {mod.content_type === "video" ? (
                           <span className="flex items-center gap-0.5"><Video className="w-3 h-3" />Vidéo</span>
-                        ) : (
+                        ) : mod.content_url ? (
                           <span className="flex items-center gap-0.5"><FileText className="w-3 h-3" />PDF</span>
+                        ) : (
+                          <span className="flex items-center gap-0.5"><BookOpen className="w-3 h-3" />Lecture</span>
                         )}
-                        <span>• {mod.duration_minutes}min</span>
+                        <span>• {mod.duration_minutes || 0}min</span>
+                        <span>• Chapitre {idx + 1}</span>
                       </div>
                     </div>
                     {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -300,9 +341,15 @@ const FormationDetail = () => {
 
                   {isExpanded && (
                     <CardContent className="pt-0 px-3 sm:px-4 pb-3 sm:pb-4 border-t border-border space-y-3">
-                      {mod.description && (
-                        <p className="text-xs text-muted-foreground whitespace-pre-line">{mod.description}</p>
-                      )}
+                      {mod.description ? (
+                        <div className="rounded-md bg-muted/40 p-3">
+                          <p className="text-xs sm:text-sm text-foreground whitespace-pre-line leading-relaxed">{mod.description}</p>
+                        </div>
+                      ) : !mod.content_url ? (
+                        <p className="text-xs text-muted-foreground italic">
+                          Contenu textuel à venir pour ce chapitre.
+                        </p>
+                      ) : null}
 
                       {/* Content viewer — self-paced learning */}
                       {mod.content_url && mod.content_type === "video" && (() => {
