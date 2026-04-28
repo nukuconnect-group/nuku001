@@ -439,7 +439,7 @@ const FormationDetail = () => {
                               kind,
                               message: r.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES[kind],
                               details: {
-                                amount: r.amount ?? Number(formation?.price) || undefined,
+                                amount: (r.amount ?? Number(formation?.price)) || undefined,
                                 method: payNetwork === "CARD" ? "Carte bancaire" : payNetwork,
                                 identifier: payIdentifier!,
                                 txReference: payTxRef || undefined,
