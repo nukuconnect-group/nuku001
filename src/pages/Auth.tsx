@@ -620,6 +620,14 @@ const Auth = () => {
                 {/* Profile-specific fields */}
                 {(userType === "producer" || userType === "trainer") && (
                   <div className="space-y-3">
+                    <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] text-foreground flex items-start gap-2">
+                      <Building className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>
+                        {userType === "trainer"
+                          ? "Saisissez le nom de votre organisme/institution — c'est ce nom qui sera affiché publiquement, pas votre nom personnel."
+                          : "Saisissez le nom de votre entreprise/exploitation — c'est ce nom qui sera affiché publiquement sur votre profil et vos produits, pas votre nom personnel."}
+                      </span>
+                    </div>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input type="text" placeholder="Nom complet" value={producerName} onChange={(e) => setProducerName(e.target.value)} className="pl-10" required />
