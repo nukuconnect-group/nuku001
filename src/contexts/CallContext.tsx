@@ -224,6 +224,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const cleanupCall = useCallback(() => {
     stopRingtone();
+    stopIncomingAlerts();
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
     try { pcRef.current?.close(); } catch {}
@@ -239,7 +240,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       try { supabase.removeChannel(peerChannelRef.current); } catch {}
       peerChannelRef.current = null;
     }
-  }, [stopRingtone]);
+  }, [stopRingtone, stopIncomingAlerts]);
 
   const sendSignal = useCallback(async (toUserId: string, payload: any) => {
     // Use a dedicated outgoing channel to broadcast to peer's `call:<peerUid>`
