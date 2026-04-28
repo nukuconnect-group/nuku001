@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback, Re
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "@/hooks/use-toast";
+import { logDiag } from "@/lib/diagnostics";
 
 /**
  * Call signaling via Supabase Realtime broadcast.
