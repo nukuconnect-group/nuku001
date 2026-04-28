@@ -314,9 +314,13 @@ const Auth = () => {
       const fullName = (userType === "buyer" || userType === "learner") ? `${buyerFirstName} ${buyerLastName}` : producerName;
       const phone = (userType === "buyer" || userType === "learner") ? buyerPhone : producerPhone;
       const location = (userType === "buyer" || userType === "learner") ? `${buyerLocation}, ${buyerCountry}` : producerLocation;
+      const isCompany = userType === "producer" || userType === "trainer";
+      const businessName = isCompany
+        ? producerCompany.trim()
+        : ((userType === "buyer" || userType === "learner") && buyerCompany.trim() ? buyerCompany.trim() : null);
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail, password: signupPassword,
-        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, sector: userType === "producer" ? producerSector : null } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: businessName, sector: userType === "producer" ? producerSector : null } },
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
@@ -337,7 +341,7 @@ const Auth = () => {
         }
 
         const needsConfirmation = !authData.session;
-        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: (userType === "producer" || userType === "trainer") ? producerCompany.trim() : null, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
+        await supabase.from("profiles").insert({ user_id: authData.user.id, full_name: fullName, user_type: userType, location, business_name: businessName, bio: userType === "producer" ? `${producerCompany} - ${producerSector}` : userType === "driver" ? `Livreur - ${producerSector || 'moto'}` : null });
 
         // Link referral if present — only remove localStorage AFTER successful claim
         const savedRef = localStorage.getItem("nukuconnect-ref");
