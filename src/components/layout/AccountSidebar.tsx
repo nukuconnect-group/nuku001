@@ -88,6 +88,49 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("Togo");
 
+  // UI state for new interactions
+  const [isCountryEditing, setIsCountryEditing] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [isSavingCountry, setIsSavingCountry] = useState(false);
+  const [profileCountry, setProfileCountry] = useState<string>("");
+
+  // Sync profile country
+  useEffect(() => {
+    const loc = (profile?.location || "").trim();
+    // Try extract country (last comma part) else raw
+    const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
+    setProfileCountry(parts[parts.length - 1] || loc || "Togo");
+  }, [profile?.location]);
+
+  const handleSaveCountry = async (newCountry: string) => {
+    if (!user?.id || !profile?.id) return;
+    setIsSavingCountry(true);
+    try {
+      // Preserve city if present
+      const loc = (profile?.location || "").trim();
+      const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
+      let newLocation = newCountry;
+      if (parts.length > 1) {
+        parts[parts.length - 1] = newCountry;
+        newLocation = parts.join(", ");
+      } else if (parts.length === 1 && parts[0] !== profileCountry) {
+        newLocation = `${parts[0]}, ${newCountry}`;
+      }
+      const { error } = await supabase
+        .from("profiles")
+        .update({ location: newLocation })
+        .eq("id", profile.id);
+      if (error) throw error;
+      setProfileCountry(newCountry);
+      setIsCountryEditing(false);
+      toast({ title: "Pays mis à jour", description: newLocation });
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err?.message || "Impossible de mettre à jour", variant: "destructive" });
+    } finally {
+      setIsSavingCountry(false);
+    }
+  };
+
   useEffect(() => {
     if (!isReady) return;
 
