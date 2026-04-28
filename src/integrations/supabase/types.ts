@@ -1903,6 +1903,7 @@ export type Database = {
           json_ld: Json | null
           keywords: string | null
           no_index: boolean
+          og_image_sizes: Json | null
           og_image_url: string | null
           route: string
           title: string | null
@@ -1918,6 +1919,7 @@ export type Database = {
           json_ld?: Json | null
           keywords?: string | null
           no_index?: boolean
+          og_image_sizes?: Json | null
           og_image_url?: string | null
           route: string
           title?: string | null
@@ -1933,6 +1935,7 @@ export type Database = {
           json_ld?: Json | null
           keywords?: string | null
           no_index?: boolean
+          og_image_sizes?: Json | null
           og_image_url?: string | null
           route?: string
           title?: string | null

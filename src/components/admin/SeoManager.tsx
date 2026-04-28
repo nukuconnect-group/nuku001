@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye } from "lucide-react";
+import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface SeoRow {
@@ -19,6 +19,7 @@ interface SeoRow {
   description: string | null;
   keywords: string | null;
   og_image_url: string | null;
+  og_image_sizes?: Record<string, string> | null;
   canonical_path: string | null;
   no_index: boolean;
 }
@@ -59,7 +60,7 @@ const SeoManager = () => {
   useEffect(() => { load(); }, []);
 
   const save = async () => {
-    if (!selected) return;
+    if (!selected) return null;
     setSaving(selected.id);
     const { error } = await (supabase as any)
       .from("seo_settings")
@@ -75,11 +76,24 @@ const SeoManager = () => {
     setSaving(null);
     if (error) {
       toast({ title: "Erreur d'enregistrement", description: error.message, variant: "destructive" });
-    } else {
-      clearSeoCache(selected.route);
-      toast({ title: "SEO enregistré", description: `Mise à jour de ${selected.route}` });
-      load();
+      return false;
     }
+    clearSeoCache(selected.route);
+    toast({ title: "SEO enregistré", description: `Mise à jour de ${selected.route}` });
+    load();
+    return true;
+  };
+
+  const publish = async () => {
+    if (!selected) return;
+    const ok = await save();
+    if (!ok) return;
+    // Clear local cache for ALL routes so any open tab refetches
+    clearSeoCache();
+    toast({
+      title: "Publié sur la route",
+      description: `${selected.route} • Cache SEO invalidé. Les visiteurs verront les nouvelles balises au prochain chargement.`,
+    });
   };
 
   const addRoute = async () => {
@@ -138,9 +152,10 @@ const SeoManager = () => {
       toast({ title: "Échec génération image", description: error?.message || data?.error || "Erreur IA", variant: "destructive" });
       return;
     }
-    setSelected({ ...selected, og_image_url: data.og_image_url });
+    setSelected({ ...selected, og_image_url: data.og_image_url, og_image_sizes: data.og_image_sizes || selected.og_image_sizes });
     clearSeoCache(selected.route);
-    toast({ title: "Image OG générée", description: "Image sauvegardée et liée à la page." });
+    const sizesCount = data.og_image_sizes ? Object.keys(data.og_image_sizes).length : 1;
+    toast({ title: "Image OG générée", description: `${sizesCount} taille(s) sauvegardée(s) (1200×630${sizesCount > 1 ? " + 640×640" : ""}).` });
     load();
   };
 
@@ -307,9 +322,13 @@ const SeoManager = () => {
                 {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 Remplir automatiquement (IA)
               </Button>
-              <Button size="sm" onClick={save} disabled={saving === selected.id}>
+              <Button variant="secondary" size="sm" onClick={save} disabled={saving === selected.id}>
                 {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Enregistrer
+              </Button>
+              <Button size="sm" onClick={publish} disabled={saving === selected.id}>
+                {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+                Publier sur la route
               </Button>
             </div>
           </CardContent>

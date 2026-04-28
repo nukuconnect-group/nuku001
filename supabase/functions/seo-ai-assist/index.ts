@@ -83,52 +83,72 @@ Génère des métadonnées SEO optimisées en français. Réponds UNIQUEMENT en 
     }
 
     if (action === "generate_og") {
-      const imgPrompt = `Crée une image Open Graph professionnelle 1200x630 pour la marketplace agricole africaine NUKUCONNECT.
+      const safeRoute = route.replace(/[^a-zA-Z0-9_-]/g, "_") || "global";
+      const stamp = Date.now();
+
+      // Helper: ask the AI image model for a specific size
+      async function genVariant(size: "1200x630" | "640x640") {
+        const prompt = size === "1200x630"
+          ? `Crée une image Open Graph professionnelle 1200x630 pour la marketplace agricole africaine NUKUCONNECT.
 Page: "${niceName}". ${context ? `Contexte: ${context}` : ""}
 Style: moderne, vert et bleu (palette agri-tech), photo réaliste d'agriculture africaine,
-texte minimaliste avec le titre "${niceName.toUpperCase()}", logo discret, composition équilibrée pour partage social.`;
+texte minimaliste avec le titre "${niceName.toUpperCase()}", logo discret, composition équilibrée pour partage social.`
+          : `Crée une image carrée 640x640 pour la marketplace agricole africaine NUKUCONNECT.
+Page: "${niceName}". ${context ? `Contexte: ${context}` : ""}
+Style: moderne, vert et bleu (palette agri-tech), composition centrée, idéale pour aperçu carré
+(WhatsApp, Twitter summary), texte court "${niceName.toUpperCase()}".`;
 
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [{ role: "user", content: imgPrompt }],
-          modalities: ["image", "text"],
-        }),
-      });
-      if (!aiResp.ok) {
-        const t = await aiResp.text();
-        if (aiResp.status === 429) return jsonResponse({ error: "Limite atteinte, réessayez plus tard." }, 429);
-        if (aiResp.status === 402) return jsonResponse({ error: "Crédits IA épuisés." }, 402);
-        return jsonResponse({ error: "AI image error", details: t }, 500);
+        const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: prompt }],
+            modalities: ["image", "text"],
+          }),
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          throw new Error(`ai_${resp.status}:${t.slice(0, 200)}`);
+        }
+        const d = await resp.json();
+        const dataUrl: string | undefined = d.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (!dataUrl?.startsWith("data:")) throw new Error("no_image");
+
+        const [meta, b64] = dataUrl.split(",");
+        const mime = meta.match(/data:([^;]+);base64/)?.[1] || "image/png";
+        const ext = mime.includes("jpeg") ? "jpg" : "png";
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const path = `${safeRoute}-${size}-${stamp}.${ext}`;
+
+        const { error: upErr } = await admin.storage
+          .from("seo-og-images")
+          .upload(path, bytes, { contentType: mime, upsert: true });
+        if (upErr) throw new Error(`upload:${upErr.message}`);
+
+        const { data: pub } = admin.storage.from("seo-og-images").getPublicUrl(path);
+        return pub.publicUrl;
       }
-      const data = await aiResp.json();
-      const dataUrl: string | undefined = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!dataUrl?.startsWith("data:")) return jsonResponse({ error: "no image returned" }, 500);
 
-      const [meta, b64] = dataUrl.split(",");
-      const mime = meta.match(/data:([^;]+);base64/)?.[1] || "image/png";
-      const ext = mime.includes("jpeg") ? "jpg" : "png";
-      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      try {
+        const og1200 = await genVariant("1200x630");
+        let og640: string | null = null;
+        try { og640 = await genVariant("640x640"); } catch (_) { og640 = null; }
 
-      const safeRoute = route.replace(/[^a-zA-Z0-9_-]/g, "_") || "global";
-      const path = `${safeRoute}-${Date.now()}.${ext}`;
+        const sizes: Record<string, string> = { "1200x630": og1200 };
+        if (og640) sizes["640x640"] = og640;
 
-      const { error: upErr } = await admin.storage
-        .from("seo-og-images")
-        .upload(path, bytes, { contentType: mime, upsert: true });
-      if (upErr) return jsonResponse({ error: "upload failed", details: upErr.message }, 500);
+        await admin.from("seo_settings")
+          .update({ og_image_url: og1200, og_image_sizes: sizes })
+          .eq("route", route);
 
-      const { data: pub } = admin.storage.from("seo-og-images").getPublicUrl(path);
-
-      // Persist directly into seo_settings for this route
-      await admin.from("seo_settings").update({ og_image_url: pub.publicUrl }).eq("route", route);
-
-      return jsonResponse({ success: true, og_image_url: pub.publicUrl });
+        return jsonResponse({ success: true, og_image_url: og1200, og_image_sizes: sizes });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "image error";
+        if (msg.startsWith("ai_429")) return jsonResponse({ error: "Limite atteinte, réessayez plus tard." }, 429);
+        if (msg.startsWith("ai_402")) return jsonResponse({ error: "Crédits IA épuisés." }, 402);
+        return jsonResponse({ error: msg }, 500);
+      }
     }
 
     return jsonResponse({ error: "unknown action" }, 400);
