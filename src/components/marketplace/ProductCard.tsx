@@ -20,12 +20,16 @@ interface ProductCardProps {
   product: Product;
   viewMode?: "grid" | "list";
   onCompare?: (product: Product) => void;
+  /** Hide the supplier/producer row. Implied by `minimal`. */
   hideProducer?: boolean;
   isBoosted?: boolean;
+  /** Ultra-minimal layout for sponsored cards: only image, price (+ promo), title, location. Implies hideProducer. */
   minimal?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false, minimal = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hideProducerProp = false, isBoosted = false, minimal = false }: ProductCardProps) => {
+  // Refactor: minimal always hides producer to avoid redundant props & accidental display
+  const hideProducer = hideProducerProp || minimal;
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -152,20 +156,16 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             onError={() => setImgError(true)}
           />
           
-          {/* Top badges */}
+          {/* Top-left badges (sale / sponsored / new / status) */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
-            {/* Vente badge for supplier products */}
-            <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
-              VENTE
-            </Badge>
+            {!minimal && (
+              <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
+                VENTE
+              </Badge>
+            )}
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
                 <Rocket className="w-2.5 h-2.5" />Sponsorisé
-              </Badge>
-            )}
-            {computedDiscount > 0 && (
-              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                -{computedDiscount}%
               </Badge>
             )}
             {isNew && (
@@ -185,29 +185,38 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             )}
           </div>
 
-          {/* Action buttons — top right */}
-          <div className="absolute top-1.5 right-1.5 flex flex-col gap-1">
-            <button
-              onClick={handleCompare}
-              className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
-            >
-              <GitCompareArrows className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isAuthenticated) {
-                  toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
-                  navigate("/auth");
-                  return;
-                }
-                toggleWishlist(product.id);
-              }}
-              className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
-            >
-              <Heart className={`w-3.5 h-3.5 transition-colors duration-200 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground hover:text-destructive"}`} />
-            </button>
+          {/* Top-right area: discount badge (opposite side) + action buttons */}
+          <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+            {computedDiscount > 0 && (
+              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                -{computedDiscount}%
+              </Badge>
+            )}
+            {!minimal && (
+              <>
+                <button
+                  onClick={handleCompare}
+                  className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
+                >
+                  <GitCompareArrows className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isAuthenticated) {
+                      toast({ title: "Connexion requise", description: "Connectez-vous pour ajouter aux favoris", variant: "destructive" });
+                      navigate("/auth");
+                      return;
+                    }
+                    toggleWishlist(product.id);
+                  }}
+                  className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
+                >
+                  <Heart className={`w-3.5 h-3.5 transition-colors duration-200 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground hover:text-destructive"}`} />
+                </button>
+              </>
+            )}
           </div>
 
           {/* Quick add to cart — bottom of image */}
@@ -219,11 +228,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
         </div>
 
         <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-0.5 min-h-0 overflow-hidden">
-          {/* Price */}
-          <div className="flex items-baseline gap-1 flex-wrap">
-            <span className="font-heading text-sm sm:text-base font-bold text-destructive">{formatPrice(product.price)}</span>
+          {/* Price — single line in minimal mode (no wrap, smaller) */}
+          <div className={`flex items-baseline gap-1 ${minimal ? 'flex-nowrap whitespace-nowrap overflow-hidden' : 'flex-wrap'}`}>
+            <span className={`font-heading font-bold text-destructive ${minimal ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>
+              {formatPrice(product.price)}
+            </span>
             {computedOriginalPrice && computedOriginalPrice > product.price && (
-              <span className="text-[9px] text-muted-foreground line-through">{formatPrice(computedOriginalPrice)}</span>
+              <span className={`text-muted-foreground line-through ${minimal ? 'text-[8px]' : 'text-[9px]'}`}>
+                {formatPrice(computedOriginalPrice)}
+              </span>
             )}
             {!minimal && <span className="text-[9px] text-muted-foreground">/{product.unit}</span>}
           </div>
