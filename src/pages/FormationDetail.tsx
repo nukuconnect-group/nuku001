@@ -324,6 +324,77 @@ const FormationDetail = () => {
             </div>
           )}
 
+          {/* Paid formation: payment required before enrollment */}
+          {userId && !isEnrolled && formation.is_paid && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="text-xs sm:text-sm flex-1">
+                  <p className="font-semibold text-foreground mb-0.5">Formation payante — {Number(formation.price || 0).toLocaleString("fr-FR")} FCFA</p>
+                  <p className="text-muted-foreground">L'accès aux chapitres, vidéos et au document PDF est débloqué automatiquement après confirmation du paiement.</p>
+                </div>
+                {!payOpen && (
+                  <Button variant="hero" size="sm" className="text-xs gap-1" onClick={() => setPayOpen(true)}>
+                    <CreditCard className="w-3.5 h-3.5" /> Payer & accéder
+                  </Button>
+                )}
+              </div>
+
+              {payOpen && (
+                <div className="border-t border-primary/20 pt-3 space-y-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {(["CARD", "TMONEY", "FLOOZ"] as const).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setPayNetwork(n)}
+                        className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
+                          payNetwork === n ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
+                        }`}
+                      >
+                        {n === "CARD" ? "Carte bancaire" : n === "TMONEY" ? "T-Money" : "Flooz"}
+                      </button>
+                    ))}
+                  </div>
+                  {payNetwork !== "CARD" && (
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="Numéro Mobile Money (ex: 90000000)"
+                      value={payPhone}
+                      onChange={(e) => setPayPhone(e.target.value)}
+                      className="w-full text-xs px-3 py-2 rounded-md border border-border bg-background"
+                    />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating || !!payIdentifier}>
+                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : payIdentifier ? "Paiement en cours…" : <><CreditCard className="w-3 h-3" /> Confirmer le paiement</>}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setPayOpen(false); setPayIdentifier(null); setPayTxRef(null); }}>
+                      Annuler
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Paygate. L'inscription est automatique après confirmation.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Visitors not logged-in on a paid formation */}
+          {!userId && formation.is_paid && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4 flex items-center gap-3">
+              <Lock className="w-5 h-5 text-primary flex-shrink-0" />
+              <div className="text-xs sm:text-sm flex-1">
+                <p className="font-semibold text-foreground">Connectez-vous pour acheter cette formation</p>
+                <p className="text-muted-foreground">Accédez aux chapitres, vidéos et document PDF après paiement.</p>
+              </div>
+              <Link to="/auth"><Button variant="hero" size="sm" className="text-xs">Se connecter</Button></Link>
+            </div>
+          )}
+
+
           {/* Summary */}
           {formation.summary && (
             <Card>
