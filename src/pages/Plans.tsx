@@ -158,12 +158,19 @@ const Plans = () => {
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     if (paymentStep) {
-      activateSubscription(paymentStep, {
+      void activateSubscription(paymentStep, {
         identifier: paymentIdentifier,
         tx_reference: data?.tx_reference,
+      }).catch((error: any) => {
+        setSubscribing(null);
+        toast({
+          title: "Erreur d'abonnement",
+          description: error?.message || "Impossible d'activer votre abonnement.",
+          variant: "destructive",
+        });
       });
     }
-  }, [paymentIdentifier, paymentStep, activateSubscription]);
+  }, [paymentIdentifier, paymentStep, activateSubscription, toast]);
 
   const handlePaymentFailed = useCallback(() => {
     setPollingEnabled(false);
