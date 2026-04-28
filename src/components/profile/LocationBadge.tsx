@@ -22,7 +22,7 @@ const LocationBadge = ({ location, className, size = "md" }: LocationBadgeProps)
     <div
       data-testid="location-badge"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border",
+        "inline-flex items-center gap-1.5 rounded-none border",
         isFallback
           ? "bg-muted/50 border-muted-foreground/20 text-muted-foreground"
           : "bg-primary/10 border-primary/20 text-primary",
