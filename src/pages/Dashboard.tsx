@@ -102,7 +102,21 @@ const Dashboard = () => {
     loadData();
     return () => { isMounted = false; };
   }, [isReady, profileLoading, user, profile, navigate]);
-  
+
+  // Realtime: sync products list across tabs/devices when CRUD happens
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`dashboard-products-${profile.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products", filter: `producer_id=eq.${profile.id}` },
+        () => { fetchProducts(profile.id); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id]);
+
 
   const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const completedOrders = orders.filter(o => o.status === "completed").length;
@@ -120,17 +134,25 @@ const Dashboard = () => {
     { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm("Supprimer définitivement ce produit ? Il sera retiré de la marketplace immédiatement.")) return;
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+    const productId = productToDelete.id;
+    // Optimistic update — disparaît immédiatement de la liste locale
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
     const { error } = await supabase.from("products").delete().eq("id", productId);
-    if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    else {
-      toast({ title: "Produit supprimé", description: "Le produit a été retiré de la marketplace." });
+    setIsDeleting(false);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      // Recharge en cas d'échec pour rétablir l'état réel
       fetchProducts(profile.id);
+    } else {
+      toast({ title: "Produit supprimé", description: "Le produit a été retiré de la marketplace." });
       // Invalidate marketplace caches so changes appear immediately everywhere
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product", productId] });
     }
+    setProductToDelete(null);
   };
 
   if (isLoading || profileLoading) {
