@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
+import { paymentMethods, validateMobileMoneyPhone } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
@@ -489,15 +489,17 @@ const Cart = () => {
       return;
     }
 
-    if (!selectedNetwork) {
-      toast({ title: "Mode de paiement requis", description: "Veuillez sélectionner Moov Money ou T-Money.", variant: "destructive" });
+    // Validation Mobile Money (numéro + auto-détection du réseau)
+    const phoneValidation = validateMobileMoneyPhone(mobileNumber);
+    if (!phoneValidation.valid || !phoneValidation.network) {
+      toast({
+        title: "Numéro Mobile Money invalide",
+        description: phoneValidation.reason || "Vérifiez votre numéro avant de payer.",
+        variant: "destructive",
+      });
       return;
     }
-
-    if (!mobileNumber.trim()) {
-      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
-      return;
-    }
+    const detectedNetwork = phoneValidation.network;
 
     setIsCheckingOut(true);
     setPayStatus({ kind: "initiating" });
@@ -559,7 +561,7 @@ const Cart = () => {
           description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
           identifier,
           phone_number: phoneDigits,
-          network: selectedNetwork,
+          network: detectedNetwork,
           // Mobile Money: paiement direct via push USSD (pas de redirection)
           use_redirect: false,
         },
@@ -575,11 +577,11 @@ const Cart = () => {
       setPollingEnabled(true);
       setPayStatus({
         kind: "pending",
-        message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
+        message: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
       });
       toast({
         title: "📱 Paiement initié",
-        description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
+        description: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
       });
 
     } catch (error: any) {
