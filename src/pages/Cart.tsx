@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import TrustBadges from "@/components/cart/TrustBadges";
+// TrustBadges est désormais rendu globalement dans <Footer />, ne pas l'importer ici.
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/components/cart/CartContext";
