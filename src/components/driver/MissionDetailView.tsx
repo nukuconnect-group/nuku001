@@ -511,13 +511,45 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
         {/* Map control buttons */}
         <div className="absolute right-3 bottom-4 z-[10] flex flex-col gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className={`w-11 h-11 rounded-full backdrop-blur shadow-md border-0 ${navMode ? "bg-primary text-primary-foreground" : "bg-background/90"}`}
+            onClick={() => {
+              setNavMode((v) => {
+                const next = !v;
+                if (next && mapInstanceRef.current) {
+                  mapInstanceRef.current.flyTo([livePos[0], livePos[1]], 17, { duration: 0.8 });
+                }
+                toast({ title: next ? "Mode navigation activé" : "Mode navigation désactivé", description: next ? "La carte suit votre position" : "Vue libre" });
+                return next;
+              });
+            }}
+            title={navMode ? "Désactiver le suivi auto" : "Activer le suivi auto"}
+          >
+            <Compass className={`w-5 h-5 ${navMode ? "" : "text-primary"}`} />
+          </Button>
           <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={centerOnDriver} title="Ma position">
             <Locate className="w-5 h-5 text-primary" />
           </Button>
-          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={fitAllBounds} title="Voir tout">
+          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={() => { setNavMode(false); fitAllBounds(); }} title="Voir tout">
             <Layers className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* GPS status banner */}
+        {gpsError && (
+          <div className="absolute top-16 left-3 right-3 z-[11] bg-amber-500/95 text-white text-[11px] font-medium rounded-xl px-3 py-2 shadow-md flex items-center gap-2">
+            <Crosshair className="w-4 h-4 flex-shrink-0" />
+            <span>{gpsError}</span>
+          </div>
+        )}
+        {!gpsError && gpsAccuracy != null && (
+          <div className="absolute bottom-4 left-3 z-[10] bg-background/90 backdrop-blur rounded-full px-3 py-1 shadow-md text-[10px] font-medium flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${gpsAccuracy < 20 ? "bg-emerald-500" : gpsAccuracy < 50 ? "bg-amber-500" : "bg-red-500"} animate-pulse`} />
+            GPS ±{Math.round(gpsAccuracy)}m
+          </div>
+        )}
 
         {/* Route info pill */}
         {routeInfo && (
