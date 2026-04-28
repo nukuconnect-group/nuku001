@@ -35,6 +35,8 @@ const FormationDetail = () => {
   const [payPhone, setPayPhone] = useState("");
   const [payInitiating, setPayInitiating] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  // Signed URL for paid-formation PDF (refreshed when enrollment changes)
+  const [signedPdfUrl, setSignedPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
