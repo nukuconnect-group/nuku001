@@ -194,6 +194,39 @@ const PaymentMethodSelect = ({
             </div>
           </div>
 
+          {/* Sélection manuelle du réseau (cliquable) */}
+          <div>
+            <Label className="text-xs mb-1.5 block">Choisir votre opérateur</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setManualNetwork(manualNetwork === "FLOOZ" ? "" : "FLOOZ")}
+                disabled={isDisabled}
+                className={`rounded-xl bg-background p-2.5 flex items-center justify-center h-16 transition-all ${
+                  detectedNetwork === "FLOOZ"
+                    ? "border-2 border-primary ring-2 ring-primary/20"
+                    : "border border-border hover:border-primary/50"
+                }`}
+                aria-label="Choisir Moov Money"
+              >
+                <img src={moovFloozLogo} alt="Moov Money / Flooz" className="max-h-10 max-w-full object-contain" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setManualNetwork(manualNetwork === "TMONEY" ? "" : "TMONEY")}
+                disabled={isDisabled}
+                className={`rounded-xl bg-background p-2.5 flex items-center justify-center h-16 transition-all ${
+                  detectedNetwork === "TMONEY"
+                    ? "border-2 border-primary ring-2 ring-primary/20"
+                    : "border border-border hover:border-primary/50"
+                }`}
+                aria-label="Choisir Mixx by Yas"
+              >
+                <img src={mixxYasLogo} alt="Mixx by Yas" className="max-h-10 max-w-full object-contain" />
+              </button>
+            </div>
+          </div>
+
           {/* Champ numéro avec auto-détection */}
           {!showPolling && (
             <div className="space-y-1.5">
