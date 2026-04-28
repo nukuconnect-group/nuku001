@@ -8,8 +8,9 @@ import {
   MapPin, Navigation, Package, CheckCircle2,
   Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield,
   Locate, Layers, PauseCircle, PlayCircle, RotateCcw, Edit3,
-  ChevronUp, ChevronDown
+  ChevronUp, ChevronDown, Crosshair, Compass
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface MissionDetailViewProps {
   delivery: any;
@@ -55,38 +56,82 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [routeSteps, setRouteSteps] = useState<any[]>([]);
   const [livePos, setLivePos] = useState<[number, number]>(driverPosition);
+  const [navMode, setNavMode] = useState(true); // mode auto-suivi style Google Maps
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const lastDbWriteRef = useRef<number>(0);
 
   const currentStep = getStepIndex(delivery.status);
 
-  // Real GPS tracking
+  // Persist position to DB (throttled to 5s)
+  const persistPosition = useCallback(async (lat: number, lng: number) => {
+    if (!delivery.id) return;
+    const now = Date.now();
+    if (now - lastDbWriteRef.current < 5000) return;
+    lastDbWriteRef.current = now;
+    try {
+      await supabase.from("deliveries").update({
+        driver_current_lat: lat,
+        driver_current_lng: lng,
+      }).eq("id", delivery.id);
+      // Also update driver_profiles so others see the live location
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.user?.id) {
+        await supabase.from("driver_profiles")
+          .update({ current_lat: lat, current_lng: lng })
+          .eq("user_id", session.session.user.id);
+      }
+    } catch (e) {
+      console.warn("[GPS] persist error", e);
+    }
+  }, [delivery.id]);
+
+  // Real GPS tracking — watchPosition + interval fallback for reliability
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setGpsError("Géolocalisation non supportée par ce navigateur");
+      return;
+    }
 
     const onPos = (pos: GeolocationPosition) => {
       const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
       setLivePos(newPos);
-
-      // Update driver position in DB
-      if (delivery.id) {
-        supabase.from("deliveries").update({
-          driver_current_lat: newPos[0],
-          driver_current_lng: newPos[1],
-        }).eq("id", delivery.id).then(() => {});
-      }
+      setGpsAccuracy(pos.coords.accuracy);
+      setGpsError(null);
+      persistPosition(newPos[0], newPos[1]);
     };
 
-    gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, () => {}, {
+    const onErr = (err: GeolocationPositionError) => {
+      console.warn("[GPS]", err.code, err.message);
+      if (err.code === 1) setGpsError("Autorisez l'accès à votre position pour suivre la livraison");
+      else if (err.code === 2) setGpsError("Position GPS indisponible. Activez le GPS.");
+      else if (err.code === 3) setGpsError("Délai GPS dépassé. Réessai…");
+    };
+
+    // 1. Continuous watch (fires when position changes)
+    gpsWatchRef.current = navigator.geolocation.watchPosition(onPos, onErr, {
       enableHighAccuracy: true,
-      maximumAge: 5000,
-      timeout: 15000,
+      maximumAge: 2000,
+      timeout: 20000,
     });
+
+    // 2. Periodic fallback every 5s — ensures the marker keeps moving even
+    //    if watchPosition is throttled by the browser (common on desktop / when stationary)
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(onPos, onErr, {
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 15000,
+      });
+    }, 5000);
 
     return () => {
       if (gpsWatchRef.current !== null) {
         navigator.geolocation.clearWatch(gpsWatchRef.current);
       }
+      clearInterval(interval);
     };
-  }, [delivery.id]);
+  }, [delivery.id, persistPosition]);
 
   // Fetch driver vehicle type
   useEffect(() => {
@@ -299,6 +344,11 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         });
       }
 
+      // Disable nav mode if user pans the map manually (Google Maps UX)
+      map.on("dragstart", () => {
+        setNavMode(false);
+      });
+
       mapInstanceRef.current = map;
 
       // Pulse CSS
@@ -326,11 +376,15 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     };
   }, [delivery.pickup_lat, delivery.pickup_lng, delivery.dropoff_lat, delivery.dropoff_lng, driverVehicle, currentStep, waypoints, addingWaypoint]);
 
-  // Update driver marker position in real time
+  // Update driver marker position in real time + auto-pan in nav mode
   useEffect(() => {
     if (!driverMarkerRef.current) return;
     driverMarkerRef.current.setLatLng([livePos[0], livePos[1]]);
-  }, [livePos]);
+    if (navMode && mapInstanceRef.current) {
+      // Smoothly pan the map to follow the driver (Google Maps style)
+      mapInstanceRef.current.panTo([livePos[0], livePos[1]], { animate: true, duration: 0.8 });
+    }
+  }, [livePos, navMode]);
 
   // Refresh route periodically when moving
   useEffect(() => {
@@ -462,13 +516,45 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
 
         {/* Map control buttons */}
         <div className="absolute right-3 bottom-4 z-[10] flex flex-col gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className={`w-11 h-11 rounded-full backdrop-blur shadow-md border-0 ${navMode ? "bg-primary text-primary-foreground" : "bg-background/90"}`}
+            onClick={() => {
+              setNavMode((v) => {
+                const next = !v;
+                if (next && mapInstanceRef.current) {
+                  mapInstanceRef.current.flyTo([livePos[0], livePos[1]], 17, { duration: 0.8 });
+                }
+                toast({ title: next ? "Mode navigation activé" : "Mode navigation désactivé", description: next ? "La carte suit votre position" : "Vue libre" });
+                return next;
+              });
+            }}
+            title={navMode ? "Désactiver le suivi auto" : "Activer le suivi auto"}
+          >
+            <Compass className={`w-5 h-5 ${navMode ? "" : "text-primary"}`} />
+          </Button>
           <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={centerOnDriver} title="Ma position">
             <Locate className="w-5 h-5 text-primary" />
           </Button>
-          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={fitAllBounds} title="Voir tout">
+          <Button variant="outline" size="icon" className="w-10 h-10 rounded-full bg-background/90 backdrop-blur shadow-md border-0" onClick={() => { setNavMode(false); fitAllBounds(); }} title="Voir tout">
             <Layers className="w-5 h-5" />
           </Button>
         </div>
+
+        {/* GPS status banner */}
+        {gpsError && (
+          <div className="absolute top-16 left-3 right-3 z-[11] bg-amber-500/95 text-white text-[11px] font-medium rounded-xl px-3 py-2 shadow-md flex items-center gap-2">
+            <Crosshair className="w-4 h-4 flex-shrink-0" />
+            <span>{gpsError}</span>
+          </div>
+        )}
+        {!gpsError && gpsAccuracy != null && (
+          <div className="absolute bottom-4 left-3 z-[10] bg-background/90 backdrop-blur rounded-full px-3 py-1 shadow-md text-[10px] font-medium flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${gpsAccuracy < 20 ? "bg-emerald-500" : gpsAccuracy < 50 ? "bg-amber-500" : "bg-red-500"} animate-pulse`} />
+            GPS ±{Math.round(gpsAccuracy)}m
+          </div>
+        )}
 
         {/* Route info pill */}
         {routeInfo && (
