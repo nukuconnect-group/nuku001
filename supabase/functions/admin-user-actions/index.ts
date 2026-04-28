@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 interface ActionPayload {
-  action: "send_password_reset" | "set_password" | "ban" | "unban" | "update_profile";
+  action: "send_password_reset" | "set_password" | "ban" | "unban" | "update_profile" | "resend_confirmation_email" | "send_magic_link";
   target_user_id: string;
   // Optional fields based on action
   new_password?: string;
