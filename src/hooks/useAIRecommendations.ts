@@ -18,11 +18,26 @@ export function useAIRecommendations(role: "buyer" | "producer", userId?: string
   return useQuery({
     queryKey: ["ai-recommendations", role, userId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("ai-recommendations", {
-        body: { user_id: userId, role, profile_id: profileId, location },
-      });
-      if (error) throw error;
-      return data as { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
+      const emptyBuyer: BuyerRecommendations = { recommended_products: [], similar_products: [], nearby_suppliers: [], recommended_formations: [] };
+      const emptySupplier: SupplierRecommendations = { potential_clients: [], trending_products: [], ai_suggestions: [] };
+      const fallback = { recommendations: role === "buyer" ? emptyBuyer : emptySupplier, context: {} };
+      try {
+        const { data, error } = await supabase.functions.invoke("ai-recommendations", {
+          body: { user_id: userId, role, profile_id: profileId, location },
+        });
+        if (error) {
+          console.warn("[ai-recommendations] unavailable, using fallback:", error.message);
+          return fallback;
+        }
+        if (data?.error) {
+          console.warn("[ai-recommendations] returned error:", data.error);
+          return fallback;
+        }
+        return data as { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
+      } catch (e) {
+        console.warn("[ai-recommendations] exception, using fallback:", e);
+        return fallback;
+      }
     },
     enabled: !!userId && !!profileId,
     staleTime: 1000 * 60 * 15,
