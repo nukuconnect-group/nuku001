@@ -167,7 +167,27 @@ const AdminDashboard = () => {
     };
 
     load();
-    return () => { isMounted = false; };
+
+    // Realtime: refresh analytics & orders when new visits/orders arrive
+    const liveChannel = supabase
+      .channel("admin-live-feed")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "analytics_visits" }, () => {
+        // Debounced refetch of analytics so country counts stay live
+        supabase.rpc("get_admin_analytics").then(({ data }) => { if (isMounted && data) setAnalytics(data); });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        Promise.all([
+          supabase.rpc("get_admin_orders"),
+          supabase.rpc("get_admin_stats"),
+        ]).then(([oRes, sRes]) => {
+          if (!isMounted) return;
+          if (oRes.data) setOrders(oRes.data);
+          if (sRes.data) setStats(sRes.data);
+        });
+      })
+      .subscribe();
+
+    return () => { isMounted = false; supabase.removeChannel(liveChannel); };
   }, [navigate, toast]);
 
   // Load chat messages when conversation selected

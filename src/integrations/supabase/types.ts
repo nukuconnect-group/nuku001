@@ -1280,10 +1280,12 @@ export type Database = {
         Row: {
           buyer_id: string
           created_at: string
+          delivery_method: string
           id: string
           notes: string | null
           product_id: string
           quantity: number
+          seller_confirmed_at: string | null
           seller_id: string
           status: string
           total_price: number
@@ -1292,10 +1294,12 @@ export type Database = {
         Insert: {
           buyer_id: string
           created_at?: string
+          delivery_method?: string
           id?: string
           notes?: string | null
           product_id: string
           quantity: number
+          seller_confirmed_at?: string | null
           seller_id: string
           status?: string
           total_price: number
@@ -1304,10 +1308,12 @@ export type Database = {
         Update: {
           buyer_id?: string
           created_at?: string
+          delivery_method?: string
           id?: string
           notes?: string | null
           product_id?: string
           quantity?: number
+          seller_confirmed_at?: string | null
           seller_id?: string
           status?: string
           total_price?: number

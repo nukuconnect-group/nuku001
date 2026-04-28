@@ -35,6 +35,7 @@ import ProductQuotaCard from "@/components/dashboard/ProductQuotaCard";
 import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
+import SellerOrdersToValidate from "@/components/dashboard/SellerOrdersToValidate";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
@@ -294,6 +295,13 @@ const Dashboard = () => {
             <div className="lg:col-span-2"><SalesAreaChart orders={orders} /></div>
             <CategoryPieInfo orders={orders} />
           </div>
+
+          {/* Seller orders awaiting validation (real-time) */}
+          {profile?.id && (
+            <div className="mb-4 sm:mb-6">
+              <SellerOrdersToValidate sellerProfileId={profile.id} />
+            </div>
+          )}
 
           {/* Quick actions row — Independent icon cards */}
           <h3 className="font-heading text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
