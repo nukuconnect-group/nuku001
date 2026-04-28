@@ -63,7 +63,7 @@ const HeaderPromoSlider = () => {
               <span className="text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
                 {slide.title}
               </span>
-              <span className="text-[8px] sm:text-[9px] text-primary-foreground/60 hidden sm:inline font-medium tracking-wide">
+              <span className="text-[8px] sm:text-[9px] text-primary-foreground/60 hidden font-medium tracking-wide">
                 — {slide.subtitle}
               </span>
               <span className="text-[8px] sm:text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
