@@ -20,12 +20,16 @@ interface ProductCardProps {
   product: Product;
   viewMode?: "grid" | "list";
   onCompare?: (product: Product) => void;
+  /** Hide the supplier/producer row. Implied by `minimal`. */
   hideProducer?: boolean;
   isBoosted?: boolean;
+  /** Ultra-minimal layout for sponsored cards: only image, price (+ promo), title, location. Implies hideProducer. */
   minimal?: boolean;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = false, isBoosted = false, minimal = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hideProducerProp = false, isBoosted = false, minimal = false }: ProductCardProps) => {
+  // Refactor: minimal always hides producer to avoid redundant props & accidental display
+  const hideProducer = hideProducerProp || minimal;
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -152,20 +156,16 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
             onError={() => setImgError(true)}
           />
           
-          {/* Top badges */}
+          {/* Top-left badges (sale / sponsored / new / status) */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
-            {/* Vente badge for supplier products */}
-            <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
-              VENTE
-            </Badge>
+            {!minimal && (
+              <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
+                VENTE
+              </Badge>
+            )}
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
                 <Rocket className="w-2.5 h-2.5" />Sponsorisé
-              </Badge>
-            )}
-            {computedDiscount > 0 && (
-              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                -{computedDiscount}%
               </Badge>
             )}
             {isNew && (
