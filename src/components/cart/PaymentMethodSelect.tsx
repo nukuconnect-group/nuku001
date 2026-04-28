@@ -184,16 +184,6 @@ const PaymentMethodSelect = ({
             </div>
           </div>
 
-          {/* Réseaux supportés — affichage informatif aligné */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
-              <img src={moovFloozLogo} alt="Moov Money / Flooz" className="max-h-10 max-w-full object-contain" />
-            </div>
-            <div className="rounded-xl bg-background border border-border p-2.5 flex items-center justify-center h-16">
-              <img src={mixxYasLogo} alt="Mixx by Yas" className="max-h-10 max-w-full object-contain" />
-            </div>
-          </div>
-
           {/* Sélection manuelle du réseau (cliquable) */}
           <div>
             <Label className="text-xs mb-1.5 block">Choisir votre opérateur</Label>
