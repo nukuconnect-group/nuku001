@@ -780,7 +780,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     </Sheet>
 
     <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto overscroll-contain">
         <DialogHeader>
           <DialogTitle>Partager NUKUCONNECT</DialogTitle>
           <DialogDescription>Choisissez un réseau, le partage du téléphone ou un QR code.</DialogDescription>
