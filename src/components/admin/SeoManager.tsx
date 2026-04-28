@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket, AlertTriangle, CheckCircle2, FileEdit } from "lucide-react";
+import { Loader2, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket, AlertTriangle, CheckCircle2, FileEdit, CalendarClock, GitCompare } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
+import { normalizeSeoSlug } from "@/lib/seoSlug";
 
 interface SeoRow {
   id: string;
@@ -30,7 +30,18 @@ interface SeoRow {
   no_index: boolean;
   is_draft?: boolean;
   published_at?: string | null;
+  scheduled_publish_at?: string | null;
 }
+
+// Fields that matter for the diff view
+const DIFFABLE: Array<{ key: keyof SeoRow; label: string }> = [
+  { key: "title", label: "Titre" },
+  { key: "description", label: "Description" },
+  { key: "keywords", label: "Mots-clés" },
+  { key: "og_image_url", label: "Image OG" },
+  { key: "canonical_path", label: "URL canonique" },
+  { key: "no_index", label: "Désindexer" },
+];
 
 const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 
@@ -48,6 +59,9 @@ const SeoManager = () => {
   const [aiBusy, setAiBusy] = useState<"autofill" | "image" | null>(null);
   const [uploading, setUploading] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState<string>(""); // datetime-local string
+  // Snapshot of the last-loaded values, used for the diff view
+  const [original, setOriginal] = useState<SeoRow | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -60,10 +74,13 @@ const SeoManager = () => {
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      setRows((data as SeoRow[]) || []);
+      const list = (data as SeoRow[]) || [];
+      setRows(list);
       setSelected(prev => {
-        if (!prev) return (data?.[0] as SeoRow) || null;
-        return (data as SeoRow[])?.find(r => r.id === prev.id) || prev;
+        const next = prev ? list.find(r => r.id === prev.id) || list[0] : list[0];
+        // Refresh the original snapshot whenever we reload from the server
+        setOriginal(next ? { ...next } : null);
+        return next || null;
       });
     }
     setLoading(false);
@@ -101,6 +118,9 @@ const SeoManager = () => {
   const persist = async (extras: Partial<SeoRow> = {}) => {
     if (!selected) return false;
     setSaving(selected.id);
+    const cleanCanonical = selected.canonical_path
+      ? normalizeSeoSlug(selected.canonical_path)
+      : selected.canonical_path;
     const { error } = await (supabase as any)
       .from("seo_settings")
       .update({
@@ -108,44 +128,68 @@ const SeoManager = () => {
         description: selected.description,
         keywords: selected.keywords,
         og_image_url: selected.og_image_url,
-        canonical_path: selected.canonical_path,
+        canonical_path: cleanCanonical,
         no_index: selected.no_index,
         ...extras,
       })
       .eq("id", selected.id);
     setSaving(null);
     if (error) {
-      toast({ title: "Erreur d'enregistrement", description: error.message, variant: "destructive" });
+      const msg = error.message || "Erreur";
+      let friendly = msg;
+      if (msg.includes("unknown_route")) friendly = "Cette route n'existe pas dans l'application. Enregistrez en brouillon ou ajoutez-la à la liste autorisée.";
+      else if (msg.includes("invalid_slug")) friendly = "Le slug n'est pas valide.";
+      toast({ title: "Erreur d'enregistrement", description: friendly, variant: "destructive" });
       return false;
     }
     return true;
   };
 
-  // Save as draft (does not affect visitors)
+  // Save as draft (does not affect visitors). Cancels any pending schedule.
   const saveDraft = async () => {
-    const ok = await persist({ is_draft: true });
+    const ok = await persist({ is_draft: true, scheduled_publish_at: null } as any);
     if (ok) {
       toast({ title: "Brouillon enregistré", description: "Aucun changement public. Publiez quand vous êtes prêt." });
       load();
     }
   };
 
-  // Publish (validates first, requires confirmation, invalidates cache)
+  // Publish immediately
   const doPublish = async () => {
     if (!selected) return;
     if (!routeValidation.ok) {
       toast({ title: "Publication bloquée", description: routeValidation.message, variant: "destructive" });
       return;
     }
-    const ok = await persist({ is_draft: false, published_at: new Date().toISOString() } as any);
+    const ok = await persist({ is_draft: false, published_at: new Date().toISOString(), scheduled_publish_at: null } as any);
     if (!ok) return;
     clearSeoCache();
     toast({ title: "Publié", description: `${selected.route} • cache invalidé.` });
     load();
   };
 
+  // Schedule publication for later (kept as draft until time arrives)
+  const doSchedule = async () => {
+    if (!selected || !scheduleAt) return;
+    if (!routeValidation.ok) {
+      toast({ title: "Planification bloquée", description: routeValidation.message, variant: "destructive" });
+      return;
+    }
+    const iso = new Date(scheduleAt).toISOString();
+    if (new Date(iso).getTime() <= Date.now()) {
+      toast({ title: "Date invalide", description: "Choisissez une date dans le futur.", variant: "destructive" });
+      return;
+    }
+    const ok = await persist({ is_draft: true, scheduled_publish_at: iso } as any);
+    if (ok) {
+      toast({ title: "Publication planifiée", description: `Sera publié automatiquement le ${new Date(iso).toLocaleString()}.` });
+      setScheduleAt("");
+      load();
+    }
+  };
+
   const addRoute = async () => {
-    const route = newRoute.trim();
+    const route = normalizeSeoSlug(newRoute);
     if (!newRouteValidation.ok) {
       toast({ title: "Route invalide", description: newRouteValidation.message, variant: "destructive" });
       return;
@@ -288,7 +332,7 @@ const SeoManager = () => {
           {filtered.map(r => (
             <button
               key={r.id}
-              onClick={() => setSelected(r)}
+              onClick={() => { setSelected(r); setOriginal({ ...r }); setScheduleAt(""); }}
               className={`w-full text-left px-3 py-2 rounded-md text-xs transition-colors ${
                 selected?.id === r.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
               }`}
@@ -401,6 +445,34 @@ const SeoManager = () => {
               </div>
             </div>
 
+            {/* Scheduled publish info */}
+            {selected.scheduled_publish_at && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900 p-3 flex items-center gap-2 text-xs">
+                <CalendarClock className="w-4 h-4 text-blue-600" />
+                <span>Publication planifiée : <strong>{new Date(selected.scheduled_publish_at).toLocaleString()}</strong></span>
+              </div>
+            )}
+
+            {/* Schedule input */}
+            <div className="rounded-md border p-3 space-y-2">
+              <Label className="text-xs flex items-center gap-1.5"><CalendarClock className="w-3.5 h-3.5" /> Planifier une publication</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={e => setScheduleAt(e.target.value)}
+                  min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                  className="h-9"
+                />
+                <Button size="sm" variant="outline" onClick={doSchedule} disabled={!scheduleAt || !routeValidation.ok || saving === selected.id}>
+                  <CalendarClock className="w-4 h-4" /> Planifier
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Reste en brouillon jusqu'à la date choisie, puis devient public automatiquement.
+              </p>
+            </div>
+
             <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={aiAutofill} disabled={aiBusy === "autofill"}>
                 {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -412,29 +484,66 @@ const SeoManager = () => {
               </Button>
               <Button size="sm" onClick={() => setConfirmPublish(true)} disabled={publishDisabled}>
                 <Rocket className="w-4 h-4" />
-                Publier
+                Publier maintenant
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <AlertDialog open={confirmPublish} onOpenChange={setConfirmPublish}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Publier les changements SEO ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Les nouvelles balises seront servies aux visiteurs et aux crawlers (Google, Facebook, Twitter) au prochain chargement.
-              Une copie est conservée dans l'historique pour pouvoir revenir en arrière.
-              {selected && <><br /><br /><span className="font-mono text-xs">{selected.route}</span></>}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setConfirmPublish(false); doPublish(); }}>Publier</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Diff + confirmation dialog */}
+      <Dialog open={confirmPublish} onOpenChange={setConfirmPublish}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><GitCompare className="w-4 h-4" /> Comparer & publier</DialogTitle>
+            <DialogDescription>
+              Vérifiez les changements avant qu'ils soient servis aux visiteurs et aux crawlers.
+              {selected && <><br /><span className="font-mono text-[11px]">{selected.route}</span></>}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selected && (
+            <div className="space-y-2 text-xs">
+              {(() => {
+                const changes = DIFFABLE.filter(({ key }) => {
+                  const a = (original?.[key] ?? "") as any;
+                  const b = (selected[key] ?? "") as any;
+                  return String(a) !== String(b);
+                });
+                if (changes.length === 0) {
+                  return <p className="text-muted-foreground italic">Aucun changement par rapport à la version actuelle.</p>;
+                }
+                return changes.map(({ key, label }) => {
+                  const oldVal = String(original?.[key] ?? "");
+                  const newVal = String(selected[key] ?? "");
+                  return (
+                    <div key={String(key)} className="border rounded-md overflow-hidden">
+                      <div className="px-3 py-1.5 bg-muted/50 font-semibold">{label}</div>
+                      <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x">
+                        <div className="p-2 bg-red-50 dark:bg-red-950/20">
+                          <p className="text-[10px] uppercase text-red-700 dark:text-red-400 mb-1">Actuel</p>
+                          <p className="break-all whitespace-pre-wrap font-mono">{oldVal || <span className="italic text-muted-foreground">vide</span>}</p>
+                        </div>
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20">
+                          <p className="text-[10px] uppercase text-emerald-700 dark:text-emerald-400 mb-1">Nouveau</p>
+                          <p className="break-all whitespace-pre-wrap font-mono">{newVal || <span className="italic text-muted-foreground">vide</span>}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmPublish(false)}>Annuler</Button>
+            <Button onClick={() => { setConfirmPublish(false); doPublish(); }}>
+              <Rocket className="w-4 h-4" /> Publier maintenant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

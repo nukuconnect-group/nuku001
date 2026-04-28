@@ -1893,6 +1893,24 @@ export type Database = {
           },
         ]
       }
+      seo_allowed_routes: {
+        Row: {
+          created_at: string
+          description: string | null
+          route: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          route: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          route?: string
+        }
+        Relationships: []
+      }
       seo_settings: {
         Row: {
           canonical_path: string | null
@@ -1908,6 +1926,7 @@ export type Database = {
           og_image_url: string | null
           published_at: string | null
           route: string
+          scheduled_publish_at: string | null
           title: string | null
           updated_at: string
           updated_by: string | null
@@ -1926,6 +1945,7 @@ export type Database = {
           og_image_url?: string | null
           published_at?: string | null
           route: string
+          scheduled_publish_at?: string | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -1944,6 +1964,7 @@ export type Database = {
           og_image_url?: string | null
           published_at?: string | null
           route?: string
+          scheduled_publish_at?: string | null
           title?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -2710,6 +2731,8 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_seo_slug: { Args: { input: string }; Returns: string }
+      publish_due_seo_settings: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
