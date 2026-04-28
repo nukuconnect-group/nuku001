@@ -745,6 +745,25 @@ const Auth = () => {
                       <SelectTrigger><SelectValue placeholder="Choisir un pays" /></SelectTrigger>
                       <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
+
+                    {/* Optionnel : nom d'entreprise pour les acheteurs (B2B) */}
+                    <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground flex items-start gap-2">
+                      <Building className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>
+                        <strong className="text-foreground">Optionnel</strong> — Si vous achetez au nom d'une entreprise,
+                        renseignez-la ci-dessous. Elle sera affichée à la place de votre nom personnel.
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Nom de l'entreprise (optionnel)"
+                        value={buyerCompany}
+                        onChange={(e) => setBuyerCompany(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
                 )}
 
