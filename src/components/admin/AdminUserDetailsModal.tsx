@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, Phone, MapPin, Calendar, ShieldCheck, Ban, KeyRound, Send, Save, Copy } from "lucide-react";
+import { Loader2, Mail, Phone, MapPin, Calendar, ShieldCheck, Ban, KeyRound, Send, Save, Copy, MailCheck, Sparkles } from "lucide-react";
 
 interface AdminUser {
   user_id: string;
