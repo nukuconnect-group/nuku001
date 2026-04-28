@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
+import { paymentMethods, validateMobileMoneyPhone } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
