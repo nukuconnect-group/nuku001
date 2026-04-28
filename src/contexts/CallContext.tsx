@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback, Re
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "@/hooks/use-toast";
+import { logDiag } from "@/lib/diagnostics";
 
 /**
  * Call signaling via Supabase Realtime broadcast.
@@ -303,6 +304,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   // ----- incoming signal handler -----
   const handleSignal = useCallback(async (payload: any) => {
     if (!user?.id || payload?.from === user.id) return;
+    logDiag("call", `signal:${payload?.type}`, { from: payload?.from, callId: payload?.callId });
 
     if (payload.type === "offer") {
       // Incoming call
@@ -363,7 +365,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
     } else if (payload.type === "decline") {
       finalizeCall("declined");
     }
-  }, [user?.id, profile?.id, sendSignal, playRingtone, stopRingtone, startTimer, cleanupCall, finalizeCall]);
+  }, [
+    user?.id,
+    profile?.id,
+    sendSignal,
+    playRingtone,
+    stopRingtone,
+    startTimer,
+    cleanupCall,
+    finalizeCall,
+    startIncomingAlerts,
+  ]);
 
   // Subscribe to my call channel
   useEffect(() => {
