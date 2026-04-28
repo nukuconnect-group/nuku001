@@ -31,8 +31,9 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
@@ -498,56 +499,51 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
                 </Link>
 
-                {/* Apparence — collapsible: user clicks first, then chooses */}
-                <div className="border-b border-border/20">
-                  <button
-                    onClick={() => setAppearanceOpen((v) => !v)}
-                    className="flex items-center gap-3.5 px-4 py-3.5 w-full text-left hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
-                      {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : theme === "light" ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Monitor className="w-4 h-4 text-muted-foreground" />}
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-[15px] font-medium tracking-tight block">Apparence</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {theme === "dark" ? "Sombre" : theme === "light" ? "Clair" : "Auto (système)"}
-                      </span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-muted-foreground/40 flex-shrink-0 transition-transform ${appearanceOpen ? "rotate-90" : ""}`} />
-                  </button>
-
-                  {appearanceOpen && (
-                    <div className="px-4 pb-3 -mt-1 space-y-1.5">
-                      {([
-                        { value: "light", label: "Clair", desc: "Fond clair en permanence", Icon: Sun },
-                        { value: "dark", label: "Sombre", desc: "Fond sombre en permanence", Icon: Moon },
-                        { value: "system", label: "Auto", desc: "Suit le réglage du système", Icon: Monitor },
-                      ] as { value: ThemeMode; label: string; desc: string; Icon: typeof Sun }[]).map(({ value, label, desc, Icon }) => {
-                        const active = theme === value;
-                        return (
-                          <button
-                            key={value}
-                            onClick={() => setTheme(value)}
-                            className={`flex items-center gap-3 w-full p-2.5 rounded-lg border transition-colors text-left ${
-                              active
-                                ? "border-primary bg-primary/10"
-                                : "border-border bg-background hover:bg-muted"
-                            }`}
-                          >
-                            <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 ${active ? "bg-primary/20" : "bg-muted/60"}`}>
-                              <Icon className={`w-4 h-4 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className={`text-[14px] font-semibold block ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
-                              <span className="text-[11px] text-muted-foreground">{desc}</span>
-                            </div>
-                            {active && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                {/* Thème sombre — simple toggle (like native app) */}
+                <div className="flex items-center gap-3.5 px-4 py-3.5 border-b border-border/20">
+                  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center flex-shrink-0">
+                    {theme === "dark" ? (
+                      <Moon className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <Sun className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Thème sombre</span>
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                    aria-label="Activer le thème sombre"
+                  />
                 </div>
+
+                {/* Partager cette application */}
+                <button
+                  onClick={async () => {
+                    const shareData = {
+                      title: "NUKUCONNECT",
+                      text: "Découvre NUKUCONNECT, la marketplace agricole intelligente d'Afrique.",
+                      url: "https://nukuconnect.com",
+                    };
+                    try {
+                      if (navigator.share) {
+                        await navigator.share(shareData);
+                      } else {
+                        await navigator.clipboard.writeText(shareData.url);
+                        toast({ title: "Lien copié", description: "Le lien de l'application a été copié." });
+                      }
+                    } catch {
+                      // user cancelled — silent
+                    }
+                  }}
+                  className="flex items-center gap-3.5 px-4 py-3.5 text-foreground hover:bg-muted/50 transition-colors border-b border-border/20 w-full text-left"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Share2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="flex-1 text-[15px] font-medium tracking-tight">Partager cette application</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                </button>
+
               </div>
             </nav>
 
