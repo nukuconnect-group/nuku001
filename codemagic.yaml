@@ -1,0 +1,77 @@
+workflows:
+  android-release:
+    name: Nukuconnect Android Release (AAB)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      android_signing:
+        - nukuconnect_keystore
+      groups:
+        - google_play   # (optionnel) pour publication automatique sur Play Store
+      vars:
+        PACKAGE_NAME: "app.lovable.7cbf6140856746c7888328d929a2bdd4"
+      node: 20
+      java: 17
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Installer les dépendances npm
+        script: |
+          npm install
+
+      - name: Builder l'application web (Vite)
+        script: |
+          npm run build
+
+      - name: Préparer la plateforme Android (Capacitor)
+        script: |
+          # Retire le serveur de dev pour la prod (build offline embarqué)
+          node -e "
+            const fs = require('fs');
+            const f = 'capacitor.config.ts';
+            let c = fs.readFileSync(f, 'utf8');
+            c = c.replace(/server:\s*{[^}]*},?/s, '');
+            fs.writeFileSync(f, c);
+          "
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Configurer le numéro de version Android
+        script: |
+          cd android/app
+          # Incrémente automatiquement le versionCode à chaque build
+          BUILD_NUMBER=$(($(date +%s) / 60))
+          sed -i.bak "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" build.gradle
+          sed -i.bak "s/versionName \"[^\"]*\"/versionName \"1.0.$BUILD_NUMBER\"/" build.gradle
+
+      - name: Compiler l'AAB signé
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - VOTRE_EMAIL@example.com   # ⚠️ Remplacez par votre vraie adresse
+        notify:
+          success: true
+          failure: true
+
+      # ── Publication automatique sur Play Console (optionnel) ──
+      # Décommentez après avoir créé le compte de service Google Play
+      # et ajouté GCLOUD_SERVICE_ACCOUNT_CREDENTIALS dans le groupe "google_play"
+      #
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal       # internal | alpha | beta | production
+      #   submit_as_draft: true
