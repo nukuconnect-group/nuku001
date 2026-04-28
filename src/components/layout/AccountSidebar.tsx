@@ -31,7 +31,7 @@ import {
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check
 } from "lucide-react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
