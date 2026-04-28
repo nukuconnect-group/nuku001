@@ -9,16 +9,21 @@ import { Button } from "@/components/ui/button";
  * - >8s  : UI de récupération avec bouton "Réessayer"
  */
 const SmartLoader = () => {
-  const [phase, setPhase] = useState<"loading" | "slow" | "stuck">("loading");
+  const [phase, setPhase] = useState<"hidden" | "loading" | "slow" | "stuck">("hidden");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("slow"), 2500);
-    const t2 = setTimeout(() => setPhase("stuck"), 8000);
+    // Pas d'écran de chargement avant 350ms : navigation instantanée perçue
+    const t0 = setTimeout(() => setPhase("loading"), 350);
+    const t1 = setTimeout(() => setPhase("slow"), 3000);
+    const t2 = setTimeout(() => setPhase("stuck"), 9000);
     return () => {
+      clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
     };
   }, []);
+
+  if (phase === "hidden") return null;
 
   const handleRetry = () => {
     window.location.reload();
