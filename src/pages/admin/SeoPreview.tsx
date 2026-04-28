@@ -257,12 +257,12 @@ const SeoPreview = () => {
                 </div>
               )}
             </div>
-            <Button onClick={fetchRow} disabled={loading}>
+            <Button onClick={fetchRow} disabled={loading || !routeOk}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Charger
             </Button>
-            <Button variant="outline" asChild disabled={!known}>
-              <a href={route} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
+            <Button variant="outline" asChild disabled={!routeOk}>
+              <a href={normalizedRoute} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
             </Button>
           </div>
           {!slugShapeOk ? (
