@@ -33,12 +33,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import { useQueryClient } from "@tanstack/react-query";
+import QRCode from "qrcode";
 import { 
   User, Store, Mail, Lock, Eye, EyeOff, Loader2, Phone, MapPin, 
   Building, Briefcase, LogOut, Settings, ShoppingBag, LayoutDashboard,
   Crown, Heart, Shield, ChevronRight, MessageSquare, ShoppingCart,
   HelpCircle, Truck, GraduationCap, BookOpen, Globe, Ticket, Download, Smartphone, Headphones,
-  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin
+  Sun, Moon, Monitor, RotateCcw, FileText, Bell, Wallet, Users, Star, Check, Share2, Copy, MessageCircle, Facebook, Twitter, Send, Linkedin, QrCode
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -81,6 +82,8 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
