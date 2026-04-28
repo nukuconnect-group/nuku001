@@ -438,6 +438,31 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         imageUrl = urls[0] || null;
       }
 
+      // Upload source document (PDF/DOCX/etc) so learners can read it directly
+      let sourceDocumentUrl: string | null = null;
+      let sourceDocumentName: string | null = null;
+      if (aiSourceFile) {
+        try {
+          const ext = aiSourceFile.name.split(".").pop() || "pdf";
+          const path = `${authData.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("product-images")
+            .upload(path, aiSourceFile, { contentType: aiSourceFile.type || "application/pdf", upsert: false });
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+            sourceDocumentUrl = pub.publicUrl;
+            sourceDocumentName = aiSourceFile.name;
+          }
+        } catch (e) {
+          console.warn("source doc upload failed", e);
+        }
+      }
+
+      // Build a short summary from the extracted content (first 600 chars)
+      const summary = aiContent.trim().length > 50
+        ? aiContent.trim().slice(0, 600) + (aiContent.trim().length > 600 ? "…" : "")
+        : null;
+
       const { data: created, error } = await supabase.from("formations").insert({
         title: form.title,
         description: form.description,
@@ -450,6 +475,9 @@ const AddFormationModal = ({ open, onOpenChange, instructorName, onCreated }: Pr
         image_url: imageUrl,
         is_published: true,
         author_user_id: authData.user.id,
+        source_document_url: sourceDocumentUrl,
+        source_document_name: sourceDocumentName,
+        summary,
       } as any).select("id").single();
 
       if (error) throw error;

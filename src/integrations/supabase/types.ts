@@ -1003,7 +1003,10 @@ export type Database = {
           price: number | null
           rating: number | null
           slug: string | null
+          source_document_name: string | null
+          source_document_url: string | null
           students_count: number | null
+          summary: string | null
           title: string
           updated_at: string
         }
@@ -1023,7 +1026,10 @@ export type Database = {
           price?: number | null
           rating?: number | null
           slug?: string | null
+          source_document_name?: string | null
+          source_document_url?: string | null
           students_count?: number | null
+          summary?: string | null
           title: string
           updated_at?: string
         }
@@ -1043,7 +1049,10 @@ export type Database = {
           price?: number | null
           rating?: number | null
           slug?: string | null
+          source_document_name?: string | null
+          source_document_url?: string | null
           students_count?: number | null
+          summary?: string | null
           title?: string
           updated_at?: string
         }
