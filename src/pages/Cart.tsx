@@ -15,6 +15,8 @@ import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
+import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
 const BillingForm = lazy(() => import("@/components/cart/BillingForm"));
 const DeliveryZoneMap = lazy(() => import("@/components/cart/DeliveryZoneMap"));
