@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
-import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket } from "lucide-react";
+import { Loader2, Save, Plus, Search, Upload, Sparkles, Image as ImageIcon, Eye, Rocket, AlertTriangle, CheckCircle2, FileEdit } from "lucide-react";
 import { Link } from "react-router-dom";
+import { isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
 
 interface SeoRow {
   id: string;
@@ -22,9 +28,14 @@ interface SeoRow {
   og_image_sizes?: Record<string, string> | null;
   canonical_path: string | null;
   no_index: boolean;
+  is_draft?: boolean;
+  published_at?: string | null;
 }
 
 const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
+
+// Slug validation: allow / followed by [a-z0-9-/] segments, no spaces, no caps
+const SLUG_RE = /^\/[a-z0-9\-\/]*$/;
 
 const SeoManager = () => {
   const { toast } = useToast();
@@ -36,6 +47,7 @@ const SeoManager = () => {
   const [newRoute, setNewRoute] = useState("");
   const [aiBusy, setAiBusy] = useState<"autofill" | "image" | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -59,8 +71,35 @@ const SeoManager = () => {
 
   useEffect(() => { load(); }, []);
 
-  const save = async () => {
-    if (!selected) return null;
+  // Validation of currently-selected route + slug
+  const routeValidation = useMemo(() => {
+    if (!selected) return { ok: true, message: "" };
+    if (selected.is_global || selected.route === "__global__") return { ok: true, message: "Route globale" };
+    if (!SLUG_RE.test(selected.route)) {
+      return { ok: false, message: "Slug invalide : minuscules, chiffres, tirets et / uniquement (ex: /ma-page)" };
+    }
+    if (!isKnownRoute(selected.route)) {
+      return { ok: false, message: "Cette route n'existe pas dans l'application." };
+    }
+    return { ok: true, message: "Route valide" };
+  }, [selected]);
+
+  const newRouteValidation = useMemo(() => {
+    const r = newRoute.trim();
+    if (!r) return { ok: false, message: "" };
+    if (!SLUG_RE.test(r)) return { ok: false, message: "Slug invalide" };
+    if (!isKnownRoute(r)) return { ok: false, message: "Route inconnue" };
+    if (rows.some(x => x.route === r)) return { ok: false, message: "Déjà existante" };
+    return { ok: true, message: "Route valide" };
+  }, [newRoute, rows]);
+
+  const newRouteSuggest = useMemo(
+    () => (newRoute && !newRouteValidation.ok ? suggestRoutes(newRoute, 5) : []),
+    [newRoute, newRouteValidation.ok]
+  );
+
+  const persist = async (extras: Partial<SeoRow> = {}) => {
+    if (!selected) return false;
     setSaving(selected.id);
     const { error } = await (supabase as any)
       .from("seo_settings")
@@ -71,6 +110,7 @@ const SeoManager = () => {
         og_image_url: selected.og_image_url,
         canonical_path: selected.canonical_path,
         no_index: selected.no_index,
+        ...extras,
       })
       .eq("id", selected.id);
     setSaving(null);
@@ -78,33 +118,41 @@ const SeoManager = () => {
       toast({ title: "Erreur d'enregistrement", description: error.message, variant: "destructive" });
       return false;
     }
-    clearSeoCache(selected.route);
-    toast({ title: "SEO enregistré", description: `Mise à jour de ${selected.route}` });
-    load();
     return true;
   };
 
-  const publish = async () => {
+  // Save as draft (does not affect visitors)
+  const saveDraft = async () => {
+    const ok = await persist({ is_draft: true });
+    if (ok) {
+      toast({ title: "Brouillon enregistré", description: "Aucun changement public. Publiez quand vous êtes prêt." });
+      load();
+    }
+  };
+
+  // Publish (validates first, requires confirmation, invalidates cache)
+  const doPublish = async () => {
     if (!selected) return;
-    const ok = await save();
+    if (!routeValidation.ok) {
+      toast({ title: "Publication bloquée", description: routeValidation.message, variant: "destructive" });
+      return;
+    }
+    const ok = await persist({ is_draft: false, published_at: new Date().toISOString() } as any);
     if (!ok) return;
-    // Clear local cache for ALL routes so any open tab refetches
     clearSeoCache();
-    toast({
-      title: "Publié sur la route",
-      description: `${selected.route} • Cache SEO invalidé. Les visiteurs verront les nouvelles balises au prochain chargement.`,
-    });
+    toast({ title: "Publié", description: `${selected.route} • cache invalidé.` });
+    load();
   };
 
   const addRoute = async () => {
     const route = newRoute.trim();
-    if (!route.startsWith("/")) {
-      toast({ title: "Format invalide", description: "La route doit commencer par /", variant: "destructive" });
+    if (!newRouteValidation.ok) {
+      toast({ title: "Route invalide", description: newRouteValidation.message, variant: "destructive" });
       return;
     }
     const { data, error } = await (supabase as any)
       .from("seo_settings")
-      .insert({ route, title: route, description: "" })
+      .insert({ route, title: route, description: "", is_draft: true })
       .select()
       .single();
     if (error) {
@@ -116,7 +164,6 @@ const SeoManager = () => {
     }
   };
 
-  // AI autofill via edge function
   const aiAutofill = async () => {
     if (!selected) return;
     setAiBusy("autofill");
@@ -140,7 +187,6 @@ const SeoManager = () => {
     toast({ title: "Champs remplis par l'IA", description: "Vérifiez puis enregistrez." });
   };
 
-  // AI generate OG image via edge function (saves to bucket + DB)
   const aiGenerateOg = async () => {
     if (!selected) return;
     setAiBusy("image");
@@ -155,11 +201,10 @@ const SeoManager = () => {
     setSelected({ ...selected, og_image_url: data.og_image_url, og_image_sizes: data.og_image_sizes || selected.og_image_sizes });
     clearSeoCache(selected.route);
     const sizesCount = data.og_image_sizes ? Object.keys(data.og_image_sizes).length : 1;
-    toast({ title: "Image OG générée", description: `${sizesCount} taille(s) sauvegardée(s) (1200×630${sizesCount > 1 ? " + 640×640" : ""}).` });
+    toast({ title: "Image OG générée", description: `${sizesCount} taille(s) sauvegardée(s).` });
     load();
   };
 
-  // Direct upload of image to bucket
   const handleUpload = async (file: File) => {
     if (!selected) return;
     setUploading(true);
@@ -167,8 +212,7 @@ const SeoManager = () => {
     const ext = file.name.split(".").pop() || "png";
     const path = `${safeRoute}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("seo-og-images").upload(path, file, {
-      contentType: file.type,
-      upsert: true,
+      contentType: file.type, upsert: true,
     });
     if (upErr) {
       setUploading(false);
@@ -177,9 +221,7 @@ const SeoManager = () => {
     }
     const { data: pub } = supabase.storage.from("seo-og-images").getPublicUrl(path);
     const { error: dbErr } = await (supabase as any)
-      .from("seo_settings")
-      .update({ og_image_url: pub.publicUrl })
-      .eq("id", selected.id);
+      .from("seo_settings").update({ og_image_url: pub.publicUrl }).eq("id", selected.id);
     setUploading(false);
     if (dbErr) {
       toast({ title: "Image envoyée mais non liée", description: dbErr.message, variant: "destructive" });
@@ -187,7 +229,7 @@ const SeoManager = () => {
     }
     setSelected({ ...selected, og_image_url: pub.publicUrl });
     clearSeoCache(selected.route);
-    toast({ title: "Image OG mise à jour", description: "Sauvegardée dans le bucket." });
+    toast({ title: "Image OG mise à jour" });
     load();
   };
 
@@ -199,6 +241,8 @@ const SeoManager = () => {
   if (loading) {
     return <div className="flex items-center justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>;
   }
+
+  const publishDisabled = !routeValidation.ok || saving === selected?.id;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -212,9 +256,29 @@ const SeoManager = () => {
               <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher" className="pl-8 h-9" />
             </div>
           </div>
-          <div className="flex gap-2 pt-2">
-            <Input value={newRoute} onChange={e => setNewRoute(e.target.value)} placeholder="/nouvelle-route" className="h-9" />
-            <Button size="sm" onClick={addRoute}><Plus className="w-4 h-4" /></Button>
+          <div className="space-y-1 pt-2">
+            <div className="flex gap-2">
+              <Input
+                value={newRoute}
+                onChange={e => setNewRoute(e.target.value)}
+                placeholder="/nouvelle-route"
+                className="h-9"
+              />
+              <Button size="sm" onClick={addRoute} disabled={!newRouteValidation.ok}><Plus className="w-4 h-4" /></Button>
+            </div>
+            {newRoute && (
+              <p className={`text-[10px] flex items-center gap-1 ${newRouteValidation.ok ? "text-emerald-600" : "text-amber-600"}`}>
+                {newRouteValidation.ok ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                {newRouteValidation.message || "Vérification..."}
+              </p>
+            )}
+            {newRouteSuggest.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {newRouteSuggest.map(s => (
+                  <button key={s} onClick={() => setNewRoute(s)} className="text-[10px] px-1.5 py-0.5 rounded bg-muted hover:bg-muted/80">{s}</button>
+                ))}
+              </div>
+            )}
           </div>
           <Link to="/admin/seo-preview" className="text-[11px] text-primary hover:underline inline-flex items-center gap-1 pt-1">
             <Eye className="w-3 h-3" /> Page de test SEO
@@ -229,7 +293,10 @@ const SeoManager = () => {
                 selected?.id === r.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
               }`}
             >
-              <div className="font-medium truncate">{r.is_global ? "🌐 Global (défaut)" : r.route}</div>
+              <div className="font-medium truncate flex items-center gap-1.5">
+                <span className="truncate">{r.is_global ? "🌐 Global (défaut)" : r.route}</span>
+                {r.is_draft && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">brouillon</Badge>}
+              </div>
               {r.title && <div className="text-muted-foreground truncate text-[11px]">{r.title}</div>}
             </button>
           ))}
@@ -240,8 +307,30 @@ const SeoManager = () => {
       {selected && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">{selected.is_global ? "Paramètres SEO globaux" : `Édition : ${selected.route}`}</CardTitle>
-            <CardDescription>Ces valeurs surchargent le SEO codé en dur de la page.</CardDescription>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  {selected.is_global ? "Paramètres SEO globaux" : `Édition : ${selected.route}`}
+                  {selected.is_draft && <Badge variant="secondary">Brouillon</Badge>}
+                </CardTitle>
+                <CardDescription>
+                  {selected.published_at
+                    ? `Dernière publication : ${new Date(selected.published_at).toLocaleString()}`
+                    : "Jamais publié"}
+                </CardDescription>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/admin/seo-preview?route=${encodeURIComponent(selected.route)}`}>
+                  <Eye className="w-4 h-4" /> Aperçu & historique
+                </Link>
+              </Button>
+            </div>
+            {!routeValidation.ok && !selected.is_global && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{routeValidation.message} La publication est désactivée.</span>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
@@ -261,20 +350,15 @@ const SeoManager = () => {
                 <Label className="text-xs">Image OG (1200x630)</Label>
                 <Input value={selected.og_image_url || ""} onChange={e => setSelected({ ...selected, og_image_url: e.target.value })} placeholder="https://..." />
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                  />
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                    onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} />
                   <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
                     {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                     Uploader
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={aiGenerateOg} disabled={aiBusy === "image"}>
                     {aiBusy === "image" ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImageIcon className="w-3 h-3" />}
-                    Générer l'image OG (IA)
+                    Générer (IA)
                   </Button>
                 </div>
               </div>
@@ -320,20 +404,37 @@ const SeoManager = () => {
             <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={aiAutofill} disabled={aiBusy === "autofill"}>
                 {aiBusy === "autofill" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Remplir automatiquement (IA)
+                Remplir (IA)
               </Button>
-              <Button variant="secondary" size="sm" onClick={save} disabled={saving === selected.id}>
-                {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Enregistrer
+              <Button variant="secondary" size="sm" onClick={saveDraft} disabled={saving === selected.id}>
+                {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileEdit className="w-4 h-4" />}
+                Enregistrer brouillon
               </Button>
-              <Button size="sm" onClick={publish} disabled={saving === selected.id}>
-                {saving === selected.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-                Publier sur la route
+              <Button size="sm" onClick={() => setConfirmPublish(true)} disabled={publishDisabled}>
+                <Rocket className="w-4 h-4" />
+                Publier
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={confirmPublish} onOpenChange={setConfirmPublish}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Publier les changements SEO ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Les nouvelles balises seront servies aux visiteurs et aux crawlers (Google, Facebook, Twitter) au prochain chargement.
+              Une copie est conservée dans l'historique pour pouvoir revenir en arrière.
+              {selected && <><br /><br /><span className="font-mono text-xs">{selected.route}</span></>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmPublish(false); doPublish(); }}>Publier</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

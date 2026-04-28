@@ -28,10 +28,11 @@ export function useSeoSettings(route?: string): SeoOverride | null {
     (async () => {
       const { data: row } = await (supabase as any)
         .from("seo_settings")
-        .select("title,description,keywords,og_image_url,canonical_path,no_index")
+        .select("title,description,keywords,og_image_url,canonical_path,no_index,is_draft")
         .eq("route", route)
         .maybeSingle();
-      const value = (row as SeoOverride) ?? null;
+      // Drafts must NOT be served to visitors — only published entries override defaults
+      const value = row && !(row as any).is_draft ? (row as SeoOverride) : null;
       cache.set(route, value);
       if (active) setData(value);
     })();

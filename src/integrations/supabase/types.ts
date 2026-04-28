@@ -1899,12 +1899,14 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_draft: boolean
           is_global: boolean
           json_ld: Json | null
           keywords: string | null
           no_index: boolean
           og_image_sizes: Json | null
           og_image_url: string | null
+          published_at: string | null
           route: string
           title: string | null
           updated_at: string
@@ -1915,12 +1917,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_draft?: boolean
           is_global?: boolean
           json_ld?: Json | null
           keywords?: string | null
           no_index?: boolean
           og_image_sizes?: Json | null
           og_image_url?: string | null
+          published_at?: string | null
           route: string
           title?: string | null
           updated_at?: string
@@ -1931,18 +1935,82 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_draft?: boolean
           is_global?: boolean
           json_ld?: Json | null
           keywords?: string | null
           no_index?: boolean
           og_image_sizes?: Json | null
           og_image_url?: string | null
+          published_at?: string | null
           route?: string
           title?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: []
+      }
+      seo_settings_history: {
+        Row: {
+          action: string
+          canonical_path: string | null
+          changed_by: string | null
+          changed_by_email: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_draft: boolean
+          keywords: string | null
+          no_index: boolean
+          og_image_sizes: Json | null
+          og_image_url: string | null
+          route: string
+          seo_settings_id: string
+          title: string | null
+        }
+        Insert: {
+          action?: string
+          canonical_path?: string | null
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_draft?: boolean
+          keywords?: string | null
+          no_index?: boolean
+          og_image_sizes?: Json | null
+          og_image_url?: string | null
+          route: string
+          seo_settings_id: string
+          title?: string | null
+        }
+        Update: {
+          action?: string
+          canonical_path?: string | null
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_draft?: boolean
+          keywords?: string | null
+          no_index?: boolean
+          og_image_sizes?: Json | null
+          og_image_url?: string | null
+          route?: string
+          seo_settings_id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_settings_history_seo_settings_id_fkey"
+            columns: ["seo_settings_id"]
+            isOneToOne: false
+            referencedRelation: "seo_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
