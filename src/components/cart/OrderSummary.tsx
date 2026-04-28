@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/components/cart/CartContext";
-import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2, ShoppingBag } from "lucide-react";
+import { CreditCard, Loader2, Minus, Plus, Trash2, ShieldCheck, Tag, X, CheckCircle2, ShoppingBag, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -322,6 +322,15 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
         <div className="flex justify-between font-bold text-base sm:text-lg">
           <span>Total</span>
           <span className="text-primary">{formatPrice(finalTotal)}</span>
+        </div>
+
+        {/* Protection reminder */}
+        <div className="flex gap-2 p-2.5 rounded-md border-l-4 border-l-destructive bg-destructive/5">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <p className="text-[10px] sm:text-xs leading-relaxed text-foreground/90">
+            <strong>Rappel :</strong> seuls les achats effectués via Nukuconnect bénéficient de notre protection acheteur et de la médiation en cas de litige. Tout paiement réalisé en dehors de la plateforme n'est pas couvert.{" "}
+            <Link to="/politique-achat" className="text-primary hover:underline font-medium">En savoir plus</Link>
+          </p>
         </div>
 
         {/* Step 1: Commander button (shows payment options) */}
