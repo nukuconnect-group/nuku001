@@ -436,6 +436,8 @@ const SeoPreview = () => {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
 
       <AlertDialog open={!!restoreCandidate} onOpenChange={(o) => !o && setRestoreCandidate(null)}>
         <AlertDialogContent>
