@@ -35,7 +35,12 @@ export async function invokeAuthenticatedFunction<T = unknown>(
   });
 
   const raw = await response.text();
-  const data = raw ? JSON.parse(raw) : null;
+  let data: any = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = { error: raw || `Erreur ${response.status}` };
+  }
 
   if (!response.ok) {
     throw new Error(data?.error || data?.message || `Erreur ${response.status}`);
