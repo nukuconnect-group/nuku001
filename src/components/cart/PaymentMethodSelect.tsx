@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import moovFloozLogo from "@/assets/moov-flooz.png";
 import mixxYasLogo from "@/assets/mixx-yas.png";
-import visaMcLogo from "@/assets/visa-mastercard.png";
+
 
 const paymentMethods = [
   { id: "paygate", name: "Paygate", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
