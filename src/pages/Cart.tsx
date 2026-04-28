@@ -577,11 +577,11 @@ const Cart = () => {
       setPollingEnabled(true);
       setPayStatus({
         kind: "pending",
-        message: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
+        message: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
       });
       toast({
         title: "📱 Paiement initié",
-        description: `Validez la transaction sur votre téléphone ${selectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
+        description: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
       });
 
     } catch (error: any) {
