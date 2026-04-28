@@ -152,9 +152,10 @@ const SeoManager = () => {
       toast({ title: "Échec génération image", description: error?.message || data?.error || "Erreur IA", variant: "destructive" });
       return;
     }
-    setSelected({ ...selected, og_image_url: data.og_image_url });
+    setSelected({ ...selected, og_image_url: data.og_image_url, og_image_sizes: data.og_image_sizes || selected.og_image_sizes });
     clearSeoCache(selected.route);
-    toast({ title: "Image OG générée", description: "Image sauvegardée et liée à la page." });
+    const sizesCount = data.og_image_sizes ? Object.keys(data.og_image_sizes).length : 1;
+    toast({ title: "Image OG générée", description: `${sizesCount} taille(s) sauvegardée(s) (1200×630${sizesCount > 1 ? " + 640×640" : ""}).` });
     load();
   };
 
