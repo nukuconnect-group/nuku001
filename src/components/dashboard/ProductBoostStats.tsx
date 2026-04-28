@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Rocket, Clock, CalendarDays, TrendingUp, Eye, MousePointerClick,
-  ShieldCheck, QrCode, Sparkles, CheckCircle2,
+  ShieldCheck, QrCode, Sparkles, CheckCircle2, MessageCircle, ShoppingCart,
+  AlertTriangle, Users, XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProductBoosts } from "@/hooks/useBoosts";
@@ -24,51 +25,99 @@ const formatDateTime = (iso: string) =>
     hour: "2-digit", minute: "2-digit",
   });
 
+interface BoostMetrics {
+  impressions: number;     // total page views (analytics_visits)
+  uniqueVisitors: number;  // distinct sessions
+  clicks: number;          // alias of impressions for now
+  conversations: number;   // discussions ouvertes sur ce produit
+  orders: number;          // commandes générées
+  revenue: number;         // CA généré pendant le boost
+}
+
 const ProductBoostStats = ({ productId, productName, successMode = false }: Props) => {
   const { data: boosts = [], isLoading } = useProductBoosts(productId);
-  const [views, setViews] = useState<number | null>(null);
-  const [orders, setOrders] = useState<number | null>(null);
+  const [metrics, setMetrics] = useState<BoostMetrics | null>(null);
 
+  const now = Date.now();
   const active = boosts.find(
-    (b) => b.is_active && new Date(b.expires_at) > new Date(),
+    (b) => b.is_active && new Date(b.expires_at).getTime() > now,
   );
+  // Dernier boost terminé pour afficher un statut final si pas d'actif
+  const lastFinished = !active
+    ? boosts
+        .filter((b) => new Date(b.expires_at).getTime() <= now)
+        .sort((a, b) => new Date(b.expires_at).getTime() - new Date(a.expires_at).getTime())[0]
+    : null;
+
+  const reference = active || lastFinished;
 
   useEffect(() => {
-    if (!active) return;
+    if (!reference) { setMetrics(null); return; }
+    let cancelled = false;
     (async () => {
-      const since = active.started_at;
-      // Vues issues du tracking analytics si dispo
-      const { count: viewCount } = await supabase
-        .from("analytics_visits")
-        .select("id", { count: "exact", head: true })
-        .ilike("page_path", `%${productId}%`)
-        .gte("created_at", since);
-      setViews(viewCount ?? 0);
+      const since = reference.started_at;
+      const until = new Date(reference.expires_at).getTime() < now
+        ? reference.expires_at
+        : new Date().toISOString();
 
-      const { count: orderCount } = await supabase
-        .from("orders")
+      // Vues / impressions
+      const { data: visits } = await supabase
+        .from("analytics_visits")
+        .select("session_id")
+        .ilike("page_path", `%${productId}%`)
+        .gte("created_at", since)
+        .lte("created_at", until);
+      const impressions = visits?.length ?? 0;
+      const uniqueVisitors = new Set((visits || []).map((v: any) => v.session_id).filter(Boolean)).size;
+
+      // Conversations / discussions
+      const { count: convCount } = await supabase
+        .from("conversations")
         .select("id", { count: "exact", head: true })
         .eq("product_id", productId)
-        .gte("created_at", since);
-      setOrders(orderCount ?? 0);
+        .gte("created_at", since)
+        .lte("created_at", until);
+
+      // Commandes & revenu
+      const { data: orderRows } = await supabase
+        .from("orders")
+        .select("id,total_price,status")
+        .eq("product_id", productId)
+        .gte("created_at", since)
+        .lte("created_at", until);
+      const orders = orderRows?.length ?? 0;
+      const EXCLUDED = new Set(["cancelled", "canceled", "refunded", "failed", "rejected"]);
+      const revenue = (orderRows || [])
+        .filter((o: any) => !EXCLUDED.has(String(o.status || "").toLowerCase()))
+        .reduce((s: number, o: any) => s + (Number(o.total_price) || 0), 0);
+
+      if (cancelled) return;
+      setMetrics({
+        impressions,
+        uniqueVisitors,
+        clicks: impressions,
+        conversations: convCount ?? 0,
+        orders,
+        revenue,
+      });
     })();
-  }, [active, productId]);
+    return () => { cancelled = true; };
+  }, [reference?.id, productId]);
 
   if (isLoading) return null;
 
-  if (!active) {
+  if (!reference) {
     return (
       <Card className="border-dashed">
         <CardContent className="p-4 text-center text-xs text-muted-foreground">
-          Aucun boost actif sur ce produit.
+          Aucun boost lancé sur ce produit.
         </CardContent>
       </Card>
     );
   }
 
-  const start = new Date(active.started_at).getTime();
-  const end = new Date(active.expires_at).getTime();
-  const now = Date.now();
+  const start = new Date(reference.started_at).getTime();
+  const end = new Date(reference.expires_at).getTime();
   const total = end - start;
   const elapsed = Math.max(0, Math.min(total, now - start));
   const percent = total > 0 ? Math.round((elapsed / total) * 100) : 0;
@@ -76,24 +125,51 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
   const remainingDays = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
   const remainingHours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
+  // Statut final pour boost terminé : on considère "réussi" s'il y a eu des impressions ou des commandes
+  const isFinished = !!lastFinished;
+  const m = metrics;
+  const success = m ? (m.impressions > 0 || m.orders > 0) : false;
+  const hasNoData = m && m.impressions === 0 && m.uniqueVisitors === 0 && m.conversations === 0 && m.orders === 0;
+
+  // Couleur entête selon état
+  const headerClass = isFinished
+    ? success
+      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white"
+      : "bg-gradient-to-r from-destructive to-destructive/80 text-white"
+    : "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground";
+
   return (
     <Card className="overflow-hidden border-primary/30 shadow-elevated">
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4">
-        <div className="flex items-center gap-2 mb-1">
-          {successMode ? (
+      <div className={`${headerClass} p-4`}>
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          {successMode || (isFinished && success) ? (
             <CheckCircle2 className="w-5 h-5" />
+          ) : isFinished && !success ? (
+            <XCircle className="w-5 h-5" />
           ) : (
             <Rocket className="w-5 h-5" />
           )}
           <span className="font-heading font-bold text-sm">
-            {successMode ? "🚀 Boost activé avec succès" : "Boost actif"}
+            {successMode
+              ? "🚀 Boost activé avec succès"
+              : isFinished
+              ? success
+                ? "✅ Boost terminé — Réussi"
+                : "❌ Boost terminé — Sans impact"
+              : "Boost actif"}
           </span>
           <Badge className="ml-auto bg-white/20 text-white border-0 text-[10px]">
-            {active.plan_name === "basic" ? "7 jours" : `${active.days} jours`}
+            {reference.plan_name === "basic" ? "7 jours" : `${reference.days} jours`}
           </Badge>
         </div>
         {productName && (
           <p className="text-xs opacity-90 line-clamp-1">{productName}</p>
+        )}
+        {isFinished && !success && (
+          <p className="text-[11px] mt-1.5 opacity-95 flex items-start gap-1">
+            <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+            Raison probable : aucune visite enregistrée. Vérifiez la qualité de vos photos, le titre et le prix, puis relancez un boost.
+          </p>
         )}
       </div>
 
@@ -102,15 +178,17 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
         <div>
           <div className="flex items-center justify-between text-[11px] mb-1">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" /> Temps écoulé
+              <Clock className="w-3 h-3" /> {isFinished ? "Durée" : "Temps écoulé"}
             </span>
             <span className="font-semibold text-foreground">{percent}%</span>
           </div>
           <Progress value={percent} className="h-2" />
           <p className="text-[10px] text-muted-foreground mt-1">
-            {remainingDays > 0
-              ? `${remainingDays}j ${remainingHours}h restant${remainingDays > 1 ? "s" : ""}`
-              : `${remainingHours}h restantes`}
+            {isFinished
+              ? `Terminé le ${formatDateTime(reference.expires_at)}`
+              : remainingDays > 0
+                ? `${remainingDays}j ${remainingHours}h restant${remainingDays > 1 ? "s" : ""}`
+                : `${remainingHours}h restantes`}
           </p>
         </div>
 
@@ -120,33 +198,60 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
             <p className="text-muted-foreground flex items-center gap-1 mb-0.5">
               <CalendarDays className="w-3 h-3" /> Démarré
             </p>
-            <p className="font-semibold text-foreground">{formatDateTime(active.started_at)}</p>
+            <p className="font-semibold text-foreground">{formatDateTime(reference.started_at)}</p>
           </div>
           <div className="rounded-lg bg-muted/50 p-2">
             <p className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <CalendarDays className="w-3 h-3" /> Expire le
+              <CalendarDays className="w-3 h-3" /> {isFinished ? "Terminé le" : "Expire le"}
             </p>
-            <p className="font-semibold text-foreground">{formatDateTime(active.expires_at)}</p>
+            <p className="font-semibold text-foreground">{formatDateTime(reference.expires_at)}</p>
           </div>
         </div>
 
-        {/* Statistiques live */}
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
-          <div className="text-center">
-            <Eye className="w-4 h-4 mx-auto text-primary mb-1" />
-            <p className="text-sm font-bold text-foreground">{views ?? "…"}</p>
-            <p className="text-[9px] text-muted-foreground">Vues depuis le boost</p>
+        {/* Statistiques détaillées de mise en avant */}
+        <div className="pt-2 border-t border-border">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+            <TrendingUp className="w-3 h-3" /> Performances détaillées
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <Eye className="w-4 h-4 mx-auto text-primary mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.impressions ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Impressions</p>
+            </div>
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <Users className="w-4 h-4 mx-auto text-blue-500 mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.uniqueVisitors ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Visiteurs uniques</p>
+            </div>
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <MousePointerClick className="w-4 h-4 mx-auto text-amber-500 mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.clicks ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Clics fiche</p>
+            </div>
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <MessageCircle className="w-4 h-4 mx-auto text-green-600 mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.conversations ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Discussions</p>
+            </div>
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <ShoppingCart className="w-4 h-4 mx-auto text-primary mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.orders ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Commandes</p>
+            </div>
+            <div className="text-center rounded-lg bg-muted/40 p-2">
+              <TrendingUp className="w-4 h-4 mx-auto text-emerald-600 mb-1" />
+              <p className="text-sm font-bold text-foreground">
+                {m ? (m.revenue > 0 ? `${(m.revenue / 1000).toFixed(0)}K` : "0") : "…"} F
+              </p>
+              <p className="text-[9px] text-muted-foreground">Revenus</p>
+            </div>
           </div>
-          <div className="text-center">
-            <MousePointerClick className="w-4 h-4 mx-auto text-primary mb-1" />
-            <p className="text-sm font-bold text-foreground">{orders ?? "…"}</p>
-            <p className="text-[9px] text-muted-foreground">Commandes</p>
-          </div>
-          <div className="text-center">
-            <TrendingUp className="w-4 h-4 mx-auto text-primary mb-1" />
-            <p className="text-sm font-bold text-foreground">+{Math.round(percent / 4)}%</p>
-            <p className="text-[9px] text-muted-foreground">Visibilité estimée</p>
-          </div>
+          {hasNoData && !isFinished && (
+            <p className="text-[10px] text-muted-foreground mt-2 italic">
+              Pas encore de données — donnez quelques heures au boost pour générer du trafic.
+            </p>
+          )}
         </div>
 
         {/* Actions traçabilité + historique */}
@@ -171,7 +276,8 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
             </p>
             <ul className="space-y-1 max-h-32 overflow-y-auto">
               {boosts.map((b) => {
-                const isActiveBoost = b.id === active.id;
+                const isRef = b.id === reference.id;
+                const ended = new Date(b.expires_at).getTime() <= now;
                 return (
                   <li
                     key={b.id}
@@ -181,14 +287,10 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
                       {formatDateTime(b.started_at)} · {b.days}j
                     </span>
                     <Badge
-                      variant={isActiveBoost ? "default" : "secondary"}
+                      variant={isRef && !ended ? "default" : "secondary"}
                       className="text-[9px] h-4 px-1.5"
                     >
-                      {isActiveBoost
-                        ? "Actif"
-                        : new Date(b.expires_at) > new Date()
-                          ? "En cours"
-                          : "Terminé"}
+                      {!ended ? "Actif" : "Terminé"}
                     </Badge>
                   </li>
                 );
