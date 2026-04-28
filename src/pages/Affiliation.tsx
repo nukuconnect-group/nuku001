@@ -113,9 +113,25 @@ const Affiliation = () => {
     <div className="min-h-screen pb-14 lg:pb-0">
       <SEO
         url="/affiliation"
-        title="Programme d'Affiliation - NukuConnect"
-        description="Gagnez de l'argent en parrainant des producteurs et acheteurs. 10% sur les abonnements payants, 3% sur les achats."
+        title="Programme d'Affiliation Nukuconnect — Gagnez 10% & 3%"
+        description="Parrainez vos contacts sur Nukuconnect : 10% de commission à vie sur les abonnements payants et 3% sur chaque achat de vos filleuls. Inscription gratuite."
         image="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1200&h=630&fit=crop&q=80"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: "Programme d'Affiliation Nukuconnect",
+          description: "Programme de parrainage avec 10% de commission sur abonnements et 3% sur achats.",
+          url: "https://www.nukuconnect.com/affiliation",
+          mainEntity: {
+            "@type": "Service",
+            name: "Programme d'affiliation Nukuconnect",
+            provider: { "@type": "Organization", name: "Nukuconnect" },
+            offers: [
+              { "@type": "Offer", description: "10% sur les abonnements payants des filleuls", category: "Affiliation" },
+              { "@type": "Offer", description: "3% sur les achats des filleuls", category: "Affiliation" },
+            ],
+          },
+        }}
       />
       <Header />
 
