@@ -77,6 +77,33 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Helper: actually send the action link via the transactional email pipeline.
+    // generateLink() alone does NOT trigger any email — it just produces the URL.
+    const sendActionEmail = async (
+      kind: "recovery" | "magiclink" | "signup",
+      email: string,
+      actionLink: string,
+      name?: string,
+    ) => {
+      const idempotencyKey = `admin-${kind}-${targetId}-${Date.now()}`;
+      const { error } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "admin-account-link",
+          recipientEmail: email,
+          idempotencyKey,
+          templateData: {
+            name: name || "",
+            actionLink,
+            kind,
+          },
+        },
+      });
+      if (error) {
+        console.error(`send-transactional-email (${kind}) failed`, error);
+      }
+      return { idempotencyKey, send_error: error?.message || null };
+    };
+
     switch (body.action) {
       case "send_password_reset": {
         const { data: targetUser } = await admin.auth.admin.getUserById(targetId);
