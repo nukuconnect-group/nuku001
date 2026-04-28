@@ -93,30 +93,51 @@ const Cart = () => {
   };
 
   const filledRef = useRef(false);
+  const filledForUserIdRef = useRef<string | null>(null);
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       if (session?.user && !filledRef.current) {
         filledRef.current = true;
+        filledForUserIdRef.current = session.user.id;
         await fillBillingFromUser(session.user);
       }
     };
     init();
 
-    // Listen for auth changes - only auto-fill on first sign in (not on token refresh)
+    // Listen for auth changes - only auto-fill once per user.
+    // Ignore TOKEN_REFRESHED, USER_UPDATED, INITIAL_SESSION to avoid wiping user input.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
-      if (event === "SIGNED_IN" && session?.user && !filledRef.current) {
-        filledRef.current = true;
-        await fillBillingFromUser(session.user);
+      if (event === "SIGNED_IN" && session?.user) {
+        if (!filledRef.current || filledForUserIdRef.current !== session.user.id) {
+          filledRef.current = true;
+          filledForUserIdRef.current = session.user.id;
+          await fillBillingFromUser(session.user);
+        }
       }
       if (event === "SIGNED_OUT") {
         filledRef.current = false;
+        filledForUserIdRef.current = null;
       }
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Auto-scroll to payment section when "Payer" is clicked (showPaymentStep activated)
+  useEffect(() => {
+    if (showPaymentStep) {
+      // Wait for lazy-loaded PaymentMethodSelect to mount
+      const timer = setTimeout(() => {
+        const el = document.getElementById("payment-section");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [showPaymentStep]);
 
   const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
