@@ -80,6 +80,8 @@ const Moderation = lazy(() => import("./pages/Moderation"));
 const FAQNukuAI = lazy(() => import("./pages/FAQNukuAI"));
 const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
 const AccountAccess = lazy(() => import("./pages/AccountAccess"));
+const Refunds = lazy(() => import("./pages/Refunds"));
+const Invoices = lazy(() => import("./pages/Invoices"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -224,6 +226,8 @@ const App = () => {
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
+                  <Route path="/remboursements" element={<Refunds />} />
+                  <Route path="/factures" element={<Invoices />} />
                   <Route path="/adresse-livraison" element={<DeliveryAddress />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/devenir-fournisseur" element={<BecomeSeller />} />

@@ -1858,6 +1858,51 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_response: string | null
+          amount: number | null
+          attachments: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          reason: string
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          amount?: number | null
+          attachments?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          reason: string
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          amount?: number | null
+          attachments?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
