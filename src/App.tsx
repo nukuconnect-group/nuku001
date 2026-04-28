@@ -176,6 +176,7 @@ const App = () => {
               <PerformanceTracker />
               <LinkPrefetcher />
               <ScrollToTop />
+              <CleanTrackingParams />
               <AnalyticsTracker />
               <PresenceTracker />
               <RealtimeNotifications />
