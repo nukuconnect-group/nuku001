@@ -46,6 +46,8 @@ const Footer = () => {
 
   return (
     <footer className="text-white relative overflow-hidden">
+      {/* Trust badges — visibles sur tout le site juste avant le pied de page */}
+      <TrustBadges />
       {/* Background image with blur overlay */}
       <div className="absolute inset-0 z-0">
         <img src={footerBg} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
