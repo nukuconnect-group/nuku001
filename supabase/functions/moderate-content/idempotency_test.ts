@@ -104,5 +104,5 @@ Deno.test({
     assert(first.status === 401 || first.status === 403,
       `Expected unauthorized status, got ${first.status}: ${JSON.stringify(first.body)}`);
     console.warn("⚠️  SUPABASE_SERVICE_ROLE_KEY not set — ran lightweight (response-shape) assertions only.");
-  }
+  },
 });
