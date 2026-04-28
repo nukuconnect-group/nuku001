@@ -119,7 +119,15 @@ const Plans = () => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session?.access_token) {
+      toast({
+        title: "Session expirée",
+        description: "Veuillez vous reconnecter pour finaliser votre abonnement.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
 
     const { data, error } = await supabase.functions.invoke("update-subscription", {
       body: {
