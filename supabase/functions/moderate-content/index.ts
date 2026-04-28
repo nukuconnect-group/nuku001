@@ -192,6 +192,7 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
       if (type === "product") {
         await sendModerationEmail(userId, itemName, "approved");
       }
+      return new Response(JSON.stringify({ approved: true, reason: "Modération automatique indisponible" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
