@@ -489,15 +489,17 @@ const Cart = () => {
       return;
     }
 
-    if (!selectedNetwork) {
-      toast({ title: "Mode de paiement requis", description: "Veuillez sélectionner Moov Money ou T-Money.", variant: "destructive" });
+    // Validation Mobile Money (numéro + auto-détection du réseau)
+    const phoneValidation = validateMobileMoneyPhone(mobileNumber);
+    if (!phoneValidation.valid || !phoneValidation.network) {
+      toast({
+        title: "Numéro Mobile Money invalide",
+        description: phoneValidation.reason || "Vérifiez votre numéro avant de payer.",
+        variant: "destructive",
+      });
       return;
     }
-
-    if (!mobileNumber.trim()) {
-      toast({ title: "Numéro requis", description: "Entrez votre numéro de téléphone Mobile Money.", variant: "destructive" });
-      return;
-    }
+    const detectedNetwork = phoneValidation.network;
 
     setIsCheckingOut(true);
     setPayStatus({ kind: "initiating" });
