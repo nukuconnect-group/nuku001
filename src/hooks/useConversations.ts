@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logDiag } from "@/lib/diagnostics";
 
 export type ConversationCategory = "achat" | "vente" | "livraison" | "general";
 
