@@ -102,11 +102,26 @@ const KYCManager = () => {
           : `Votre vérification a été refusée.${adminNote ? ` Motif : ${adminNote}` : " Veuillez resoumettre vos documents."}`,
       });
 
+      // Send branded KYC status email (real-time, idempotent via Edge Function)
+      const profile = profiles[kyc.user_id];
+      supabase.functions.invoke("send-kyc-status-email", {
+        body: {
+          user_id: kyc.user_id,
+          kyc_id: kyc.id,
+          kyc_type: type,
+          decision,
+          admin_note: decision === "rejected" ? adminNote : "",
+          name: profile?.full_name || "",
+        },
+      }).then(({ error: emailErr }) => {
+        if (emailErr) console.error("KYC email send failed (non-blocking):", emailErr);
+      });
+
       toast({
-        title: decision === "approved" ? "KYC approuvé ✓" : "KYC refusé",
+        title: decision === "approved" ? "KYC approuvé ✓ Email envoyé" : "KYC refusé — Email envoyé",
         description: decision === "approved"
-          ? type === "supplier" ? "Le fournisseur est maintenant vérifié avec le badge." : "Le livreur a été activé."
-          : "L'utilisateur a été notifié du refus.",
+          ? type === "supplier" ? "Le fournisseur est vérifié. Email de confirmation envoyé." : "Le livreur a été activé. Email de confirmation envoyé."
+          : "L'utilisateur a été notifié du refus par email avec le motif.",
       });
 
       setSelectedKyc(null);
