@@ -80,6 +80,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
