@@ -40,6 +40,18 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
   const lowestTierPrice = tiers.length > 0 ? Math.min(...tiers.map((t) => t.price)) : null;
   const shippingDays = product.shippingDelayDays;
 
+  // Promo : pour les produits sponsorisés sans promo réelle, on génère une remise visuelle déterministe (10–25%)
+  const hashId = (product.id || product.name || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const syntheticDiscount = isBoosted ? 10 + (hashId % 16) : 0; // 10..25
+  const computedOriginalPrice =
+    product.originalPrice ??
+    (syntheticDiscount > 0 ? Math.round(product.price / (1 - syntheticDiscount / 100)) : undefined);
+  const computedDiscount =
+    product.discount ??
+    (computedOriginalPrice && computedOriginalPrice > product.price
+      ? Math.round(((computedOriginalPrice - product.price) / computedOriginalPrice) * 100)
+      : 0);
+
   const { data: matchingDemands = 0 } = useQuery({
     queryKey: ["demand-count", product.category],
     queryFn: async () => {
@@ -151,9 +163,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
                 <Rocket className="w-2.5 h-2.5" />Sponsorisé
               </Badge>
             )}
-            {product.discount && product.discount > 0 && (
+            {computedDiscount > 0 && (
               <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                -{product.discount}%
+                -{computedDiscount}%
               </Badge>
             )}
             {isNew && (
@@ -210,8 +222,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer = fal
           {/* Price */}
           <div className="flex items-baseline gap-1 flex-wrap">
             <span className="font-heading text-sm sm:text-base font-bold text-destructive">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
-              <span className="text-[9px] text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+            {computedOriginalPrice && computedOriginalPrice > product.price && (
+              <span className="text-[9px] text-muted-foreground line-through">{formatPrice(computedOriginalPrice)}</span>
             )}
             {!minimal && <span className="text-[9px] text-muted-foreground">/{product.unit}</span>}
           </div>
