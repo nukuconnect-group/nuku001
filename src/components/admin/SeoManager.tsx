@@ -19,6 +19,7 @@ interface SeoRow {
   description: string | null;
   keywords: string | null;
   og_image_url: string | null;
+  og_image_sizes?: Record<string, string> | null;
   canonical_path: string | null;
   no_index: boolean;
 }
