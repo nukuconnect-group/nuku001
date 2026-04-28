@@ -327,10 +327,13 @@ const FormationDetail = () => {
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                         {mod.content_type === "video" ? (
                           <span className="flex items-center gap-0.5"><Video className="w-3 h-3" />Vidéo</span>
-                        ) : (
+                        ) : mod.content_url ? (
                           <span className="flex items-center gap-0.5"><FileText className="w-3 h-3" />PDF</span>
+                        ) : (
+                          <span className="flex items-center gap-0.5"><BookOpen className="w-3 h-3" />Lecture</span>
                         )}
-                        <span>• {mod.duration_minutes}min</span>
+                        <span>• {mod.duration_minutes || 0}min</span>
+                        <span>• Chapitre {idx + 1}</span>
                       </div>
                     </div>
                     {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
