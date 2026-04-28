@@ -307,6 +307,16 @@ const Cart = () => {
       }).then(() => {});
 
       toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers vos commandes..." });
+      setPayStatus({
+        kind: "success",
+        message: "Votre commande est confirmée. Le montant a été prélevé et votre facture PDF a été téléchargée.",
+        details: {
+          invoiceNumber,
+          amount: finalTotal,
+          method: selectedPayment?.name || "Mobile Money",
+          orderIds,
+        },
+      });
       clearCart();
 
       // Navigate to order detail if we have a single order, otherwise to delivery tracking
@@ -317,6 +327,10 @@ const Cart = () => {
       }
     } catch (err: any) {
       console.error("Finalize order error:", err);
+      setPayStatus({
+        kind: "failed",
+        message: err.message || "Une erreur est survenue lors de la finalisation. Le montant peut avoir été débité — contactez le support.",
+      });
       toast({ title: "Erreur lors de la finalisation", description: err.message || "Une erreur est survenue. Contactez le support.", variant: "destructive" });
     }
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
