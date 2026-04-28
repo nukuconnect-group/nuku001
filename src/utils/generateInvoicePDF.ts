@@ -24,7 +24,7 @@ interface InvoiceData {
   total: number;
 }
 
-const formatCFA = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
+const formatCFA = (amount: number) => `${amount.toLocaleString("en-US")} FCFA`;
 
 export const generateInvoicePDF = (data: InvoiceData) => {
   const doc = new jsPDF();

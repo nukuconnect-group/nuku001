@@ -218,7 +218,7 @@ const PaymentMethodSelect = ({
             ) : (
               <ShieldCheck className="w-4 h-4" />
             )}
-            {isProcessing ? "Traitement en cours..." : `Payer ${amount.toLocaleString("fr-FR")} FCFA`}
+            {isProcessing ? "Traitement en cours..." : `Payer ${amount.toLocaleString("en-US")} FCFA`}
           </Button>
         )}
       </CardContent>

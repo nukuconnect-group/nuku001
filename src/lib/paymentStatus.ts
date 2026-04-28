@@ -91,5 +91,5 @@ export function mapBackendStateToKind(state?: string | null): PaymentStatusKind 
 
 export function formatFcfa(amount?: number): string {
   if (amount == null || Number.isNaN(amount)) return "—";
-  return `${amount.toLocaleString("fr-FR")} FCFA`;
+  return `${amount.toLocaleString("en-US")} FCFA`;
 }

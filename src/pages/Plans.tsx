@@ -318,7 +318,7 @@ const Plans = () => {
                         <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">Gratuit</span>
                       ) : (
                         <>
-                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{price.toLocaleString("fr-FR")}</span>
+                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{price.toLocaleString("en-US")}</span>
                           <span className="text-[10px] sm:text-xs text-muted-foreground"> FCFA</span>
                           <span className="text-[9px] sm:text-[10px] text-muted-foreground block">/an</span>
                         </>
@@ -384,7 +384,7 @@ const Plans = () => {
                         {selectedNetwork && !pollingEnabled && (
                           <Button variant="hero" size="sm" className="w-full gap-1 text-[10px] h-7" disabled={!!subscribing} onClick={() => initiatePayment(plan.id)}>
                             {subscribing === plan.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
-                            Payer {price.toLocaleString("fr-FR")} FCFA
+                            Payer {price.toLocaleString("en-US")} FCFA
                           </Button>
                         )}
 

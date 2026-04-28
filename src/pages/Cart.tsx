@@ -174,7 +174,7 @@ const Cart = () => {
 
             if (deliveryData?.id) {
               const orderItemsSummary = items
-                .map((cartItem) => `• ${cartItem.product.name} — ${cartItem.quantity} × ${cartItem.product.price.toLocaleString("fr-FR")} FCFA`)
+                .map((cartItem) => `• ${cartItem.product.name} — ${cartItem.quantity} × ${cartItem.product.price.toLocaleString("en-US")} FCFA`)
                 .join("\n");
 
               await supabase.from("delivery_messages").insert({
@@ -280,7 +280,7 @@ const Cart = () => {
         user_id: user.id,
         type: "order",
         title: "🛒 Nouvelle commande confirmée",
-        description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString("fr-FR")} FCFA. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+        description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString("en-US")} FCFA. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
       }).then(() => {});
 
       supabase.from("user_roles").select("user_id").eq("role", "admin").then(({ data: admins }) => {
@@ -289,7 +289,7 @@ const Cart = () => {
             user_id: a.user_id,
             type: "order",
             title: "🛒 Nouvelle commande confirmée",
-            description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString("fr-FR")} FCFA. Livraison: ${selectedDelivery?.name || "Retrait"}. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
+            description: `${buyerFullName} a commandé: ${orderSummary}. Total: ${finalTotal.toLocaleString("en-US")} FCFA. Livraison: ${selectedDelivery?.name || "Retrait"}. Paiement: ${selectedPayment?.name || "Mobile Money"}`,
           }));
           supabase.from("notifications").insert(adminNotifs).then(() => {});
         }
@@ -300,7 +300,7 @@ const Cart = () => {
         user_id: user.id,
         type: "order",
         title: "✅ Commande confirmée !",
-        description: `Votre commande ${invoiceNumber} de ${finalTotal.toLocaleString("fr-FR")} FCFA a été confirmée. Facture PDF disponible.`,
+        description: `Votre commande ${invoiceNumber} de ${finalTotal.toLocaleString("en-US")} FCFA a été confirmée. Facture PDF disponible.`,
       }).then(() => {});
 
       toast({ title: "✅ Paiement confirmé & commande enregistrée !", description: "Votre reçu PDF a été téléchargé. Redirection vers vos commandes..." });
@@ -736,7 +736,7 @@ const Cart = () => {
                       </div>
                       {dynamicDeliveryPrice > 0 && (
                         <p className="text-[10px] text-muted-foreground mt-2">
-                          💡 Le prix de livraison ({(dynamicDeliveryPrice).toLocaleString("fr-FR")} FCFA) est calculé en fonction de la distance réelle entre vous et le fournisseur.
+                          💡 Le prix de livraison ({(dynamicDeliveryPrice).toLocaleString("en-US")} FCFA) est calculé en fonction de la distance réelle entre vous et le fournisseur.
                         </p>
                       )}
                     </CardContent>

@@ -50,15 +50,15 @@ const DriverEarningsPanel = ({
         <CardContent className="p-4 space-y-3">
           <div className="text-center">
             <p className="text-xs text-emerald-100">Solde disponible</p>
-            <p className="text-3xl font-bold">{availableBalance.toLocaleString("fr-FR")} F</p>
+            <p className="text-3xl font-bold">{availableBalance.toLocaleString("en-US")} F</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-white/10 rounded-lg p-2">
-              <p className="text-sm font-bold">{todayEarnings.toLocaleString("fr-FR")} F</p>
+              <p className="text-sm font-bold">{todayEarnings.toLocaleString("en-US")} F</p>
               <p className="text-[9px] text-emerald-100">Aujourd'hui</p>
             </div>
             <div className="bg-white/10 rounded-lg p-2">
-              <p className="text-sm font-bold">{weekEarnings.toLocaleString("fr-FR")} F</p>
+              <p className="text-sm font-bold">{weekEarnings.toLocaleString("en-US")} F</p>
               <p className="text-[9px] text-emerald-100">Cette semaine</p>
             </div>
             <div className="bg-white/10 rounded-lg p-2">
@@ -73,12 +73,12 @@ const DriverEarningsPanel = ({
       <div className="grid grid-cols-2 gap-2">
         <Card className="p-3 text-center">
           <TrendingUp className="w-4 h-4 mx-auto text-emerald-500 mb-1" />
-          <p className="text-sm font-bold">{totalEarnings.toLocaleString("fr-FR")} F</p>
+          <p className="text-sm font-bold">{totalEarnings.toLocaleString("en-US")} F</p>
           <p className="text-[9px] text-muted-foreground">Total gagné</p>
         </Card>
         <Card className="p-3 text-center">
           <ArrowDownToLine className="w-4 h-4 mx-auto text-blue-500 mb-1" />
-          <p className="text-sm font-bold">{totalWithdrawn.toLocaleString("fr-FR")} F</p>
+          <p className="text-sm font-bold">{totalWithdrawn.toLocaleString("en-US")} F</p>
           <p className="text-[9px] text-muted-foreground">Total retiré</p>
         </Card>
       </div>
@@ -93,7 +93,7 @@ const DriverEarningsPanel = ({
         <CardContent className="p-3 pt-1 space-y-2.5">
           <div>
             <Label className="text-xs">Montant (FCFA)</Label>
-            <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Max: ${availableBalance.toLocaleString("fr-FR")}`} />
+            <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Max: ${availableBalance.toLocaleString("en-US")}`} />
           </div>
           <div>
             <Label className="text-xs">Opérateur</Label>
@@ -128,7 +128,7 @@ const DriverEarningsPanel = ({
             {withdrawals.map((w: any) => (
               <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                 <div>
-                  <p className="text-sm font-medium">{w.amount.toLocaleString("fr-FR")} F</p>
+                  <p className="text-sm font-medium">{w.amount.toLocaleString("en-US")} F</p>
                   <p className="text-[10px] text-muted-foreground">
                     {w.operator === "flooz" ? "Moov" : "T-Money"} • {new Date(w.created_at).toLocaleDateString("fr-FR")}
                   </p>

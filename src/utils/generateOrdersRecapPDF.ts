@@ -31,7 +31,7 @@ const DELIVERY_LABEL: Record<string, string> = {
   cancelled: "Annulee",
 };
 
-const formatCFA = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
+const formatCFA = (n: number) => `${Math.round(n).toLocaleString("en-US")} FCFA`;
 const formatDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString("fr-FR") : "—";
 
