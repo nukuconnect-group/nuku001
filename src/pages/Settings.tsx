@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { getProfileDisplayName } from "@/lib/displayName";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -275,7 +276,7 @@ const Settings = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{profile?.full_name}</p>
+                  <p className="text-sm font-semibold text-foreground">{getProfileDisplayName(profile, "")}</p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {resolvedUserType === "producer" ? "Fournisseur" : 
                      resolvedUserType === "driver" ? "Livreur" : 

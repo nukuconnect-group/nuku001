@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { getProfileDisplayName } from "@/lib/displayName";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -215,7 +216,7 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
               </div>
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">{profile?.full_name}</p>
+              <p className="text-sm font-semibold text-foreground">{getProfileDisplayName(profile, "")}</p>
               <p className="text-xs text-muted-foreground capitalize">
                  {resolvedUserType === "producer" ? "Fournisseur" : 
                   resolvedUserType === "driver" ? "Livreur" : 

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
+import { getProfileDisplayName } from "@/lib/displayName";
 import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -280,7 +281,7 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <SheetTitle className="text-left text-[15px] font-bold tracking-tight truncate">
-                      {profile?.full_name || user.email || "Mon compte"}
+                      {getProfileDisplayName(profile, user.email || "Mon compte")}
                     </SheetTitle>
                     <SheetDescription className="flex flex-wrap items-center gap-2 text-left text-[12px] mt-0.5">
                       <span className="font-medium">{getUserTypeLabel(resolvedUserType)}</span>
