@@ -73,6 +73,7 @@ const MesCommandes = lazy(() => import("./pages/MesCommandes"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Affiliation = lazy(() => import("./pages/Affiliation"));
+const AffiliationStatus = lazy(() => import("./pages/AffiliationStatus"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Moderation = lazy(() => import("./pages/Moderation"));
@@ -229,6 +230,7 @@ const App = () => {
                   <Route path="/unsubscribe" element={<Unsubscribe />} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/affiliation" element={<Affiliation />} />
+                  <Route path="/affiliation/statut" element={<AffiliationStatus />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/moderation" element={<Moderation />} />

@@ -126,9 +126,9 @@ export default function AffiliationCard({ userId }: Props) {
             </Button>
           </Link>
         )}
-        <Link to="/affiliation">
+        <Link to="/affiliation/statut">
           <Button variant="ghost" size="sm" className="w-full gap-1.5 text-xs h-7">
-            Voir l'historique <ArrowRight className="w-3 h-3" />
+            Voir le statut détaillé <ArrowRight className="w-3 h-3" />
           </Button>
         </Link>
       </CardContent>
