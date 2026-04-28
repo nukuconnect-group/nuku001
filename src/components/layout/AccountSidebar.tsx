@@ -111,8 +111,39 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
     const loc = (profile?.location || "").trim();
     // Try extract country (last comma part) else raw
     const parts = loc.split(",").map((s: string) => s.trim()).filter(Boolean);
-    setProfileCountry(parts[parts.length - 1] || loc || "Togo");
+    setProfileCountry(parts[parts.length - 1] || loc || "");
   }, [profile?.location]);
+
+  // Auto-detect country via geolocation + reverse geocoding (only if not set)
+  useEffect(() => {
+    if (!user?.id || !profile?.id) return;
+    if (profileCountry && profileCountry.length > 0) return;
+    if (!("geolocation" in navigator)) return;
+
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=fr&zoom=3`,
+            { headers: { "Accept": "application/json" } }
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+          const detected = data?.address?.country as string | undefined;
+          if (!detected || cancelled) return;
+          setProfileCountry(detected);
+          await supabase.from("profiles").update({ location: detected }).eq("id", profile.id);
+        } catch {
+          /* silent */
+        }
+      },
+      () => { /* user denied — silent */ },
+      { timeout: 8000, maximumAge: 24 * 60 * 60 * 1000 }
+    );
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.id, profileCountry]);
 
   const handleSaveCountry = async (newCountry: string) => {
     if (!user?.id || !profile?.id) return;
