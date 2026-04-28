@@ -118,7 +118,12 @@ const Plans = () => {
   const activateSubscription = useCallback(async (planId: string, paymentProof?: { identifier?: string; tx_reference?: string }) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
-    const { data: { session } } = await supabase.auth.getSession();
+    let { data: { session } } = await supabase.auth.getSession();
+    // Refresh to avoid 401 from a stale access token
+    if (session?.refresh_token) {
+      const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
+      if (refreshed?.session) session = refreshed.session;
+    }
     if (!session?.access_token) {
       toast({
         title: "Session expirée",

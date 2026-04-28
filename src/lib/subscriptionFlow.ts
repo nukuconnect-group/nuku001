@@ -129,7 +129,12 @@ export async function activateMembership({
     if (error) throw error;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
+  // Force a refresh to ensure the access token isn't expired/stale
+  if (session?.refresh_token) {
+    const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
+    if (refreshed?.session) session = refreshed.session;
+  }
   if (!session?.access_token) {
     throw new Error("Session expirée. Veuillez vous reconnecter pour finaliser votre abonnement.");
   }
