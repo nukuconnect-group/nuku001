@@ -100,11 +100,18 @@ const FormationDetail = () => {
     const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
       body: { formation_id: formation.id, identifier, tx_reference },
     });
-    if (error || !(data as any)?.success) {
+    const result = (data as any) || {};
+    if (error || !result.success) {
+      const state = result.state || "unknown";
+      const msg = result.user_message || result.error || error?.message || "Le paiement n'a pas encore été confirmé.";
+      const isPending = state === "pending";
       toast({
-        title: "Inscription en attente",
-        description: (data as any)?.error || error?.message || "Le paiement n'a pas encore été confirmé.",
-        variant: "destructive",
+        title:
+          state === "expired" ? "Paiement expiré" :
+          state === "failed" ? "Paiement échoué" :
+          isPending ? "Paiement en attente" : "Inscription non confirmée",
+        description: msg,
+        variant: isPending ? "default" : "destructive",
       });
       return;
     }
@@ -112,7 +119,10 @@ const FormationDetail = () => {
     setPayOpen(false);
     setPayIdentifier(null);
     setPayTxRef(null);
-    toast({ title: "Paiement confirmé ✅", description: "Vous avez désormais accès à la formation." });
+    toast({
+      title: result.state === "already_enrolled" ? "Déjà inscrit" : "Paiement confirmé ✅",
+      description: result.user_message || "Vous avez désormais accès à la formation.",
+    });
   };
 
   usePaygatePolling({
