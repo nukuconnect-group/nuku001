@@ -1,0 +1,51 @@
+
+UPDATE storage.buckets SET public = false WHERE id = 'driver-kyc';
+DROP POLICY IF EXISTS "Public read driver-kyc" ON storage.objects;
+
+REVOKE EXECUTE ON FUNCTION public.get_admin_orders() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_admin_subscriptions() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_admin_analytics() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_admin_stats() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_admin_recent_actions(integer, timestamptz, timestamptz, text, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_delete_user_data(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_credit_tokens(uuid, integer, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_set_user_subscription(uuid, text, text, integer, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.update_user_subscription(uuid, text, integer, text, timestamptz) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.enroll_paid_formation(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.expire_old_tokens() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_products_due_for_moderation(integer) FROM anon, public;
+
+REVOKE EXECUTE ON FUNCTION public.claim_referral(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.renew_free_subscription() FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.create_token_purchase(text, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.complete_token_purchase(uuid, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.clear_conversation_messages(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.delete_conversation_thread(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.resubmit_product_moderation(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_driver_for_delivery(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.count_user_products(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.log_api_call(uuid, uuid, text, text, integer, text) FROM anon, public;
+
+REVOKE EXECUTE ON FUNCTION public.notify_new_demand() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.notify_new_product() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.notify_new_message() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.notify_product_moderation_change() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.notify_withdrawal_change() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.handle_new_subscription() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.handle_order_created() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_supplier_verification() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_driver_approval() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.update_driver_rating() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.update_comment_likes_count() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.update_updated_at_column() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.set_support_message_email() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.schedule_product_moderation() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.enforce_business_name_for_producers() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.generate_product_slug() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.generate_formation_slug() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.delete_email(text, bigint) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.validate_api_key(text) FROM anon, authenticated, public;
