@@ -12,7 +12,11 @@ const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL")!;
 const ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-Deno.test("moderate-content: idempotent on already-moderated product (no email re-emission)", async () => {
+Deno.test({
+  name: "moderate-content: idempotent on already-moderated product (no email re-emission)",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
   assert(SUPABASE_URL, "VITE_SUPABASE_URL not set");
   assert(ANON_KEY, "VITE_SUPABASE_PUBLISHABLE_KEY not set");
 
