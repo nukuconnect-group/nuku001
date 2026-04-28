@@ -366,6 +366,77 @@ const Dashboard = () => {
 
 
           {/* Products list — Quick Actions cover other sections */}
+          {(() => {
+            const pendingProducts = products.filter(
+              (p) => (p.moderation_status || "pending") === "pending"
+            );
+            const rejectedProducts = products.filter(
+              (p) => p.moderation_status === "rejected"
+            );
+            return (
+              <>
+                {pendingProducts.length > 0 && (
+                  <Card className="mb-3 border-amber-300 bg-amber-50/60 dark:bg-amber-950/20">
+                    <CardHeader className="p-3">
+                      <CardTitle className="text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                        ⏳ En attente d'analyse ({pendingProducts.length})
+                      </CardTitle>
+                      <CardDescription className="text-[11px]">
+                        Vos produits sont en cours de vérification par l'équipe Nukuconnect. Vous recevrez une notification et un email dès l'approbation. Délai estimé : ~20 minutes.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 space-y-1.5">
+                      {pendingProducts.map((p) => (
+                        <div key={p.id} className="flex items-center gap-2 text-xs">
+                          <Package className="w-3.5 h-3.5 text-amber-600" />
+                          <span className="font-medium truncate flex-1">{p.name}</span>
+                          <Badge variant="outline" className="text-[9px] border-amber-400 text-amber-700">
+                            En analyse
+                          </Badge>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                {rejectedProducts.length > 0 && (
+                  <Card className="mb-3 border-destructive/40 bg-destructive/5">
+                    <CardHeader className="p-3">
+                      <CardTitle className="text-sm flex items-center gap-2 text-destructive">
+                        ❌ Refusés ({rejectedProducts.length})
+                      </CardTitle>
+                      <CardDescription className="text-[11px]">
+                        Modifiez votre publication et soumettez-la à nouveau pour qu'elle soit ré-analysée.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 space-y-1.5">
+                      {rejectedProducts.map((p) => (
+                        <div key={p.id} className="flex items-start gap-2 text-xs">
+                          <Package className="w-3.5 h-3.5 text-destructive mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{p.name}</p>
+                            {p.moderation_reason && (
+                              <p className="text-[10px] text-muted-foreground line-clamp-2">
+                                Motif : {p.moderation_reason}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[10px] px-2"
+                            onClick={() => { setEditingProduct(p); setShowAddProduct(true); }}
+                          >
+                            Modifier
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            );
+          })()}
+
           <Card className="mb-4" id="products-section">
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
               <div>
