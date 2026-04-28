@@ -255,7 +255,35 @@ const SeoManager = () => {
     load();
   };
 
-  const handleUpload = async (file: File) => {
+  // Persist toggle preference
+  useEffect(() => {
+    try { localStorage.setItem("seo_auto_regen_og", autoRegenOg ? "1" : "0"); } catch {}
+  }, [autoRegenOg]);
+
+  // Auto-regenerate OG images (all sizes) when title/description changes,
+  // but only on draft entries (never silently regenerate published images).
+  useEffect(() => {
+    if (!autoRegenOg || !selected || !original) return;
+    if (!selected.is_draft) return; // safety: only touch drafts
+    const titleChanged = (selected.title || "") !== (original.title || "");
+    const descChanged = (selected.description || "") !== (original.description || "");
+    if (!titleChanged && !descChanged) return;
+    if (!routeValidation.ok && !selected.is_global) return;
+
+    if (autoRegenTimer.current) clearTimeout(autoRegenTimer.current);
+    setAutoRegenPending(true);
+    autoRegenTimer.current = setTimeout(async () => {
+      setAutoRegenPending(false);
+      await aiGenerateOg();
+    }, 2500);
+
+    return () => {
+      if (autoRegenTimer.current) clearTimeout(autoRegenTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.title, selected?.description, autoRegenOg]);
+
+
     if (!selected) return;
     setUploading(true);
     const safeRoute = selected.route.replace(/[^a-zA-Z0-9_-]/g, "_") || "global";
