@@ -78,10 +78,24 @@ const SeoPreview = () => {
   }, []);
 
   const fetchRow = async () => {
+    // Refuse to load tags for an unknown / malformed route, even if forced via URL.
+    const normalized = normalizeSeoSlug(route);
+    if (!isValidSlugShape(route) || !isKnownRoute(normalized)) {
+      setRow(null);
+      setGlobalRow(null);
+      setHistory([]);
+      setLiveTags(null);
+      toast({
+        title: "Route inconnue",
+        description: "Cette route n'existe pas dans l'application. Aucun tag SEO n'est affiché.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     setLiveTags(null);
     const [{ data: r }, { data: g }] = await Promise.all([
-      (supabase as any).from("seo_settings").select("*").eq("route", route).maybeSingle(),
+      (supabase as any).from("seo_settings").select("*").eq("route", normalized).maybeSingle(),
       (supabase as any).from("seo_settings").select("*").eq("route", "__global__").maybeSingle(),
     ]);
     setRow(r as SeoRow | null);
