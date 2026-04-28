@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RotateCcw, Search, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import { Loader2, RotateCcw, Search, CheckCircle2, XCircle, Clock, Eye, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import jsPDF from "jspdf";
 
 interface RefundRow {
   id: string;
@@ -51,6 +52,8 @@ const RefundsManager = () => {
   const [rows, setRows] = useState<RefundRow[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [selected, setSelected] = useState<RefundRow | null>(null);
   const [newStatus, setNewStatus] = useState<string>("pending");
   const [response, setResponse] = useState("");
@@ -147,6 +150,14 @@ const RefundsManager = () => {
   const filtered = rows.filter((r) => {
     const q = search.trim().toLowerCase();
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (dateFrom) {
+      const from = new Date(dateFrom + "T00:00:00").getTime();
+      if (new Date(r.created_at).getTime() < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo + "T23:59:59").getTime();
+      if (new Date(r.created_at).getTime() > to) return false;
+    }
     if (!q) return true;
     return (
       r.reason.toLowerCase().includes(q) ||
@@ -155,6 +166,112 @@ const RefundsManager = () => {
       r.id.toLowerCase().includes(q)
     );
   });
+
+  const exportCSV = () => {
+    if (filtered.length === 0) {
+      toast({ title: "Aucune donnée à exporter", variant: "destructive" });
+      return;
+    }
+    const headers = ["ID", "Date", "Type", "Statut", "Utilisateur", "Motif", "Description", "Montant (FCFA)", "Réponse admin"];
+    const escape = (v: string | number | null | undefined) => {
+      const s = (v ?? "").toString().replace(/"/g, '""');
+      return `"${s}"`;
+    };
+    const lines = filtered.map((r) =>
+      [
+        r.id,
+        format(new Date(r.created_at), "yyyy-MM-dd HH:mm"),
+        TYPE_LABELS[r.type] || r.type,
+        STATUS_LABELS[r.status]?.label || r.status,
+        r.user_name || r.user_id,
+        r.reason,
+        r.description || "",
+        r.amount ?? "",
+        r.admin_response || "",
+      ].map(escape).join(","),
+    );
+    const csv = "\uFEFF" + headers.map(escape).join(",") + "\n" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `remboursements_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "Export CSV téléchargé", description: `${filtered.length} demandes exportées.` });
+  };
+
+  const exportPDF = () => {
+    if (filtered.length === 0) {
+      toast({ title: "Aucune donnée à exporter", variant: "destructive" });
+      return;
+    }
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("Nukuconnect — Demandes de remboursement", 14, 15);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(
+      `Exporté le ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: fr })} • ${filtered.length} demande(s)`,
+      14,
+      21,
+    );
+    const filterLine = [
+      statusFilter !== "all" ? `Statut: ${STATUS_LABELS[statusFilter]?.label}` : null,
+      dateFrom ? `Du ${dateFrom}` : null,
+      dateTo ? `Au ${dateTo}` : null,
+    ].filter(Boolean).join(" • ");
+    if (filterLine) doc.text(`Filtres: ${filterLine}`, 14, 26);
+
+    const headers = ["Date", "Type", "Statut", "Utilisateur", "Motif", "Montant"];
+    const colWidths = [28, 28, 28, 45, 90, 25];
+    let y = 34;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, y - 4, colWidths.reduce((a, b) => a + b, 0), 6, "F");
+    let x = 14;
+    headers.forEach((h, i) => {
+      doc.text(h, x + 1, y);
+      x += colWidths[i];
+    });
+    y += 4;
+
+    doc.setFont("helvetica", "normal");
+    filtered.forEach((r) => {
+      if (y > pageHeight - 12) {
+        doc.addPage();
+        y = 15;
+      }
+      const row = [
+        format(new Date(r.created_at), "dd/MM/yy HH:mm"),
+        TYPE_LABELS[r.type] || r.type,
+        STATUS_LABELS[r.status]?.label || r.status,
+        (r.user_name || r.user_id).slice(0, 28),
+        r.reason.slice(0, 70),
+        r.amount ? `${Number(r.amount).toLocaleString()}` : "—",
+      ];
+      x = 14;
+      row.forEach((cell, i) => {
+        doc.text(cell, x + 1, y);
+        x += colWidths[i];
+      });
+      y += 5;
+      doc.setDrawColor(230);
+      doc.line(14, y - 2, 14 + colWidths.reduce((a, b) => a + b, 0), y - 2);
+    });
+
+    doc.save(`remboursements_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast({ title: "Export PDF téléchargé", description: `${filtered.length} demandes exportées.` });
+  };
+
 
   const counts = {
     pending: rows.filter((r) => r.status === "pending").length,
