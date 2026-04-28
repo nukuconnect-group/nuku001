@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, RefreshCw, ExternalLink, Copy, AlertTriangle, CheckCircle2, History, Globe, Smartphone, RotateCcw } from "lucide-react";
 import { APP_ROUTES, isKnownRoute, suggestRoutes } from "@/lib/appRoutes";
+import { normalizeSeoSlug, isValidSlugShape } from "@/lib/seoSlug";
 import { clearSeoCache } from "@/hooks/useSeoSettings";
 
 interface SeoRow {
@@ -77,10 +78,24 @@ const SeoPreview = () => {
   }, []);
 
   const fetchRow = async () => {
+    // Refuse to load tags for an unknown / malformed route, even if forced via URL.
+    const normalized = normalizeSeoSlug(route);
+    if (!isValidSlugShape(route) || !isKnownRoute(normalized)) {
+      setRow(null);
+      setGlobalRow(null);
+      setHistory([]);
+      setLiveTags(null);
+      toast({
+        title: "Route inconnue",
+        description: "Cette route n'existe pas dans l'application. Aucun tag SEO n'est affiché.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     setLiveTags(null);
     const [{ data: r }, { data: g }] = await Promise.all([
-      (supabase as any).from("seo_settings").select("*").eq("route", route).maybeSingle(),
+      (supabase as any).from("seo_settings").select("*").eq("route", normalized).maybeSingle(),
       (supabase as any).from("seo_settings").select("*").eq("route", "__global__").maybeSingle(),
     ]);
     setRow(r as SeoRow | null);
@@ -104,7 +119,10 @@ const SeoPreview = () => {
 
   useEffect(() => { if (authorized) fetchRow(); /* eslint-disable-next-line */ }, [authorized]);
 
-  const known = isKnownRoute(route);
+  const normalizedRoute = useMemo(() => normalizeSeoSlug(route), [route]);
+  const slugShapeOk = useMemo(() => isValidSlugShape(route), [route]);
+  const known = isKnownRoute(normalizedRoute);
+  const routeOk = slugShapeOk && known;
   const suggestions = useMemo(() => suggestRoutes(route, 8), [route]);
 
   const computed = useMemo(() => {
@@ -239,25 +257,53 @@ const SeoPreview = () => {
                 </div>
               )}
             </div>
-            <Button onClick={fetchRow} disabled={loading}>
+            <Button onClick={fetchRow} disabled={loading || !routeOk}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Charger
             </Button>
-            <Button variant="outline" asChild disabled={!known}>
-              <a href={route} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
+            <Button variant="outline" asChild disabled={!routeOk}>
+              <a href={normalizedRoute} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4" /> Voir</a>
             </Button>
           </div>
-          {!known ? (
+          {!slugShapeOk ? (
+            <p className="text-[11px] text-destructive flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Slug invalide. Format attendu : minuscules, chiffres, tirets et "/" uniquement.
+            </p>
+          ) : !known ? (
             <p className="text-[11px] text-amber-600 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> Route inconnue. Vérifiez l'orthographe ou choisissez une suggestion.
+              <AlertTriangle className="w-3 h-3" /> Route inconnue (normalisée : <span className="font-mono">{normalizedRoute}</span>). Aucun tag SEO ne sera affiché tant que vous ne choisissez pas une route existante.
             </p>
           ) : (
             <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> Route valide.
+              <CheckCircle2 className="w-3 h-3" /> Route valide{normalizedRoute !== route && <> (normalisée : <span className="font-mono">{normalizedRoute}</span>)</>}.
             </p>
           )}
         </CardContent>
       </Card>
+
+      {!routeOk && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="py-6 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-destructive">Affichage des balises SEO bloqué.</p>
+              <p className="text-muted-foreground mt-1">
+                La route normalisée <span className="font-mono">{normalizedRoute || "(vide)"}</span> n'est pas reconnue par l'application.
+                Pour éviter de prévisualiser des tags qui ne correspondent à aucune page réelle, l'aperçu, l'historique et la récupération live sont désactivés.
+              </p>
+              {suggestions.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {suggestions.slice(0, 6).map(s => (
+                    <button key={s} onClick={() => setRoute(s)} className="text-[11px] px-2 py-0.5 rounded bg-muted hover:bg-muted/80 font-mono">{s}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {routeOk && (
+        <>
 
       {/* Computed tags */}
       <Card>
@@ -390,6 +436,8 @@ const SeoPreview = () => {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
 
       <AlertDialog open={!!restoreCandidate} onOpenChange={(o) => !o && setRestoreCandidate(null)}>
         <AlertDialogContent>

@@ -62,6 +62,12 @@ const SeoManager = () => {
   const [scheduleAt, setScheduleAt] = useState<string>(""); // datetime-local string
   // Snapshot of the last-loaded values, used for the diff view
   const [original, setOriginal] = useState<SeoRow | null>(null);
+  // Auto-regenerate OG images when title/description change (debounced)
+  const [autoRegenOg, setAutoRegenOg] = useState<boolean>(() => {
+    try { return localStorage.getItem("seo_auto_regen_og") === "1"; } catch { return false; }
+  });
+  const [autoRegenPending, setAutoRegenPending] = useState(false);
+  const autoRegenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -249,6 +255,34 @@ const SeoManager = () => {
     load();
   };
 
+  // Persist toggle preference
+  useEffect(() => {
+    try { localStorage.setItem("seo_auto_regen_og", autoRegenOg ? "1" : "0"); } catch {}
+  }, [autoRegenOg]);
+
+  // Auto-regenerate OG images (all sizes) when title/description changes,
+  // but only on draft entries (never silently regenerate published images).
+  useEffect(() => {
+    if (!autoRegenOg || !selected || !original) return;
+    if (!selected.is_draft) return; // safety: only touch drafts
+    const titleChanged = (selected.title || "") !== (original.title || "");
+    const descChanged = (selected.description || "") !== (original.description || "");
+    if (!titleChanged && !descChanged) return;
+    if (!routeValidation.ok && !selected.is_global) return;
+
+    if (autoRegenTimer.current) clearTimeout(autoRegenTimer.current);
+    setAutoRegenPending(true);
+    autoRegenTimer.current = setTimeout(async () => {
+      setAutoRegenPending(false);
+      await aiGenerateOg();
+    }, 2500);
+
+    return () => {
+      if (autoRegenTimer.current) clearTimeout(autoRegenTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.title, selected?.description, autoRegenOg]);
+
   const handleUpload = async (file: File) => {
     if (!selected) return;
     setUploading(true);
@@ -410,6 +444,19 @@ const SeoManager = () => {
                 <Label className="text-xs">URL canonique</Label>
                 <Input value={selected.canonical_path || ""} onChange={e => setSelected({ ...selected, canonical_path: e.target.value })} placeholder="/ma-page" />
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3 bg-muted/30">
+              <div className="pr-3">
+                <Label className="text-xs flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Régénération auto de l'image OG
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Quand le titre ou la description change (brouillon uniquement), l'IA recrée automatiquement les images OG (toutes tailles) après 2,5 s.
+                  {autoRegenPending && <span className="ml-1 text-amber-600">• régénération en attente…</span>}
+                  {aiBusy === "image" && autoRegenOg && <span className="ml-1 text-primary">• génération en cours…</span>}
+                </p>
+              </div>
+              <Switch checked={autoRegenOg} onCheckedChange={setAutoRegenOg} />
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
               <div>
