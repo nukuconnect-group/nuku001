@@ -115,6 +115,7 @@ const Plans = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
