@@ -108,7 +108,7 @@ const CategoriesSection = () => {
               <div className="overflow-hidden rounded-none sm:rounded-none bg-card hover:shadow-md transition-all border border-border/50 hover:border-primary/30">
                 <div className="relative h-24 sm:h-28 overflow-hidden">
                   <img
-                    src={getCategoryImage(cat.name)}
+                    src={cat.image_url || getCategoryImage(cat.name)}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
