@@ -8,7 +8,7 @@ import { ShieldCheck, Sprout, Truck, ArrowRight, BadgeCheck } from "lucide-react
  */
 const DirectFromFarmHero = () => {
   return (
-    <section className="relative overflow-hidden border-y border-border/40">
+    <section className="relative overflow-hidden border-t border-border/40">
       {/* Background image — producteurs en interaction dans un champ */}
       <div className="absolute inset-0">
         <img
