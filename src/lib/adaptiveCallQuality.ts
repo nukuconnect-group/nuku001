@@ -97,6 +97,29 @@ export class AdaptiveCallQualityController {
     return this.currentTier;
   }
 
+  /** Renvoie la dernière raison de changement (lisible humain). */
+  getReason(): string {
+    return this.currentReason;
+  }
+
+  /** Active/désactive le mode économie de données. Plafonne la qualité à `low`. */
+  setDataSaver(enabled: boolean): void {
+    if (this.dataSaver === enabled) return;
+    this.dataSaver = enabled;
+    if (enabled) {
+      // On bascule immédiatement à low (ou audio-only si déjà sous low)
+      const next: QualityTier = this.currentTier === "audio-only" ? "audio-only" : "low";
+      void this.setTier(next, "économie de données activée");
+    } else {
+      // On laisse la boucle remonter selon les conditions réelles
+      this.stableTicks = 0;
+    }
+  }
+
+  isDataSaver(): boolean {
+    return this.dataSaver;
+  }
+
   // ---------------------------------------------------------------- internals
 
   private applyInitialTierFromConnection(): void {
