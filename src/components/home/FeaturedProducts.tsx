@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Loader2, Star, MapPin } from "lucide-react";
+import { ArrowRight, Flame, Loader2, Star, MapPin, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -33,13 +33,15 @@ const FeaturedProducts = () => {
   return (
     <section className="py-4 sm:py-8 lg:py-12 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-          <h2 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            {t("mp.forYou")}
+        <div className="flex items-center justify-between gap-2 mb-3 sm:mb-5">
+          <h2 className="font-heading text-[13px] sm:text-lg lg:text-2xl font-bold text-foreground flex items-center gap-1.5 sm:gap-2 leading-tight">
+            <span className="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg bg-primary/10 flex-shrink-0">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-primary" />
+            </span>
+            Produits populaires
           </h2>
-          <Link to="/marketplace">
-            <Button variant="ghost" size="sm" className="text-xs sm:text-sm text-primary gap-1">
+          <Link to="/marketplace" className="flex-shrink-0">
+            <Button variant="ghost" size="sm" className="text-[11px] sm:text-sm text-primary gap-1 px-2 sm:px-3 h-8">
               {t("mp.viewAll")}
               <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
@@ -104,7 +106,7 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-2xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[420px] lg:min-h-[480px]"
+      className="group relative block overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[260px] sm:min-h-[380px] lg:min-h-[480px]"
     >
       <img
         src={src}
@@ -116,53 +118,53 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
 
       {/* Top badge */}
-      <div className="absolute top-3 left-3">
-        <Badge className="bg-primary text-primary-foreground font-bold text-[10px] px-2 py-1 rounded-full shadow gap-1">
-          <Sparkles className="w-3 h-3" />
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+        <Badge className="bg-primary text-primary-foreground font-bold text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow gap-1">
+          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
           NOUVEAU
         </Badge>
       </div>
 
       {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-6 text-white">
-        <p className="text-[10px] uppercase tracking-wider text-white/80 font-semibold mb-2">
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 text-white">
+        <p className="text-[8px] sm:text-[10px] uppercase tracking-wider text-white/80 font-semibold mb-1 sm:mb-2 line-clamp-1">
           {product.category}
         </p>
-        <h3 className="font-heading text-xl lg:text-2xl font-bold leading-tight mb-1.5 line-clamp-2">
+        <h3 className="font-heading text-sm sm:text-lg lg:text-2xl font-bold leading-tight mb-1 sm:mb-1.5 line-clamp-2">
           {product.name}
         </h3>
         {product.description && (
-          <p className="text-xs lg:text-sm text-white/85 line-clamp-1 mb-3">
+          <p className="hidden sm:block text-xs lg:text-sm text-white/85 line-clamp-1 mb-3">
             {product.description}
           </p>
         )}
 
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-3">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`w-3.5 h-3.5 ${
+              className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${
                 i < Math.round(product.producer.rating)
                   ? "text-accent fill-accent"
                   : "text-white/30"
               }`}
             />
           ))}
-          <span className="text-[10px] text-white/80 ml-1">
+          <span className="text-[8px] sm:text-[10px] text-white/80 ml-0.5 sm:ml-1">
             ({Math.floor(product.producer.rating * 12)})
           </span>
         </div>
 
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex items-end justify-between gap-2 sm:gap-3">
           <div>
-            <p className="font-heading text-2xl lg:text-3xl font-bold text-white">
+            <p className="font-heading text-base sm:text-xl lg:text-3xl font-bold text-white">
               {formatPrice(product.price)}
             </p>
-            <p className="text-[10px] text-white/70">/{product.unit}</p>
+            <p className="text-[8px] sm:text-[10px] text-white/70">/{product.unit}</p>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-white/85">
-            <MapPin className="w-3 h-3" />
-            <span className="truncate max-w-[120px]">{product.location}</span>
+          <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] text-white/85">
+            <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="truncate max-w-[70px] sm:max-w-[120px]">{product.location}</span>
           </div>
         </div>
       </div>
@@ -179,7 +181,7 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[200px] lg:min-h-[230px]"
+      className="group relative block overflow-hidden rounded-lg sm:rounded-xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[125px] sm:min-h-[185px] lg:min-h-[230px]"
     >
       <img
         src={src}
@@ -190,21 +192,21 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
 
-      <div className="absolute top-2.5 left-2.5">
-        <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-2 py-0.5 rounded-full shadow">
+      <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5">
+        <Badge className="bg-accent text-accent-foreground font-bold text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full shadow">
           NEW
         </Badge>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 text-white">
-        <p className="text-[9px] uppercase tracking-wider text-white/80 font-semibold mb-1 line-clamp-1">
+      <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 lg:p-4 text-white">
+        <p className="text-[7px] sm:text-[9px] uppercase tracking-wider text-white/80 font-semibold mb-0.5 sm:mb-1 line-clamp-1">
           {product.category}
         </p>
-        <h3 className="font-heading text-sm lg:text-base font-bold leading-tight mb-1.5 line-clamp-1">
+        <h3 className="font-heading text-[11px] sm:text-sm lg:text-base font-bold leading-tight mb-1 sm:mb-1.5 line-clamp-1">
           {product.name}
         </h3>
 
-        <div className="flex items-center gap-1 mb-1.5">
+        <div className="hidden sm:flex items-center gap-1 mb-1.5">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
@@ -217,11 +219,11 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
           ))}
         </div>
 
-        <div className="flex items-end justify-between gap-2">
-          <p className="font-heading text-base lg:text-lg font-bold text-white">
+        <div className="flex items-end justify-between gap-1 sm:gap-2">
+          <p className="font-heading text-xs sm:text-base lg:text-lg font-bold text-white">
             {formatPrice(product.price)}
           </p>
-          <div className="flex items-center gap-0.5 text-[10px] text-white/85">
+          <div className="hidden sm:flex items-center gap-0.5 text-[10px] text-white/85">
             <MapPin className="w-2.5 h-2.5" />
             <span className="truncate max-w-[80px]">{product.location}</span>
           </div>

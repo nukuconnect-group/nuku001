@@ -8,7 +8,7 @@ import { ShieldCheck, Sprout, Truck, ArrowRight, BadgeCheck } from "lucide-react
  */
 const DirectFromFarmHero = () => {
   return (
-    <section className="relative overflow-hidden border-y border-border/40">
+    <section className="relative overflow-hidden border-t border-border/40">
       {/* Background image — producteurs en interaction dans un champ */}
       <div className="absolute inset-0">
         <img
@@ -83,7 +83,7 @@ const DirectFromFarmHero = () => {
           <div className="flex flex-wrap gap-3 pt-3">
             <Link to="/marketplace">
               <Button variant="hero" size="lg" className="gap-2">
-                Acheter direct producteur
+                Acheter chez les producteurs
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
