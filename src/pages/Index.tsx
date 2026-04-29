@@ -13,7 +13,7 @@ import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
 import HomeDemandsSection from "@/components/home/HomeDemandsSection";
-import VerifiedSuppliersSection from "@/components/home/VerifiedSuppliersSection";
+
 import { useProfile } from "@/contexts/ProfileContext";
 
 const Index = () => {
