@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "@/hooks/use-toast";
 import { logDiag } from "@/lib/diagnostics";
+import { requestUserMedia, isMediaPermissionError, type MediaPermissionError } from "@/lib/mediaPermissions";
+import { AdaptiveCallQualityController, type QualityTier } from "@/lib/adaptiveCallQuality";
 
 /**
  * Call signaling via Supabase Realtime broadcast.
