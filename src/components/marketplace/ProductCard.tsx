@@ -309,6 +309,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           </div>
         </CardContent>
       </Card>
+      {!minimal && quickViewOpen && (
+        <Suspense fallback={null}>
+          <ProductQuickView
+            product={product}
+            open={quickViewOpen}
+            onOpenChange={setQuickViewOpen}
+          />
+        </Suspense>
+      )}
     </Link>
   );
 };
