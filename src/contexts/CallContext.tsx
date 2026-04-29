@@ -401,8 +401,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [user?.id, handleSignal]);
 
   // ----- public actions -----
-  const startCall = useCallback(async ({ conversationId, peerUserId, peerName, peerAvatar }: {
-    conversationId: string; peerUserId: string; peerName: string; peerAvatar: string;
+  const startCall = useCallback(async ({ conversationId, peerUserId, peerName, peerAvatar, withVideo = false }: {
+    conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean;
   }) => {
     if (!user?.id || !profile?.id) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour appeler.", variant: "destructive" });
@@ -415,17 +415,21 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (status !== "idle") return;
 
     const callId = crypto.randomUUID();
-    const m: CallMeta = { callId, conversationId, peerUserId, peerName, peerAvatar, isCaller: true };
+    const m: CallMeta = { callId, conversationId, peerUserId, peerName, peerAvatar, isCaller: true, withVideo };
     setMeta(m);
     setStatus("outgoing");
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: withVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+      });
       localStreamRef.current = stream;
+      setLocalStream(stream);
       const pc = buildPeerConnection(peerUserId, callId);
       pcRef.current = pc;
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
-      const offer = await pc.createOffer({ offerToReceiveAudio: true });
+      const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: withVideo });
       await pc.setLocalDescription(offer);
 
       await sendSignal(peerUserId, {
@@ -435,6 +439,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         from: user.id,
         callerName: profile.full_name || "Appelant",
         callerAvatar: profile.avatar_url || "",
+        withVideo,
         offer,
       });
 
@@ -447,7 +452,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }, 35000);
     } catch (e: any) {
       console.error("startCall error", e);
-      toast({ title: "Erreur micro", description: e?.message || "Accès au micro refusé.", variant: "destructive" });
+      toast({ title: "Erreur média", description: e?.message || "Accès au micro/caméra refusé.", variant: "destructive" });
       cleanupCall();
       setStatus("idle");
       setMeta(null);
