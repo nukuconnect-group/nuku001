@@ -214,7 +214,11 @@ const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) 
     <div
       className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full border text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
     >
-      <span className="opacity-80">{icon}</span>
+  return (
+    <div
+      className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full border text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
+    >
+      <span>{icon}</span>
       {isLoading ? (
         <span className="inline-block h-3 w-10 bg-current/20 animate-pulse rounded" />
       ) : (
@@ -222,9 +226,6 @@ const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) 
           {value.toLocaleString("fr-FR")}
         </span>
       )}
-      <span className="opacity-80 font-medium">{label}</span>
+      <span className="font-semibold">{label}</span>
     </div>
   );
-};
-
-export default VerifiedSuppliersBar;
