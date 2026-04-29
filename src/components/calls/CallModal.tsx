@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useCall } from "@/contexts/CallContext";
-import { Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -11,15 +11,33 @@ function fmtDuration(sec: number) {
 }
 
 export default function CallModal() {
-  const { status, meta, remoteStream, isMuted, durationSec, acceptCall, declineCall, hangup, toggleMute } = useCall();
+  const {
+    status, meta, remoteStream, localStream, isMuted, isCameraOff,
+    durationSec, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
+  } = useCall();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const isVideo = !!meta?.withVideo;
 
   useEffect(() => {
     if (audioRef.current && remoteStream) {
       audioRef.current.srcObject = remoteStream;
       audioRef.current.play().catch(() => {});
     }
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(() => {});
+    }
   }, [remoteStream]);
+
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, [localStream]);
 
   if (status === "idle" || !meta) return null;
 
@@ -31,37 +49,73 @@ export default function CallModal() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={isIncoming ? `Appel entrant de ${meta.peerName}` : isOutgoing ? `Appel sortant vers ${meta.peerName}` : `En communication avec ${meta.peerName}`}
+      aria-label={isIncoming ? `Appel ${isVideo ? "vidéo " : ""}entrant de ${meta.peerName}` : isOutgoing ? `Appel ${isVideo ? "vidéo " : ""}sortant vers ${meta.peerName}` : `En communication avec ${meta.peerName}`}
       className="fixed inset-0 z-[100] bg-gradient-to-b from-emerald-900/95 to-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-between py-12 px-6 animate-fade-in"
     >
-      {/* Hidden audio element for remote stream */}
+      {/* Hidden audio element (always for fallback audio playback) */}
       <audio ref={audioRef} autoPlay playsInline />
 
-      {/* Top: avatar + name + status */}
-      <div className="flex flex-col items-center gap-4 text-white text-center pt-8">
-        <div className={cn(
-          "relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/20",
-          (isIncoming || isOutgoing) && "animate-pulse"
-        )}>
-          {meta.peerAvatar ? (
-            <img src={meta.peerAvatar} alt={meta.peerName} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-emerald-700 flex items-center justify-center text-4xl font-bold" aria-hidden="true">
-              {meta.peerName.charAt(0).toUpperCase()}
-            </div>
+      {/* Remote video — fullscreen during in-call video */}
+      {isVideo && isInCall && (
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover bg-black z-0"
+        />
+      )}
+
+      {/* Local video preview (PiP) — visible whenever we have local video */}
+      {isVideo && localStream && (
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          className={cn(
+            "absolute z-10 rounded-2xl border-2 border-white/30 shadow-xl object-cover bg-black",
+            isInCall
+              ? "top-6 right-6 w-28 h-40 sm:w-36 sm:h-52"
+              : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96"
           )}
+        />
+      )}
+
+      {/* Top: avatar + name + status — masqué pendant un appel vidéo en cours */}
+      {!(isVideo && isInCall) && (
+        <div className="relative z-10 flex flex-col items-center gap-4 text-white text-center pt-8">
+          <div className={cn(
+            "relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/20",
+            (isIncoming || isOutgoing) && "animate-pulse"
+          )}>
+            {meta.peerAvatar ? (
+              <img src={meta.peerAvatar} alt={meta.peerName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-emerald-700 flex items-center justify-center text-4xl font-bold" aria-hidden="true">
+                {meta.peerName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <h2 className="text-2xl font-semibold">{meta.peerName}</h2>
+          <p className="text-sm text-white/70" aria-live="assertive" aria-atomic="true">
+            {isIncoming && (isVideo ? "📹 Appel vidéo entrant…" : "📞 Appel entrant…")}
+            {isOutgoing && (isVideo ? "Appel vidéo en cours…" : "Appel en cours…")}
+            {isInCall && fmtDuration(durationSec)}
+          </p>
         </div>
-        <h2 className="text-2xl font-semibold">{meta.peerName}</h2>
-        <p className="text-sm text-white/70" aria-live="assertive" aria-atomic="true">
-          {isIncoming && "📞 Appel entrant…"}
-          {isOutgoing && "Appel en cours…"}
-          {isInCall && fmtDuration(durationSec)}
-        </p>
-      </div>
+      )}
+
+      {/* Overlay name+timer for in-call video */}
+      {isVideo && isInCall && (
+        <div className="relative z-10 flex flex-col items-center gap-1 text-white text-center pt-4 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm">
+          <h2 className="text-lg font-semibold">{meta.peerName}</h2>
+          <p className="text-xs text-white/80">{fmtDuration(durationSec)}</p>
+        </div>
+      )}
 
       {/* Visual ringing animation */}
       {(isIncoming || isOutgoing) && (
-        <div className="flex gap-2">
+        <div className="relative z-10 flex gap-2">
           {[0, 1, 2].map(i => (
             <span
               key={i}
@@ -73,7 +127,7 @@ export default function CallModal() {
       )}
 
       {/* Bottom controls */}
-      <div className="flex items-center gap-6 pb-8">
+      <div className="relative z-10 flex items-center gap-4 sm:gap-6 pb-8">
         {isIncoming ? (
           <>
             <Button
@@ -88,7 +142,7 @@ export default function CallModal() {
               className="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-700 shadow-lg animate-pulse"
               aria-label="Accepter"
             >
-              <Phone className="w-7 h-7 text-white" />
+              {isVideo ? <Video className="w-7 h-7 text-white" /> : <Phone className="w-7 h-7 text-white" />}
             </Button>
           </>
         ) : (
@@ -103,6 +157,18 @@ export default function CallModal() {
                 aria-label={isMuted ? "Activer le micro" : "Couper le micro"}
               >
                 {isMuted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+              </Button>
+            )}
+            {isInCall && isVideo && (
+              <Button
+                onClick={toggleCamera}
+                className={cn(
+                  "w-14 h-14 rounded-full shadow-lg",
+                  isCameraOff ? "bg-white/20 hover:bg-white/30" : "bg-white/10 hover:bg-white/20"
+                )}
+                aria-label={isCameraOff ? "Activer la caméra" : "Couper la caméra"}
+              >
+                {isCameraOff ? <VideoOff className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
               </Button>
             )}
             <Button
