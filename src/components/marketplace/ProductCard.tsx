@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck, Package } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck, Package, Eye } from "lucide-react";
 import { Product } from "@/data/marketplace";
+
+const ProductQuickView = lazy(() => import("./ProductQuickView"));
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -39,6 +41,13 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const [showReviews, setShowReviews] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [listImgError, setListImgError] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickViewOpen(true);
+  };
 
   // Wholesale tiers : on récupère seulement le prix le plus bas pour afficher "dès X F"
   const { data: tiers = [] } = useProductPriceTiers(product.id);
