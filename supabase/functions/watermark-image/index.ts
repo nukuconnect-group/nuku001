@@ -4,7 +4,7 @@
 // the Supabase Edge Runtime). Watermark size adapts to the image aspect
 // ratio. Original mime type (jpeg / png) is preserved when possible.
 // Errors are logged to public.watermark_error_logs for admin review.
-import { Jimp } from "npm:[email protected]";
+import { Jimp } from "npm:jimp@1.6.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
