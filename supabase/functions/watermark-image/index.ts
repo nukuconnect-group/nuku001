@@ -9,7 +9,7 @@ import {
   initializeImageMagick,
   MagickFormat,
   CompositeOperator,
-} from "https://deno.land/x/[email protected]/mod.ts";
+} from "https://deno.land/x/imagemagick_deno@0.0.31/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
