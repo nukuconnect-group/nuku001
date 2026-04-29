@@ -207,14 +207,14 @@ interface CounterPillProps {
 const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) => {
   const toneClasses =
     tone === "primary"
-      ? "bg-primary/10 text-primary border-primary/20"
-      : "bg-accent/15 text-accent-foreground border-accent/30";
+      ? "bg-primary/10 text-primary border-primary/30"
+      : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
 
   return (
     <div
       className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full border text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
     >
-      <span className="opacity-80">{icon}</span>
+      <span>{icon}</span>
       {isLoading ? (
         <span className="inline-block h-3 w-10 bg-current/20 animate-pulse rounded" />
       ) : (
@@ -222,7 +222,7 @@ const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) 
           {value.toLocaleString("fr-FR")}
         </span>
       )}
-      <span className="opacity-80 font-medium">{label}</span>
+      <span className="font-semibold">{label}</span>
     </div>
   );
 };

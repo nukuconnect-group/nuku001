@@ -128,11 +128,11 @@ const HomeDemandsSection = () => {
               <Link
                 key={d.id}
                 to={linkHref}
-                className="flex-shrink-0 w-[170px] sm:w-[200px] snap-start group"
+                className="flex-shrink-0 w-[280px] sm:w-[340px] min-w-[280px] snap-start group"
               >
-                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-col h-[260px] sm:h-[280px]">
-                  {/* Image — toujours présente : image fournie OU fallback Unsplash par catégorie */}
-                  <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
+                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-row h-[120px] sm:h-[130px]">
+                  {/* Image rectangulaire à gauche */}
+                  <div className="relative h-full w-[110px] sm:w-[130px] flex-shrink-0 bg-muted overflow-hidden">
                     <DemandImage
                       src={d.image_url}
                       category={d.category}
