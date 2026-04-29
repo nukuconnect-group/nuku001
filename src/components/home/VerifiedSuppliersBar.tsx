@@ -82,7 +82,11 @@ const VerifiedSuppliersBar = () => {
   const realSuppliers = data?.suppliers ?? 0;
   const producers = Math.max(MIN_PRODUCERS, MIN_PRODUCERS + realProducers);
   const suppliers = Math.max(MIN_SUPPLIERS, MIN_SUPPLIERS + realSuppliers);
-  const avatars = data?.avatars ?? [];
+  const allAvatars = data?.avatars ?? [];
+  // Priorise ceux qui ont une photo, complète avec les autres pour atteindre min. 5
+  const withAvatar = allAvatars.filter((a) => !!a.avatar_url);
+  const withoutAvatar = allAvatars.filter((a) => !a.avatar_url);
+  const avatars = [...withAvatar, ...withoutAvatar].slice(0, 8);
   const totalNetwork = producers + suppliers;
   // Affichage compact "+5K" pour le badge avatars
   const networkBadge = totalNetwork >= 1000
