@@ -97,7 +97,7 @@ const CategoriesSection = () => {
         {/* Horizontal scroll on mobile, grid on tablet/desktop — same card style */}
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory lg:grid lg:grid-cols-6 lg:overflow-visible lg:snap-none"
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
         >
           {activeCategories.map((cat: any) => (
             <Link
