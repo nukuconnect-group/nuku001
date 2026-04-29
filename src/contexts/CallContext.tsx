@@ -244,6 +244,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopIncomingAlerts();
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
+    try { adaptiveCtrlRef.current?.stop(); } catch {}
+    adaptiveCtrlRef.current = null;
     try { pcRef.current?.close(); } catch {}
     pcRef.current = null;
     try { localStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
@@ -253,6 +255,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsMuted(false);
     setIsCameraOff(false);
     setDurationSec(0);
+    setQualityTier("high");
     pendingIceRef.current = [];
     pendingOfferRef.current = null;
     if (peerChannelRef.current) {
