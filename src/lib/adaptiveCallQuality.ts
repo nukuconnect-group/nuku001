@@ -30,10 +30,12 @@ const TIER_PROFILES: Record<QualityTier, TierProfile> = {
 
 interface ControllerOptions {
   pc: RTCPeerConnection;
-  /** Callback informatif (UI) à chaque changement de palier */
+  /** Callback informatif (UI) à chaque changement de palier — reçoit le palier + raison technique. */
   onTierChange?: (tier: QualityTier, reason: string) => void;
   /** Stream local pour pouvoir activer/désactiver la piste vidéo en mode audio-only */
   localStream: MediaStream;
+  /** Si true au démarrage, force le mode économie de données (palier max = low). */
+  initialDataSaver?: boolean;
 }
 
 export class AdaptiveCallQualityController {
@@ -41,17 +43,20 @@ export class AdaptiveCallQualityController {
   private localStream: MediaStream;
   private onTierChange?: (tier: QualityTier, reason: string) => void;
   private currentTier: QualityTier = "high";
+  private currentReason = "init";
   private intervalId: number | null = null;
   private prevPacketsLost = 0;
   private prevPacketsSent = 0;
   private stableTicks = 0;
   private destroyed = false;
   private connectionListener: (() => void) | null = null;
+  private dataSaver = false;
 
   constructor(opts: ControllerOptions) {
     this.pc = opts.pc;
     this.localStream = opts.localStream;
     this.onTierChange = opts.onTierChange;
+    this.dataSaver = !!opts.initialDataSaver;
   }
 
   /** Démarre la boucle d'adaptation. */
@@ -90,6 +95,29 @@ export class AdaptiveCallQualityController {
   /** Renvoie le palier actuel (utile pour affichage debug). */
   getTier(): QualityTier {
     return this.currentTier;
+  }
+
+  /** Renvoie la dernière raison de changement (lisible humain). */
+  getReason(): string {
+    return this.currentReason;
+  }
+
+  /** Active/désactive le mode économie de données. Plafonne la qualité à `low`. */
+  setDataSaver(enabled: boolean): void {
+    if (this.dataSaver === enabled) return;
+    this.dataSaver = enabled;
+    if (enabled) {
+      // On bascule immédiatement à low (ou audio-only si déjà sous low)
+      const next: QualityTier = this.currentTier === "audio-only" ? "audio-only" : "low";
+      void this.setTier(next, "économie de données activée");
+    } else {
+      // On laisse la boucle remonter selon les conditions réelles
+      this.stableTicks = 0;
+    }
+  }
+
+  isDataSaver(): boolean {
+    return this.dataSaver;
   }
 
   // ---------------------------------------------------------------- internals
@@ -181,9 +209,16 @@ export class AdaptiveCallQualityController {
 
   private async setTier(tier: QualityTier, reason: string): Promise<void> {
     if (this.destroyed) return;
-    const profile = TIER_PROFILES[tier];
+    // Plafond en mode économie de données : pas de high/medium
+    let effectiveTier = tier;
+    if (this.dataSaver && (tier === "high" || tier === "medium")) {
+      effectiveTier = "low";
+      reason = `${reason} · économie de données`;
+    }
+    const profile = TIER_PROFILES[effectiveTier];
     const prev = this.currentTier;
-    this.currentTier = tier;
+    this.currentTier = effectiveTier;
+    this.currentReason = reason;
 
     try {
       // 1) Ajuste la piste vidéo sortante via le sender
@@ -207,13 +242,13 @@ export class AdaptiveCallQualityController {
 
       // 2) Mode audio-only : on coupe l'envoi vidéo (sans détruire la track)
       const videoTracks = this.localStream.getVideoTracks();
-      if (tier === "audio-only") {
+      if (effectiveTier === "audio-only") {
         videoTracks.forEach(t => { t.enabled = false; });
       } else if (prev === "audio-only") {
         videoTracks.forEach(t => { t.enabled = true; });
       }
 
-      this.onTierChange?.(tier, reason);
+      this.onTierChange?.(effectiveTier, reason);
     } catch (e) {
       console.warn("[adaptive-quality] setTier failed", e);
     }

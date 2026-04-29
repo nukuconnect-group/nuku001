@@ -34,6 +34,11 @@ interface CallContextValue {
   durationSec: number;
   /** Palier adaptatif courant (high / medium / low / audio-only). */
   qualityTier: QualityTier;
+  /** Raison du dernier changement de qualité (lisible humain). */
+  qualityReason: string;
+  /** Mode économie de données (manuel) — plafonne la qualité à `low`. */
+  dataSaver: boolean;
+  setDataSaver: (enabled: boolean) => void;
   /** Dernière erreur de permission micro/caméra, à afficher par l'UI si besoin. */
   lastPermissionError: MediaPermissionError | null;
   clearPermissionError: () => void;
@@ -91,6 +96,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
   const [qualityTier, setQualityTier] = useState<QualityTier>("high");
+  const [qualityReason, setQualityReason] = useState<string>("Connexion initialisée");
+  const [dataSaver, setDataSaverState] = useState<boolean>(() => {
+    try { return localStorage.getItem("nuku-call-data-saver") === "1"; } catch { return false; }
+  });
   const [lastPermissionError, setLastPermissionError] = useState<MediaPermissionError | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -427,8 +436,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
     const ctrl = new AdaptiveCallQualityController({
       pc,
       localStream: stream,
+      initialDataSaver: dataSaver,
       onTierChange: (tier, reason) => {
         setQualityTier(tier);
+        setQualityReason(reason);
         if (tier === "audio-only") {
           toast({
             title: "Connexion faible",
@@ -444,6 +455,18 @@ export function CallProvider({ children }: { children: ReactNode }) {
     });
     ctrl.start();
     adaptiveCtrlRef.current = ctrl;
+  }, [dataSaver]);
+
+  const setDataSaver = useCallback((enabled: boolean) => {
+    setDataSaverState(enabled);
+    try { localStorage.setItem("nuku-call-data-saver", enabled ? "1" : "0"); } catch {}
+    try { adaptiveCtrlRef.current?.setDataSaver(enabled); } catch {}
+    toast({
+      title: enabled ? "Économie de données activée" : "Économie de données désactivée",
+      description: enabled
+        ? "L'appel privilégiera l'audio et la basse résolution."
+        : "La qualité s'adapte de nouveau automatiquement à votre réseau.",
+    });
   }, []);
 
   // ----- public actions -----
@@ -625,7 +648,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const value: CallContextValue = {
     status, meta, remoteStream, localStream, isMuted, isCameraOff, durationSec,
-    qualityTier, lastPermissionError, clearPermissionError,
+    qualityTier, qualityReason, dataSaver, setDataSaver,
+    lastPermissionError, clearPermissionError,
     startCall, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   };
 
