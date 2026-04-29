@@ -150,8 +150,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <SmartWatermarkedImage
-            originalSrc={imgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+          <img
+            src={imgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
             alt={product.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
