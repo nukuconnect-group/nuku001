@@ -1,34 +1,38 @@
 // deno-lint-ignore-file no-explicit-any
-// Watermark proxy: fetches a remote image, burns a centered Nukuconnect
-// watermark into the pixel data, and returns the new image. Watermark
-// size adapts to the image aspect ratio (square / portrait / landscape).
-// The original mime type (jpeg / png / webp) is preserved when possible.
+// Watermark proxy: fetches a remote image, burns the centered Nukuconnect
+// watermark into the pixel data using Jimp (pure JS, no WASM, works in
+// the Supabase Edge Runtime). Watermark size adapts to the image aspect
+// ratio. Original mime type (jpeg / png) is preserved when possible.
 // Errors are logged to public.watermark_error_logs for admin review.
-import {
-  ImageMagick,
-  initializeImageMagick,
-  MagickFormat,
-  CompositeOperator,
-} from "https://deno.land/x/imagemagick_deno@0.0.31/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Jimp } from "npm:jimp@1.6.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { LOGO_B64 } from "./_logo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-let magickReady: Promise<void> | null = null;
-const ensureMagick = () => (magickReady ??= initializeImageMagick());
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
 
-let logoBytes: Uint8Array | null = null;
+function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  // Slice yields a fresh ArrayBuffer (Jimp accepts ArrayBuffer / Buffer only).
+  return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
+}
+
+let logoPromise: Promise<any> | null = null;
 const loadLogo = async () => {
-  if (logoBytes) return logoBytes;
-  const url = new URL("./_logo.png", import.meta.url);
-  logoBytes = new Uint8Array(await Deno.readFile(url));
-  return logoBytes;
+  if (!logoPromise) {
+    logoPromise = Jimp.fromBuffer(toArrayBuffer(b64ToBytes(LOGO_B64)));
+  }
+  return await logoPromise;
 };
 
-// Lazy admin client for error logging (uses service-role)
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const adminClient = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
@@ -48,78 +52,17 @@ async function logError(payload: {
   }
 }
 
-type Fmt = { magick: MagickFormat; mime: string; ext: string };
+type Fmt = { mime: "image/png" | "image/jpeg" };
 
 function resolveFormat(reqFormat: string | null, contentType: string | null, target: string): Fmt {
   const want = (reqFormat || "").toLowerCase();
   const ct = (contentType || "").toLowerCase();
   const lowerUrl = target.toLowerCase();
-
   const isPng = want === "png" || ct.includes("png") || /\.png(\?|$)/.test(lowerUrl);
-  const isWebp = want === "webp" || ct.includes("webp") || /\.webp(\?|$)/.test(lowerUrl);
-
-  if (isPng) return { magick: MagickFormat.Png, mime: "image/png", ext: "png" };
-  if (isWebp) return { magick: MagickFormat.WebP, mime: "image/webp", ext: "webp" };
-  return { magick: MagickFormat.Jpeg, mime: "image/jpeg", ext: "jpg" };
+  // WebP/AVIF not natively supported by Jimp — fall back to JPEG output.
+  if (isPng) return { mime: "image/png" };
+  return { mime: "image/jpeg" };
 }
-
-const burnWatermark = (src: Uint8Array, logo: Uint8Array, fmt: Fmt): Promise<Uint8Array> =>
-  new Promise((resolve, reject) => {
-    try {
-      ImageMagick.read(src, (img) => {
-        const MAX = 1600;
-        let w = img.width;
-        let h = img.height;
-        if (Math.max(w, h) > MAX) {
-          const r = MAX / Math.max(w, h);
-          w = Math.round(w * r);
-          h = Math.round(h * r);
-          img.resize(w, h);
-        }
-
-        ImageMagick.read(logo, (lg) => {
-          // Aspect-aware sizing: target a percentage of the SHORTEST side
-          // so the watermark stays readable on portrait/landscape/square.
-          const ratio = w / h;
-          let pctOfShort: number;
-          if (ratio > 1.4) {
-            // landscape — slimmer logo, scaled to height
-            pctOfShort = 0.65;
-          } else if (ratio < 0.75) {
-            // portrait — keep watermark compact relative to width
-            pctOfShort = 0.7;
-          } else {
-            // square-ish
-            pctOfShort = 0.6;
-          }
-          const shortSide = Math.min(w, h);
-          let targetW = Math.round(shortSide * pctOfShort);
-          let targetH = Math.round((lg.height / lg.width) * targetW);
-          // Safety: never exceed 80% of either dimension
-          if (targetW > w * 0.8) {
-            targetW = Math.round(w * 0.8);
-            targetH = Math.round((lg.height / lg.width) * targetW);
-          }
-          if (targetH > h * 0.8) {
-            targetH = Math.round(h * 0.8);
-            targetW = Math.round((lg.width / lg.height) * targetH);
-          }
-          lg.resize(targetW, targetH);
-
-          const x = Math.round((w - targetW) / 2);
-          const y = Math.round((h - targetH) / 2);
-          img.composite(lg, x, y, CompositeOperator.Over);
-
-          if (fmt.magick === MagickFormat.Jpeg) img.quality = 86;
-          else if (fmt.magick === MagickFormat.WebP) img.quality = 88;
-
-          img.write(fmt.magick, (data) => resolve(new Uint8Array(data)));
-        });
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -150,9 +93,45 @@ Deno.serve(async (req) => {
     const srcBytes = new Uint8Array(await upstream.arrayBuffer());
     const fmt = resolveFormat(reqFormat, upstream.headers.get("content-type"), target);
 
-    await ensureMagick();
-    const logo = await loadLogo();
-    const out = await burnWatermark(srcBytes, logo, fmt);
+    const [img, logoOriginal] = await Promise.all([Jimp.fromBuffer(toArrayBuffer(srcBytes)), loadLogo()]);
+
+    // Cap size for memory
+    const MAX = 1400;
+    let w = img.bitmap.width;
+    let h = img.bitmap.height;
+    if (Math.max(w, h) > MAX) {
+      const r = MAX / Math.max(w, h);
+      w = Math.round(w * r);
+      h = Math.round(h * r);
+      img.resize({ w, h });
+    }
+
+    // Aspect-aware sizing relative to the shortest side
+    const ratio = w / h;
+    const pctOfShort = ratio > 1.4 ? 0.65 : ratio < 0.75 ? 0.7 : 0.6;
+    const shortSide = Math.min(w, h);
+    let targetW = Math.round(shortSide * pctOfShort);
+    const logoRatio = logoOriginal.bitmap.height / logoOriginal.bitmap.width;
+    let targetH = Math.round(targetW * logoRatio);
+    if (targetW > w * 0.8) {
+      targetW = Math.round(w * 0.8);
+      targetH = Math.round(targetW * logoRatio);
+    }
+    if (targetH > h * 0.8) {
+      targetH = Math.round(h * 0.8);
+      targetW = Math.round(targetH / logoRatio);
+    }
+
+    // Clone + resize the logo so we don't mutate the cached one
+    const logo = logoOriginal.clone();
+    logo.resize({ w: targetW, h: targetH });
+
+    const x = Math.round((w - targetW) / 2);
+    const y = Math.round((h - targetH) / 2);
+
+    img.composite(logo, x, y, { opacitySource: 0.55 } as any);
+
+    const out: Uint8Array = await img.getBuffer(fmt.mime, fmt.mime === "image/jpeg" ? { quality: 86 } : undefined as any);
 
     return new Response(out, {
       headers: {
