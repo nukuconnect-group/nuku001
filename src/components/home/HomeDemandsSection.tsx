@@ -75,11 +75,13 @@ const DemandImage = ({ src, category, title }: { src?: string; category: string;
 const HomeDemandsSection = () => {
   const { data: demands = [], isLoading } = useDemands();
   const { formatPrice } = useLanguage();
+  const PAGE_SIZE = 4;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   if (isLoading) return null;
 
-  // Combiner les vraies demandes + exemples pour toujours avoir 4+ items
-  const realDemands = demands.slice(0, 8).map((d) => ({
+  // Combiner les vraies demandes + exemples pour toujours avoir un visuel riche
+  const realDemands = demands.slice(0, 20).map((d) => ({
     id: d.id,
     title: d.title,
     category: d.category,
@@ -90,10 +92,11 @@ const HomeDemandsSection = () => {
     profile: d.profile,
     image_url: (d as any).image_url,
   }));
-  const items = [...realDemands, ...SAMPLE_DEMANDS].slice(0, Math.max(realDemands.length, 4) + (realDemands.length < 4 ? 4 - realDemands.length : 0));
-  const finalItems = items.length >= 4 ? items : [...realDemands, ...SAMPLE_DEMANDS].slice(0, 8);
+  const allItems = [...realDemands, ...SAMPLE_DEMANDS];
+  if (allItems.length === 0) return null;
 
-  if (finalItems.length === 0) return null;
+  const finalItems = allItems.slice(0, visibleCount);
+  const hasMore = visibleCount < allItems.length;
 
   return (
     <section className="py-6 sm:py-10 bg-gradient-to-br from-accent/5 to-transparent">
