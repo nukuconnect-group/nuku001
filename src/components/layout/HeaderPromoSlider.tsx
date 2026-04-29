@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Truck, GraduationCap, ShoppingBag } from "lucide-react";
+import { Leaf, Truck, GraduationCap, Network } from "lucide-react";
+import networkImg from "@/assets/promo-network-connected.jpg";
 
 const slides = [
   {
@@ -9,6 +10,7 @@ const slides = [
     cta: "EXPLORER",
     href: "/marketplace",
     Icon: Leaf,
+    image: null as string | null,
   },
   {
     title: "LIVRAISON EXPRESS",
@@ -16,6 +18,7 @@ const slides = [
     cta: "COMMANDER",
     href: "/marketplace",
     Icon: Truck,
+    image: null,
   },
   {
     title: "FORMATIONS GRATUITES",
@@ -23,13 +26,15 @@ const slides = [
     cta: "APPRENDRE",
     href: "/formations",
     Icon: GraduationCap,
+    image: null,
   },
   {
-    title: "MARKETPLACE",
-    subtitle: "Achetez & Vendez",
-    cta: "DÉCOUVRIR",
-    href: "/marketplace",
-    Icon: ShoppingBag,
+    title: "RÉSEAU AGRICOLE CONNECTÉ",
+    subtitle: "Producteurs & acheteurs",
+    cta: "REJOINDRE",
+    href: "/producteurs",
+    Icon: Network,
+    image: networkImg,
   },
 ];
 
