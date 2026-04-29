@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Users, ArrowRight } from "lucide-react";
+import { ShieldCheck, ArrowRight, Sprout, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
@@ -11,71 +12,106 @@ interface VerifiedSupplier {
   business_name: string | null;
   avatar_url: string | null;
   is_verified?: boolean | null;
+  user_type?: string | null;
 }
 
+const QUERY_KEY = ["verified-suppliers-bar"] as const;
+
 /**
- * Mini-section affichant un aperçu des fournisseurs vérifiés (logos + compteur).
- * Visible uniquement sur tablette et ordinateur, juste après le hero "achat direct".
+ * Mini-section "Réseau de confiance" — desktop & tablette uniquement.
+ * Affiche compteurs SÉPARÉS (producteurs vs fournisseurs) + aperçu logos,
+ * mis à jour en TEMPS RÉEL via Supabase Realtime sur la table profiles.
  */
 const VerifiedSuppliersBar = () => {
-  const { data, isLoading } = useQuery({
-    queryKey: ["verified-suppliers-bar"],
-    queryFn: async () => {
-      // Compteur total : producteurs + fournisseurs (tous, pour valoriser le réseau)
-      const { count } = await supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .in("user_type", ["producer", "supplier"]);
+  const queryClient = useQueryClient();
 
-      // Aperçu logos : priorité aux vérifiés, sinon n'importe quel producteur/fournisseur avec avatar
-      const { data: suppliers } = await supabase
-        .from("profiles")
-        .select("id, full_name, business_name, avatar_url, is_verified")
-        .in("user_type", ["producer", "supplier"])
-        .not("avatar_url", "is", null)
-        .order("is_verified", { ascending: false })
-        .limit(8);
+  const { data, isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      // Compteurs séparés en parallèle
+      const [producersRes, suppliersRes, avatarsRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("user_type", "producer"),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("user_type", "supplier"),
+        supabase
+          .from("profiles")
+          .select("id, full_name, business_name, avatar_url, is_verified, user_type")
+          .in("user_type", ["producer", "supplier"])
+          .not("avatar_url", "is", null)
+          .order("is_verified", { ascending: false })
+          .limit(8),
+      ]);
 
       return {
-        total: count ?? 0,
-        suppliers: (suppliers ?? []) as VerifiedSupplier[],
+        producers: producersRes.count ?? 0,
+        suppliers: suppliersRes.count ?? 0,
+        avatars: ((avatarsRes.data ?? []) as VerifiedSupplier[]),
       };
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60, // 1 min — realtime se charge des invalidations
   });
 
-  // Toujours rendre quelque chose pour ne pas casser la mise en page (pas de white-flash)
-  const total = data?.total ?? 0;
-  const suppliers = data?.suppliers ?? [];
+  // 🔴 Realtime : invalide la requête à chaque INSERT/UPDATE/DELETE sur profiles
+  useEffect(() => {
+    const channel = supabase
+      .channel("verified-suppliers-bar-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  const producers = data?.producers ?? 0;
+  const suppliers = data?.suppliers ?? 0;
+  const avatars = data?.avatars ?? [];
+  const total = producers + suppliers;
 
   return (
     <section className="hidden md:block py-6 lg:py-8 bg-card border-b border-border/40">
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-          {/* Title + count */}
+          {/* Title + dual counters */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
               <ShieldCheck className="w-6 h-6 lg:w-7 lg:h-7 text-emerald-600" />
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
-                Réseau de confiance
+                Réseau de confiance · temps réel
               </p>
               <h3 className="font-heading text-base lg:text-xl font-bold text-foreground leading-tight">
-                Fournisseurs vérifiés Nukuconnect
+                Producteurs &amp; Fournisseurs Nukuconnect
               </h3>
-              <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                <Users className="w-3.5 h-3.5" />
-                {isLoading ? (
-                  <span className="inline-block h-3 w-24 bg-muted animate-pulse rounded" />
-                ) : (
-                  <span>
-                    <strong className="text-foreground font-bold">
-                      {total.toLocaleString("fr-FR")}+
-                    </strong>{" "}
-                    producteurs et fournisseurs certifiés
-                  </span>
-                )}
+
+              {/* Two separate counters */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <CounterPill
+                  icon={<Sprout className="w-3 h-3" />}
+                  label="Producteurs"
+                  value={producers}
+                  isLoading={isLoading}
+                  tone="primary"
+                />
+                <CounterPill
+                  icon={<Store className="w-3 h-3" />}
+                  label="Fournisseurs"
+                  value={suppliers}
+                  isLoading={isLoading}
+                  tone="accent"
+                />
               </div>
             </div>
           </div>
@@ -91,26 +127,28 @@ const VerifiedSuppliersBar = () => {
                   />
                 ))}
               </div>
-            ) : suppliers.length > 0 ? (
+            ) : avatars.length > 0 ? (
               <div className="flex -space-x-3">
-                {suppliers.slice(0, 6).map((s) => (
+                {avatars.slice(0, 6).map((s) => (
                   <div
                     key={s.id}
-                    title={s.business_name || s.full_name || "Fournisseur vérifié"}
+                    title={s.business_name || s.full_name || "Membre vérifié"}
                     className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-full border-2 border-card bg-muted overflow-hidden hover:scale-110 hover:z-10 transition-transform shadow-sm"
                   >
                     <img
                       src={s.avatar_url || defaultAvatar}
-                      alt={s.business_name || s.full_name || "Fournisseur"}
+                      alt={s.business_name || s.full_name || "Membre"}
                       className="w-full h-full object-cover"
                       loading="lazy"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = defaultAvatar;
                       }}
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center">
-                      <ShieldCheck className="w-2.5 h-2.5 text-white" />
-                    </div>
+                    {s.is_verified && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center">
+                        <ShieldCheck className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    )}
                   </div>
                 ))}
                 {total > 6 && (
@@ -127,15 +165,49 @@ const VerifiedSuppliersBar = () => {
           </div>
 
           {/* CTA */}
-          <Link to="/producteurs?verified=1" className="flex-shrink-0">
+          <Link to="/producteurs" className="flex-shrink-0">
             <Button variant="outline" size="sm" className="gap-1.5">
-              Voir tous les fournisseurs
+              Voir le réseau
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
       </div>
     </section>
+  );
+};
+
+// ============================================================
+// Counter pill — visuel compact pour chaque type
+// ============================================================
+interface CounterPillProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  isLoading: boolean;
+  tone: "primary" | "accent";
+}
+
+const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) => {
+  const toneClasses =
+    tone === "primary"
+      ? "bg-primary/10 text-primary border-primary/20"
+      : "bg-accent/15 text-accent-foreground border-accent/30";
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${toneClasses}`}
+    >
+      <span className="opacity-80">{icon}</span>
+      {isLoading ? (
+        <span className="inline-block h-3 w-10 bg-current/20 animate-pulse rounded" />
+      ) : (
+        <span className="font-bold tabular-nums">
+          {value.toLocaleString("fr-FR")}
+        </span>
+      )}
+      <span className="opacity-80 font-medium">{label}</span>
+    </div>
   );
 };
 
