@@ -10,6 +10,7 @@ interface VerifiedSupplier {
   full_name: string | null;
   business_name: string | null;
   avatar_url: string | null;
+  is_verified?: boolean | null;
 }
 
 /**
