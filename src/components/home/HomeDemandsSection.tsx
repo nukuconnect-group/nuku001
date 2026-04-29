@@ -131,11 +131,11 @@ const HomeDemandsSection = () => {
               <Link
                 key={d.id}
                 to={linkHref}
-                className="flex-shrink-0 w-[280px] sm:w-[340px] min-w-[280px] snap-start group"
+                className="flex-shrink-0 w-[260px] xs:w-[280px] sm:w-[340px] snap-start group"
               >
-                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-row h-[120px] sm:h-[130px]">
-                  {/* Image rectangulaire à gauche */}
-                  <div className="relative h-full w-[110px] sm:w-[130px] flex-shrink-0 bg-muted overflow-hidden">
+                <div className="rounded-xl overflow-hidden border border-border bg-card hover:shadow-md transition-all flex flex-row h-[120px] sm:h-[130px] max-w-full">
+                  {/* Image rectangulaire à gauche — largeur fixe */}
+                  <div className="relative h-full w-[100px] sm:w-[120px] flex-shrink-0 bg-muted overflow-hidden">
                     <DemandImage
                       src={d.image_url}
                       category={d.category}
@@ -146,37 +146,39 @@ const HomeDemandsSection = () => {
                     </span>
                   </div>
 
-                  <div className="p-2.5 flex-1 flex flex-col">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {/* Infos à droite — min-w-0 indispensable pour que truncate fonctionne */}
+                  <div className="p-2 sm:p-2.5 flex-1 min-w-0 flex flex-col overflow-hidden">
+                    <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {d.profile?.avatar_url ? (
                           <img src={d.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-2.5 h-2.5 text-accent" />
                         )}
                       </div>
-                      <span className="text-[9px] text-muted-foreground truncate">
+                      <span className="text-[9px] text-muted-foreground truncate min-w-0 flex-1">
                         {d.profile?.full_name || "Acheteur"}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1.5 leading-snug">
+                    <h3 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1 leading-snug break-words">
                       {d.title}
                     </h3>
-                    <div className="mt-auto space-y-0.5">
+                    <div className="mt-auto space-y-0.5 min-w-0">
                       {d.quantity && (
-                        <p className="text-[9px] text-muted-foreground flex items-center gap-1">
-                          📦 <span className="font-medium text-foreground">{d.quantity} {d.unit}</span>
+                        <p className="text-[9px] text-muted-foreground flex items-center gap-1 truncate">
+                          <Package className="w-2.5 h-2.5 flex-shrink-0" />
+                          <span className="font-medium text-foreground truncate">{d.quantity} {d.unit}</span>
                         </p>
                       )}
                       {d.budget && (
-                        <p className="text-[10px] sm:text-xs font-bold text-primary">
+                        <p className="text-[10px] sm:text-xs font-bold text-primary truncate">
                           {formatPrice(d.budget)}
                         </p>
                       )}
                       {d.location && (
-                        <p className="text-[9px] text-muted-foreground flex items-center gap-0.5 line-clamp-1">
+                        <p className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                           <MapPin className="w-2.5 h-2.5 flex-shrink-0" />
-                          <span className="truncate">{d.location}</span>
+                          <span className="truncate min-w-0">{d.location}</span>
                         </p>
                       )}
                     </div>
@@ -186,6 +188,21 @@ const HomeDemandsSection = () => {
             );
           })}
         </div>
+
+        {/* Pagination "Voir plus" */}
+        {hasMore && (
+          <div className="flex justify-center mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="gap-1.5 text-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Voir plus de demandes
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
