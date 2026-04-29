@@ -3,17 +3,15 @@ import { ArrowRight, Sparkles, Loader2, Star, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMemo, useRef, useCallback, useEffect, useState } from "react";
-import ProductCard from "@/components/marketplace/ProductCard";
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
 import type { Product } from "@/data/marketplace";
 
 /**
  * Featured / "Pour vous" products.
- * - Mobile: scroll horizontal (auto-défilement) — comportement existant.
- * - Tablette & ordinateur: mosaïque pro avec 1 hero card à gauche + 4 cartes à droite,
- *   inspiré du design "Nouveautés" de la marketplace.
+ * Mosaïque pro identique sur mobile, tablette et desktop :
+ * 1 hero card + 4 cartes secondaires (grille 2 colonnes en dessous).
  */
 const FeaturedProducts = () => {
   const { data: dbProducts, isLoading } = useProducts();
@@ -26,38 +24,9 @@ const FeaturedProducts = () => {
       .slice(0, 8);
   }, [dbProducts]);
 
-  // Desktop / tablette : 1 hero + 4 secondaires (5 produits visibles)
+  // 1 hero + 4 secondaires (5 produits visibles)
   const heroProduct = featuredProducts[0];
   const sideProducts = featuredProducts.slice(1, 5);
-
-  // ========== Mobile scroll auto ==========
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const autoScrollTimer = useRef<ReturnType<typeof setInterval>>();
-
-  const startAutoScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-    autoScrollTimer.current = setInterval(() => {
-      const el = scrollRef.current;
-      if (!el) return;
-      const cardWidth = 180;
-      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 10) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: cardWidth, behavior: "smooth" });
-      }
-    }, 3500);
-  }, []);
-
-  useEffect(() => {
-    startAutoScroll();
-    return () => clearInterval(autoScrollTimer.current);
-  }, [startAutoScroll, featuredProducts]);
-
-  const handleTouchStart = () => clearInterval(autoScrollTimer.current);
-  const handleTouchEnd = () => {
-    clearInterval(autoScrollTimer.current);
-    startAutoScroll();
-  };
 
   if (featuredProducts.length === 0 && !isLoading) return null;
 
@@ -83,32 +52,14 @@ const FeaturedProducts = () => {
           </div>
         ) : (
           <>
-            {/* ===== MOBILE : scroll horizontal (inchangé) ===== */}
-            <div
-              ref={scrollRef}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              className="md:hidden flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              {featuredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="w-[140px] h-[260px] snap-start flex-shrink-0"
-                >
-                  <ProductCard product={product} viewMode="grid" />
-                </div>
-              ))}
-            </div>
-
-            {/* ===== TABLETTE & DESKTOP : mosaïque pro ===== */}
+            {/* ===== Mosaïque pro — sur TOUS les écrans (mobile, tablette, desktop) ===== */}
             {heroProduct && (
-              <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
                 {/* HERO card */}
                 <FeaturedHeroCard product={heroProduct} formatPrice={formatPrice} />
 
-                {/* Side grid */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4 lg:gap-5">
+                {/* Side grid — 2 colonnes (mobile inclus) */}
+                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                   {sideProducts.map((product) => (
                     <FeaturedSecondaryCard
                       key={product.id}

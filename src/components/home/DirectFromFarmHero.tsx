@@ -8,22 +8,26 @@ import { ShieldCheck, Sprout, Truck, ArrowRight, BadgeCheck } from "lucide-react
  */
 const DirectFromFarmHero = () => {
   return (
-    <section className="hidden md:block relative overflow-hidden border-y border-border/40">
-      {/* Background image — producteurs à l'échelle industrielle */}
+    <section className="relative overflow-hidden border-y border-border/40">
+      {/* Background image — producteurs en interaction dans un champ */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1592982537447-7440770faae9?w=1920&q=80"
+          src="https://images.unsplash.com/photo-1530507629858-e3759c1a4c63?auto=format&fit=crop&w=1920&q=80"
           alt="Producteurs agricoles en interaction avec des acheteurs dans un champ — réseau Nukuconnect"
           className="w-full h-full object-cover"
           loading="lazy"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1920&q=80";
+          }}
         />
         {/* Overlay : sombre à gauche, transparent à droite — pour lisibilité du texte */}
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/70 to-foreground/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
       </div>
 
       {/* Content */}
-      <div className="relative container mx-auto px-4 py-16 lg:py-24 xl:py-28">
+      <div className="relative container mx-auto px-4 py-10 sm:py-14 md:py-16 lg:py-24 xl:py-28">
         <div className="max-w-2xl space-y-6 text-white">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25">
             <BadgeCheck className="w-4 h-4 text-accent" />
@@ -32,14 +36,14 @@ const DirectFromFarmHero = () => {
             </span>
           </div>
 
-          <h2 className="font-heading text-3xl lg:text-5xl xl:text-6xl font-bold leading-[1.1]">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-[1.1]">
             Achetez directement chez{" "}
             <span className="text-accent">les producteurs</span>,
-            <br className="hidden lg:block" />
+            <br className="hidden sm:block" />
             sans intermédiaire
           </h2>
 
-          <p className="text-base lg:text-lg text-white/90 leading-relaxed max-w-xl">
+          <p className="text-sm sm:text-base lg:text-lg text-white/90 leading-relaxed max-w-xl">
             Connectez-vous aux fournisseurs vérifiés et recevez vos produits agricoles
             directement depuis le lieu de production. Plus de fraîcheur, des prix justes,
             une traçabilité totale.
