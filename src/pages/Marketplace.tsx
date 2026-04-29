@@ -734,7 +734,7 @@ const Marketplace = () => {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}>
               <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-              <span className="truncate">Produits</span>
+              <span className="truncate">Produits en vente</span>
             </button>
             <button
               onClick={() => setMarketView("demands")}
