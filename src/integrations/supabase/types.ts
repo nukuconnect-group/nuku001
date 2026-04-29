@@ -2527,6 +2527,36 @@ export type Database = {
         }
         Relationships: []
       }
+      watermark_error_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_kind: string
+          error_message: string | null
+          id: string
+          source_url: string | null
+          upstream_status: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_kind: string
+          error_message?: string | null
+          id?: string
+          source_url?: string | null
+          upstream_status?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_kind?: string
+          error_message?: string | null
+          id?: string
+          source_url?: string | null
+          upstream_status?: number | null
+        }
+        Relationships: []
+      }
       wishlist: {
         Row: {
           created_at: string
