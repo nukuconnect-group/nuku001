@@ -117,11 +117,12 @@ Maximum 5 éléments par catégorie.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPrompt + " Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans texte additionnel." },
           { role: "user", content: userPrompt },
         ],
+        response_format: { type: "json_object" },
       }),
     });
 
