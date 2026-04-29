@@ -42,9 +42,9 @@ const VerifiedSuppliersBar = () => {
           .from("profiles")
           .select("id, full_name, business_name, avatar_url, is_verified, user_type")
           .in("user_type", ["producer", "supplier"])
-          .not("avatar_url", "is", null)
           .order("is_verified", { ascending: false })
-          .limit(8),
+          .order("created_at", { ascending: false })
+          .limit(15),
       ]);
 
       return {
@@ -82,7 +82,11 @@ const VerifiedSuppliersBar = () => {
   const realSuppliers = data?.suppliers ?? 0;
   const producers = Math.max(MIN_PRODUCERS, MIN_PRODUCERS + realProducers);
   const suppliers = Math.max(MIN_SUPPLIERS, MIN_SUPPLIERS + realSuppliers);
-  const avatars = data?.avatars ?? [];
+  const allAvatars = data?.avatars ?? [];
+  // Priorise ceux qui ont une photo, complète avec les autres pour atteindre min. 5
+  const withAvatar = allAvatars.filter((a) => !!a.avatar_url);
+  const withoutAvatar = allAvatars.filter((a) => !a.avatar_url);
+  const avatars = [...withAvatar, ...withoutAvatar].slice(0, 8);
   const totalNetwork = producers + suppliers;
   // Affichage compact "+5K" pour le badge avatars
   const networkBadge = totalNetwork >= 1000
@@ -141,7 +145,7 @@ const VerifiedSuppliersBar = () => {
                 </div>
               ) : avatars.length > 0 ? (
                 <div className="flex -space-x-2 sm:-space-x-3 items-center">
-                  {avatars.slice(0, 5).map((s) => (
+                  {avatars.slice(0, 6).map((s) => (
                     <div
                       key={s.id}
                       title={s.business_name || s.full_name || "Membre vérifié"}
