@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HandCoins, ArrowRight, MapPin, Package, User } from "lucide-react";
+import { HandCoins, ArrowRight, MapPin, Package, User, Plus } from "lucide-react";
 import { useDemands } from "@/hooks/useDemands";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
