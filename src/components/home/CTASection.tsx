@@ -66,11 +66,12 @@ const CTASection = () => {
             <p className="text-xs sm:text-sm text-muted-foreground mb-6">Ils nous font confiance</p>
             <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
               {partners.map((partner) => (
-                <div key={partner.name} className="flex items-center justify-center grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300">
+                <div key={partner.name} className="flex items-center justify-center bg-card/90 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-300">
                   <img
                     src={partner.logo}
                     alt={partner.name}
-                    className="h-12 sm:h-16 lg:h-20 w-auto object-contain"
+                    className="h-10 sm:h-14 lg:h-16 w-auto object-contain"
+                    loading="lazy"
                   />
                 </div>
               ))}
