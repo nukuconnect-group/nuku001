@@ -57,6 +57,7 @@ const Index = () => {
         <CategoriesSection />
         
         <DirectFromFarmHero />
+        <VerifiedSuppliersBar />
         <FeaturedProducts />
         <HomeDemandsSection />
         <FeaturesSection />
