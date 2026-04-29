@@ -247,19 +247,30 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           </div>
         </div>
 
-        <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-0.5 min-h-0 overflow-hidden">
-          {/* Price — aligned single line, promo barrée à côté du prix */}
-          <div className="flex items-baseline gap-1 flex-nowrap whitespace-nowrap overflow-hidden">
-            <span className={`font-heading font-bold text-destructive ${minimal ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>
-              {formatPrice(product.price)}
-            </span>
-            {computedOriginalPrice && computedOriginalPrice > product.price && (
-              <span className={`text-muted-foreground line-through ${minimal ? 'text-[8px]' : 'text-[9px] sm:text-[10px]'}`}>
-                {formatPrice(computedOriginalPrice)}
-              </span>
-            )}
-            {!minimal && <span className="text-[9px] text-muted-foreground">/{product.unit}</span>}
-          </div>
+        <CardContent className="p-2 sm:p-2.5 flex-1 flex flex-col gap-0.5 min-w-0 overflow-hidden">
+          {/* Price — auto-shrink quand le montant est long, wrap autorisé pour /unité */}
+          {(() => {
+            const priceStr = formatPrice(product.price);
+            const isLongPrice = priceStr.replace(/\s/g, "").length > 8;
+            const priceSize = minimal
+              ? (isLongPrice ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm")
+              : (isLongPrice ? "text-xs sm:text-sm" : "text-sm sm:text-base");
+            return (
+              <div className="flex items-baseline flex-wrap gap-x-1 gap-y-0 min-w-0">
+                <span className={`font-heading font-bold text-destructive break-words ${priceSize}`}>
+                  {priceStr}
+                </span>
+                {computedOriginalPrice && computedOriginalPrice > product.price && (
+                  <span className={`text-muted-foreground line-through break-words ${minimal ? 'text-[8px]' : 'text-[9px] sm:text-[10px]'}`}>
+                    {formatPrice(computedOriginalPrice)}
+                  </span>
+                )}
+                {!minimal && (
+                  <span className="text-[9px] text-muted-foreground whitespace-nowrap">/{product.unit}</span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Title */}
           <h3 className="font-medium text-foreground text-[11px] sm:text-xs leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
