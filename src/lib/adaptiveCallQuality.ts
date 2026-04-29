@@ -30,10 +30,12 @@ const TIER_PROFILES: Record<QualityTier, TierProfile> = {
 
 interface ControllerOptions {
   pc: RTCPeerConnection;
-  /** Callback informatif (UI) à chaque changement de palier */
+  /** Callback informatif (UI) à chaque changement de palier — reçoit le palier + raison technique. */
   onTierChange?: (tier: QualityTier, reason: string) => void;
   /** Stream local pour pouvoir activer/désactiver la piste vidéo en mode audio-only */
   localStream: MediaStream;
+  /** Si true au démarrage, force le mode économie de données (palier max = low). */
+  initialDataSaver?: boolean;
 }
 
 export class AdaptiveCallQualityController {
@@ -41,17 +43,20 @@ export class AdaptiveCallQualityController {
   private localStream: MediaStream;
   private onTierChange?: (tier: QualityTier, reason: string) => void;
   private currentTier: QualityTier = "high";
+  private currentReason = "init";
   private intervalId: number | null = null;
   private prevPacketsLost = 0;
   private prevPacketsSent = 0;
   private stableTicks = 0;
   private destroyed = false;
   private connectionListener: (() => void) | null = null;
+  private dataSaver = false;
 
   constructor(opts: ControllerOptions) {
     this.pc = opts.pc;
     this.localStream = opts.localStream;
     this.onTierChange = opts.onTierChange;
+    this.dataSaver = !!opts.initialDataSaver;
   }
 
   /** Démarre la boucle d'adaptation. */
