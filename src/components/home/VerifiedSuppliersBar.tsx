@@ -30,7 +30,7 @@ const VerifiedSuppliersBar = () => {
       // Aperçu logos (8 max)
       const { data: suppliers } = await supabase
         .from("profiles")
-        .select("id, full_name, company_name, avatar_url")
+        .select("id, full_name, business_name, avatar_url")
         .eq("user_type", "supplier")
         .eq("is_verified", true)
         .not("avatar_url", "is", null)
@@ -96,12 +96,12 @@ const VerifiedSuppliersBar = () => {
                 {suppliers.slice(0, 6).map((s) => (
                   <div
                     key={s.id}
-                    title={s.company_name || s.full_name || "Fournisseur vérifié"}
+                    title={s.business_name || s.full_name || "Fournisseur vérifié"}
                     className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-full border-2 border-card bg-muted overflow-hidden hover:scale-110 hover:z-10 transition-transform shadow-sm"
                   >
                     <img
                       src={s.avatar_url || defaultAvatar}
-                      alt={s.company_name || s.full_name || "Fournisseur"}
+                      alt={s.business_name || s.full_name || "Fournisseur"}
                       className="w-full h-full object-cover"
                       loading="lazy"
                       onError={(e) => {
