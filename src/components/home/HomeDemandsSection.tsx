@@ -25,14 +25,14 @@ const SAMPLE_DEMANDS = [
   },
   {
     id: "demo-2",
-    title: "Tomates fraîches pour restaurant",
-    category: "Légumes",
-    quantity: 100,
+    title: "Sacs de riz local 50 kg — 1 tonne",
+    category: "Céréales",
+    quantity: 1000,
     unit: "kg",
-    budget: 60000,
-    location: "Cotonou, Bénin",
-    profile: { full_name: "Resto Le Palmier", avatar_url: null },
-    image_url: "https://images.unsplash.com/photo-1546470427-227df1b44d44?w=400&q=80",
+    budget: 450000,
+    location: "Kara, Togo",
+    profile: { full_name: "Coopérative Agro-Nord", avatar_url: null },
+    image_url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80",
   },
   {
     id: "demo-3",
@@ -161,7 +161,7 @@ const HomeDemandsSection = () => {
                       </span>
                     </div>
                     <h3 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1 leading-snug break-words">
-                      {d.title}
+                      Besoin d'achat de {d.title.replace(/^(Recherche|Besoin d'achat de)\s+/i, "")}
                     </h3>
                     <div className="mt-auto space-y-0.5 min-w-0">
                       {d.quantity && (

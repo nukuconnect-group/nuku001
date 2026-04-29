@@ -143,9 +143,18 @@ const VerifiedSuppliersBar = () => {
                     />
                   ))}
                 </div>
-              ) : avatars.length > 0 ? (
-                <div className="flex -space-x-2 sm:-space-x-3 items-center">
-                  {avatars.slice(0, 6).map((s) => (
+              ) : (
+                <Link to="/producteurs" className="flex -space-x-2 sm:-space-x-3 items-center">
+                  {(avatars.length > 0
+                    ? avatars.slice(0, 6)
+                    : Array.from({ length: 5 }).map((_, i) => ({
+                        id: `placeholder-${i}`,
+                        avatar_url: null,
+                        full_name: null,
+                        business_name: null,
+                        is_verified: false,
+                      } as VerifiedSupplier))
+                  ).map((s) => (
                     <div
                       key={s.id}
                       title={s.business_name || s.full_name || "Membre vérifié"}
@@ -171,11 +180,7 @@ const VerifiedSuppliersBar = () => {
                   <div className="w-9 h-8 sm:w-11 sm:h-10 lg:w-12 lg:h-11 rounded-full border-2 border-card bg-primary/10 flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-primary tabular-nums">
                     {networkBadge}
                   </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">
-                  Bientôt disponible
-                </p>
+                </Link>
               )}
             </div>
 
