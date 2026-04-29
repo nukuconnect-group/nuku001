@@ -153,52 +153,53 @@ const MobileBottomNav = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden">
-        <div className="flex items-center justify-around h-14 relative px-1">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-stretch justify-around h-12 sm:h-14 relative px-0.5 sm:px-1 gap-0.5">
           <Link to="/"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg transition-colors flex-1 min-w-0 ${
               isActive("/") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
-            <Home className="w-5 h-5" />
-            <span className="text-[9px] font-medium">Accueil</span>
+            <Home className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+            <span className="text-[8px] sm:text-[9px] font-medium leading-none">Accueil</span>
           </Link>
 
           <Link to="/marketplace"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg transition-colors flex-1 min-w-0 ${
               isActive("/marketplace") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
-            <Store className="w-5 h-5" />
-            <span className="text-[9px] font-medium">Marché</span>
+            <Store className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+            <span className="text-[8px] sm:text-[9px] font-medium leading-none">Marché</span>
           </Link>
 
-          <div className="flex flex-col items-center justify-center -mt-5">
+          <div className="flex flex-col items-center justify-center -mt-4 sm:-mt-5 flex-1 min-w-0">
             <div className="relative">
               <div className="absolute -inset-1 rounded-full bg-primary/20 blur-md animate-pulse" />
               <button onClick={handleSellClick}
-                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent flex items-center justify-center shadow-[0_4px_20px_hsl(var(--primary)/0.4)] text-primary-foreground hover:shadow-[0_6px_28px_hsl(var(--primary)/0.55)] transition-all duration-300 active:scale-90 ring-[3px] ring-background">
+                aria-label="Vendre"
+                className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary via-primary/90 to-accent flex items-center justify-center shadow-[0_4px_20px_hsl(var(--primary)/0.4)] text-primary-foreground hover:shadow-[0_6px_28px_hsl(var(--primary)/0.55)] transition-all duration-300 active:scale-90 ring-[3px] ring-background">
                 {showSellLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Plus className="w-6 h-6 stroke-[2.5]" />
+                  <Plus className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                 )}
               </button>
             </div>
-            <span className="text-[9px] font-bold text-primary mt-0.5 tracking-wide">Vendre</span>
+            <span className="text-[8px] sm:text-[9px] font-bold text-primary mt-0.5 tracking-wide leading-none">Vendre</span>
           </div>
 
           <Link to="/messages"
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] relative ${
+            className={`flex flex-col items-center justify-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg transition-colors flex-1 min-w-0 relative ${
               isActive("/messages") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
             <div className="relative">
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
               {unreadMessages > 0 && (
-                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-destructive text-white rounded-full text-[9px] flex items-center justify-center font-bold">
+                <span className="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 bg-destructive text-white rounded-full text-[8px] sm:text-[9px] flex items-center justify-center font-bold leading-none">
                   {unreadMessages > 99 ? "99+" : unreadMessages}
                 </span>
               )}
             </div>
-            <span className="text-[9px] font-medium">Messages</span>
+            <span className="text-[8px] sm:text-[9px] font-medium leading-none">Messages</span>
           </Link>
 
           <button onClick={() => {
@@ -208,9 +209,9 @@ const MobileBottomNav = () => {
                 setShowAccount(true);
               }
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg transition-colors min-w-[48px] text-muted-foreground hover:text-foreground`}>
-            <UserCircle className="w-5 h-5" />
-            <span className="text-[9px] font-medium">Compte</span>
+            className={`flex flex-col items-center justify-center gap-0.5 px-1 sm:px-2 py-1 rounded-lg transition-colors flex-1 min-w-0 text-muted-foreground hover:text-foreground`}>
+            <UserCircle className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
+            <span className="text-[8px] sm:text-[9px] font-medium leading-none">Compte</span>
           </button>
         </div>
       </nav>
