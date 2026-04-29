@@ -242,13 +242,13 @@ export class AdaptiveCallQualityController {
 
       // 2) Mode audio-only : on coupe l'envoi vidéo (sans détruire la track)
       const videoTracks = this.localStream.getVideoTracks();
-      if (tier === "audio-only") {
+      if (effectiveTier === "audio-only") {
         videoTracks.forEach(t => { t.enabled = false; });
       } else if (prev === "audio-only") {
         videoTracks.forEach(t => { t.enabled = true; });
       }
 
-      this.onTierChange?.(tier, reason);
+      this.onTierChange?.(effectiveTier, reason);
     } catch (e) {
       console.warn("[adaptive-quality] setTier failed", e);
     }
