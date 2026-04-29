@@ -17,7 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
 import { ProductDetailSkeleton, CachedDataBanner } from "@/components/marketplace/ProductDetailSkeleton";
 import OfflineFallback from "@/components/layout/OfflineFallback";
-import { watermarked } from "@/lib/watermarkUrl";
+import SmartWatermarkedImage from "@/components/marketplace/SmartWatermarkedImage";
 import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
@@ -238,8 +238,8 @@ const ProductDetail = () => {
             <div className="space-y-2 sm:space-y-3">
               {/* Main image — 4:3 ratio, compact on mobile */}
               <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg cursor-zoom-in" onClick={() => setZoomOpen(true)}>
-                <img
-                  src={watermarked(images[currentImageIndex] || product.image)}
+                <SmartWatermarkedImage
+                  originalSrc={images[currentImageIndex] || product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
