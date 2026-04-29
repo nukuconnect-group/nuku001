@@ -106,7 +106,7 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-2xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[420px] lg:min-h-[480px]"
+      className="group relative block overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[260px] sm:min-h-[380px] lg:min-h-[480px]"
     >
       <img
         src={src}
@@ -118,53 +118,53 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
 
       {/* Top badge */}
-      <div className="absolute top-3 left-3">
-        <Badge className="bg-primary text-primary-foreground font-bold text-[10px] px-2 py-1 rounded-full shadow gap-1">
-          <Sparkles className="w-3 h-3" />
+      <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+        <Badge className="bg-primary text-primary-foreground font-bold text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow gap-1">
+          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
           NOUVEAU
         </Badge>
       </div>
 
       {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-6 text-white">
-        <p className="text-[10px] uppercase tracking-wider text-white/80 font-semibold mb-2">
+      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 text-white">
+        <p className="text-[8px] sm:text-[10px] uppercase tracking-wider text-white/80 font-semibold mb-1 sm:mb-2 line-clamp-1">
           {product.category}
         </p>
-        <h3 className="font-heading text-xl lg:text-2xl font-bold leading-tight mb-1.5 line-clamp-2">
+        <h3 className="font-heading text-sm sm:text-lg lg:text-2xl font-bold leading-tight mb-1 sm:mb-1.5 line-clamp-2">
           {product.name}
         </h3>
         {product.description && (
-          <p className="text-xs lg:text-sm text-white/85 line-clamp-1 mb-3">
+          <p className="hidden sm:block text-xs lg:text-sm text-white/85 line-clamp-1 mb-3">
             {product.description}
           </p>
         )}
 
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-3">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`w-3.5 h-3.5 ${
+              className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${
                 i < Math.round(product.producer.rating)
                   ? "text-accent fill-accent"
                   : "text-white/30"
               }`}
             />
           ))}
-          <span className="text-[10px] text-white/80 ml-1">
+          <span className="text-[8px] sm:text-[10px] text-white/80 ml-0.5 sm:ml-1">
             ({Math.floor(product.producer.rating * 12)})
           </span>
         </div>
 
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex items-end justify-between gap-2 sm:gap-3">
           <div>
-            <p className="font-heading text-2xl lg:text-3xl font-bold text-white">
+            <p className="font-heading text-base sm:text-xl lg:text-3xl font-bold text-white">
               {formatPrice(product.price)}
             </p>
-            <p className="text-[10px] text-white/70">/{product.unit}</p>
+            <p className="text-[8px] sm:text-[10px] text-white/70">/{product.unit}</p>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-white/85">
-            <MapPin className="w-3 h-3" />
-            <span className="truncate max-w-[120px]">{product.location}</span>
+          <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] text-white/85">
+            <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <span className="truncate max-w-[70px] sm:max-w-[120px]">{product.location}</span>
           </div>
         </div>
       </div>
