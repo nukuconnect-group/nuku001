@@ -780,6 +780,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             peerUserId: conversation.participant.userId,
             peerName: conversation.participant.name,
             peerAvatar: conversation.participant.avatar,
+            withVideo: false,
+          });
+        }}
+        onVideoCall={() => {
+          if (!conversation.participant.userId) return;
+          startCall({
+            conversationId: conversation.id,
+            peerUserId: conversation.participant.userId,
+            peerName: conversation.participant.name,
+            peerAvatar: conversation.participant.avatar,
+            withVideo: true,
           });
         }}
       />
