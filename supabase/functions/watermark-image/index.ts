@@ -20,10 +20,15 @@ function b64ToBytes(b64: string): Uint8Array {
   return bytes;
 }
 
+function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  // Slice yields a fresh ArrayBuffer (Jimp accepts ArrayBuffer / Buffer only).
+  return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
+}
+
 let logoPromise: Promise<any> | null = null;
 const loadLogo = async () => {
   if (!logoPromise) {
-    logoPromise = Jimp.read(b64ToBytes(LOGO_B64));
+    logoPromise = Jimp.fromBuffer(toArrayBuffer(b64ToBytes(LOGO_B64)));
   }
   return await logoPromise;
 };
