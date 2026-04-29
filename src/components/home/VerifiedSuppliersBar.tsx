@@ -8,7 +8,7 @@ import defaultAvatar from "@/assets/default-producer-avatar.png";
 interface VerifiedSupplier {
   id: string;
   full_name: string | null;
-  company_name: string | null;
+  business_name: string | null;
   avatar_url: string | null;
 }
 
