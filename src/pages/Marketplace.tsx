@@ -373,21 +373,32 @@ const Marketplace = () => {
     return result;
   }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, shippingFilter, t]);
 
-  const featuredProducts = useMemo(() => [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [allProducts]);
-  const flashDeals = useMemo(() => allProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [allProducts]);
-  const newArrivals = useMemo(() => [...allProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6), [allProducts]);
+  // ID set des produits sponsorisés — pour les EXCLURE des autres sections
+  // (populaire, flash, nouveautés, par catégorie). Ils restent visibles uniquement
+  // dans la section dédiée "Produits sponsorisés".
+  const sponsoredIdSet = useMemo(
+    () => new Set(activeBoosts.map((b) => b.product_id)),
+    [activeBoosts],
+  );
+  const nonSponsoredProducts = useMemo(
+    () => allProducts.filter((p) => !sponsoredIdSet.has(p.id)),
+    [allProducts, sponsoredIdSet],
+  );
+
+  const featuredProducts = useMemo(() => [...nonSponsoredProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [nonSponsoredProducts]);
+  const flashDeals = useMemo(() => nonSponsoredProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [nonSponsoredProducts]);
+  const newArrivals = useMemo(() => [...nonSponsoredProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6), [nonSponsoredProducts]);
   const sponsoredProducts = useMemo(() => {
-    const boostedIds = new Set(activeBoosts.map(b => b.product_id));
-    const boosted = allProducts.filter(p => boostedIds.has(p.id));
+    const boosted = allProducts.filter(p => sponsoredIdSet.has(p.id));
     // If no boosted products, show top-rated as fallback
     return boosted.length > 0 ? boosted.slice(0, 8) : [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8);
-  }, [allProducts, activeBoosts]);
+  }, [allProducts, sponsoredIdSet]);
 
   const productsByCategory = useMemo(() => {
-    const grouped: { [key: string]: typeof allProducts } = {};
-    allProducts.forEach(p => { if (!grouped[p.category]) grouped[p.category] = []; grouped[p.category].push(p); });
+    const grouped: { [key: string]: typeof nonSponsoredProducts } = {};
+    nonSponsoredProducts.forEach(p => { if (!grouped[p.category]) grouped[p.category] = []; grouped[p.category].push(p); });
     return grouped;
-  }, [allProducts]);
+  }, [nonSponsoredProducts]);
 
   const handleReset = () => {
     setSearchQuery(""); setSelectedCategory("all"); setPriceRange([0, 500000]);
