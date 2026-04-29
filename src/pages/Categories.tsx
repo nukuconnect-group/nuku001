@@ -17,8 +17,14 @@ import imgCereals from "@/assets/category-cereals-modern.jpg";
 import imgVegetables from "@/assets/category-vegetables-modern.jpg";
 import imgFruits from "@/assets/category-fruits-modern.jpg";
 import imgLivestock from "@/assets/category-livestock-modern.jpg";
-import imgAquaculture from "@/assets/category-aquaculture-modern.jpg";
+import imgAquaculture from "@/assets/category-aquaculture-v2.jpg";
+import imgPisciculture from "@/assets/category-pisciculture-modern.jpg";
 import imgEquipment from "@/assets/category-equipment-modern.jpg";
+import imgForestry from "@/assets/category-forestry-modern.jpg";
+import imgAgroalimentaire from "@/assets/category-agroalimentaire-modern.jpg";
+import imgAgribusiness from "@/assets/category-agribusiness-modern.jpg";
+import imgAviculture from "@/assets/category-aviculture-modern.jpg";
+import imgTubercules from "@/assets/category-tubercules-modern.jpg";
 
 const categoryImages: Record<string, string> = {
   agriculture: imgAgriculture,
@@ -27,18 +33,31 @@ const categoryImages: Record<string, string> = {
   "légumes & maraîchage": imgVegetables,
   "légumes": imgVegetables,
   legumes: imgVegetables,
+  maraîchage: imgVegetables,
+  maraichage: imgVegetables,
   fruits: imgFruits,
-  tubercules: imgVegetables,
+  tubercules: imgTubercules,
   élevage: imgLivestock,
   elevage: imgLivestock,
-  aviculture: imgLivestock,
-  pisciculture: imgAquaculture,
+  aviculture: imgAviculture,
+  pisciculture: imgPisciculture,
   aquaculture: imgAquaculture,
-  agribusiness: imgEquipment,
-  foresterie: imgAgriculture,
-  agroalimentaire: imgEquipment,
+  "pêche & aquaculture": imgAquaculture,
+  pêche: imgPisciculture,
+  peche: imgPisciculture,
+  agribusiness: imgAgribusiness,
+  agrobusiness: imgAgribusiness,
+  foresterie: imgForestry,
+  forêt: imgForestry,
+  foret: imgForestry,
+  agroalimentaire: imgAgroalimentaire,
+  "transformation agroalimentaire": imgAgroalimentaire,
+  transformation: imgAgroalimentaire,
   equipement: imgEquipment,
   équipement: imgEquipment,
+  "équipements agricoles": imgEquipment,
+  matériel: imgEquipment,
+  materiel: imgEquipment,
 };
 
 const getCategoryImage = (name: string) => {
