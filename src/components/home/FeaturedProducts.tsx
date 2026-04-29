@@ -181,7 +181,7 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[200px] lg:min-h-[230px]"
+      className="group relative block overflow-hidden rounded-lg sm:rounded-xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[125px] sm:min-h-[185px] lg:min-h-[230px]"
     >
       <img
         src={src}
@@ -192,21 +192,21 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
 
-      <div className="absolute top-2.5 left-2.5">
-        <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-2 py-0.5 rounded-full shadow">
+      <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5">
+        <Badge className="bg-accent text-accent-foreground font-bold text-[7px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full shadow">
           NEW
         </Badge>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 text-white">
-        <p className="text-[9px] uppercase tracking-wider text-white/80 font-semibold mb-1 line-clamp-1">
+      <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 lg:p-4 text-white">
+        <p className="text-[7px] sm:text-[9px] uppercase tracking-wider text-white/80 font-semibold mb-0.5 sm:mb-1 line-clamp-1">
           {product.category}
         </p>
-        <h3 className="font-heading text-sm lg:text-base font-bold leading-tight mb-1.5 line-clamp-1">
+        <h3 className="font-heading text-[11px] sm:text-sm lg:text-base font-bold leading-tight mb-1 sm:mb-1.5 line-clamp-1">
           {product.name}
         </h3>
 
-        <div className="flex items-center gap-1 mb-1.5">
+        <div className="hidden sm:flex items-center gap-1 mb-1.5">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
@@ -219,11 +219,11 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
           ))}
         </div>
 
-        <div className="flex items-end justify-between gap-2">
-          <p className="font-heading text-base lg:text-lg font-bold text-white">
+        <div className="flex items-end justify-between gap-1 sm:gap-2">
+          <p className="font-heading text-xs sm:text-base lg:text-lg font-bold text-white">
             {formatPrice(product.price)}
           </p>
-          <div className="flex items-center gap-0.5 text-[10px] text-white/85">
+          <div className="hidden sm:flex items-center gap-0.5 text-[10px] text-white/85">
             <MapPin className="w-2.5 h-2.5" />
             <span className="truncate max-w-[80px]">{product.location}</span>
           </div>
