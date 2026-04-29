@@ -604,7 +604,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Settings collapsible (was tab) */}
-          <details className="mb-4">
+          <details className="mb-4" id="settings-section">
             <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
               <Settings className="w-4 h-4 text-primary" />
               <span className="text-xs sm:text-sm font-semibold text-foreground">Paramètres du compte</span>
