@@ -207,8 +207,8 @@ interface CounterPillProps {
 const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) => {
   const toneClasses =
     tone === "primary"
-      ? "bg-primary/10 text-primary border-primary/20"
-      : "bg-accent/15 text-accent-foreground border-accent/30";
+      ? "bg-primary/10 text-primary border-primary/30"
+      : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
 
   return (
     <div
