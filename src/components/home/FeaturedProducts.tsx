@@ -33,13 +33,15 @@ const FeaturedProducts = () => {
   return (
     <section className="py-4 sm:py-8 lg:py-12 bg-muted/30">
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-          <h2 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            {t("mp.forYou")}
+        <div className="flex items-center justify-between gap-2 mb-3 sm:mb-5">
+          <h2 className="font-heading text-[13px] sm:text-lg lg:text-2xl font-bold text-foreground flex items-center gap-1.5 sm:gap-2 leading-tight">
+            <span className="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg bg-primary/10 flex-shrink-0">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-primary" />
+            </span>
+            Produits populaires
           </h2>
-          <Link to="/marketplace">
-            <Button variant="ghost" size="sm" className="text-xs sm:text-sm text-primary gap-1">
+          <Link to="/marketplace" className="flex-shrink-0">
+            <Button variant="ghost" size="sm" className="text-[11px] sm:text-sm text-primary gap-1 px-2 sm:px-3 h-8">
               {t("mp.viewAll")}
               <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
