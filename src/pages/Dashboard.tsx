@@ -340,22 +340,32 @@ const Dashboard = () => {
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: openPublishFlow },
               { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
-              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
+              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/mes-commandes", badge: pendingOrders },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                document.getElementById("withdrawals-section")?.setAttribute("open", "true");
-                document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
+              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
+              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
+                const el = document.getElementById("withdrawals-section");
+                el?.setAttribute("open", "true");
+                el?.scrollIntoView({ behavior: "smooth" });
               }},
-              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
-              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", href: "/settings" },
-            ].map((action, i) => {
+              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => {
+                const el = document.getElementById("settings-section");
+                el?.setAttribute("open", "true");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }},
+            ].map((action: any, i) => {
               const content = (
-                <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group">
+                <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group h-full">
                   <CardContent className="p-3 flex flex-col items-center gap-1.5 text-center">
-                    <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <div className={`relative w-10 h-10 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                       <action.icon className="w-5 h-5" />
+                      {action.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center border-2 border-card">
+                          {action.badge > 9 ? "9+" : action.badge}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[10px] font-semibold text-foreground">{action.label}</p>
+                    <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-2">{action.label}</p>
                   </CardContent>
                 </Card>
               );
