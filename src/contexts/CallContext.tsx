@@ -90,9 +90,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
+  const [qualityTier, setQualityTier] = useState<QualityTier>("high");
+  const [lastPermissionError, setLastPermissionError] = useState<MediaPermissionError | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const adaptiveCtrlRef = useRef<AdaptiveCallQualityController | null>(null);
   const channelRef = useRef<any>(null);
   const peerChannelRef = useRef<any>(null); // outgoing channel to peer
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
