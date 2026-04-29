@@ -15,6 +15,7 @@ import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
+import ImageWatermark from "@/components/marketplace/ImageWatermark";
 
 interface ProductCardProps {
   product: Product;
@@ -100,6 +101,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               className="w-full h-full object-cover"
               onError={() => setListImgError(true)}
             />
+            <ImageWatermark scale={0.32} />
             <div className="absolute top-2 left-2 flex gap-1">
               <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
               {product.discount && (
@@ -156,6 +158,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             onError={() => setImgError(true)}
           />
+          <ImageWatermark scale={0.32} />
           
           {/* Top-left badges (sale / sponsored / new / status) */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
