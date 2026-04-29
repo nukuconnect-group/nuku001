@@ -80,20 +80,21 @@ const DirectFromFarmHero = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-3">
-            <Link to="/marketplace">
-              <Button variant="hero" size="lg" className="gap-2">
-                Acheter chez les producteurs
-                <ArrowRight className="w-4 h-4" />
+          {/* CTAs : sur la même ligne y compris sur mobile */}
+          <div className="flex flex-row flex-nowrap items-center gap-2 sm:gap-3 pt-3">
+            <Link to="/marketplace" className="flex-1 sm:flex-none min-w-0">
+              <Button variant="hero" size="sm" className="w-full sm:w-auto gap-1.5 sm:gap-2 h-10 sm:h-11 text-xs sm:text-sm px-3 sm:px-5">
+                <span className="truncate">Acheter chez les producteurs</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
               </Button>
             </Link>
-            <Link to="/producteurs">
+            <Link to="/producteurs" className="flex-1 sm:flex-none min-w-0">
               <Button
-                size="lg"
+                size="sm"
                 variant="outline"
-                className="bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/20 hover:text-white"
+                className="w-full sm:w-auto h-10 sm:h-11 text-xs sm:text-sm px-3 sm:px-5 bg-white/10 backdrop-blur-sm border-white/40 text-white hover:bg-white/20 hover:text-white"
               >
-                Voir les fournisseurs
+                <span className="truncate">Voir les fournisseurs</span>
               </Button>
             </Link>
           </div>

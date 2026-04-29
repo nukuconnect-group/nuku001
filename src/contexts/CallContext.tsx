@@ -19,19 +19,23 @@ export interface CallMeta {
   peerName: string;
   peerAvatar: string;
   isCaller: boolean;
+  withVideo: boolean;
 }
 
 interface CallContextValue {
   status: CallStatus;
   meta: CallMeta | null;
   remoteStream: MediaStream | null;
+  localStream: MediaStream | null;
   isMuted: boolean;
+  isCameraOff: boolean;
   durationSec: number;
-  startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string }) => Promise<void>;
+  startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean }) => Promise<void>;
   acceptCall: () => Promise<void>;
   declineCall: () => Promise<void>;
   hangup: () => Promise<void>;
   toggleMute: () => void;
+  toggleCamera: () => void;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
@@ -75,7 +79,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<CallStatus>("idle");
   const [meta, setMeta] = useState<CallMeta | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -233,7 +239,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
     try { localStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
     localStreamRef.current = null;
     setRemoteStream(null);
+    setLocalStream(null);
     setIsMuted(false);
+    setIsCameraOff(false);
     setDurationSec(0);
     pendingIceRef.current = [];
     pendingOfferRef.current = null;
@@ -321,6 +329,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         peerName: payload.callerName || "Appelant",
         peerAvatar: payload.callerAvatar || "",
         isCaller: false,
+        withVideo: !!payload.withVideo,
       });
       setStatus("incoming");
       playRingtone("incoming");
@@ -392,8 +401,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [user?.id, handleSignal]);
 
   // ----- public actions -----
-  const startCall = useCallback(async ({ conversationId, peerUserId, peerName, peerAvatar }: {
-    conversationId: string; peerUserId: string; peerName: string; peerAvatar: string;
+  const startCall = useCallback(async ({ conversationId, peerUserId, peerName, peerAvatar, withVideo = false }: {
+    conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean;
   }) => {
     if (!user?.id || !profile?.id) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour appeler.", variant: "destructive" });
@@ -406,17 +415,21 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (status !== "idle") return;
 
     const callId = crypto.randomUUID();
-    const m: CallMeta = { callId, conversationId, peerUserId, peerName, peerAvatar, isCaller: true };
+    const m: CallMeta = { callId, conversationId, peerUserId, peerName, peerAvatar, isCaller: true, withVideo };
     setMeta(m);
     setStatus("outgoing");
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: withVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+      });
       localStreamRef.current = stream;
+      setLocalStream(stream);
       const pc = buildPeerConnection(peerUserId, callId);
       pcRef.current = pc;
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
-      const offer = await pc.createOffer({ offerToReceiveAudio: true });
+      const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: withVideo });
       await pc.setLocalDescription(offer);
 
       await sendSignal(peerUserId, {
@@ -426,6 +439,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         from: user.id,
         callerName: profile.full_name || "Appelant",
         callerAvatar: profile.avatar_url || "",
+        withVideo,
         offer,
       });
 
@@ -438,7 +452,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }, 35000);
     } catch (e: any) {
       console.error("startCall error", e);
-      toast({ title: "Erreur micro", description: e?.message || "Accès au micro refusé.", variant: "destructive" });
+      toast({ title: "Erreur média", description: e?.message || "Accès au micro/caméra refusé.", variant: "destructive" });
       cleanupCall();
       setStatus("idle");
       setMeta(null);
@@ -450,8 +464,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopRingtone();
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const useVideo = !!meta.withVideo;
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+      });
       localStreamRef.current = stream;
+      setLocalStream(stream);
       const pc = buildPeerConnection(meta.peerUserId, meta.callId);
       pcRef.current = pc;
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
@@ -497,9 +516,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsMuted(next);
   }, [isMuted]);
 
+  const toggleCamera = useCallback(() => {
+    const tracks = localStreamRef.current?.getVideoTracks() || [];
+    const next = !isCameraOff;
+    tracks.forEach(t => { t.enabled = !next; });
+    setIsCameraOff(next);
+  }, [isCameraOff]);
+
   const value: CallContextValue = {
-    status, meta, remoteStream, isMuted, durationSec,
-    startCall, acceptCall, declineCall, hangup, toggleMute,
+    status, meta, remoteStream, localStream, isMuted, isCameraOff, durationSec,
+    startCall, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   };
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
