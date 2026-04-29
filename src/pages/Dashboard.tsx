@@ -36,6 +36,7 @@ import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 import SellerOrdersToValidate from "@/components/dashboard/SellerOrdersToValidate";
+import ProductBoostStats from "@/components/dashboard/ProductBoostStats";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
@@ -340,22 +341,32 @@ const Dashboard = () => {
               { icon: Plus, label: "Publier", color: "bg-primary/10 text-primary", onClick: openPublishFlow },
               { icon: ShieldCheck, label: "Modération", color: "bg-amber-500/10 text-amber-600", href: "/moderation" },
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
-              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/suivi-livraison" },
+              { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/mes-commandes", badge: pendingOrders },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
-              { icon: Wallet, label: "Retraits", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                document.getElementById("withdrawals-section")?.setAttribute("open", "true");
-                document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
+              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
+              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
+                const el = document.getElementById("withdrawals-section");
+                el?.setAttribute("open", "true");
+                el?.scrollIntoView({ behavior: "smooth" });
               }},
-              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
-              { icon: Settings, label: "Paramètres", color: "bg-muted text-muted-foreground", href: "/settings" },
-            ].map((action, i) => {
+              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => {
+                const el = document.getElementById("settings-section");
+                el?.setAttribute("open", "true");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }},
+            ].map((action: any, i) => {
               const content = (
-                <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group">
+                <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group h-full">
                   <CardContent className="p-3 flex flex-col items-center gap-1.5 text-center">
-                    <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <div className={`relative w-10 h-10 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                       <action.icon className="w-5 h-5" />
+                      {action.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center border-2 border-card">
+                          {action.badge > 9 ? "9+" : action.badge}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[10px] font-semibold text-foreground">{action.label}</p>
+                    <p className="text-[10px] font-semibold text-foreground leading-tight line-clamp-2">{action.label}</p>
                   </CardContent>
                 </Card>
               );
@@ -470,6 +481,31 @@ const Dashboard = () => {
                   </Card>
                 )}
               </>
+            );
+          })()}
+
+          {/* Boosted products — stats détaillées */}
+          {(() => {
+            const boostedProducts = products.filter(p => isProductBoosted(activeBoosts, p.id));
+            if (boostedProducts.length === 0) return null;
+            return (
+              <details className="mb-4" open>
+                <summary className="cursor-pointer flex items-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/30 hover:bg-primary/15 transition-colors">
+                  <Rocket className="w-4 h-4 text-primary" />
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">
+                    Produits boostés ({boostedProducts.length})
+                  </span>
+                  <Badge className="bg-primary text-primary-foreground text-[9px] gap-0.5 animate-pulse">
+                    <Rocket className="w-2.5 h-2.5" /> Actif
+                  </Badge>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+                </summary>
+                <div className="mt-2 space-y-3">
+                  {boostedProducts.map((p) => (
+                    <ProductBoostStats key={p.id} productId={p.id} productName={p.name} />
+                  ))}
+                </div>
+              </details>
             );
           })()}
 
@@ -594,7 +630,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Settings collapsible (was tab) */}
-          <details className="mb-4">
+          <details className="mb-4" id="settings-section">
             <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
               <Settings className="w-4 h-4 text-primary" />
               <span className="text-xs sm:text-sm font-semibold text-foreground">Paramètres du compte</span>
