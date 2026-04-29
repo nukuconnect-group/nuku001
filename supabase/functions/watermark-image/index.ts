@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     const srcBytes = new Uint8Array(await upstream.arrayBuffer());
     const fmt = resolveFormat(reqFormat, upstream.headers.get("content-type"), target);
 
-    const [img, logoOriginal] = await Promise.all([Jimp.read(srcBytes), loadLogo()]);
+    const [img, logoOriginal] = await Promise.all([Jimp.fromBuffer(toArrayBuffer(srcBytes)), loadLogo()]);
 
     // Cap size for memory
     const MAX = 1400;
