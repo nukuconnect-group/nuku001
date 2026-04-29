@@ -147,7 +147,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
 
   return (
     <Link to={`/produit/${product.slug || product.id}`} className="block h-full">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
