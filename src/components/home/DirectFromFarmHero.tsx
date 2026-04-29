@@ -36,14 +36,14 @@ const DirectFromFarmHero = () => {
             </span>
           </div>
 
-          <h2 className="font-heading text-3xl lg:text-5xl xl:text-6xl font-bold leading-[1.1]">
+          <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-[1.1]">
             Achetez directement chez{" "}
             <span className="text-accent">les producteurs</span>,
-            <br className="hidden lg:block" />
+            <br className="hidden sm:block" />
             sans intermédiaire
           </h2>
 
-          <p className="text-base lg:text-lg text-white/90 leading-relaxed max-w-xl">
+          <p className="text-sm sm:text-base lg:text-lg text-white/90 leading-relaxed max-w-xl">
             Connectez-vous aux fournisseurs vérifiés et recevez vos produits agricoles
             directement depuis le lieu de production. Plus de fraîcheur, des prix justes,
             une traçabilité totale.
