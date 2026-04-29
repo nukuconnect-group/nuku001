@@ -59,32 +59,22 @@ export async function applyWatermark(file: File): Promise<File> {
 
     ctx.drawImage(img, 0, 0, w, h);
 
-    // Watermark sized relative to the image (≈22% width)
-    const targetW = Math.round(w * 0.22);
+    // Centered watermark sized relative to the image (≈55% width)
+    const targetW = Math.round(w * 0.55);
     const ratio = logo.height / logo.width;
     const targetH = Math.round(targetW * ratio);
-    const margin = Math.round(Math.min(w, h) * 0.025);
-    const x = w - targetW - margin;
-    const y = h - targetH - margin;
+    const x = Math.round((w - targetW) / 2);
+    const y = Math.round((h - targetH) / 2);
 
-    // Soft white plate behind the logo for legibility on any background
+    // Soft, professional centered logo (low opacity, slight blur halo)
     ctx.save();
     ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "#ffffff";
-    const pad = Math.round(targetW * 0.08);
-    ctx.fillRect(x - pad, y - pad, targetW + pad * 2, targetH + pad * 2);
-    ctx.restore();
-
-    // Blurred logo pass (halo)
-    ctx.save();
-    ctx.globalAlpha = 0.35;
     (ctx as any).filter = "blur(2px)";
     ctx.drawImage(logo, x, y, targetW, targetH);
     ctx.restore();
 
-    // Crisp logo pass on top
     ctx.save();
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.32;
     (ctx as any).filter = "none";
     ctx.drawImage(logo, x, y, targetW, targetH);
     ctx.restore();
