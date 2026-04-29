@@ -106,8 +106,8 @@ const VerifiedSuppliersBar = () => {
                 Producteurs &amp; Fournisseurs Nukuconnect
               </h3>
 
-              {/* Two separate counters */}
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 flex-wrap">
+              {/* Two separate counters — toujours sur la même ligne (mobile inclus) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 flex-nowrap overflow-x-auto no-scrollbar">
                 <CounterPill
                   icon={<Sprout className="w-3 h-3" />}
                   label="Producteurs"
@@ -208,7 +208,7 @@ const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) 
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${toneClasses}`}
+      className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full border text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
     >
       <span className="opacity-80">{icon}</span>
       {isLoading ? (
