@@ -865,6 +865,8 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
             </Button>
           </div>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
