@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     const x = Math.round((w - targetW) / 2);
     const y = Math.round((h - targetH) / 2);
 
-    img.composite(logo, x, y, { opacitySource: 0.55 } as any);
+    img.composite(logo, x, y, { opacitySource: 0.38 } as any);
 
     const out: Uint8Array = await img.getBuffer(fmt.mime, fmt.mime === "image/jpeg" ? { quality: 86 } : undefined as any);
 
