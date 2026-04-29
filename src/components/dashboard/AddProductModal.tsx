@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin } from "lucide-react";
+import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin, CheckCircle2, Sparkles, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -109,6 +109,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [isLoading, setIsLoading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const defaultProduct = {
@@ -280,10 +281,6 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         const { data, error } = await supabase.from("products").insert(productData).select("id").single();
         if (error) throw error;
         savedProductId = (data as any)?.id || null;
-        toast({
-          title: "📤 Produit soumis pour analyse",
-          description: "Notre IA vérifie la conformité de votre produit. Il sera publié sur la marketplace d'ici environ 20 minutes s'il respecte les normes.",
-        });
       }
 
       // Sync price tiers (replace strategy)
@@ -306,9 +303,15 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       setNewProduct(defaultProduct);
       setImageFiles([]);
       setImagePreviews([]);
-      
+
       onProductAdded();
-      onOpenChange(false);
+
+      if (editProduct) {
+        onOpenChange(false);
+      } else {
+        // Show success screen for new submissions
+        setSubmittedSuccess(true);
+      }
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
@@ -339,9 +342,47 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     }
   };
 
+  const handleClose = (o: boolean) => {
+    if (!o) setSubmittedSuccess(false);
+    onOpenChange(o);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        {submittedSuccess ? (
+          <div className="py-6 text-center space-y-5">
+            <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
+              <CheckCircle2 className="w-12 h-12 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-foreground">Publication réussie ! 🎉</h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Votre produit a bien été enregistré. Il sera analysé par l'équipe Nukuconnect
+                pour vérifier sa conformité avant publication sur la marketplace.
+              </p>
+            </div>
+            <div className="bg-muted/40 border border-border rounded-lg p-4 max-w-md mx-auto text-left space-y-2">
+              <div className="flex items-start gap-2 text-sm">
+                <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-foreground">Analyse IA conformité agricole en cours</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <Bell className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-foreground">
+                  Vous recevrez une notification dès l'approbation
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+              <Button variant="outline" onClick={() => setSubmittedSuccess(false)}>
+                Publier un autre produit
+              </Button>
+              <Button onClick={() => handleClose(false)}>Fermer</Button>
+            </div>
+          </div>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {editProduct ? <Edit className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
