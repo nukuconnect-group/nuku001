@@ -34,6 +34,11 @@ interface CallContextValue {
   durationSec: number;
   /** Palier adaptatif courant (high / medium / low / audio-only). */
   qualityTier: QualityTier;
+  /** Raison du dernier changement de qualité (lisible humain). */
+  qualityReason: string;
+  /** Mode économie de données (manuel) — plafonne la qualité à `low`. */
+  dataSaver: boolean;
+  setDataSaver: (enabled: boolean) => void;
   /** Dernière erreur de permission micro/caméra, à afficher par l'UI si besoin. */
   lastPermissionError: MediaPermissionError | null;
   clearPermissionError: () => void;
