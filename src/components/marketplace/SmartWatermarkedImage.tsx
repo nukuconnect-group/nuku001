@@ -78,12 +78,12 @@ const SmartWatermarkedImage = ({
           src={watermarkLogo}
           alt=""
           draggable={false}
-          className="opacity-70"
+          className="opacity-40"
           style={{
             width: `${watermarkScale * 100}%`,
             maxWidth: "75%",
             filter:
-              "drop-shadow(0 2px 6px rgba(0,0,0,0.55)) drop-shadow(0 0 2px rgba(0,0,0,0.4))",
+              "drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 1px rgba(0,0,0,0.25))",
           }}
         />
       </div>
