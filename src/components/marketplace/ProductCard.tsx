@@ -94,8 +94,8 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
       <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-xl border-border/50">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0 bg-muted">
-            <SmartWatermarkedImage
-              originalSrc={listImgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+            <img
+              src={listImgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
               alt={product.name}
               loading="lazy"
               className="w-full h-full object-cover"
