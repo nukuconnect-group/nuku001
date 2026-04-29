@@ -19,19 +19,23 @@ export interface CallMeta {
   peerName: string;
   peerAvatar: string;
   isCaller: boolean;
+  withVideo: boolean;
 }
 
 interface CallContextValue {
   status: CallStatus;
   meta: CallMeta | null;
   remoteStream: MediaStream | null;
+  localStream: MediaStream | null;
   isMuted: boolean;
+  isCameraOff: boolean;
   durationSec: number;
-  startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string }) => Promise<void>;
+  startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean }) => Promise<void>;
   acceptCall: () => Promise<void>;
   declineCall: () => Promise<void>;
   hangup: () => Promise<void>;
   toggleMute: () => void;
+  toggleCamera: () => void;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
@@ -75,7 +79,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<CallStatus>("idle");
   const [meta, setMeta] = useState<CallMeta | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
