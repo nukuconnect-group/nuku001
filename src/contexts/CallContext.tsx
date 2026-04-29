@@ -538,10 +538,22 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
     try {
       const useVideo = !!meta.withVideo;
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-      });
+      const { stream, downgradedToAudio } = await requestUserMedia(
+        {
+          audio: true,
+          video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+        },
+        { videoFallbackToAudio: true },
+      );
+      let answerWithVideo = useVideo;
+      if (downgradedToAudio && useVideo) {
+        answerWithVideo = false;
+        setMeta({ ...meta, withVideo: false });
+        toast({
+          title: "Caméra indisponible",
+          description: "L'appel continue en audio seul — votre caméra n'a pas pu être activée.",
+        });
+      }
       localStreamRef.current = stream;
       setLocalStream(stream);
       const pc = buildPeerConnection(meta.peerUserId, meta.callId);
@@ -555,17 +567,30 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pendingIceRef.current = [];
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+
+      // Adaptive quality côté receveur aussi
+      attachAdaptiveQuality(pc, stream);
+
       await sendSignal(meta.peerUserId, {
-        type: "answer", callId: meta.callId, from: user.id, answer,
+        type: "answer", callId: meta.callId, from: user.id, withVideo: answerWithVideo, answer,
       });
       setStatus("in-call");
       startTimer();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("acceptCall error", e);
-      toast({ title: "Erreur micro", description: e?.message || "Accès au micro refusé.", variant: "destructive" });
+      if (isMediaPermissionError(e)) {
+        setLastPermissionError(e);
+        toast({ title: e.title, description: e.description, variant: "destructive" });
+      } else {
+        toast({
+          title: "Impossible d'accepter l'appel",
+          description: (e as Error)?.message || "Erreur inattendue.",
+          variant: "destructive",
+        });
+      }
       await declineCall();
     }
-  }, [status, meta, user?.id, buildPeerConnection, sendSignal, stopRingtone, startTimer]);
+  }, [status, meta, user?.id, buildPeerConnection, sendSignal, stopRingtone, startTimer, attachAdaptiveQuality]);
 
   const declineCall = useCallback(async () => {
     if (!meta || !user?.id) { cleanupCall(); setStatus("idle"); setMeta(null); return; }
@@ -596,8 +621,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsCameraOff(next);
   }, [isCameraOff]);
 
+  const clearPermissionError = useCallback(() => setLastPermissionError(null), []);
+
   const value: CallContextValue = {
     status, meta, remoteStream, localStream, isMuted, isCameraOff, durationSec,
+    qualityTier, lastPermissionError, clearPermissionError,
     startCall, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   };
 
