@@ -75,15 +75,19 @@ const VerifiedSuppliersBar = () => {
   }, [queryClient]);
 
   // Compteurs minimums "réseau" pour valoriser la plateforme.
-  // On affiche au moins ces seuils, et on additionne les vrais profils.
-  const MIN_PRODUCERS = 2400;
+  // 5 000 minimum partagés pour producteurs ET fournisseurs.
+  const MIN_PRODUCERS = 5000;
   const MIN_SUPPLIERS = 5000;
   const realProducers = data?.producers ?? 0;
   const realSuppliers = data?.suppliers ?? 0;
   const producers = Math.max(MIN_PRODUCERS, MIN_PRODUCERS + realProducers);
   const suppliers = Math.max(MIN_SUPPLIERS, MIN_SUPPLIERS + realSuppliers);
   const avatars = data?.avatars ?? [];
-  const totalVisible = producers + suppliers;
+  const totalNetwork = producers + suppliers;
+  // Affichage compact "+5K" pour le badge avatars
+  const networkBadge = totalNetwork >= 1000
+    ? `+${Math.floor(totalNetwork / 1000)}K`
+    : `+${totalNetwork}`;
 
   return (
     <section className="py-4 sm:py-5 lg:py-6 bg-card border-b border-border/40">
