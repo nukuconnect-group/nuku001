@@ -212,11 +212,11 @@ const CounterPill = ({ icon, label, value, isLoading, tone }: CounterPillProps) 
 
   return (
     <div
-      className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full border text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
+      className={`inline-flex items-center gap-0.5 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border text-[9px] sm:text-xs whitespace-nowrap flex-shrink-0 ${toneClasses}`}
     >
-      <span>{icon}</span>
+      <span className="hidden xs:inline-flex">{icon}</span>
       {isLoading ? (
-        <span className="inline-block h-3 w-10 bg-current/20 animate-pulse rounded" />
+        <span className="inline-block h-3 w-8 bg-current/20 animate-pulse rounded" />
       ) : (
         <span className="font-bold tabular-nums">
           {value.toLocaleString("fr-FR")}
