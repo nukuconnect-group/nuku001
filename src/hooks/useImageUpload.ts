@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { applyWatermark } from "@/lib/watermark";
+import { prewarmWatermarks } from "@/lib/watermarkUrl";
 
 export function useImageUpload() {
   const [uploading, setUploading] = useState(false);
@@ -32,6 +33,10 @@ export function useImageUpload() {
         urls.push(publicUrl);
       }
 
+      // Pre-generate watermarked variants so the first marketplace
+      // request hits a warm CDN cache instead of waiting on ImageMagick.
+      prewarmWatermarks(urls);
+
       return urls;
     } finally {
       setUploading(false);
@@ -40,3 +45,4 @@ export function useImageUpload() {
 
   return { uploadImages, uploading };
 }
+
