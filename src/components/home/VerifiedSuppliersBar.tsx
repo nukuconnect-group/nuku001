@@ -20,20 +20,19 @@ const VerifiedSuppliersBar = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["verified-suppliers-bar"],
     queryFn: async () => {
-      // Compteur total de fournisseurs vérifiés
+      // Compteur total : producteurs + fournisseurs (tous, pour valoriser le réseau)
       const { count } = await supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
-        .eq("user_type", "supplier")
-        .eq("is_verified", true);
+        .in("user_type", ["producer", "supplier"]);
 
-      // Aperçu logos (8 max)
+      // Aperçu logos : priorité aux vérifiés, sinon n'importe quel producteur/fournisseur avec avatar
       const { data: suppliers } = await supabase
         .from("profiles")
-        .select("id, full_name, business_name, avatar_url")
-        .eq("user_type", "supplier")
-        .eq("is_verified", true)
+        .select("id, full_name, business_name, avatar_url, is_verified")
+        .in("user_type", ["producer", "supplier"])
         .not("avatar_url", "is", null)
+        .order("is_verified", { ascending: false })
         .limit(8);
 
       return {
