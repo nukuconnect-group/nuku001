@@ -54,9 +54,14 @@ const About = () => {
           <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
             Qui sommes-<span className="text-primary">nous</span> ?
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto mb-6">
-            NUKUCONNECT est une marketplace agricole intelligente qui met en relation 
-            directe les producteurs et les acheteurs en Afrique de l'Ouest.
+          <p className="text-sm sm:text-base text-muted-foreground max-w-3xl mx-auto mb-6 leading-relaxed">
+            <span className="font-semibold text-foreground">NUKUCONNECT</span> est une startup <span className="font-semibold">agritech</span> légalement
+            enregistrée sous la dénomination de société au <span className="font-semibold">Togo</span>. Nous opérons
+            sur l'ensemble de la chaîne de valeur agricole en concevant et déployant des
+            <span className="font-semibold"> solutions digitales et technologiques innovantes</span> destinées à la
+            valorisation du secteur agricole en Afrique. Notre ambition est de connecter les producteurs,
+            fournisseurs, acheteurs et acteurs logistiques au sein d'un écosystème intelligent, durable et inclusif,
+            au service du développement agricole du continent.
           </p>
         </div>
       </section>
