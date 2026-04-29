@@ -80,7 +80,7 @@ const VerifiedSuppliersBar = () => {
   const total = producers + suppliers;
 
   return (
-    <section className="hidden md:block py-6 lg:py-8 bg-card border-b border-border/40">
+    <section className="py-5 md:py-6 lg:py-8 bg-card border-b border-border/40">
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           {/* Title + dual counters */}
