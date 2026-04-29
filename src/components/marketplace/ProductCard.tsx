@@ -15,7 +15,7 @@ import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
-import SmartWatermarkedImage from "@/components/marketplace/SmartWatermarkedImage";
+
 
 interface ProductCardProps {
   product: Product;
