@@ -201,29 +201,29 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0 space-y-5">
           {/* Avatar */}
-          <div className="flex items-center gap-4">
-            <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent cursor-pointer group flex-shrink-0"
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent cursor-pointer group flex-shrink-0"
               onClick={() => avatarInputRef.current?.click()}>
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary-foreground" />
+                  <User className="w-7 h-7 sm:w-8 sm:h-8 text-primary-foreground" />
                 </div>
               )}
               <div className="absolute inset-0 bg-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
-                {isUploadingAvatar ? <Loader2 className="w-5 h-5 animate-spin text-primary-foreground" /> : <Camera className="w-5 h-5 text-primary-foreground" />}
+                {isUploadingAvatar ? <Loader2 className="w-5 h-5 animate-spin text-primary-foreground" /> : <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />}
               </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{getProfileDisplayName(profile, "")}</p>
-              <p className="text-xs text-muted-foreground capitalize">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground truncate">{getProfileDisplayName(profile, "")}</p>
+              <p className="text-xs text-muted-foreground capitalize truncate">
                  {resolvedUserType === "producer" ? "Fournisseur" : 
                   resolvedUserType === "driver" ? "Livreur" : 
                   resolvedUserType === "trainer" ? "Formateur" :
                   resolvedUserType === "learner" ? "Apprenant" : "Acheteur"}
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Cliquez pour changer la photo</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">Cliquez pour changer la photo</p>
             </div>
           </div>
           <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
