@@ -88,7 +88,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-20 sm:h-24 object-contain" />
+              <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-28 sm:h-32 lg:h-36 object-contain" />
             </Link>
             <p className="text-white/70 text-xs sm:text-sm mb-4 sm:mb-6">
               {t("footer.desc")}
