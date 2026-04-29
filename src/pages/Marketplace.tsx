@@ -744,7 +744,7 @@ const Marketplace = () => {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}>
               <HandCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-              <span className="truncate">Demandes</span>
+              <span className="truncate">Besoins d'achat</span>
               {demandsCount > 0 && (
                 <Badge className="bg-secondary text-secondary-foreground text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0 ml-0.5 sm:ml-1 flex-shrink-0">{demandsCount}</Badge>
               )}
