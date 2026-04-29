@@ -55,6 +55,7 @@ const Index = () => {
         <PromoBannerSlider />
         <CategoriesSection />
         
+        <DirectFromFarmHero />
         <FeaturedProducts />
         <HomeDemandsSection />
         <FeaturesSection />
