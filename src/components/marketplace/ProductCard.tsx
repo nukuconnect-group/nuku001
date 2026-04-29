@@ -205,6 +205,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             )}
             {!minimal && (
               <>
+                {/* Aperçu rapide — visible au survol sur ordinateur uniquement */}
+                <button
+                  onClick={handleQuickView}
+                  aria-label="Aperçu rapide"
+                  title="Aperçu rapide"
+                  className="hidden sm:flex w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm opacity-0 group-hover:opacity-100"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
                 <button
                   onClick={handleCompare}
                   className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
