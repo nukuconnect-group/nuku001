@@ -17,8 +17,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// magick.wasm needs an absolute URL when running in Supabase Edge Runtime
+// (relative `magick.wasm` lookups fail with "Invalid URL").
+const WASM_URL = new URL("https://deno.land/x/imagemagick_deno@0.0.31/wasm/magick.wasm");
 let magickReady: Promise<void> | null = null;
-const ensureMagick = () => (magickReady ??= initializeImageMagick());
+const ensureMagick = () => (magickReady ??= initializeImageMagick(WASM_URL));
 
 let logoBytes: Uint8Array | null = null;
 const loadLogo = async () => {
