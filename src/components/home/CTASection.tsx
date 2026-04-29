@@ -61,20 +61,31 @@ const CTASection = () => {
             </Link>
           </div>
 
-          {/* Partners with logos */}
+          {/* Partners marquee */}
           <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-border">
             <p className="text-xs sm:text-sm text-muted-foreground mb-6">Ils nous font confiance</p>
-            <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
-              {partners.map((partner) => (
-                <div key={partner.name} className="flex items-center justify-center bg-card/90 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-300">
-                  <img
-                    src={partner.logo}
-                    alt={partner.name}
-                    className="h-10 sm:h-14 lg:h-16 w-auto object-contain"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
+            <div
+              className="relative overflow-hidden w-full"
+              style={{
+                maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+                WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              }}
+            >
+              <div className="flex w-max gap-8 sm:gap-12 animate-[marquee_30s_linear_infinite] hover:[animation-play-state:paused]">
+                {[...partners, ...partners, ...partners].map((partner, idx) => (
+                  <div
+                    key={`${partner.name}-${idx}`}
+                    className="flex-shrink-0 flex items-center justify-center bg-card/95 rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-all duration-300 min-w-[140px] sm:min-w-[180px]"
+                  >
+                    <img
+                      src={partner.logo}
+                      alt={partner.name}
+                      className="h-10 sm:h-14 lg:h-16 w-auto object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
