@@ -209,9 +209,16 @@ export class AdaptiveCallQualityController {
 
   private async setTier(tier: QualityTier, reason: string): Promise<void> {
     if (this.destroyed) return;
-    const profile = TIER_PROFILES[tier];
+    // Plafond en mode économie de données : pas de high/medium
+    let effectiveTier = tier;
+    if (this.dataSaver && (tier === "high" || tier === "medium")) {
+      effectiveTier = "low";
+      reason = `${reason} · économie de données`;
+    }
+    const profile = TIER_PROFILES[effectiveTier];
     const prev = this.currentTier;
-    this.currentTier = tier;
+    this.currentTier = effectiveTier;
+    this.currentReason = reason;
 
     try {
       // 1) Ajuste la piste vidéo sortante via le sender
