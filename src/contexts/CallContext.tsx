@@ -239,7 +239,9 @@ export function CallProvider({ children }: { children: ReactNode }) {
     try { localStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
     localStreamRef.current = null;
     setRemoteStream(null);
+    setLocalStream(null);
     setIsMuted(false);
+    setIsCameraOff(false);
     setDurationSec(0);
     pendingIceRef.current = [];
     pendingOfferRef.current = null;
