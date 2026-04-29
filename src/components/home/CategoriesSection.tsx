@@ -97,13 +97,13 @@ const CategoriesSection = () => {
         {/* Horizontal scroll on mobile, grid on tablet/desktop — same card style */}
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory lg:grid lg:grid-cols-6 lg:overflow-visible lg:snap-none"
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
         >
           {activeCategories.map((cat: any) => (
             <Link
               key={cat.id}
               to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-              className="flex-shrink-0 w-[38vw] max-w-[160px] snap-start group lg:w-auto lg:max-w-none"
+              className="flex-shrink-0 w-[38vw] max-w-[160px] snap-start group"
             >
               <div className="overflow-hidden rounded-none sm:rounded-none bg-card hover:shadow-md transition-all border border-border/50 hover:border-primary/30">
                 <div className="relative h-24 sm:h-28 overflow-hidden">

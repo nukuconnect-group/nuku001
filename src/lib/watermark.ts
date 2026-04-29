@@ -87,7 +87,8 @@ export async function applyWatermark(file: File): Promise<File> {
       )
     );
 
-    const newName = file.name.replace(/\.(png|webp|heic|heif|jpe?g)$/i, "") + "-nuku.jpg";
+    const baseName = file.name.replace(/\.(png|webp|heic|heif|jpe?g)$/i, "") || "image";
+    const newName = `nukuconnect-${baseName}.jpg`;
     return new File([blob], newName, { type: "image/jpeg" });
   } catch (e) {
     console.warn("Watermark skipped:", e);

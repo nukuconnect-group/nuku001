@@ -140,10 +140,15 @@ Deno.serve(async (req) => {
 
     const out: Uint8Array = await img.getBuffer(fmt.mime, fmt.mime === "image/jpeg" ? { quality: 86 } : undefined as any);
 
+    // Friendly download filename: nukuconnect-image-<ts>.<ext>
+    const ext = fmt.mime === "image/png" ? "png" : "jpg";
+    const filename = `nukuconnect-image-${Date.now()}.${ext}`;
+
     return new Response(out, {
       headers: {
         ...corsHeaders,
         "Content-Type": fmt.mime,
+        "Content-Disposition": `inline; filename="${filename}"`,
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });

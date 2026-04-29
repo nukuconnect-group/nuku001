@@ -91,7 +91,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
 
   if (viewMode === "list") {
     return (
-      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none sm:rounded-xl border-border/50">
+      <Card variant="feature" className="w-full overflow-hidden group hover:shadow-elevated transition-all duration-300 rounded-none border-border/50">
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0 bg-muted">
             <img
@@ -147,7 +147,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
 
   return (
     <Link to={`/produit/${product.slug || product.id}`} className="block h-full">
-      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none sm:rounded-xl shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
+      <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
