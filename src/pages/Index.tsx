@@ -14,6 +14,7 @@ import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
 import HomeDemandsSection from "@/components/home/HomeDemandsSection";
 import DirectFromFarmHero from "@/components/home/DirectFromFarmHero";
+import VerifiedSuppliersBar from "@/components/home/VerifiedSuppliersBar";
 
 import { useProfile } from "@/contexts/ProfileContext";
 
