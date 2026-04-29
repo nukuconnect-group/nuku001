@@ -36,6 +36,7 @@ import PremiumFeaturesPanel from "@/components/dashboard/PremiumFeaturesPanel";
 import ProductStatusBadge from "@/components/dashboard/ProductStatusBadge";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 import SellerOrdersToValidate from "@/components/dashboard/SellerOrdersToValidate";
+import ProductBoostStats from "@/components/dashboard/ProductBoostStats";
 import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
 import { useTokens } from "@/hooks/useTokens";
 import {
