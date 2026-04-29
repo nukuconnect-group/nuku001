@@ -105,11 +105,21 @@ export default function CallModal() {
         </div>
       )}
 
-      {/* Overlay name+timer for in-call video */}
+      {/* Overlay name+timer + indicateur qualité pour appel vidéo en cours */}
       {isVideo && isInCall && (
         <div className="relative z-10 flex flex-col items-center gap-1 text-white text-center pt-4 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm">
           <h2 className="text-lg font-semibold">{meta.peerName}</h2>
-          <p className="text-xs text-white/80">{fmtDuration(durationSec)}</p>
+          <div className="flex items-center gap-2 text-xs text-white/80">
+            <span>{fmtDuration(durationSec)}</span>
+            <QualityBadge tier={qualityTier} />
+          </div>
+        </div>
+      )}
+
+      {/* Indicateur qualité discret pour les appels audio */}
+      {!isVideo && isInCall && qualityTier !== "high" && (
+        <div className="relative z-10 -mt-4">
+          <QualityBadge tier={qualityTier} />
         </div>
       )}
 
