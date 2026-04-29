@@ -13,7 +13,7 @@ function fmtDuration(sec: number) {
 export default function CallModal() {
   const {
     status, meta, remoteStream, localStream, isMuted, isCameraOff,
-    durationSec, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
+    durationSec, qualityTier, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   } = useCall();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
