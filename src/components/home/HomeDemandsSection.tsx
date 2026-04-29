@@ -161,7 +161,7 @@ const HomeDemandsSection = () => {
                       </span>
                     </div>
                     <h3 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1 leading-snug break-words">
-                      {d.title}
+                      Besoin d'achat de {d.title.replace(/^(Recherche|Besoin d'achat de)\s+/i, "")}
                     </h3>
                     <div className="mt-auto space-y-0.5 min-w-0">
                       {d.quantity && (
