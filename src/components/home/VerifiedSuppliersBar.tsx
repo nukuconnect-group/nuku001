@@ -42,9 +42,9 @@ const VerifiedSuppliersBar = () => {
           .from("profiles")
           .select("id, full_name, business_name, avatar_url, is_verified, user_type")
           .in("user_type", ["producer", "supplier"])
-          .not("avatar_url", "is", null)
           .order("is_verified", { ascending: false })
-          .limit(8),
+          .order("created_at", { ascending: false })
+          .limit(15),
       ]);
 
       return {
