@@ -125,7 +125,7 @@ const ProfileSettingsPanel = ({ profile, user, onProfileUpdate }: ProfileSetting
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-full overflow-hidden">
       {/* Cover Images Carousel */}
       <Card>
         <CardHeader className="p-3 sm:p-4 pb-2">
