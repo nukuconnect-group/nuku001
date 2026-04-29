@@ -15,7 +15,7 @@ import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
-import ImageWatermark from "@/components/marketplace/ImageWatermark";
+import { watermarked } from "@/lib/watermarkUrl";
 
 interface ProductCardProps {
   product: Product;
@@ -95,13 +95,12 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-52 aspect-square sm:aspect-auto sm:h-auto flex-shrink-0 bg-muted">
             <img
-              src={listImgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+              src={watermarked(listImgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image)}
               alt={product.name}
               loading="lazy"
               className="w-full h-full object-cover"
               onError={() => setListImgError(true)}
             />
-            <ImageWatermark scale={0.32} />
             <div className="absolute top-2 left-2 flex gap-1">
               <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
               {product.discount && (
@@ -152,7 +151,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
         {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={imgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image}
+            src={watermarked(imgError || !product.image ? getCategoryFallbackImage(product.category, product.name) : product.image)}
             alt={product.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
