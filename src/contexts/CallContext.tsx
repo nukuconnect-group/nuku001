@@ -329,6 +329,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         peerName: payload.callerName || "Appelant",
         peerAvatar: payload.callerAvatar || "",
         isCaller: false,
+        withVideo: !!payload.withVideo,
       });
       setStatus("incoming");
       playRingtone("incoming");
