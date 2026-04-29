@@ -464,8 +464,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopRingtone();
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const useVideo = !!meta.withVideo;
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+      });
       localStreamRef.current = stream;
+      setLocalStream(stream);
       const pc = buildPeerConnection(meta.peerUserId, meta.callId);
       pcRef.current = pc;
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
@@ -511,9 +516,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsMuted(next);
   }, [isMuted]);
 
+  const toggleCamera = useCallback(() => {
+    const tracks = localStreamRef.current?.getVideoTracks() || [];
+    const next = !isCameraOff;
+    tracks.forEach(t => { t.enabled = !next; });
+    setIsCameraOff(next);
+  }, [isCameraOff]);
+
   const value: CallContextValue = {
-    status, meta, remoteStream, isMuted, durationSec,
-    startCall, acceptCall, declineCall, hangup, toggleMute,
+    status, meta, remoteStream, localStream, isMuted, isCameraOff, durationSec,
+    startCall, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   };
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
