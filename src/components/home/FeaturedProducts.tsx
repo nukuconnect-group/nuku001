@@ -83,32 +83,14 @@ const FeaturedProducts = () => {
           </div>
         ) : (
           <>
-            {/* ===== MOBILE : scroll horizontal (inchangé) ===== */}
-            <div
-              ref={scrollRef}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              className="md:hidden flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              {featuredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="w-[140px] h-[260px] snap-start flex-shrink-0"
-                >
-                  <ProductCard product={product} viewMode="grid" />
-                </div>
-              ))}
-            </div>
-
-            {/* ===== TABLETTE & DESKTOP : mosaïque pro ===== */}
+            {/* ===== Mosaïque pro — sur TOUS les écrans (mobile, tablette, desktop) ===== */}
             {heroProduct && (
-              <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
                 {/* HERO card */}
                 <FeaturedHeroCard product={heroProduct} formatPrice={formatPrice} />
 
-                {/* Side grid */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4 lg:gap-5">
+                {/* Side grid — 2 colonnes (mobile inclus) */}
+                <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                   {sideProducts.map((product) => (
                     <FeaturedSecondaryCard
                       key={product.id}
