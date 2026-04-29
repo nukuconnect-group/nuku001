@@ -33,6 +33,33 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const sendNotificationEmail = async (
+    templateName: "subscription" | "tokens-credited",
+    payload: Record<string, any>
+  ) => {
+    try {
+      // Look up user's email via admin RPC
+      const { data: users } = await supabase.rpc("get_admin_users" as any);
+      const user = (users as any[] | null)?.find((u: any) => u.user_id === userId);
+      const recipientEmail = user?.email;
+      if (!recipientEmail) return;
+
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName,
+          recipientEmail,
+          idempotencyKey: `${templateName}-${userId}-${Date.now()}`,
+          templateData: {
+            recipientName: user?.full_name || userName,
+            ...payload,
+          },
+        },
+      });
+    } catch (e) {
+      console.warn("Email notification failed (non-blocking):", e);
+    }
+  };
+
   const applySub = async () => {
     setBusy(true);
     const { data, error } = await supabase.rpc("admin_set_user_subscription" as any, {
@@ -56,9 +83,19 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
       }
       return;
     }
+    // Send activation email (non-blocking)
+    const result = (data as any) || {};
+    sendNotificationEmail("subscription", {
+      plan,
+      billingPeriod: billing,
+      eventType: "activated",
+      maxProducts: result.max_products,
+      bonusTokens: result.bonus_tokens,
+      expiresAt: result.expires_at,
+    });
     toast({
       title: "Abonnement mis à jour",
-      description: `Plan ${plan} attribué à ${userName || "l'utilisateur"}.`,
+      description: `Plan ${plan} attribué à ${userName || "l'utilisateur"}. Email de confirmation envoyé.`,
     });
     setOpenSub(false);
     setReason("");
@@ -82,7 +119,13 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Jetons crédités", description: `+${credit} jetons attribués.` });
+    // Send tokens-credited email (non-blocking) — reuse subscription template as informational
+    sendNotificationEmail("subscription", {
+      plan: "tokens",
+      eventType: "activated",
+      bonusTokens: credit,
+    });
+    toast({ title: "Jetons crédités", description: `+${credit} jetons attribués. Email envoyé.` });
     setOpenCredit(false);
     setReason("");
     onUpdated?.();

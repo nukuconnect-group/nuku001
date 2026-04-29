@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Truck, GraduationCap, ShoppingBag } from "lucide-react";
+import { Leaf, Truck, GraduationCap, Network } from "lucide-react";
+import networkImg from "@/assets/promo-network-connected.jpg";
 
 const slides = [
   {
@@ -9,6 +10,7 @@ const slides = [
     cta: "EXPLORER",
     href: "/marketplace",
     Icon: Leaf,
+    image: null as string | null,
   },
   {
     title: "LIVRAISON EXPRESS",
@@ -16,6 +18,7 @@ const slides = [
     cta: "COMMANDER",
     href: "/marketplace",
     Icon: Truck,
+    image: null,
   },
   {
     title: "FORMATIONS GRATUITES",
@@ -23,13 +26,15 @@ const slides = [
     cta: "APPRENDRE",
     href: "/formations",
     Icon: GraduationCap,
+    image: null,
   },
   {
-    title: "MARKETPLACE",
-    subtitle: "Achetez & Vendez",
-    cta: "DÉCOUVRIR",
-    href: "/marketplace",
-    Icon: ShoppingBag,
+    title: "RÉSEAU AGRICOLE CONNECTÉ",
+    subtitle: "Producteurs & acheteurs",
+    cta: "REJOINDRE",
+    href: "/producteurs",
+    Icon: Network,
+    image: networkImg,
   },
 ];
 
@@ -55,18 +60,30 @@ const HeaderPromoSlider = () => {
             <Link
               key={i}
               to={slide.href}
-              className="flex-shrink-0 w-full h-full flex items-center justify-center gap-2 sm:gap-3 px-4"
+              className="relative flex-shrink-0 w-full h-full flex items-center justify-center gap-2 sm:gap-3 px-4 overflow-hidden"
             >
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
+              {slide.image && (
+                <>
+                  <img
+                    src={slide.image}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover opacity-40"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--secondary)/0.9)] via-[hsl(var(--secondary)/0.7)] to-[hsl(var(--primary)/0.85)]" />
+                </>
+              )}
+              <div className="relative w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
                 <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" />
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
+              <span className="relative text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
                 {slide.title}
               </span>
-              <span className="text-[8px] sm:text-[9px] text-primary-foreground/60 hidden font-medium tracking-wide">
+              <span className="relative text-[8px] sm:text-[9px] text-primary-foreground/60 hidden font-medium tracking-wide">
                 — {slide.subtitle}
               </span>
-              <span className="text-[8px] sm:text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
+              <span className="relative text-[8px] sm:text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
                 {slide.cta}
               </span>
             </Link>

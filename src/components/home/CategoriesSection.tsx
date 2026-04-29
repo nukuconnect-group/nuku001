@@ -3,34 +3,41 @@ import { ArrowRight } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
 import { useMemo, useRef } from "react";
+import imgAgriculture from "@/assets/category-agriculture-modern.jpg";
+import imgCereals from "@/assets/category-cereals-modern.jpg";
+import imgVegetables from "@/assets/category-vegetables-modern.jpg";
+import imgFruits from "@/assets/category-fruits-modern.jpg";
+import imgLivestock from "@/assets/category-livestock-modern.jpg";
+import imgAquaculture from "@/assets/category-aquaculture-modern.jpg";
+import imgEquipment from "@/assets/category-equipment-modern.jpg";
 
 const categoryImages: Record<string, string> = {
-  agriculture: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=300&fit=crop&q=80",
-  céréales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=80",
-  cereales: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop&q=80",
-  "légumes & maraîchage": "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&h=300&fit=crop&q=80",
-  "légumes": "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&h=300&fit=crop&q=80",
-  legumes: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&h=300&fit=crop&q=80",
-  fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&h=300&fit=crop&q=80",
-  tubercules: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400&h=300&fit=crop&q=80",
-  élevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400&h=300&fit=crop&q=80",
-  elevage: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400&h=300&fit=crop&q=80",
-  aviculture: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400&h=300&fit=crop&q=80",
-  pisciculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&h=300&fit=crop&q=80",
-  aquaculture: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&h=300&fit=crop&q=80",
-  "pêche & aquaculture": "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&h=300&fit=crop&q=80",
-  agribusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
-  agrobusiness: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
-  foresterie: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=300&fit=crop&q=80",
-  agroalimentaire: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
-  "transformation agroalimentaire": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop&q=80",
-  equipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&h=300&fit=crop&q=80",
-  équipement: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=400&h=300&fit=crop&q=80",
+  agriculture: imgAgriculture,
+  céréales: imgCereals,
+  cereales: imgCereals,
+  "légumes & maraîchage": imgVegetables,
+  "légumes": imgVegetables,
+  legumes: imgVegetables,
+  fruits: imgFruits,
+  tubercules: imgVegetables,
+  élevage: imgLivestock,
+  elevage: imgLivestock,
+  aviculture: imgLivestock,
+  pisciculture: imgAquaculture,
+  aquaculture: imgAquaculture,
+  "pêche & aquaculture": imgAquaculture,
+  agribusiness: imgEquipment,
+  agrobusiness: imgEquipment,
+  foresterie: imgAgriculture,
+  agroalimentaire: imgEquipment,
+  "transformation agroalimentaire": imgEquipment,
+  equipement: imgEquipment,
+  équipement: imgEquipment,
 };
 
 const getCategoryImage = (name: string) => {
   const key = name.toLowerCase().trim();
-  return categoryImages[key] || "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop&q=80";
+  return categoryImages[key] || imgAgriculture;
 };
 
 const CategoriesSection = () => {
@@ -113,7 +120,7 @@ const CategoriesSection = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop&q=80";
+                      (e.target as HTMLImageElement).src = imgAgriculture;
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />

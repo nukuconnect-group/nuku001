@@ -4,12 +4,16 @@ import { Link } from "react-router-dom";
 import partnerEG from "@/assets/partner-energy-generation.png";
 import partnerRT from "@/assets/partner-republique-togolaise.png";
 import partnerTTI from "@/assets/partner-togo-top-impact.png";
+import partnerKoko from "@/assets/partner-koko-international.png";
+import partnerAHA from "@/assets/partner-africa-horizon.jpg";
 import heroFarmerVR from "@/assets/hero-african-farmer-vr.jpg";
 
 const partners = [
   { name: "Energy Generation", logo: partnerEG },
   { name: "République Togolaise", logo: partnerRT },
   { name: "Togo Top Impact", logo: partnerTTI },
+  { name: "Koko International", logo: partnerKoko },
+  { name: "Africa Horizon Aquatic", logo: partnerAHA },
 ];
 
 const CTASection = () => {
@@ -23,11 +27,9 @@ const CTASection = () => {
         width={1920}
         height={1080}
       />
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent" />
-      </div>
+      {/* Strong dark overlay for text legibility on any background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/80 to-background/90" />
+      <div className="absolute inset-0 bg-foreground/10" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
@@ -35,12 +37,12 @@ const CTASection = () => {
             <Rocket className="w-7 h-7 sm:w-10 sm:h-10 text-primary-foreground" />
           </div>
 
-          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 sm:mb-6 px-2">
+          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 px-2 drop-shadow-[0_2px_8px_hsl(var(--background)/0.8)]">
             Prêt à transformer votre{" "}
-            <span className="text-primary">activité agricole</span> ?
+            <span className="text-primary drop-shadow-[0_2px_8px_hsl(var(--background)/0.6)]">activité agricole</span> ?
           </h2>
 
-          <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-10 max-w-2xl mx-auto px-4">
+          <p className="text-sm sm:text-lg text-foreground/90 font-medium mb-6 sm:mb-10 max-w-2xl mx-auto px-4 drop-shadow-[0_1px_4px_hsl(var(--background)/0.7)]">
             Rejoignez des milliers de producteurs et acheteurs qui font confiance 
             à NUKUCONNECT pour développer leur activité.
           </p>
@@ -64,11 +66,12 @@ const CTASection = () => {
             <p className="text-xs sm:text-sm text-muted-foreground mb-6">Ils nous font confiance</p>
             <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
               {partners.map((partner) => (
-                <div key={partner.name} className="flex items-center justify-center grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300">
+                <div key={partner.name} className="flex items-center justify-center bg-card/90 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-all duration-300">
                   <img
                     src={partner.logo}
                     alt={partner.name}
-                    className="h-12 sm:h-16 lg:h-20 w-auto object-contain"
+                    className="h-10 sm:h-14 lg:h-16 w-auto object-contain"
+                    loading="lazy"
                   />
                 </div>
               ))}
