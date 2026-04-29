@@ -13,6 +13,7 @@ import HowItWorksSection from "@/components/home/HowItWorksSection";
 import NukuAISection from "@/components/home/NukuAISection";
 import CTASection from "@/components/home/CTASection";
 import HomeDemandsSection from "@/components/home/HomeDemandsSection";
+import DirectFromFarmHero from "@/components/home/DirectFromFarmHero";
 
 import { useProfile } from "@/contexts/ProfileContext";
 
