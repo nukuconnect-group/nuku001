@@ -194,3 +194,25 @@ export default function CallModal() {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quality badge — renvoie un petit indicateur visuel selon le palier adaptatif
+// ─────────────────────────────────────────────────────────────────────────────
+function QualityBadge({ tier }: { tier: "high" | "medium" | "low" | "audio-only" }) {
+  const cfg: Record<typeof tier, { label: string; dotClass: string }> = {
+    high: { label: "HD", dotClass: "bg-emerald-400" },
+    medium: { label: "SD", dotClass: "bg-yellow-400" },
+    low: { label: "Faible", dotClass: "bg-orange-400" },
+    "audio-only": { label: "Audio seul", dotClass: "bg-red-400" },
+  };
+  const { label, dotClass } = cfg[tier];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-medium uppercase tracking-wider"
+      title={`Qualité réseau : ${label}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${dotClass} animate-pulse`} />
+      {label}
+    </span>
+  );
+}
