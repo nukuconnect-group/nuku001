@@ -24,8 +24,12 @@ const ImageWatermark = ({ scale = 0.55, className }: Props) => (
       src={watermark}
       alt=""
       draggable={false}
-      className="w-auto h-auto opacity-40 mix-blend-overlay drop-shadow-sm"
-      style={{ width: `${scale * 100}%`, maxWidth: "70%" }}
+      className="w-auto h-auto opacity-70"
+      style={{
+        width: `${scale * 100}%`,
+        maxWidth: "75%",
+        filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.55)) drop-shadow(0 0 2px rgba(0,0,0,0.4))",
+      }}
     />
   </div>
 );
