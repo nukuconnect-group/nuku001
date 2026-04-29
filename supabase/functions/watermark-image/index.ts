@@ -1,8 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 // Watermark proxy: fetches a remote image, burns the centered Nukuconnect
-// watermark into the pixels, and returns it. Because the watermark is part
-// of the image bytes, it survives download, screenshot, zoom, etc.
-import { ImageMagick, initializeImageMagick, MagickFormat } from "https://deno.land/x/[email protected]/mod.ts";
+// watermark into the pixel data, and returns the new image. Because the
+// watermark is part of the bytes themselves, it remains visible after
+// download, screenshot, zoom, sharing, etc.
+import {
+  ImageMagick,
+  initializeImageMagick,
+  MagickFormat,
+  CompositeOperator,
+} from "https://deno.land/x/[email protected]/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,20 +26,48 @@ const loadLogo = async () => {
   return logoBytes;
 };
 
+const burnWatermark = (src: Uint8Array, logo: Uint8Array): Promise<Uint8Array> =>
+  new Promise((resolve, reject) => {
+    try {
+      ImageMagick.read(src, (img) => {
+        const MAX = 1600;
+        let w = img.width;
+        let h = img.height;
+        if (Math.max(w, h) > MAX) {
+          const r = MAX / Math.max(w, h);
+          w = Math.round(w * r);
+          h = Math.round(h * r);
+          img.resize(w, h);
+        }
+
+        ImageMagick.read(logo, (lg) => {
+          const targetW = Math.round(w * 0.55);
+          const targetH = Math.round((lg.height / lg.width) * targetW);
+          lg.resize(targetW, targetH);
+
+          const x = Math.round((w - targetW) / 2);
+          const y = Math.round((h - targetH) / 2);
+          img.composite(lg, x, y, CompositeOperator.Over);
+
+          img.quality = 86;
+          img.write(MagickFormat.Jpeg, (data) => resolve(new Uint8Array(data)));
+        });
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const url = new URL(req.url);
     const target = url.searchParams.get("url");
-    if (!target) return new Response("missing url", { status: 400, headers: corsHeaders });
-
-    // Only allow http(s)
-    if (!/^https?:\/\//i.test(target)) {
+    if (!target || !/^https?:\/\//i.test(target)) {
       return new Response("invalid url", { status: 400, headers: corsHeaders });
     }
 
-    // Fetch the source image
     const upstream = await fetch(target);
     if (!upstream.ok) {
       return new Response("upstream error", { status: 502, headers: corsHeaders });
@@ -42,40 +76,7 @@ Deno.serve(async (req) => {
 
     await ensureMagick();
     const logo = await loadLogo();
-
-    const out: Uint8Array = await new Promise((resolve, reject) => {
-      try {
-        ImageMagick.read(srcBytes, (img) => {
-          // Cap big images to keep memory reasonable
-          const MAX = 1600;
-          let w = img.width, h = img.height;
-          if (Math.max(w, h) > MAX) {
-            const r = MAX / Math.max(w, h);
-            w = Math.round(w * r);
-            h = Math.round(h * r);
-            img.resize(w, h);
-          }
-
-          ImageMagick.read(logo, (lg) => {
-            // Logo ≈ 55% of image width, centered
-            const targetW = Math.round(w * 0.55);
-            const targetH = Math.round((lg.height / lg.width) * targetW);
-            lg.resize(targetW, targetH);
-            // Soft transparency for a watermark feel
-            lg.evaluate(0 as any, 1 as any, "Multiply" as any, 0.55).catch?.(() => {});
-
-            const x = Math.round((w - targetW) / 2);
-            const y = Math.round((h - targetH) / 2);
-            img.composite(lg, x, y, 4 /* Over */);
-
-            img.quality = 86;
-            img.write(MagickFormat.Jpeg, (data: Uint8Array) => resolve(data));
-          });
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
+    const out = await burnWatermark(srcBytes, logo);
 
     return new Response(out, {
       headers: {
