@@ -12,8 +12,8 @@ const DirectFromFarmHero = () => {
       {/* Background image — producteurs à l'échelle industrielle */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920&q=80"
-          alt="Producteurs agricoles vérifiés à l'échelle industrielle"
+          src="https://images.unsplash.com/photo-1592982537447-7440770faae9?w=1920&q=80"
+          alt="Producteurs agricoles en interaction avec des acheteurs dans un champ — réseau Nukuconnect"
           className="w-full h-full object-cover"
           loading="lazy"
         />
