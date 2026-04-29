@@ -157,7 +157,6 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             onError={() => setImgError(true)}
           />
-          <ImageWatermark scale={0.32} />
           
           {/* Top-left badges (sale / sponsored / new / status) */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
