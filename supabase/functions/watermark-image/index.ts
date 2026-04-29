@@ -6,18 +6,24 @@
 // Errors are logged to public.watermark_error_logs for admin review.
 import { Jimp } from "npm:jimp@1.6.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { LOGO_B64 } from "./_logo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
 let logoPromise: Promise<any> | null = null;
 const loadLogo = async () => {
   if (!logoPromise) {
-    const url = new URL("./_logo.png", import.meta.url);
-    const bytes = await Deno.readFile(url);
-    logoPromise = Jimp.read(bytes);
+    logoPromise = Jimp.read(b64ToBytes(LOGO_B64));
   }
   return await logoPromise;
 };
