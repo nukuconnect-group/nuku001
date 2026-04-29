@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck, Package } from "lucide-react";
+import { Star, ShieldCheck, GitCompareArrows, ShoppingCart, MapPin, Heart, Rocket, HandCoins, MessageCircle, Truck, Package, Eye } from "lucide-react";
 import { Product } from "@/data/marketplace";
+
+const ProductQuickView = lazy(() => import("./ProductQuickView"));
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -39,6 +41,13 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const [showReviews, setShowReviews] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [listImgError, setListImgError] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickViewOpen(true);
+  };
 
   // Wholesale tiers : on récupère seulement le prix le plus bas pour afficher "dès X F"
   const { data: tiers = [] } = useProductPriceTiers(product.id);
@@ -196,6 +205,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             )}
             {!minimal && (
               <>
+                {/* Aperçu rapide — visible au survol sur ordinateur uniquement */}
+                <button
+                  onClick={handleQuickView}
+                  aria-label="Aperçu rapide"
+                  title="Aperçu rapide"
+                  className="hidden sm:flex w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm opacity-0 group-hover:opacity-100"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
                 <button
                   onClick={handleCompare}
                   className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-card transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"
@@ -291,6 +309,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           </div>
         </CardContent>
       </Card>
+      {!minimal && quickViewOpen && (
+        <Suspense fallback={null}>
+          <ProductQuickView
+            product={product}
+            open={quickViewOpen}
+            onOpenChange={setQuickViewOpen}
+          />
+        </Suspense>
+      )}
     </Link>
   );
 };
