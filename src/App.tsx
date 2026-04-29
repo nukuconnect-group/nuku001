@@ -63,6 +63,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Help = lazy(() => import("./pages/Help"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminWatermarkErrors = lazy(() => import("./pages/AdminWatermarkErrors"));
 const SeoPreview = lazy(() => import("./pages/admin/SeoPreview"));
 const SeoCanonical = lazy(() => import("./pages/admin/SeoCanonical"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -227,6 +228,7 @@ const App = () => {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
+                  <Route path="/admin/watermark-errors" element={<AdminWatermarkErrors />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/remboursements" element={<Refunds />} />
                   <Route path="/factures" element={<Invoices />} />
