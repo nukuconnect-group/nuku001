@@ -17,7 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
 import { ProductDetailSkeleton, CachedDataBanner } from "@/components/marketplace/ProductDetailSkeleton";
 import OfflineFallback from "@/components/layout/OfflineFallback";
-import ImageWatermark from "@/components/marketplace/ImageWatermark";
+import { watermarked } from "@/lib/watermarkUrl";
 import { useWishlist } from "@/hooks/useWishlist";
 import { 
   ArrowLeft, Leaf, MapPin, Star, ShieldCheck, MessageCircle, ShoppingCart,
@@ -239,12 +239,11 @@ const ProductDetail = () => {
               {/* Main image — 4:3 ratio, compact on mobile */}
               <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg cursor-zoom-in" onClick={() => setZoomOpen(true)}>
                 <img
-                  src={images[currentImageIndex] || product.image}
+                  src={watermarked(images[currentImageIndex] || product.image)}
                   alt={product.name}
                   className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                 />
-                <ImageWatermark scale={0.22} />
                 {images.length > 1 && (
                   <>
                     <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors">
