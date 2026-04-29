@@ -153,9 +153,10 @@ export default function WholesalePricingPanel({
         )}
       </div>
 
-      {/* Tier ladder — uniquement si paliers réels du vendeur */}
+      {/* Tier ladder — uniquement si paliers réels du vendeur.
+          Masqué sur mobile : on ne garde que "Prix au détail" et "Prix de gros". */}
       {hasTiers && (
-        <div className="border-t-2 border-border bg-muted/20">
+        <div className="hidden md:block border-t-2 border-border bg-muted/20">
           <div className="px-3 sm:px-4 py-2 bg-card border-b border-border">
             <h3 className="text-[10px] sm:text-xs uppercase tracking-wide font-bold text-muted-foreground">
               Détail des tranches
