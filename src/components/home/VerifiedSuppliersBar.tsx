@@ -145,7 +145,7 @@ const VerifiedSuppliersBar = () => {
                 </div>
               ) : avatars.length > 0 ? (
                 <div className="flex -space-x-2 sm:-space-x-3 items-center">
-                  {avatars.slice(0, 5).map((s) => (
+                  {avatars.slice(0, 6).map((s) => (
                     <div
                       key={s.id}
                       title={s.business_name || s.full_name || "Membre vérifié"}
