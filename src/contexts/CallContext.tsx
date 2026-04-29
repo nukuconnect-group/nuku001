@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "@/hooks/use-toast";
 import { logDiag } from "@/lib/diagnostics";
+import { requestUserMedia, isMediaPermissionError, type MediaPermissionError } from "@/lib/mediaPermissions";
+import { AdaptiveCallQualityController, type QualityTier } from "@/lib/adaptiveCallQuality";
 
 /**
  * Call signaling via Supabase Realtime broadcast.
@@ -30,6 +32,11 @@ interface CallContextValue {
   isMuted: boolean;
   isCameraOff: boolean;
   durationSec: number;
+  /** Palier adaptatif courant (high / medium / low / audio-only). */
+  qualityTier: QualityTier;
+  /** Dernière erreur de permission micro/caméra, à afficher par l'UI si besoin. */
+  lastPermissionError: MediaPermissionError | null;
+  clearPermissionError: () => void;
   startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean }) => Promise<void>;
   acceptCall: () => Promise<void>;
   declineCall: () => Promise<void>;
@@ -83,9 +90,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [durationSec, setDurationSec] = useState(0);
+  const [qualityTier, setQualityTier] = useState<QualityTier>("high");
+  const [lastPermissionError, setLastPermissionError] = useState<MediaPermissionError | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const adaptiveCtrlRef = useRef<AdaptiveCallQualityController | null>(null);
   const channelRef = useRef<any>(null);
   const peerChannelRef = useRef<any>(null); // outgoing channel to peer
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
@@ -234,6 +244,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
     stopIncomingAlerts();
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
+    try { adaptiveCtrlRef.current?.stop(); } catch {}
+    adaptiveCtrlRef.current = null;
     try { pcRef.current?.close(); } catch {}
     pcRef.current = null;
     try { localStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
@@ -243,6 +255,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsMuted(false);
     setIsCameraOff(false);
     setDurationSec(0);
+    setQualityTier("high");
     pendingIceRef.current = [];
     pendingOfferRef.current = null;
     if (peerChannelRef.current) {
@@ -400,6 +413,39 @@ export function CallProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id, handleSignal]);
 
+  /**
+   * Démarre la boucle d'adaptation qualité réseau (résolution / bitrate / fps)
+   * pour le PeerConnection courant. À appeler une fois la session établie.
+   */
+  const attachAdaptiveQuality = useCallback((pc: RTCPeerConnection, stream: MediaStream) => {
+    try { adaptiveCtrlRef.current?.stop(); } catch {}
+    if (stream.getVideoTracks().length === 0) {
+      // Appel audio-seul : pas d'adaptation vidéo nécessaire
+      adaptiveCtrlRef.current = null;
+      return;
+    }
+    const ctrl = new AdaptiveCallQualityController({
+      pc,
+      localStream: stream,
+      onTierChange: (tier, reason) => {
+        setQualityTier(tier);
+        if (tier === "audio-only") {
+          toast({
+            title: "Connexion faible",
+            description: `Vidéo coupée temporairement pour préserver l'appel (${reason}).`,
+          });
+        } else if (tier === "low") {
+          toast({
+            title: "Qualité réduite",
+            description: `Connexion faible — résolution abaissée (${reason}).`,
+          });
+        }
+      },
+    });
+    ctrl.start();
+    adaptiveCtrlRef.current = ctrl;
+  }, []);
+
   // ----- public actions -----
   const startCall = useCallback(async ({ conversationId, peerUserId, peerName, peerAvatar, withVideo = false }: {
     conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean;
@@ -415,22 +461,40 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (status !== "idle") return;
 
     const callId = crypto.randomUUID();
+    let effectiveWithVideo = withVideo;
     const m: CallMeta = { callId, conversationId, peerUserId, peerName, peerAvatar, isCaller: true, withVideo };
     setMeta(m);
     setStatus("outgoing");
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: withVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-      });
+      const { stream, downgradedToAudio } = await requestUserMedia(
+        {
+          audio: true,
+          video: withVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+        },
+        { videoFallbackToAudio: true },
+      );
+      if (downgradedToAudio && withVideo) {
+        effectiveWithVideo = false;
+        setMeta({ ...m, withVideo: false });
+        toast({
+          title: "Caméra indisponible",
+          description: "L'appel continue en audio seul — la vidéo a été désactivée.",
+        });
+      }
       localStreamRef.current = stream;
       setLocalStream(stream);
       const pc = buildPeerConnection(peerUserId, callId);
       pcRef.current = pc;
       stream.getTracks().forEach(t => pc.addTrack(t, stream));
-      const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: withVideo });
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: effectiveWithVideo,
+      });
       await pc.setLocalDescription(offer);
+
+      // Démarre l'adaptation qualité dès la session locale prête
+      attachAdaptiveQuality(pc, stream);
 
       await sendSignal(peerUserId, {
         type: "offer",
@@ -439,7 +503,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         from: user.id,
         callerName: profile.full_name || "Appelant",
         callerAvatar: profile.avatar_url || "",
-        withVideo,
+        withVideo: effectiveWithVideo,
         offer,
       });
 
@@ -450,14 +514,23 @@ export function CallProvider({ children }: { children: ReactNode }) {
         finalizeCall("outgoing-missed");
         toast({ title: "Sans réponse", description: peerName });
       }, 35000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("startCall error", e);
-      toast({ title: "Erreur média", description: e?.message || "Accès au micro/caméra refusé.", variant: "destructive" });
+      if (isMediaPermissionError(e)) {
+        setLastPermissionError(e);
+        toast({ title: e.title, description: e.description, variant: "destructive" });
+      } else {
+        toast({
+          title: "Impossible de démarrer l'appel",
+          description: (e as Error)?.message || "Erreur inattendue.",
+          variant: "destructive",
+        });
+      }
       cleanupCall();
       setStatus("idle");
       setMeta(null);
     }
-  }, [user?.id, profile, status, buildPeerConnection, sendSignal, playRingtone, cleanupCall, finalizeCall]);
+  }, [user?.id, profile, status, buildPeerConnection, sendSignal, playRingtone, cleanupCall, finalizeCall, attachAdaptiveQuality]);
 
   const acceptCall = useCallback(async () => {
     if (status !== "incoming" || !meta || !pendingOfferRef.current || !user?.id) return;
@@ -465,10 +538,22 @@ export function CallProvider({ children }: { children: ReactNode }) {
     if (ringTimeoutRef.current) { clearTimeout(ringTimeoutRef.current); ringTimeoutRef.current = null; }
     try {
       const useVideo = !!meta.withVideo;
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-      });
+      const { stream, downgradedToAudio } = await requestUserMedia(
+        {
+          audio: true,
+          video: useVideo ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
+        },
+        { videoFallbackToAudio: true },
+      );
+      let answerWithVideo = useVideo;
+      if (downgradedToAudio && useVideo) {
+        answerWithVideo = false;
+        setMeta({ ...meta, withVideo: false });
+        toast({
+          title: "Caméra indisponible",
+          description: "L'appel continue en audio seul — votre caméra n'a pas pu être activée.",
+        });
+      }
       localStreamRef.current = stream;
       setLocalStream(stream);
       const pc = buildPeerConnection(meta.peerUserId, meta.callId);
@@ -482,17 +567,30 @@ export function CallProvider({ children }: { children: ReactNode }) {
       pendingIceRef.current = [];
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+
+      // Adaptive quality côté receveur aussi
+      attachAdaptiveQuality(pc, stream);
+
       await sendSignal(meta.peerUserId, {
-        type: "answer", callId: meta.callId, from: user.id, answer,
+        type: "answer", callId: meta.callId, from: user.id, withVideo: answerWithVideo, answer,
       });
       setStatus("in-call");
       startTimer();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("acceptCall error", e);
-      toast({ title: "Erreur micro", description: e?.message || "Accès au micro refusé.", variant: "destructive" });
+      if (isMediaPermissionError(e)) {
+        setLastPermissionError(e);
+        toast({ title: e.title, description: e.description, variant: "destructive" });
+      } else {
+        toast({
+          title: "Impossible d'accepter l'appel",
+          description: (e as Error)?.message || "Erreur inattendue.",
+          variant: "destructive",
+        });
+      }
       await declineCall();
     }
-  }, [status, meta, user?.id, buildPeerConnection, sendSignal, stopRingtone, startTimer]);
+  }, [status, meta, user?.id, buildPeerConnection, sendSignal, stopRingtone, startTimer, attachAdaptiveQuality]);
 
   const declineCall = useCallback(async () => {
     if (!meta || !user?.id) { cleanupCall(); setStatus("idle"); setMeta(null); return; }
@@ -523,8 +621,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setIsCameraOff(next);
   }, [isCameraOff]);
 
+  const clearPermissionError = useCallback(() => setLastPermissionError(null), []);
+
   const value: CallContextValue = {
     status, meta, remoteStream, localStream, isMuted, isCameraOff, durationSec,
+    qualityTier, lastPermissionError, clearPermissionError,
     startCall, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   };
 

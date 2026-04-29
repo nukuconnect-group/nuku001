@@ -13,7 +13,7 @@ function fmtDuration(sec: number) {
 export default function CallModal() {
   const {
     status, meta, remoteStream, localStream, isMuted, isCameraOff,
-    durationSec, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
+    durationSec, qualityTier, acceptCall, declineCall, hangup, toggleMute, toggleCamera,
   } = useCall();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -105,11 +105,21 @@ export default function CallModal() {
         </div>
       )}
 
-      {/* Overlay name+timer for in-call video */}
+      {/* Overlay name+timer + indicateur qualité pour appel vidéo en cours */}
       {isVideo && isInCall && (
         <div className="relative z-10 flex flex-col items-center gap-1 text-white text-center pt-4 px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-sm">
           <h2 className="text-lg font-semibold">{meta.peerName}</h2>
-          <p className="text-xs text-white/80">{fmtDuration(durationSec)}</p>
+          <div className="flex items-center gap-2 text-xs text-white/80">
+            <span>{fmtDuration(durationSec)}</span>
+            <QualityBadge tier={qualityTier} />
+          </div>
+        </div>
+      )}
+
+      {/* Indicateur qualité discret pour les appels audio */}
+      {!isVideo && isInCall && qualityTier !== "high" && (
+        <div className="relative z-10 -mt-4">
+          <QualityBadge tier={qualityTier} />
         </div>
       )}
 
@@ -182,5 +192,27 @@ export default function CallModal() {
         )}
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quality badge — renvoie un petit indicateur visuel selon le palier adaptatif
+// ─────────────────────────────────────────────────────────────────────────────
+function QualityBadge({ tier }: { tier: "high" | "medium" | "low" | "audio-only" }) {
+  const cfg: Record<typeof tier, { label: string; dotClass: string }> = {
+    high: { label: "HD", dotClass: "bg-emerald-400" },
+    medium: { label: "SD", dotClass: "bg-yellow-400" },
+    low: { label: "Faible", dotClass: "bg-orange-400" },
+    "audio-only": { label: "Audio seul", dotClass: "bg-red-400" },
+  };
+  const { label, dotClass } = cfg[tier];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-medium uppercase tracking-wider"
+      title={`Qualité réseau : ${label}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${dotClass} animate-pulse`} />
+      {label}
+    </span>
   );
 }
