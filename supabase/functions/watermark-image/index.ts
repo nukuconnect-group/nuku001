@@ -58,9 +58,16 @@ function resolveFormat(reqFormat: string | null, contentType: string | null, tar
   const want = (reqFormat || "").toLowerCase();
   const ct = (contentType || "").toLowerCase();
   const lowerUrl = target.toLowerCase();
-  const isPng = want === "png" || ct.includes("png") || /\.png(\?|$)/.test(lowerUrl);
-  // WebP/AVIF not natively supported by Jimp — fall back to JPEG output.
+  if (want === "png") return { mime: "image/png" };
+  if (want === "jpeg" || want === "jpg") return { mime: "image/jpeg" };
+  const isPng = ct.includes("png") || /\.png(\?|$)/.test(lowerUrl);
   if (isPng) return { mime: "image/png" };
+  // WebP/AVIF aren't encodable by Jimp — preserve transparency by
+  // outputting PNG instead of JPEG so the watermark stays clean.
+  const isWebpOrAvif =
+    ct.includes("webp") || ct.includes("avif") ||
+    /\.(webp|avif)(\?|$)/.test(lowerUrl);
+  if (isWebpOrAvif) return { mime: "image/png" };
   return { mime: "image/jpeg" };
 }
 
