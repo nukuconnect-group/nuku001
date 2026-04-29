@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { applyWatermark } from "@/lib/watermark";
 
 export function useImageUpload() {
   const [uploading, setUploading] = useState(false);
@@ -12,7 +13,9 @@ export function useImageUpload() {
 
       const urls: string[] = [];
 
-      for (const file of files) {
+      for (const original of files) {
+        // Apply Nukuconnect watermark (signature) before upload
+        const file = await applyWatermark(original);
         const ext = file.name.split(".").pop();
         const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
