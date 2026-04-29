@@ -32,6 +32,11 @@ interface CallContextValue {
   isMuted: boolean;
   isCameraOff: boolean;
   durationSec: number;
+  /** Palier adaptatif courant (high / medium / low / audio-only). */
+  qualityTier: QualityTier;
+  /** Dernière erreur de permission micro/caméra, à afficher par l'UI si besoin. */
+  lastPermissionError: MediaPermissionError | null;
+  clearPermissionError: () => void;
   startCall: (params: { conversationId: string; peerUserId: string; peerName: string; peerAvatar: string; withVideo?: boolean }) => Promise<void>;
   acceptCall: () => Promise<void>;
   declineCall: () => Promise<void>;
