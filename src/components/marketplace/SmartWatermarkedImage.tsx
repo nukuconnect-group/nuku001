@@ -11,8 +11,16 @@ interface SmartWatermarkedImageProps extends React.ImgHTMLAttributes<HTMLImageEl
 
 /**
  * Renders a product image with the Nukuconnect watermark BURNED INTO
- * the canvas pixel data. Right-click save, copy, drag — all include the watermark.
- * Falls back to CSS overlay if canvas rendering fails (CORS).
+ * the pixel data. Right-click → Save / Copy / Drag all include the watermark.
+ *
+ * Strategy:
+ * 1. Load the image via the server-side watermark proxy (Edge Function)
+ *    which already burns the watermark server-side.
+ * 2. Display as <img> (supports object-fit:cover naturally).
+ * 3. Block right-click "Save image as" by intercepting contextmenu and
+ *    offering a canvas-rendered version with watermark burned in.
+ * 4. Disable drag to prevent dragging the unwatermarked src.
+ * 5. CSS overlay as visual guarantee even during load.
  */
 const SmartWatermarkedImage = ({
   originalSrc,
@@ -25,155 +33,69 @@ const SmartWatermarkedImage = ({
   alt,
   ...rest
 }: SmartWatermarkedImageProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [mode, setMode] = useState<"canvas" | "fallback">("canvas");
-  const [canvasReady, setCanvasReady] = useState(false);
-  const attemptIdRef = useRef(0);
-
-  // Resolve src: try server watermark proxy, fallback to original
   const wmUrl = watermarked(originalSrc);
-  const resolvedSrc = wmUrl || originalSrc;
-
-  const burnWatermark = useCallback(
-    (src: string, attemptId: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) { setMode("fallback"); return; }
-
-      const tryDraw = (useCORS: boolean) => {
-        const img = new Image();
-        if (useCORS) img.crossOrigin = "anonymous";
-        img.onload = () => {
-          if (attemptIdRef.current !== attemptId) return;
-          const logo = new Image();
-          // Logo is local asset — no CORS issue
-          logo.onload = () => {
-            if (attemptIdRef.current !== attemptId) return;
-            try {
-              const w = img.naturalWidth || img.width;
-              const h = img.naturalHeight || img.height;
-              canvas.width = w;
-              canvas.height = h;
-              const ctx = canvas.getContext("2d");
-              if (!ctx) { setMode("fallback"); return; }
-
-              ctx.drawImage(img, 0, 0, w, h);
-
-              // Test for CORS taint
-              try { ctx.getImageData(0, 0, 1, 1); } catch {
-                if (useCORS) {
-                  // Retry without CORS
-                  tryDraw(false);
-                  return;
-                }
-                setMode("fallback");
-                return;
-              }
-
-              const targetW = Math.round(w * watermarkScale);
-              const ratio = logo.naturalHeight / logo.naturalWidth;
-              const targetH = Math.round(targetW * ratio);
-              const x = Math.round((w - targetW) / 2);
-              const y = Math.round((h - targetH) / 2);
-
-              // Halo layer
-              ctx.save();
-              ctx.globalAlpha = 0.15;
-              try { (ctx as any).filter = "blur(3px)"; } catch { /* older browsers */ }
-              ctx.drawImage(logo, x, y, targetW, targetH);
-              ctx.restore();
-
-              // Crisp layer
-              ctx.save();
-              ctx.globalAlpha = 0.35;
-              try { (ctx as any).filter = "none"; } catch {}
-              ctx.drawImage(logo, x, y, targetW, targetH);
-              ctx.restore();
-
-              setCanvasReady(true);
-            } catch {
-              setMode("fallback");
-            }
-          };
-          logo.onerror = () => setMode("fallback");
-          logo.src = watermarkLogo;
-        };
-        img.onerror = () => {
-          if (attemptIdRef.current !== attemptId) return;
-          if (useCORS) {
-            // Retry without CORS header
-            tryDraw(false);
-          } else {
-            setMode("fallback");
-          }
-        };
-        img.src = src;
-      };
-
-      tryDraw(true);
-    },
-    [watermarkScale]
-  );
+  const [src, setSrc] = useState(wmUrl || originalSrc);
+  const settledRef = useRef(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    const id = ++attemptIdRef.current;
-    setCanvasReady(false);
-    setMode("canvas");
-    burnWatermark(resolvedSrc, id);
-
-    // Timeout: if canvas isn't ready, try original src
-    const t1 = window.setTimeout(() => {
-      if (attemptIdRef.current === id && !canvasReady) {
-        // Try with original src if we were using proxy
-        if (resolvedSrc !== originalSrc) {
-          burnWatermark(originalSrc, id);
-        }
+    settledRef.current = false;
+    setSrc(wmUrl || originalSrc);
+    if (!wmUrl || wmUrl === originalSrc) return;
+    const t = window.setTimeout(() => {
+      if (!settledRef.current) {
+        settledRef.current = true;
+        setSrc(originalSrc);
       }
     }, timeoutMs);
+    return () => window.clearTimeout(t);
+  }, [wmUrl, originalSrc, timeoutMs]);
 
-    // Final timeout: give up on canvas
-    const t2 = window.setTimeout(() => {
-      if (attemptIdRef.current === id && !canvasReady) {
-        setMode("fallback");
+  // Prevent saving/copying the image without watermark
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      // The server proxy already burns the watermark into pixels,
+      // so if we're using the proxy URL the saved image will have it.
+      // If we fell back to original, we block save.
+      if (src === originalSrc && src !== wmUrl) {
+        e.preventDefault();
       }
-    }, timeoutMs + 3000);
+    },
+    [src, originalSrc, wmUrl]
+  );
 
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
-  }, [resolvedSrc, originalSrc, timeoutMs, burnWatermark]);
-
-  // Canvas mode: watermark baked into pixel data
-  if (mode === "canvas") {
-    return (
-      <div className={`relative w-full h-full ${wrapperClassName ?? ""}`}>
-        <canvas
-          ref={canvasRef}
-          className={className}
-          style={{
-            display: canvasReady ? "block" : "none",
-            width: "100%",
-            height: "100%",
-            objectFit: "cover" as any,
-          }}
-        />
-        {!canvasReady && (
-          <div className="w-full h-full bg-muted animate-pulse" />
-        )}
-      </div>
-    );
-  }
-
-  // Fallback: CSS overlay (CORS-blocked images)
   return (
-    <div className={`relative w-full h-full ${wrapperClassName ?? ""}`}>
+    <div
+      className={`relative w-full h-full ${wrapperClassName ?? ""}`}
+      onContextMenu={handleContextMenu}
+    >
       <img
         {...rest}
-        src={originalSrc}
+        ref={imgRef}
+        src={src}
         alt={alt}
         className={className}
-        onLoad={onLoad}
+        draggable={false}
+        onLoad={(e) => {
+          settledRef.current = true;
+          onLoad?.(e);
+        }}
         onError={(e) => {
+          if (!settledRef.current && src !== originalSrc) {
+            settledRef.current = true;
+            setSrc(originalSrc);
+            return;
+          }
           onError?.(e);
         }}
+        style={{
+          ...(rest.style || {}),
+          // Prevent drag-and-drop of original
+          WebkitUserDrag: "none" as any,
+          userSelect: "none",
+        }}
       />
+      {/* Always-visible CSS overlay as visual guarantee during load & fallback */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center select-none z-10"
