@@ -196,16 +196,31 @@ const Auth = () => {
       if (redirected) return;
       redirected = true;
       if (returnTo) { navigate(returnTo, { replace: true }); return; }
-      let profileData = null;
-      for (let i = 0; i < 4; i++) {
+
+      // 1. Try profile (retry up to 6× — INSERT may lag right after signup)
+      let resolvedType: string | null = null;
+      for (let i = 0; i < 6; i++) {
         const { data } = await supabase.from("profiles").select("user_type").eq("user_id", userId).maybeSingle();
-        profileData = data;
-        if (profileData) break;
-        await new Promise(r => setTimeout(r, 800));
+        if (data?.user_type) { resolvedType = data.user_type; break; }
+        await new Promise(r => setTimeout(r, 700));
       }
-      if (profileData?.user_type === "producer" || profileData?.user_type === "trainer") navigate("/dashboard", { replace: true });
-      else if (profileData?.user_type === "driver") navigate("/driver-dashboard", { replace: true });
-      else if (profileData?.user_type === "learner") navigate("/learner-dashboard", { replace: true });
+
+      // 2. Fallback: read user_type from auth metadata (set at signup)
+      if (!resolvedType) {
+        const { data: { user } } = await supabase.auth.getUser();
+        const metaType = (user?.user_metadata as any)?.user_type;
+        if (metaType) resolvedType = metaType;
+      }
+
+      // 3. Fallback: driver_profiles existence
+      if (!resolvedType) {
+        const { data: drv } = await supabase.from("driver_profiles").select("id").eq("user_id", userId).maybeSingle();
+        if (drv) resolvedType = "driver";
+      }
+
+      if (resolvedType === "producer" || resolvedType === "trainer") navigate("/dashboard", { replace: true });
+      else if (resolvedType === "driver") navigate("/driver-dashboard", { replace: true });
+      else if (resolvedType === "learner") navigate("/learner-dashboard", { replace: true });
       else navigate("/buyer-dashboard", { replace: true });
     };
     supabase.auth.getSession().then(({ data: { session } }) => { if (session) redirectUser(session.user.id); });
