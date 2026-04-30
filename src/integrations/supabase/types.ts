@@ -1186,6 +1186,36 @@ export type Database = {
         }
         Relationships: []
       }
+      message_reminder_settings: {
+        Row: {
+          cron_interval_minutes: number
+          email_enabled: boolean
+          id: number
+          reminder_delay_minutes: number
+          reminder_window_minutes: number
+          updated_at: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          cron_interval_minutes?: number
+          email_enabled?: boolean
+          id?: number
+          reminder_delay_minutes?: number
+          reminder_window_minutes?: number
+          updated_at?: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          cron_interval_minutes?: number
+          email_enabled?: boolean
+          id?: number
+          reminder_delay_minutes?: number
+          reminder_window_minutes?: number
+          updated_at?: string
+          whatsapp_enabled?: boolean
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -1727,6 +1757,8 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          whatsapp_number: string | null
+          whatsapp_reminders_enabled: boolean
         }
         Insert: {
           created_at?: string
@@ -1734,6 +1766,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_number?: string | null
+          whatsapp_reminders_enabled?: boolean
         }
         Update: {
           created_at?: string
@@ -1741,6 +1775,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_number?: string | null
+          whatsapp_reminders_enabled?: boolean
         }
         Relationships: []
       }
