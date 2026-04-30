@@ -18,7 +18,7 @@ import {
   XCircle, Wallet, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import KYCForm from "@/components/driver/KYCForm";
+import DriverKYCSection from "@/components/driver/DriverKYCSection";
 import DriverStatusHeader from "@/components/driver/DriverStatusHeader";
 import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
@@ -351,7 +351,14 @@ const DriverDashboard = () => {
         onTabChange={setActiveTab}
       >
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
-        {user?.id && <AffiliationCard userId={user.id} />}
+        {/* KYC Section — collapsible like supplier */}
+        {driverProfile && (
+          <DriverKYCSection
+            userId={user?.id}
+            isApproved={driverProfile.is_approved}
+            onStatusChange={fetchDriverData}
+          />
+        )}
         {/* Wallet Card */}
         <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
           <CardContent className="p-4 sm:p-6">
@@ -405,23 +412,6 @@ const DriverDashboard = () => {
           </Card>
         )}
 
-        {/* KYC Banner */}
-        {driverProfile && !driverProfile.is_approved && (
-          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Vérification requise</p>
-                  <p className="text-[10px] text-amber-700 dark:text-amber-400">Soumettez vos documents pour activer votre compte</p>
-                </div>
-              </div>
-              <KYCForm userId={user?.id} onSubmitted={fetchDriverData} />
-            </CardContent>
-          </Card>
-        )}
 
         {/* Quick actions */}
         <div className="flex gap-2">
@@ -550,6 +540,8 @@ const DriverDashboard = () => {
                 withdrawals={withdrawals}
                 onWithdraw={handleWithdraw}
               />
+              {/* Affiliation hidden in earnings tab */}
+              {user?.id && <AffiliationCard userId={user.id} />}
             </TabsContent>
 
             {/* History */}
