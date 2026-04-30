@@ -628,16 +628,72 @@ const ProductDetail = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Protection NukuConnect — inside right details column for proper alignment */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Protection NukuConnect</h3>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+                    Seules les commandes passées et payées via NukuConnect sont protégées gratuitement.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { icon: <ShieldCheck className="w-5 h-5 text-primary" />, label: "Paiements sécurisés" },
+                      { icon: <CreditCard className="w-5 h-5 text-primary" />, label: "Protection remboursement" },
+                      { icon: <Package className="w-5 h-5 text-primary" />, label: "Suivi commande" },
+                      { icon: <Truck className="w-5 h-5 text-primary" />, label: "Livraison garantie" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-col items-center text-center p-2 rounded-lg bg-card">
+                        {item.icon}
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 leading-tight">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Adresse livraison + temps de traitement */}
+              <BuyerDeliveryZone productLocation={product.location} />
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 text-primary" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
+                        Temps de traitement
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-foreground">
+                        {(() => {
+                          const d = product.shippingDelayDays ?? 1;
+                          if (d === 0) return "Expédition immédiate";
+                          if (d === 1) return "Expédié sous 24 heures";
+                          if (d <= 3) return `Expédié sous ${d} jours ouvrés`;
+                          return `Expédié sous ${d} jours`;
+                        })()}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Préparé par {product.producer.name} avant remise au livreur NukuConnect.
+                      </p>
+                    </div>
+                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold">
+                      {(product.shippingDelayDays ?? 1) <= 1 ? "Rapide" : "Standard"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
             {/* ===== END GRID ===== */}
           </div>
 
-          {/* ===== FULL-WIDTH SECTIONS BELOW (fix desktop empty space under images) ===== */}
-          <div className="mt-6 sm:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10">
-            {/* Left column (2/3) — Caractéristiques + Traçabilité + Avis */}
-            <div className="space-y-4 sm:space-y-6">
+          {/* ===== MOBILE-ONLY SECTIONS BELOW ===== */}
+          <div className="mt-6 sm:mt-10 space-y-4 sm:space-y-6 lg:hidden">
               {/* Characteristics — visible mobile/tablet uniquement (desktop: affiché sous les images) */}
-              <Card className="lg:hidden">
+              <Card>
                 <CardContent className="p-3 sm:p-5">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <h3 className="text-sm sm:text-base font-bold text-foreground">Caractéristiques du produit</h3>
@@ -675,7 +731,7 @@ const ProductDetail = () => {
               <OwnerBatchQRGenerator productId={product.id} producerId={product.producer.id} productName={product.name} />
 
               {/* QR Code — Traçabilité */}
-              <Card className="border-primary/30 lg:hidden">
+              <Card className="border-primary/30">
                 <CardContent className="p-3 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <QrCode className="w-4 h-4 text-primary" />
@@ -814,74 +870,10 @@ const ProductDetail = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Reviews — visible mobile/tablet uniquement (desktop: affiché sous Traçabilité dans la colonne gauche) */}
-              <div className="lg:hidden">
-                <ReviewSection productId={product.id} />
-              </div>
-            </div>
-
-            {/* Right column (1/3) — Protection + adresse livraison */}
-            <div className="space-y-4 sm:space-y-6">
-              {/* Order Protection */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Protection NukuConnect</h3>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
-                    Seules les commandes passées et payées via NukuConnect sont protégées gratuitement.
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { icon: <ShieldCheck className="w-5 h-5 text-primary" />, label: "Paiements sécurisés" },
-                      { icon: <CreditCard className="w-5 h-5 text-primary" />, label: "Protection remboursement" },
-                      { icon: <Package className="w-5 h-5 text-primary" />, label: "Suivi commande" },
-                      { icon: <Truck className="w-5 h-5 text-primary" />, label: "Livraison garantie" },
-                    ].map((item, i) => (
-                      <div key={i} className="flex flex-col items-center text-center p-2 rounded-lg bg-card">
-                        {item.icon}
-                        <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 leading-tight">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Adresse livraison + temps de traitement */}
-              <BuyerDeliveryZone productLocation={product.location} />
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-4 h-4 text-primary" aria-hidden="true" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
-                        Temps de traitement
-                      </p>
-                      <p className="text-xs sm:text-sm font-semibold text-foreground">
-                        {(() => {
-                          const d = product.shippingDelayDays ?? 1;
-                          if (d === 0) return "Expédition immédiate";
-                          if (d === 1) return "Expédié sous 24 heures";
-                          if (d <= 3) return `Expédié sous ${d} jours ouvrés`;
-                          return `Expédié sous ${d} jours`;
-                        })()}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Préparé par {product.producer.name} avant remise au livreur NukuConnect.
-                      </p>
-                    </div>
-                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold">
-                      {(product.shippingDelayDays ?? 1) <= 1 ? "Rapide" : "Standard"}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              {/* Reviews */}
+              <ReviewSection productId={product.id} />
           </div>
-          {/* ===== END FULL-WIDTH SECTIONS ===== */}
+          {/* ===== END MOBILE SECTIONS ===== */}
 
           {/* ===== SIMILAR PRODUCTS ===== */}
           <SimilarProducts currentProduct={product} />
