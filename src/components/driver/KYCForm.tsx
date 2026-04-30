@@ -10,6 +10,8 @@ import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle, Camera } f
 interface KYCFormProps {
   userId?: string;
   onSubmitted: () => void;
+  /** When true, skip internal status display (parent handles it) */
+  skipStatusCheck?: boolean;
 }
 
 /** Compress image on a canvas before upload — solves mobile camera large-file issues */
@@ -38,7 +40,7 @@ const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob
     reader.readAsDataURL(file);
   });
 
-const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
+const KYCForm = ({ userId, onSubmitted, skipStatusCheck }: KYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
@@ -56,7 +58,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || skipStatusCheck) return;
     supabase
       .from("driver_kyc_submissions")
       .select("*")
@@ -67,7 +69,7 @@ const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
       .then(({ data }) => {
         if (data) setExistingKyc(data);
       });
-  }, [userId]);
+  }, [userId, skipStatusCheck]);
 
   const uploadFile = async (file: File, path: string) => {
     if (!userId) return "";

@@ -123,6 +123,7 @@ const DriverKYCSection = ({ userId, isApproved, onStatusChange }: Props) => {
           </div>
           <KYCForm
             userId={userId}
+            skipStatusCheck
             onSubmitted={() => {
               setOpen(false);
               refreshStatus();
