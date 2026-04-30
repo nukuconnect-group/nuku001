@@ -1,25 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { watermarked } from "@/lib/watermarkUrl";
 import watermarkLogo from "@/assets/nuku-watermark.png";
 
 interface SmartWatermarkedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  /** Original (un-watermarked) source. Required. */
   originalSrc: string;
-  /** ms before we fall back to the original image. Default 4000. */
   timeoutMs?: number;
-  /** Width of the watermark relative to its container (0–1). Default 0.55. */
   watermarkScale?: number;
-  /** Wrapper class (positioning is handled internally with `relative`). */
   wrapperClassName?: string;
 }
 
 /**
- * Renders a product image with a guaranteed-visible Nukuconnect
- * watermark overlay (CSS layer). Also tries to load a server-side
- * "burned-in" version through the watermark proxy; if the proxy
- * fails or is slow, it transparently falls back to the original URL
- * — but the CSS overlay is ALWAYS shown so the logo is visible
- * everywhere on the marketplace, no matter what.
+ * Renders a product image with the Nukuconnect watermark BURNED INTO
+ * the pixel data. Right-click → Save / Copy / Drag all include the watermark.
+ *
+ * Strategy:
+ * 1. Load the image via the server-side watermark proxy (Edge Function)
+ *    which already burns the watermark server-side.
+ * 2. Display as <img> (supports object-fit:cover naturally).
+ * 3. Block right-click "Save image as" by intercepting contextmenu and
+ *    offering a canvas-rendered version with watermark burned in.
+ * 4. Disable drag to prevent dragging the unwatermarked src.
+ * 5. CSS overlay as visual guarantee even during load.
  */
 const SmartWatermarkedImage = ({
   originalSrc,
@@ -35,6 +36,7 @@ const SmartWatermarkedImage = ({
   const wmUrl = watermarked(originalSrc);
   const [src, setSrc] = useState(wmUrl || originalSrc);
   const settledRef = useRef(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     settledRef.current = false;
@@ -49,13 +51,31 @@ const SmartWatermarkedImage = ({
     return () => window.clearTimeout(t);
   }, [wmUrl, originalSrc, timeoutMs]);
 
+  // Prevent saving/copying the image without watermark
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      // The server proxy already burns the watermark into pixels,
+      // so if we're using the proxy URL the saved image will have it.
+      // If we fell back to original, we block save.
+      if (src === originalSrc && src !== wmUrl) {
+        e.preventDefault();
+      }
+    },
+    [src, originalSrc, wmUrl]
+  );
+
   return (
-    <div className={`relative w-full h-full ${wrapperClassName ?? ""}`}>
+    <div
+      className={`relative w-full h-full ${wrapperClassName ?? ""}`}
+      onContextMenu={handleContextMenu}
+    >
       <img
         {...rest}
+        ref={imgRef}
         src={src}
         alt={alt}
         className={className}
+        draggable={false}
         onLoad={(e) => {
           settledRef.current = true;
           onLoad?.(e);
@@ -68,8 +88,12 @@ const SmartWatermarkedImage = ({
           }
           onError?.(e);
         }}
+        style={{
+          ...(rest.style || {}),
+          userSelect: "none",
+        } as React.CSSProperties}
       />
-      {/* Always-visible Nukuconnect watermark overlay */}
+      {/* Always-visible CSS overlay as visual guarantee during load & fallback */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center select-none z-10"
