@@ -10,6 +10,8 @@ import { Upload, Loader2, CheckCircle2, Clock, FileText, AlertCircle, Camera } f
 interface KYCFormProps {
   userId?: string;
   onSubmitted: () => void;
+  /** When true, skip internal status display (parent handles it) */
+  skipStatusCheck?: boolean;
 }
 
 /** Compress image on a canvas before upload — solves mobile camera large-file issues */
