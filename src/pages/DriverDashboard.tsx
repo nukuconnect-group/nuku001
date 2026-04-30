@@ -351,7 +351,14 @@ const DriverDashboard = () => {
         onTabChange={setActiveTab}
       >
       <main className="container mx-auto px-3 sm:px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl xl:max-w-6xl">
-        {user?.id && <AffiliationCard userId={user.id} />}
+        {/* KYC Section — collapsible like supplier */}
+        {driverProfile && (
+          <DriverKYCSection
+            userId={user?.id}
+            isApproved={driverProfile.is_approved}
+            onStatusChange={fetchDriverData}
+          />
+        )}
         {/* Wallet Card */}
         <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
           <CardContent className="p-4 sm:p-6">
