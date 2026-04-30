@@ -63,6 +63,7 @@ const BuyerDashboard = () => {
   const { wishlist: wishlistItems } = useWishlist();
   const { balance: tokenBalance, loading: tokensLoading, refresh: refreshTokens } = useTokens();
   const [showDemandBoost, setShowDemandBoost] = useState(false);
+  const [showCreateDemand, setShowCreateDemand] = useState(false);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [migrationData, setMigrationData] = useState({
     businessName: "",
@@ -311,11 +312,14 @@ const BuyerDashboard = () => {
               <p className="text-[11px] sm:text-sm text-muted-foreground mb-3">
                 Exprimez vos besoins pour que les fournisseurs vous contactent
               </p>
-              <CreateDemandModal trigger={
-                <Button variant="hero" className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10">
-                  <HandCoins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Exprimer un besoin
-                </Button>
-              } />
+              <Button
+                variant="hero"
+                className="gap-1.5 text-xs sm:text-sm h-9 sm:h-10"
+                onClick={() => setShowCreateDemand(true)}
+              >
+                <HandCoins className="w-3.5 h-3.5 sm:w-4 sm:h-4" />Exprimer un besoin
+              </Button>
+              <CreateDemandModal open={showCreateDemand} onOpenChange={setShowCreateDemand} />
               <div className="mt-3 sm:mt-4">
                 <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
                 <DemandsList limit={3} />
