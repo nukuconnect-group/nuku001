@@ -675,7 +675,7 @@ const ProductDetail = () => {
               <OwnerBatchQRGenerator productId={product.id} producerId={product.producer.id} productName={product.name} />
 
               {/* QR Code — Traçabilité */}
-              <Card className="border-primary/30">
+              <Card className="border-primary/30 lg:hidden">
                 <CardContent className="p-3 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <QrCode className="w-4 h-4 text-primary" />
