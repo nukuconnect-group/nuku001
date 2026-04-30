@@ -13,11 +13,18 @@ import { HandCoins, Loader2, MapPin, Camera, X } from "lucide-react";
 
 interface CreateDemandModalProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const CreateDemandModal = ({ trigger }: CreateDemandModalProps) => {
+const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDemandModalProps) => {
   const { data: marketplaceCategories = [] } = useCategories();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp !== undefined ? openProp : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
