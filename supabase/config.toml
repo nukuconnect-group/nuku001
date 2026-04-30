@@ -23,3 +23,5 @@ project_id = "fpnhdihvnfsiymopbjgt"
     verify_jwt = false
   [functions.watermark-image]
     verify_jwt = false
+  [functions.send-message-reminders]
+    verify_jwt = false
