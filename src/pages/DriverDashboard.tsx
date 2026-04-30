@@ -18,7 +18,7 @@ import {
   XCircle, Wallet, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import KYCForm from "@/components/driver/KYCForm";
+import DriverKYCSection from "@/components/driver/DriverKYCSection";
 import DriverStatusHeader from "@/components/driver/DriverStatusHeader";
 import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
