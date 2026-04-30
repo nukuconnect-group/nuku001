@@ -139,13 +139,15 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap">
-            <HandCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Exprimer un besoin
-          </Button>
-        )}
-      </DialogTrigger>
+      {openProp === undefined && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap">
+              <HandCoins className="w-3 h-3 sm:w-3.5 sm:h-3.5" />Exprimer un besoin
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
