@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -67,6 +67,38 @@ const ProductDetail = () => {
   const images = product?.images?.length ? product.images : (product ? [product.image] : []);
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  // Track product view by canonical UUID for boost stats reliability
+  useEffect(() => {
+    if (!product?.id) return;
+    const productUUID = product.id;
+    const isUUIDProduct = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productUUID);
+    if (!isUUIDProduct) return;
+    let sid = sessionStorage.getItem("nuku-session-id");
+    if (!sid) {
+      sid = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      sessionStorage.setItem("nuku-session-id", sid);
+    }
+    // Dedupe: only one view per product per session per 30 min
+    const dedupeKey = `nuku-prod-view-${productUUID}`;
+    const last = sessionStorage.getItem(dedupeKey);
+    if (last && Date.now() - Number(last) < 30 * 60 * 1000) return;
+    sessionStorage.setItem(dedupeKey, String(Date.now()));
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        await supabase.from("analytics_visits").insert({
+          user_id: session?.user?.id || null,
+          session_id: sid!,
+          page_path: `/produit/${productUUID}`,
+          referrer: document.referrer || null,
+          user_agent: navigator.userAgent,
+        } as any);
+      } catch {
+        // silent
+      }
+    })();
+  }, [product?.id]);
 
   const handleAddToCart = () => {
     if (product) {

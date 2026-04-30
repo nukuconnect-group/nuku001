@@ -1193,6 +1193,7 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean
+          reminder_sent_at: string | null
           reply_to_id: string | null
           sender_id: string
         }
@@ -1202,6 +1203,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          reminder_sent_at?: string | null
           reply_to_id?: string | null
           sender_id: string
         }
@@ -1211,6 +1213,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          reminder_sent_at?: string | null
           reply_to_id?: string | null
           sender_id?: string
         }
