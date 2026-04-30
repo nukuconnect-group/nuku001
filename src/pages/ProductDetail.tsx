@@ -385,6 +385,39 @@ const ProductDetail = () => {
                   ))}
                 </div>
               )}
+
+              {/* Caractéristiques — affichées juste sous les images pour combler l'espace vide en desktop */}
+              <Card className="hidden lg:block mt-2">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-bold text-foreground mb-3">Caractéristiques du produit</h3>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Catégorie</p>
+                      <p className="text-xs font-medium text-foreground capitalize">{product.category}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Unité</p>
+                      <p className="text-xs font-medium text-foreground">{product.unit}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Origine</p>
+                      <p className="text-xs font-medium text-foreground">{product.location || "Togo"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Certification</p>
+                      <p className="text-xs font-medium text-foreground">{product.isOrganic ? "Biologique" : "Standard"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Stock</p>
+                      <p className="text-xs font-medium text-foreground">{product.quantity} {product.unit}(s)</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Fournisseur</p>
+                      <p className="text-xs font-medium text-foreground truncate">{product.producer.name}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* ===== DETAILS SECTION ===== */}
@@ -559,8 +592,8 @@ const ProductDetail = () => {
           <div className="mt-6 sm:mt-10 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Left column (2/3) — Caractéristiques + Traçabilité + Avis */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-              {/* Characteristics */}
-              <Card>
+              {/* Characteristics — visible mobile/tablet uniquement (desktop: affiché sous les images) */}
+              <Card className="lg:hidden">
                 <CardContent className="p-3 sm:p-5">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <h3 className="text-sm sm:text-base font-bold text-foreground">Caractéristiques du produit</h3>
