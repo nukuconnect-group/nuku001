@@ -90,10 +90,8 @@ const SmartWatermarkedImage = ({
         }}
         style={{
           ...(rest.style || {}),
-          // Prevent drag-and-drop of original
-          WebkitUserDrag: "none" as any,
           userSelect: "none",
-        }}
+        } as React.CSSProperties}
       />
       {/* Always-visible CSS overlay as visual guarantee during load & fallback */}
       <div
