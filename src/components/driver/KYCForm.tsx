@@ -58,7 +58,7 @@ const KYCForm = ({ userId, onSubmitted, skipStatusCheck }: KYCFormProps) => {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || skipStatusCheck) return;
     supabase
       .from("driver_kyc_submissions")
       .select("*")
@@ -69,7 +69,7 @@ const KYCForm = ({ userId, onSubmitted, skipStatusCheck }: KYCFormProps) => {
       .then(({ data }) => {
         if (data) setExistingKyc(data);
       });
-  }, [userId]);
+  }, [userId, skipStatusCheck]);
 
   const uploadFile = async (file: File, path: string) => {
     if (!userId) return "";
