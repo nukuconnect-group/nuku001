@@ -75,12 +75,27 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
     };
   }, [reference?.id, filterFrom, filterTo, tick]);
 
-  // Auto-refresh toutes les 30s tant que le boost est actif
+  // Auto-refresh toutes les 15s tant que le boost est actif
   useEffect(() => {
     if (!active) return;
-    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    const id = setInterval(() => setTick((t) => t + 1), 15_000);
     return () => clearInterval(id);
   }, [active?.id]);
+
+  // Realtime: refresh instantanément sur insertion de visites/conversations/commandes/messages
+  useEffect(() => {
+    if (!active) return;
+    const channel = supabase
+      .channel(`boost-stats-${productId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "analytics_visits" }, (payload: any) => {
+        const path = payload?.new?.page_path || "";
+        if (path.includes(productId)) setTick((t) => t + 1);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "conversations", filter: `product_id=eq.${productId}` }, () => setTick((t) => t + 1))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `product_id=eq.${productId}` }, () => setTick((t) => t + 1))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [active?.id, productId]);
 
   useEffect(() => {
     if (!reference || !period) { setMetrics(null); return; }
