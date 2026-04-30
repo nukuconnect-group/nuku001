@@ -539,6 +539,7 @@ const DriverDashboard = () => {
                 completedCount={completedDeliveries.length}
                 withdrawals={withdrawals}
                 onWithdraw={handleWithdraw}
+              />
               {/* Affiliation hidden in earnings tab */}
               {user?.id && <AffiliationCard userId={user.id} />}
             </TabsContent>
