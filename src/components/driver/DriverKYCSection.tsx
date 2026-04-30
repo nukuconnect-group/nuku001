@@ -34,7 +34,7 @@ const DriverKYCSection = ({ userId, isApproved, onStatusChange }: Props) => {
 
   useEffect(() => {
     refreshStatus();
-  }, [userId]);
+  }, [userId, isApproved]);
 
   // Approved
   if (isApproved || kycStatus === "approved") {
