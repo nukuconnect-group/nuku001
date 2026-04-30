@@ -519,110 +519,55 @@ const ProductDetail = () => {
                   </CardContent>
                 </Card>
               )}
+            </div>
+            {/* ===== END GRID ===== */}
+          </div>
 
-              {/* Order Protection - Alibaba inspired */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Protection de la commande NukuConnect</h3>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
-                    Seules les commandes passées et payées via NukuConnect sont protégées gratuitement.
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { icon: <ShieldCheck className="w-5 h-5 text-primary" />, label: "Paiements sécurisés" },
-                      { icon: <CreditCard className="w-5 h-5 text-primary" />, label: "Protection remboursement" },
-                      { icon: <Package className="w-5 h-5 text-primary" />, label: "Suivi commande" },
-                      { icon: <Truck className="w-5 h-5 text-primary" />, label: "Livraison garantie" },
-                    ].map((item, i) => (
-                      <div key={i} className="flex flex-col items-center text-center p-2 rounded-lg bg-card">
-                        {item.icon}
-                        <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 leading-tight">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-
-              {/* Characteristics - Alibaba inspired */}
+          {/* ===== FULL-WIDTH SECTIONS BELOW (fix desktop empty space under images) ===== */}
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            {/* Left column (2/3) — Caractéristiques + Traçabilité + Avis */}
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              {/* Characteristics */}
               <Card>
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs sm:text-sm font-bold text-foreground">Caractéristiques</h3>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <CardContent className="p-3 sm:p-5">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 className="text-sm sm:text-base font-bold text-foreground">Caractéristiques du produit</h3>
                   </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Catégorie</p>
-                      <p className="text-xs font-medium text-foreground capitalize">{product.category}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground capitalize">{product.category}</p>
                     </div>
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Unité</p>
-                      <p className="text-xs font-medium text-foreground">{product.unit}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">{product.unit}</p>
                     </div>
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Origine</p>
-                      <p className="text-xs font-medium text-foreground">{product.location || "Togo"}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">{product.location || "Togo"}</p>
                     </div>
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Certification</p>
-                      <p className="text-xs font-medium text-foreground">{product.isOrganic ? "Biologique" : "Standard"}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">{product.isOrganic ? "Biologique" : "Standard"}</p>
                     </div>
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Stock disponible</p>
-                      <p className="text-xs font-medium text-foreground">{product.quantity} {product.unit}(s)</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">{product.quantity} {product.unit}(s)</p>
                     </div>
                     <div className="border-b border-border pb-2">
                       <p className="text-[10px] text-muted-foreground">Fournisseur</p>
-                      <p className="text-xs font-medium text-foreground">{product.producer.name}</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">{product.producer.name}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Adresse de livraison + temps de traitement (style pro) */}
-              <div className="space-y-2">
-                <BuyerDeliveryZone productLocation={product.location} />
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-4 h-4 text-primary" aria-hidden="true" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
-                          Temps de traitement
-                        </p>
-                        <p className="text-xs sm:text-sm font-semibold text-foreground">
-                          {(() => {
-                            const d = product.shippingDelayDays ?? 1;
-                            if (d === 0) return "Expédition immédiate";
-                            if (d === 1) return "Expédié sous 24 heures";
-                            if (d <= 3) return `Expédié sous ${d} jours ouvrés`;
-                            return `Expédié sous ${d} jours`;
-                          })()}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          Préparé par {product.producer.name} avant remise au livreur NukuConnect.
-                        </p>
-                      </div>
-                      <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold">
-                        {(product.shippingDelayDays ?? 1) <= 1 ? "Rapide" : "Standard"}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
 
               {/* Owner: Batch QR generator (only visible to product owner) */}
               <OwnerBatchQRGenerator productId={product.id} producerId={product.producer.id} productName={product.name} />
 
               {/* QR Code — Traçabilité */}
               <Card className="border-primary/30">
-                <CardContent className="p-3 sm:p-4">
+                <CardContent className="p-3 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <QrCode className="w-4 h-4 text-primary" />
                     <span className="font-heading font-semibold text-xs sm:text-sm text-foreground">
@@ -702,7 +647,6 @@ const ProductDetail = () => {
                   </SheetHeader>
                   <ScrollArea className="h-[calc(80vh-80px)] sm:h-[calc(70vh-80px)]">
                     <div className="space-y-4 pr-4 pb-6">
-                      {/* Product info */}
                       <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
                         <img src={images[0] || product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
                         <div>
@@ -711,8 +655,6 @@ const ProductDetail = () => {
                           <p className="text-xs text-primary font-medium">{formatPrice(product.price)}/{product.unit}</p>
                         </div>
                       </div>
-
-                      {/* Traceability timeline */}
                       <div className="space-y-0">
                         {[
                           { step: "Production", icon: "🌱", desc: `Produit par ${product.producer.name}`, detail: product.location || "Togo", status: "done" },
@@ -738,8 +680,6 @@ const ProductDetail = () => {
                           </div>
                         ))}
                       </div>
-
-                      {/* Certifications */}
                       <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 space-y-2">
                         <p className="text-xs font-semibold text-foreground">Certifications & garanties</p>
                         <div className="flex flex-wrap gap-2">
@@ -749,8 +689,6 @@ const ProductDetail = () => {
                           <Badge variant="secondary" className="text-[10px]">📦 {product.unit}</Badge>
                         </div>
                       </div>
-
-                      {/* Full page link */}
                       <Button
                         variant="outline"
                         className="w-full gap-2 text-xs"
@@ -767,10 +705,72 @@ const ProductDetail = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Reviews */}
+              {/* Reviews — vrais avis utilisateurs depuis la base */}
               <ReviewSection productId={product.id} />
             </div>
+
+            {/* Right column (1/3) — Protection + adresse livraison */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Order Protection */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs sm:text-sm font-semibold text-foreground">Protection NukuConnect</h3>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+                    Seules les commandes passées et payées via NukuConnect sont protégées gratuitement.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { icon: <ShieldCheck className="w-5 h-5 text-primary" />, label: "Paiements sécurisés" },
+                      { icon: <CreditCard className="w-5 h-5 text-primary" />, label: "Protection remboursement" },
+                      { icon: <Package className="w-5 h-5 text-primary" />, label: "Suivi commande" },
+                      { icon: <Truck className="w-5 h-5 text-primary" />, label: "Livraison garantie" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-col items-center text-center p-2 rounded-lg bg-card">
+                        {item.icon}
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground mt-1 leading-tight">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Adresse livraison + temps de traitement */}
+              <BuyerDeliveryZone productLocation={product.location} />
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 text-primary" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
+                        Temps de traitement
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-foreground">
+                        {(() => {
+                          const d = product.shippingDelayDays ?? 1;
+                          if (d === 0) return "Expédition immédiate";
+                          if (d === 1) return "Expédié sous 24 heures";
+                          if (d <= 3) return `Expédié sous ${d} jours ouvrés`;
+                          return `Expédié sous ${d} jours`;
+                        })()}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Préparé par {product.producer.name} avant remise au livreur NukuConnect.
+                      </p>
+                    </div>
+                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold">
+                      {(product.shippingDelayDays ?? 1) <= 1 ? "Rapide" : "Standard"}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
+          {/* ===== END FULL-WIDTH SECTIONS ===== */}
 
           {/* ===== SIMILAR PRODUCTS ===== */}
           <SimilarProducts currentProduct={product} />
