@@ -814,8 +814,10 @@ const ProductDetail = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Reviews — vrais avis utilisateurs depuis la base */}
-              <ReviewSection productId={product.id} />
+              {/* Reviews — visible mobile/tablet uniquement (desktop: affiché sous Traçabilité dans la colonne gauche) */}
+              <div className="lg:hidden">
+                <ReviewSection productId={product.id} />
+              </div>
             </div>
 
             {/* Right column (1/3) — Protection + adresse livraison */}
