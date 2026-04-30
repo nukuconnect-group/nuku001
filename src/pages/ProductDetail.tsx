@@ -418,6 +418,50 @@ const ProductDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Traçabilité — compacte, directement sous Caractéristiques (desktop) */}
+              <Card className="hidden lg:block border-primary/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <QrCode className="w-4 h-4 text-primary" />
+                    <span className="font-heading font-semibold text-sm text-foreground">Traçabilité du produit</span>
+                    {product.producer.verified && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[8px] gap-0.5">
+                        <ShieldCheck className="w-2.5 h-2.5" />Vérifié
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-white p-1.5 rounded-lg border border-border flex-shrink-0">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
+                          `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}`
+                        )}`}
+                        alt="QR Code traçabilité"
+                        className="w-20 h-20"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        Scannez ce QR code pour suivre le parcours complet de ce produit.
+                      </p>
+                      <Button
+                        variant="hero"
+                        size="sm"
+                        className="gap-1.5 text-[11px] h-8 w-full"
+                        onClick={() => setTraceabilityOpen(true)}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />Voir la traçabilité complète
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Avis — directement sous Traçabilité (desktop) */}
+              <div className="hidden lg:block">
+                <ReviewSection productId={product.id} />
+              </div>
             </div>
 
             {/* ===== DETAILS SECTION ===== */}
