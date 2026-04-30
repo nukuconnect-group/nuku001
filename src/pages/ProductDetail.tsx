@@ -385,6 +385,39 @@ const ProductDetail = () => {
                   ))}
                 </div>
               )}
+
+              {/* Caractéristiques — affichées juste sous les images pour combler l'espace vide en desktop */}
+              <Card className="hidden lg:block mt-2">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-bold text-foreground mb-3">Caractéristiques du produit</h3>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Catégorie</p>
+                      <p className="text-xs font-medium text-foreground capitalize">{product.category}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Unité</p>
+                      <p className="text-xs font-medium text-foreground">{product.unit}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Origine</p>
+                      <p className="text-xs font-medium text-foreground">{product.location || "Togo"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Certification</p>
+                      <p className="text-xs font-medium text-foreground">{product.isOrganic ? "Biologique" : "Standard"}</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Stock</p>
+                      <p className="text-xs font-medium text-foreground">{product.quantity} {product.unit}(s)</p>
+                    </div>
+                    <div className="border-b border-border pb-2">
+                      <p className="text-[10px] text-muted-foreground">Fournisseur</p>
+                      <p className="text-xs font-medium text-foreground truncate">{product.producer.name}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* ===== DETAILS SECTION ===== */}
