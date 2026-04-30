@@ -412,23 +412,6 @@ const DriverDashboard = () => {
           </Card>
         )}
 
-        {/* KYC Banner */}
-        {driverProfile && !driverProfile.is_approved && (
-          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Vérification requise</p>
-                  <p className="text-[10px] text-amber-700 dark:text-amber-400">Soumettez vos documents pour activer votre compte</p>
-                </div>
-              </div>
-              <KYCForm userId={user?.id} onSubmitted={fetchDriverData} />
-            </CardContent>
-          </Card>
-        )}
 
         {/* Quick actions */}
         <div className="flex gap-2">
