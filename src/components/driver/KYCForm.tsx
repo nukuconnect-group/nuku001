@@ -40,7 +40,7 @@ const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob
     reader.readAsDataURL(file);
   });
 
-const KYCForm = ({ userId, onSubmitted }: KYCFormProps) => {
+const KYCForm = ({ userId, onSubmitted, skipStatusCheck }: KYCFormProps) => {
   const { toast } = useToast();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
