@@ -633,7 +633,7 @@ const ProductDetail = () => {
           </div>
 
           {/* ===== FULL-WIDTH SECTIONS BELOW (fix desktop empty space under images) ===== */}
-          <div className="mt-6 sm:mt-10 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10">
             {/* Left column (2/3) — Caractéristiques + Traçabilité + Avis */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Characteristics — visible mobile/tablet uniquement (desktop: affiché sous les images) */}
