@@ -241,16 +241,18 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   };
 
   // Build route points
+  // Build route: ALWAYS start from driver's live position toward the next destination
   const buildRoutePoints = useCallback((): [number, number][] => {
     const pts: [number, number][] = [];
+    // Always start from driver position
+    pts.push([livePos[0], livePos[1]]);
+    // Add waypoints
+    waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
     if (currentStep <= 1) {
-      pts.push([livePos[0], livePos[1]]);
-      waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+      // Going to pickup
       if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
     } else {
-      if (delivery.pickup_lat && delivery.pickup_lng) pts.push([delivery.pickup_lat, delivery.pickup_lng]);
-      pts.push([livePos[0], livePos[1]]);
-      waypoints.forEach(wp => pts.push([wp.lat, wp.lng]));
+      // Going to dropoff (already picked up)
       if (delivery.dropoff_lat && delivery.dropoff_lng) pts.push([delivery.dropoff_lat, delivery.dropoff_lng]);
     }
     return pts;
