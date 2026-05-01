@@ -529,7 +529,6 @@ const DriverDashboard = () => {
 
             {/* Earnings */}
             <TabsContent value="earnings" className="mt-3 space-y-4">
-              <DriverStatsCharts completedDeliveries={completedDeliveries} />
               <DriverEarningsPanel
                 totalEarnings={totalEarnings}
                 totalWithdrawn={totalWithdrawn}
@@ -540,6 +539,7 @@ const DriverDashboard = () => {
                 withdrawals={withdrawals}
                 onWithdraw={handleWithdraw}
               />
+              <DriverStatsCharts completedDeliveries={completedDeliveries} />
               {/* Affiliation hidden in earnings tab */}
               {user?.id && <AffiliationCard userId={user.id} />}
             </TabsContent>
