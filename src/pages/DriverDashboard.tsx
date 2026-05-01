@@ -279,14 +279,29 @@ const DriverDashboard = () => {
       toast({ title: "Montant invalide", variant: "destructive" });
       return;
     }
-    const { data: profileData } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
-    if (!profileData) throw new Error("Profil introuvable");
-    const { error } = await supabase.from("withdrawals").insert({
-      user_id: user.id, profile_id: profileData.id, amount, phone_number: phone, operator,
-    });
-    if (error) throw error;
-    toast({ title: "✅ Demande de retrait envoyée" });
-    fetchDriverData();
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Session expirée");
+
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-withdrawal`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ amount, phone_number: phone.replace(/\D/g, ""), operator }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error || "Erreur lors du retrait");
+
+      toast({ title: "✅ Demande de retrait envoyée" });
+      fetchDriverData();
+    } catch (err: any) {
+      toast({ title: err?.message || "Erreur", variant: "destructive" });
+      throw err;
+    }
   };
 
   // Computed stats
