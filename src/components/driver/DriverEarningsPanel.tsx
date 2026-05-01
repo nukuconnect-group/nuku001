@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wallet, ArrowDownToLine, History, Loader2, TrendingUp } from "lucide-react";
+import { Wallet, ArrowDownToLine, History, Loader2, TrendingUp, Clock, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
 
 interface DriverEarningsPanelProps {
   totalEarnings: number;
@@ -17,6 +17,19 @@ interface DriverEarningsPanelProps {
   withdrawals: any[];
   onWithdraw: (amount: number, phone: string, operator: string) => Promise<void>;
 }
+
+const STATUS_CONFIG: Record<string, { label: string; icon: any; className: string }> = {
+  pending: { label: "En attente", icon: Clock, className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  approved: { label: "Approuvé", icon: CheckCircle2, className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  completed: { label: "Envoyé ✅", icon: CheckCircle2, className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  rejected: { label: "Refusé", icon: XCircle, className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+};
+
+const OPERATORS: Record<string, string> = {
+  flooz: "Moov Money",
+  tmoney: "T-Money",
+  wave: "Wave",
+};
 
 const DriverEarningsPanel = ({
   totalEarnings,
@@ -32,6 +45,7 @@ const DriverEarningsPanel = ({
   const [phone, setPhone] = useState("");
   const [operator, setOperator] = useState("flooz");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -42,6 +56,8 @@ const DriverEarningsPanel = ({
       setIsSubmitting(false);
     }
   };
+
+  const visibleWithdrawals = showAllHistory ? withdrawals : withdrawals.slice(0, 5);
 
   return (
     <div className="space-y-3">
@@ -102,48 +118,83 @@ const DriverEarningsPanel = ({
               <SelectContent>
                 <SelectItem value="flooz">Moov Money / Flooz</SelectItem>
                 <SelectItem value="tmoney">T-Money</SelectItem>
+                <SelectItem value="wave">Wave</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Numéro</Label>
+            <Label className="text-xs">Numéro de réception</Label>
             <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+228 XX XX XX XX" />
           </div>
           <Button className="w-full" onClick={handleSubmit} disabled={isSubmitting || availableBalance <= 0}>
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wallet className="w-4 h-4 mr-2" />}
-            Retirer
+            Soumettre la demande
           </Button>
         </CardContent>
       </Card>
 
-      {/* Withdrawal history */}
-      {withdrawals.length > 0 && (
-        <Card>
-          <CardHeader className="p-3 pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <History className="w-4 h-4" /> Historique retraits
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1 space-y-2">
-            {withdrawals.map((w: any) => (
-              <div key={w.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-sm font-medium">{w.amount.toLocaleString("en-US")} F</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {w.operator === "flooz" ? "Moov" : "T-Money"} • {new Date(w.created_at).toLocaleDateString("fr-FR")}
-                  </p>
-                </div>
-                <Badge className={
-                  w.status === "completed" ? "bg-emerald-100 text-emerald-800" :
-                  w.status === "pending" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"
-                }>
-                  {w.status === "completed" ? "Effectué" : w.status === "pending" ? "En attente" : "Refusé"}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Detailed withdrawal history */}
+      <Card>
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <History className="w-4 h-4" /> Historique des retraits ({withdrawals.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-1 space-y-2">
+          {withdrawals.length === 0 ? (
+            <div className="text-center py-4">
+              <Wallet className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-xs text-muted-foreground">Aucun retrait effectué</p>
+            </div>
+          ) : (
+            <>
+              {visibleWithdrawals.map((w: any) => {
+                const config = STATUS_CONFIG[w.status] || STATUS_CONFIG.pending;
+                const StatusIcon = config.icon;
+                return (
+                  <div key={w.id} className="p-2.5 rounded-xl bg-muted/50 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center ${config.className}`}>
+                          <StatusIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{Number(w.amount).toLocaleString("en-US")} FCFA</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {OPERATORS[w.operator] || w.operator} • {w.phone_number}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={`text-[9px] ${config.className} border-0`}>{config.label}</Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-[9px] text-muted-foreground pl-9">
+                      <span className="flex items-center gap-0.5">
+                        <CalendarDays className="w-2.5 h-2.5" />
+                        Demandé: {new Date(w.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      {w.processed_at && (
+                        <span>
+                          Traité: {new Date(w.processed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
+                    </div>
+                    {w.admin_note && (
+                      <p className="text-[10px] text-muted-foreground pl-9 italic">
+                        💬 {w.admin_note}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              {withdrawals.length > 5 && (
+                <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setShowAllHistory(!showAllHistory)}>
+                  {showAllHistory ? "Voir moins" : `Voir tout (${withdrawals.length})`}
+                </Button>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
