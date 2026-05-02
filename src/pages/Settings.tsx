@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor, Copy, ExternalLink
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
@@ -437,40 +437,72 @@ const Settings = () => {
                 Supprimer mon compte
               </CardTitle>
               <CardDescription className="text-[11px]">
-                Cette action est définitive. Toutes vos données seront effacées. Votre email sera libéré : vous pourrez recréer un compte plus tard et recevoir un nouveau lien de confirmation.
+                Cette action est définitive. Toutes vos données seront effacées.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0">
-              <Button
-                variant="destructive"
-                className="gap-1.5 text-xs w-full sm:w-auto"
-                onClick={async () => {
-                  const confirmText = "SUPPRIMER";
-                  const input = window.prompt(`Pour confirmer la suppression définitive de votre compte, tapez "${confirmText}" :`);
-                  if (input === null) return; // user cancelled
-                  if (input.trim() !== confirmText) {
-                    toast({
-                      title: "Confirmation incorrecte",
-                      description: `Vous devez taper exactement "${confirmText}" (en majuscules) pour confirmer la suppression. Suppression annulée.`,
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  try {
-                    const { data, error } = await supabase.functions.invoke("delete-user-account", { body: {} });
-                    if (error) throw error;
-                    if ((data as any)?.error) throw new Error((data as any).error);
-                    toast({ title: "Compte supprimé", description: "Votre compte a été définitivement supprimé." });
-                    await supabase.auth.signOut();
-                    window.location.replace("/");
-                  } catch (err: any) {
-                    toast({ title: "Erreur", description: err.message, variant: "destructive" });
-                  }
-                }}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Supprimer définitivement mon compte
-              </Button>
+            <CardContent className="p-3 sm:p-4 pt-0 space-y-3">
+              {/* Copyable deletion link for Google Play */}
+              <div className="bg-muted rounded-lg p-3 space-y-2">
+                <p className="text-[11px] text-muted-foreground font-medium">
+                  Lien de suppression de compte (pour Google Play) :
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value="https://nukuconnect.com/delete-account"
+                    className="text-xs h-8 bg-background font-mono"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 flex-shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText("https://nukuconnect.com/delete-account");
+                      toast({ title: "Lien copié ✓" });
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => window.open("/delete-account", "_blank")}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Ouvrir la page de suppression
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={async () => {
+                    const confirmText = "SUPPRIMER";
+                    const input = window.prompt(`Pour confirmer, tapez "${confirmText}" :`);
+                    if (input === null) return;
+                    if (input.trim() !== confirmText) {
+                      toast({ title: "Confirmation incorrecte", description: `Tapez exactement "${confirmText}".`, variant: "destructive" });
+                      return;
+                    }
+                    try {
+                      const { data, error } = await supabase.functions.invoke("delete-user-account", { body: {} });
+                      if (error) throw error;
+                      if ((data as any)?.error) throw new Error((data as any).error);
+                      toast({ title: "Compte supprimé" });
+                      await supabase.auth.signOut();
+                      window.location.replace("/");
+                    } catch (err: any) {
+                      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+                    }
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Supprimer mon compte
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
