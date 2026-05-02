@@ -215,10 +215,16 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
         content: "📞 Appel vocal démarré...",
       } as any);
 
+      setCallStatus("connected");
       setInCall(true);
       setCallDuration(0);
       callTimerRef.current = setInterval(() => setCallDuration(p => p + 1), 1000);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setCallStatus("mic_denied");
+      } else {
+        setCallStatus("failed");
+      }
       console.error("Call error:", err);
     }
   };
