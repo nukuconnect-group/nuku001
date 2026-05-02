@@ -37,6 +37,7 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
   const mapInstanceRef = useRef<any>(null);
   const driverMarkerRef = useRef<any>(null);
   const routeLineRef = useRef<any>(null);
+  const arrowLayerRef = useRef<any>(null);
   const leafletRef = useRef<any>(null);
   const gpsWatchRef = useRef<number | null>(null);
 
