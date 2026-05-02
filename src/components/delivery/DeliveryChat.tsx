@@ -148,7 +148,9 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   // WebRTC Voice Call via Supabase Realtime signaling
   const startCall = async () => {
     try {
+      setCallStatus("requesting_mic");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setCallStatus("connecting");
       localStreamRef.current = stream;
 
       const pc = new RTCPeerConnection({
