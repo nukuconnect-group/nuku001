@@ -84,6 +84,7 @@ const PremiumDashboard = lazy(() => import("./pages/PremiumDashboard"));
 const AccountAccess = lazy(() => import("./pages/AccountAccess"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Invoices = lazy(() => import("./pages/Invoices"));
+const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -244,6 +245,7 @@ const App = () => {
                   <Route path="/moderation" element={<Moderation />} />
                   <Route path="/faq-nuku-ai" element={<FAQNukuAI />} />
                   <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
+                  <Route path="/delete-account" element={<DeleteAccount />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SmartSuspense>
