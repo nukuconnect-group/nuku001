@@ -479,12 +479,32 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         if (routeLineRef.current) {
           mapInstanceRef.current.removeLayer(routeLineRef.current);
         }
+        if (arrowLayerRef.current) {
+          mapInstanceRef.current.removeLayer(arrowLayerRef.current);
+        }
         const leafletCoords: [number, number][] = osrmRoute.geometry.coordinates.map(
           (c: [number, number]) => [c[1], c[0]]
         );
         routeLineRef.current = L.polyline(leafletCoords, {
           color: "#3b82f6", weight: 5, opacity: 0.85,
         }).addTo(mapInstanceRef.current);
+
+        // Refresh arrows
+        const arrowGroup = L.layerGroup().addTo(mapInstanceRef.current);
+        arrowLayerRef.current = arrowGroup;
+        const arrowInterval = Math.max(1, Math.floor(leafletCoords.length / 8));
+        for (let i = arrowInterval; i < leafletCoords.length - 1; i += arrowInterval) {
+          const p1 = leafletCoords[i - 1];
+          const p2 = leafletCoords[Math.min(i + 1, leafletCoords.length - 1)];
+          const angle = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) * (180 / Math.PI);
+          const arrowIcon = L.divIcon({
+            className: "route-arrow",
+            html: `<div style="transform:rotate(${90 - angle}deg);color:#3b82f6;font-size:18px;font-weight:bold;text-shadow:0 0 3px white,0 0 3px white">▲</div>`,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+          });
+          L.marker(leafletCoords[i], { icon: arrowIcon, interactive: false }).addTo(arrowGroup);
+        }
 
         const distKm = (osrmRoute.distance / 1000).toFixed(1);
         const durMin = Math.round(osrmRoute.duration / 60);
