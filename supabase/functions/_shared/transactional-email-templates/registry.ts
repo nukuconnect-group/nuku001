@@ -16,6 +16,7 @@ import { template as subscription } from './subscription.tsx'
 import { template as productModeration } from './product-moderation.tsx'
 import { template as kycStatus } from './kyc-status.tsx'
 import { template as adminAccountLink } from './admin-account-link.tsx'
+import { template as withdrawalCompleted } from './withdrawal-completed.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'order-confirmation': orderConfirmation,
@@ -25,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'product-moderation': productModeration,
   'kyc-status': kycStatus,
   'admin-account-link': adminAccountLink,
+  'withdrawal-completed': withdrawalCompleted,
 }
