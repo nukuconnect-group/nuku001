@@ -32,6 +32,7 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   const [isMinimized, setIsMinimized] = useState(false);
   const [inCall, setInCall] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [callStatus, setCallStatus] = useState<"idle" | "requesting_mic" | "mic_denied" | "connecting" | "connected" | "failed">("idle");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
