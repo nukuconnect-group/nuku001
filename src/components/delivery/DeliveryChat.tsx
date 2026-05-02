@@ -32,6 +32,7 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   const [isMinimized, setIsMinimized] = useState(false);
   const [inCall, setInCall] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [callStatus, setCallStatus] = useState<"idle" | "requesting_mic" | "mic_denied" | "connecting" | "connected" | "failed">("idle");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const peerRef = useRef<RTCPeerConnection | null>(null);
@@ -147,7 +148,9 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   // WebRTC Voice Call via Supabase Realtime signaling
   const startCall = async () => {
     try {
+      setCallStatus("requesting_mic");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setCallStatus("connecting");
       localStreamRef.current = stream;
 
       const pc = new RTCPeerConnection({
@@ -212,10 +215,16 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
         content: "📞 Appel vocal démarré...",
       } as any);
 
+      setCallStatus("connected");
       setInCall(true);
       setCallDuration(0);
       callTimerRef.current = setInterval(() => setCallDuration(p => p + 1), 1000);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setCallStatus("mic_denied");
+      } else {
+        setCallStatus("failed");
+      }
       console.error("Call error:", err);
     }
   };
@@ -240,6 +249,7 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
     }
     setInCall(false);
     setCallDuration(0);
+    setCallStatus("idle");
   };
 
   useEffect(() => {
@@ -321,6 +331,18 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
             <p className="text-xs font-semibold truncate">{otherPartyName || "Chat"}</p>
             {inCall && (
               <p className="text-[9px] text-emerald-600 font-medium">📞 {formatCallTime(callDuration)}</p>
+            )}
+            {!inCall && callStatus === "requesting_mic" && (
+              <p className="text-[9px] text-amber-600 font-medium animate-pulse">🎤 Demande d'accès au micro...</p>
+            )}
+            {!inCall && callStatus === "mic_denied" && (
+              <p className="text-[9px] text-red-500 font-medium">🚫 Micro refusé — autorisez l'accès</p>
+            )}
+            {!inCall && callStatus === "connecting" && (
+              <p className="text-[9px] text-blue-500 font-medium animate-pulse">🔗 Connexion en cours...</p>
+            )}
+            {!inCall && callStatus === "failed" && (
+              <p className="text-[9px] text-red-500 font-medium">❌ Connexion échouée</p>
             )}
           </div>
           <Badge variant="secondary" className="text-[8px] px-1.5 py-0">

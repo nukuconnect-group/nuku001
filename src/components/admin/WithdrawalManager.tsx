@@ -109,6 +109,48 @@ const WithdrawalManager = () => {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
       toast({ title: `Retrait ${STATUS_MAP[status]?.label.toLowerCase() || status}` });
+
+      // Send email & notification on completion
+      if (status === "completed" && selectedWithdrawal) {
+        const w = selectedWithdrawal;
+        try {
+          // Get user email
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name, user_id")
+            .eq("id", w.profile_id)
+            .maybeSingle();
+
+          if (profileData?.user_id) {
+            // Send withdrawal email
+            await supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "withdrawal-completed",
+                to: undefined, // will be resolved by user_id lookup
+                userId: profileData.user_id,
+                data: {
+                  userName: profileData.full_name || "Utilisateur",
+                  amount: Number(w.amount),
+                  operator: w.operator,
+                  phoneNumber: w.phone_number,
+                  adminNote: adminNote || undefined,
+                },
+              },
+            });
+
+            // Insert notification
+            await supabase.from("notifications").insert({
+              user_id: profileData.user_id,
+              type: "withdrawal",
+              title: "💰 Retrait envoyé",
+              description: `Votre retrait de ${Number(w.amount).toLocaleString("fr-FR")} FCFA via ${OPERATORS[w.operator] || w.operator} a été envoyé.`,
+            });
+          }
+        } catch (emailErr) {
+          console.error("Email/notification error:", emailErr);
+        }
+      }
+
       setSelectedWithdrawal(null);
       setAdminNote("");
       setKycData(null);
