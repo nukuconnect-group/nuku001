@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useResolvedUserType } from "@/hooks/useResolvedUserType";
 import {
-  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor
+  User, Camera, Loader2, Save, Trash2, Plus, ChevronLeft, ChevronRight, Store, MapPin, Phone, Mail, FileText, Globe, DollarSign, Sun, Moon, Monitor, Copy, ExternalLink
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
 
