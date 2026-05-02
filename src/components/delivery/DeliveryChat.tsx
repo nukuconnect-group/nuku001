@@ -249,6 +249,7 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
     }
     setInCall(false);
     setCallDuration(0);
+    setCallStatus("idle");
   };
 
   useEffect(() => {
