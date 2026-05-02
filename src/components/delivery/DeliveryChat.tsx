@@ -332,6 +332,18 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
             {inCall && (
               <p className="text-[9px] text-emerald-600 font-medium">📞 {formatCallTime(callDuration)}</p>
             )}
+            {!inCall && callStatus === "requesting_mic" && (
+              <p className="text-[9px] text-amber-600 font-medium animate-pulse">🎤 Demande d'accès au micro...</p>
+            )}
+            {!inCall && callStatus === "mic_denied" && (
+              <p className="text-[9px] text-red-500 font-medium">🚫 Micro refusé — autorisez l'accès</p>
+            )}
+            {!inCall && callStatus === "connecting" && (
+              <p className="text-[9px] text-blue-500 font-medium animate-pulse">🔗 Connexion en cours...</p>
+            )}
+            {!inCall && callStatus === "failed" && (
+              <p className="text-[9px] text-red-500 font-medium">❌ Connexion échouée</p>
+            )}
           </div>
           <Badge variant="secondary" className="text-[8px] px-1.5 py-0">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-0.5" />En ligne
