@@ -44,7 +44,8 @@ import AdminAuditLog from "@/components/admin/AdminAuditLog";
 import AdminRecentActions from "@/components/admin/AdminRecentActions";
 import SeoManager from "@/components/admin/SeoManager";
 import RefundsManager from "@/components/admin/RefundsManager";
-import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon, RotateCcw } from "lucide-react";
+import MarketingManager from "@/components/admin/MarketingManager";
+import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon, RotateCcw, Tag } from "lucide-react";
 
 const COLORS = [
   'hsl(var(--primary))',
@@ -331,6 +332,7 @@ const AdminDashboard = () => {
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
     { id: "cookies", label: "Cookies", icon: Cookie },
+    { id: "marketing", label: "Marketing", icon: Tag },
     { id: "seo", label: "Gestion SEO", icon: SearchIcon },
   ];
 
@@ -1208,6 +1210,7 @@ const AdminDashboard = () => {
             {activeTab === "cookies" && <CookieConsentsManager />}
 
             {/* SEO management */}
+            {activeTab === "marketing" && <MarketingManager />}
             {activeTab === "seo" && <SeoManager />}
         </main>
       </div>
