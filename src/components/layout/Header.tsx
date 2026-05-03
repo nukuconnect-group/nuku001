@@ -502,7 +502,7 @@ const Header = () => {
                           <span className="text-sm font-semibold uppercase">Toutes les catégories</span>
                           <ChevronRight className="w-4 h-4" />
                         </Link>
-                        {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
+                        {marketplaceCategories.filter((c: any) => c.is_active).slice(0, 6).map((cat: any) => (
                           <Link key={cat.id} to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">

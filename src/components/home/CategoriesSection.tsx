@@ -61,7 +61,7 @@ const CategoriesSection = () => {
   const { data: products = [] } = useProducts();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeCategories = categories.filter((c: any) => c.is_active).slice(0, 12);
+  const activeCategories = categories.filter((c: any) => c.is_active).slice(0, 8);
 
   const productCounts = useMemo(() => {
     const counts: Record<string, number> = {};
