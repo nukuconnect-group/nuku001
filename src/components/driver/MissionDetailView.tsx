@@ -300,14 +300,12 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         attributionControl: false,
       });
 
-      // Google Maps tile layer for better quality
-      const GMAPS_KEY = "AIzaSyCxL40pRFJ7a-RL-lmEHp-zqifOhy0cVJs";
-      L.tileLayer(`https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i{z}!2i{x}!3i{y}!4i256!2m3!1e0!2sm!3i{r}!3m17!2sen!3sUS!5e18!12m4!1e68!2m2!1sset!2sRoadmap!12m3!1e37!2m1!1ssmartmaps!12m4!1e26!2m2!1sstyles!2ss.t:1%7Cs.e:g%7Cp.c:%23f5f5f5&key=${GMAPS_KEY}`, {
+      // Google Maps road tiles
+      L.tileLayer("https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
         maxZoom: 20,
-        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+        subdomains: ["0", "1", "2", "3"],
+        attribution: "© Google Maps",
       }).addTo(map);
-      // Fallback to OSM if Google fails
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       // Driver marker with pulse
