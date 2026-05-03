@@ -1186,6 +1186,87 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaigns: {
+        Row: {
+          clicks_count: number | null
+          created_at: string
+          created_by: string | null
+          html_content: string
+          id: string
+          opens_count: number | null
+          recipients_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          target_segment: string
+          updated_at: string
+        }
+        Insert: {
+          clicks_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          opens_count?: number | null
+          recipients_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          target_segment?: string
+          updated_at?: string
+        }
+        Update: {
+          clicks_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          opens_count?: number | null
+          recipients_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          target_segment?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_templates: {
+        Row: {
+          category: string
+          created_at: string
+          html_content: string
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          html_content?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          html_content?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_reminder_settings: {
         Row: {
           cron_interval_minutes: number
@@ -1840,6 +1921,54 @@ export type Database = {
           user_id?: string
           user_type?: string
           years_active?: number | null
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          applicable_categories: string[] | null
+          code: string
+          created_at: string
+          created_by: string | null
+          current_uses: number
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          applicable_categories?: string[] | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          applicable_categories?: string[] | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          current_uses?: number
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
