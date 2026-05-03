@@ -502,7 +502,7 @@ const Header = () => {
                           <span className="text-sm font-semibold uppercase">Toutes les catégories</span>
                           <ChevronRight className="w-4 h-4" />
                         </Link>
-                        {marketplaceCategories.filter((c: any) => c.is_active).map((cat: any) => (
+                        {marketplaceCategories.filter((c: any) => c.is_active).slice(0, 6).map((cat: any) => (
                           <Link key={cat.id} to={`/marketplace?category=${encodeURIComponent(cat.name.toLowerCase())}`}
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted border-b border-border/30">
@@ -521,13 +521,13 @@ const Header = () => {
                         <div className="p-2">
                           <Link to={getDashboardLink()} onClick={() => setIsMenuOpen(false)}
                             className="flex items-center gap-2 p-2 rounded-lg bg-muted">
-                            <div className="w-8 h-8 rounded-full bg-gradient-hero flex items-center justify-center overflow-hidden">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                               {profile?.avatar_url ? (
                                 <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                <span className="text-xs font-bold text-primary-foreground">
-                                  {(getProfileDisplayName(profile, user.email || "?")).charAt(0).toUpperCase()}
-                                </span>
+                                <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                                  <User className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.5} />
+                                </div>
                               )}
                             </div>
                             <div className="flex-1">
@@ -654,7 +654,9 @@ const Header = () => {
                   {user && profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                   ) : (
-                    <User className="w-4 h-4" />
+                    <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                      <User className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.5} />
+                    </div>
                   )}
                   {user && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />}
                 </Button>

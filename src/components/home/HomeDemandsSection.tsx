@@ -149,11 +149,13 @@ const HomeDemandsSection = () => {
                   {/* Infos à droite — min-w-0 indispensable pour que truncate fonctionne */}
                   <div className="p-2 sm:p-2.5 flex-1 min-w-0 flex flex-col overflow-hidden">
                     <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {d.profile?.avatar_url ? (
                           <img src={d.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-2.5 h-2.5 text-accent" />
+                          <div className="w-full h-full rounded-full border border-muted-foreground/40 flex items-center justify-center">
+                            <User className="w-2.5 h-2.5 text-muted-foreground/60" strokeWidth={1.5} />
+                          </div>
                         )}
                       </div>
                       <span className="text-[9px] text-muted-foreground truncate min-w-0 flex-1">

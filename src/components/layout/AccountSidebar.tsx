@@ -487,11 +487,13 @@ const AccountSidebar = ({ isOpen, onClose }: AccountSidebarProps) => {
             <div className="px-4 py-5 border-b border-border pr-12">
               <SheetHeader className="p-0">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <User className="w-7 h-7 text-muted-foreground" />
+                      <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                        <User className="w-7 h-7 text-muted-foreground/60" strokeWidth={1.5} />
+                      </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

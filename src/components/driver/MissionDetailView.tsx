@@ -300,7 +300,12 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
         attributionControl: false,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+      // Google Maps road tiles
+      L.tileLayer("https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["0", "1", "2", "3"],
+        attribution: "© Google Maps",
+      }).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       // Driver marker with pulse

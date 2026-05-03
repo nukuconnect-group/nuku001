@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowRight } from "lucide-react";
+import { ShieldCheck, ArrowRight, User } from "lucide-react";
 import LocationBadge from "@/components/profile/LocationBadge";
 
 interface Supplier {
@@ -152,7 +152,7 @@ const VerifiedSuppliersSection = () => {
                   {/* Avatar carré superposé */}
                   <div className="relative px-2 -mt-7 flex justify-center">
                     <div className="relative">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-none border-[3px] border-card bg-muted overflow-hidden shadow-md">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-card bg-transparent overflow-hidden shadow-md">
                         {s.avatar_url ? (
                           <img
                             src={s.avatar_url}
@@ -161,10 +161,8 @@ const VerifiedSuppliersSection = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/20 flex items-center justify-center">
-                            <span className="text-base sm:text-lg font-bold text-primary">
-                              {getInitials(displayName)}
-                            </span>
+                          <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                            <User className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground/60" strokeWidth={1.5} />
                           </div>
                         )}
                       </div>
