@@ -95,8 +95,10 @@ const DriverLiveMap = ({ delivery, driverName }: DriverLiveMapProps) => {
         attributionControl: false,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 18,
+      L.tileLayer("https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["0", "1", "2", "3"],
+        attribution: "© Google Maps",
       }).addTo(map);
 
       // Dropoff marker (buyer location)
