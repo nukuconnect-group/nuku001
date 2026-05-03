@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ShieldCheck, ArrowRight, Sprout, Store } from "lucide-react";
+import { ShieldCheck, ArrowRight, Sprout, Store, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
@@ -158,17 +158,24 @@ const VerifiedSuppliersBar = () => {
                     <div
                       key={s.id}
                       title={s.business_name || s.full_name || "Membre vérifié"}
-                      className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full border-2 border-card bg-muted overflow-hidden hover:scale-110 hover:z-10 transition-transform shadow-sm"
+                      className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full border-2 border-card overflow-hidden hover:scale-110 hover:z-10 transition-transform shadow-sm"
                     >
-                      <img
-                        src={s.avatar_url || defaultAvatar}
-                        alt={s.business_name || s.full_name || "Membre"}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = defaultAvatar;
-                        }}
-                      />
+                      {s.avatar_url ? (
+                        <img
+                          src={s.avatar_url}
+                          alt={s.business_name || s.full_name || "Membre"}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                            (e.currentTarget.parentElement as HTMLElement).classList.add("bg-transparent");
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
+                          <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground/60" strokeWidth={1.5} />
+                        </div>
+                      )}
                       {s.is_verified && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center">
                           <ShieldCheck className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
