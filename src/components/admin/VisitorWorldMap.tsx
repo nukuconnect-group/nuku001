@@ -49,8 +49,10 @@ const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }>
   "Mauritanie": { lat: 21.0, lng: -10.9, flag: "🇲🇷" },
 };
 
+interface CountryItem { country: string; visits?: number; count?: number; unique_visitors?: number }
+
 interface VisitorWorldMapProps {
-  countryData: { country: string; count: number }[];
+  countryData: CountryItem[];
   onLiveVisit?: (country: string | null) => void;
 }
 
@@ -59,8 +61,10 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
   const [lastLiveCountry, setLastLiveCountry] = useState<string | null>(null);
   const [liveCounter, setLiveCounter] = useState(0);
 
-  const totalVisits = useMemo(() => countryData.reduce((s, c) => s + c.count, 0), [countryData]);
-  const maxCount = useMemo(() => Math.max(...countryData.map(c => c.count), 1), [countryData]);
+  const getVisits = (c: CountryItem) => Number(c.visits || c.count || 0);
+  const totalVisits = useMemo(() => countryData.reduce((s, c) => s + getVisits(c), 0), [countryData]);
+  const totalUniqueVisitors = useMemo(() => countryData.reduce((s, c) => s + Number(c.unique_visitors || 0), 0), [countryData]);
+  const maxCount = useMemo(() => Math.max(...countryData.map(c => getVisits(c)), 1), [countryData]);
 
   const markers = useMemo(() =>
     countryData
