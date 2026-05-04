@@ -216,7 +216,8 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
 
             <div className="space-y-2">
               {countryData.map((c, i) => {
-                const pct = totalVisits > 0 ? Math.round((c.count / totalVisits) * 100) : 0;
+                const v = getVisits(c);
+                const pct = totalVisits > 0 ? Math.round((v / totalVisits) * 100) : 0;
                 const coords = COUNTRY_COORDS[c.country];
                 return (
                   <div key={i} className="flex items-center gap-2">
@@ -224,7 +225,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-xs mb-0.5">
                         <span className="font-medium truncate">{c.country}</span>
-                        <span className="text-muted-foreground flex-shrink-0">{c.count} ({pct}%)</span>
+                        <span className="text-muted-foreground flex-shrink-0">{v} visites • {c.unique_visitors || 0} visiteurs ({pct}%)</span>
                       </div>
                       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
