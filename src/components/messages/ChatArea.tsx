@@ -286,7 +286,12 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       cancelledRef.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       recordStreamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+      // Try supported MIME types
+      const mimeType = ["audio/webm", "audio/ogg", "audio/mp4", "audio/wav", ""].find(
+        m => !m || MediaRecorder.isTypeSupported(m)
+      ) || "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const actualMime = recorder.mimeType || "audio/webm";
       const chunks: Blob[] = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.onstop = () => {
@@ -295,7 +300,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         stopVisualizer();
         if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
         const duration = (Date.now() - recordStartRef.current) / 1000;
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const blob = new Blob(chunks, { type: actualMime });
         if (cancelledRef.current || duration < 0.5) {
           setRecordSeconds(0); setWaveform([]); setIsRecording(false); return;
         }
