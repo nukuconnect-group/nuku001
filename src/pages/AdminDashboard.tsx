@@ -754,19 +754,26 @@ const AdminDashboard = () => {
                                 <span className="text-xs flex items-center gap-1.5">
                                   <Globe className="w-3 h-3 text-muted-foreground" />{c.country}
                                 </span>
-                                <Badge variant="secondary" className="text-[10px]">{c.count}</Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px]">{c.unique_visitors || 0} visiteurs</Badge>
+                                  <Badge variant="secondary" className="text-[10px]">{c.visits || c.count} visites</Badge>
+                                </div>
                               </div>
                             ))}
                           </div>
                           {cityData.length > 0 && (
                             <div>
                               <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Villes</p>
-                              {cityData.slice(0, 8).map((c: any, i: number) => (
+                              {cityData.slice(0, 10).map((c: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
                                   <span className="text-xs flex items-center gap-1.5">
                                     <MapPin className="w-3 h-3 text-muted-foreground" />{c.city}
+                                    <span className="text-[9px] text-muted-foreground">({c.country})</span>
                                   </span>
-                                  <Badge variant="secondary" className="text-[10px]">{c.count}</Badge>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-[9px]">{c.unique_visitors || 0} visiteurs</Badge>
+                                    <Badge variant="secondary" className="text-[10px]">{c.visits || c.count} visites</Badge>
+                                  </div>
                                 </div>
                               ))}
                             </div>
