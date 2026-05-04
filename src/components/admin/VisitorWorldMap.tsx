@@ -109,7 +109,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
           </span>
         </CardTitle>
         <CardDescription className="text-[11px]">
-          {countryData.length} pays • {totalVisits} visites totales
+          {countryData.length} pays • {totalVisits} visites • {totalUniqueVisitors} visiteurs uniques
           {liveCounter > 0 && (
             <span className="ml-1 text-primary">• +{liveCounter} en direct{lastLiveCountry ? ` (dernier: ${lastLiveCountry})` : ""}</span>
           )}
