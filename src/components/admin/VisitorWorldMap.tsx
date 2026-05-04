@@ -49,8 +49,10 @@ const COUNTRY_COORDS: Record<string, { lat: number; lng: number; flag: string }>
   "Mauritanie": { lat: 21.0, lng: -10.9, flag: "🇲🇷" },
 };
 
+interface CountryItem { country: string; visits?: number; count?: number; unique_visitors?: number }
+
 interface VisitorWorldMapProps {
-  countryData: { country: string; count: number }[];
+  countryData: CountryItem[];
   onLiveVisit?: (country: string | null) => void;
 }
 
@@ -59,16 +61,19 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
   const [lastLiveCountry, setLastLiveCountry] = useState<string | null>(null);
   const [liveCounter, setLiveCounter] = useState(0);
 
-  const totalVisits = useMemo(() => countryData.reduce((s, c) => s + c.count, 0), [countryData]);
-  const maxCount = useMemo(() => Math.max(...countryData.map(c => c.count), 1), [countryData]);
+  const getVisits = (c: CountryItem) => Number(c.visits || c.count || 0);
+  const totalVisits = useMemo(() => countryData.reduce((s, c) => s + getVisits(c), 0), [countryData]);
+  const totalUniqueVisitors = useMemo(() => countryData.reduce((s, c) => s + Number(c.unique_visitors || 0), 0), [countryData]);
+  const maxCount = useMemo(() => Math.max(...countryData.map(c => getVisits(c)), 1), [countryData]);
 
   const markers = useMemo(() =>
     countryData
       .filter(c => COUNTRY_COORDS[c.country])
       .map(c => ({
         ...c,
+        visitCount: getVisits(c),
         coords: COUNTRY_COORDS[c.country],
-        radius: Math.max(8, Math.min(30, (c.count / maxCount) * 30)),
+        radius: Math.max(8, Math.min(30, (getVisits(c) / maxCount) * 30)),
       })),
     [countryData, maxCount]
   );
@@ -104,7 +109,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
           </span>
         </CardTitle>
         <CardDescription className="text-[11px]">
-          {countryData.length} pays • {totalVisits} visites totales
+          {countryData.length} pays • {totalVisits} visites • {totalUniqueVisitors} visiteurs uniques
           {liveCounter > 0 && (
             <span className="ml-1 text-primary">• +{liveCounter} en direct{lastLiveCountry ? ` (dernier: ${lastLiveCountry})` : ""}</span>
           )}
@@ -156,7 +161,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                     className: "visitor-badge-icon",
                     html: `<div style="display:flex;align-items:center;gap:4px;background:hsl(var(--background));border:2px solid hsl(var(--primary));border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:700;color:hsl(var(--foreground));box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;font-family:system-ui;">
                       <span style="font-size:13px;">${m.coords.flag}</span>
-                      <span>${m.count}</span>
+                      <span>${m.visitCount}</span>
                     </div>`,
                     iconSize: [60, 24],
                     iconAnchor: [30, 12],
@@ -176,16 +181,17 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                       <Marker position={[m.coords.lat, m.coords.lng]} icon={badgeIcon}>
                         <Tooltip direction="top" offset={[0, -10]} opacity={1}>
                           <div className="font-sans text-xs">
-                            <strong>{m.country}</strong> — {m.count} visites
+                            <strong>{m.country}</strong> — {m.visitCount} visites • {m.unique_visitors || 0} visiteurs
                           </div>
                         </Tooltip>
                         <Popup>
                           <div className="text-center font-sans">
                             <span className="text-2xl">{m.coords.flag}</span>
                             <div className="font-semibold mt-1">{m.country}</div>
-                            <div className="text-sm text-muted-foreground">{m.count} visites</div>
+                            <div className="text-sm text-muted-foreground">{m.visitCount} visites</div>
+                            <div className="text-sm text-muted-foreground">{m.unique_visitors || 0} visiteurs uniques</div>
                             <div className="text-[11px] text-muted-foreground mt-1">
-                              {totalVisits > 0 ? Math.round((m.count / totalVisits) * 100) : 0}% du total
+                              {totalVisits > 0 ? Math.round((m.visitCount / totalVisits) * 100) : 0}% du total
                             </div>
                           </div>
                         </Popup>
@@ -210,7 +216,8 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
 
             <div className="space-y-2">
               {countryData.map((c, i) => {
-                const pct = totalVisits > 0 ? Math.round((c.count / totalVisits) * 100) : 0;
+                const v = getVisits(c);
+                const pct = totalVisits > 0 ? Math.round((v / totalVisits) * 100) : 0;
                 const coords = COUNTRY_COORDS[c.country];
                 return (
                   <div key={i} className="flex items-center gap-2">
@@ -218,7 +225,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-xs mb-0.5">
                         <span className="font-medium truncate">{c.country}</span>
-                        <span className="text-muted-foreground flex-shrink-0">{c.count} ({pct}%)</span>
+                        <span className="text-muted-foreground flex-shrink-0">{v} visites • {c.unique_visitors || 0} visiteurs ({pct}%)</span>
                       </div>
                       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />

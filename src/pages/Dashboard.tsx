@@ -396,7 +396,24 @@ const Dashboard = () => {
                 <SupplierAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} onAddProduct={openPublishFlow} />
               </div>
             </details>
-          )}
+           )}
+
+          {/* Besoins d'achat — Section visible pour les fournisseurs */}
+          <Card className="mb-4 sm:mb-6 border-accent/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-accent-foreground" />
+                Besoins d'achat récents
+                <Badge variant="secondary" className="text-[9px] ml-auto">Marketplace</Badge>
+              </CardTitle>
+              <CardDescription className="text-[11px]">
+                Les acheteurs recherchent ces produits — proposez vos stocks directement.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <DemandsList limit={6} />
+            </CardContent>
+          </Card>
 
           {/* Delivery Tracking Widget */}
           {profile && (
