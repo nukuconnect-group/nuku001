@@ -121,17 +121,16 @@ const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
       });
       if (messageError) throw messageError;
 
-      // Notify the demand buyer
-      const demandUserProfile = demand.profile;
+      // Notify the demand buyer (non-blocking, don't fail the flow)
       if (demand.user_id) {
-        await supabase.from("notifications").insert({
+        supabase.from("notifications").insert({
           user_id: demand.user_id,
           type: "demand",
           title: mode === "offer" ? "📦 Nouvelle proposition reçue !" : "💬 Nouveau message sur votre demande",
           description: mode === "offer"
             ? `${myProfile.full_name || "Un fournisseur"} propose ${offerQuantity} ${demand.unit || "unité"} pour "${demand.title}".`
             : `${myProfile.full_name || "Un fournisseur"} vous a contacté au sujet de "${demand.title}".`,
-        });
+        }).then(({ error }) => { if (error) console.warn("Notification insert failed:", error.message); });
       }
 
       toast({
