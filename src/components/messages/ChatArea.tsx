@@ -231,10 +231,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const fileName = `${user.id}/voice-${conversation.id}-${Date.now()}.webm`;
+      const ext = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : blob.type.includes("wav") ? "wav" : "webm";
+      const fileName = `${user.id}/voice-${conversation.id}-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("chat-attachments")
-        .upload(fileName, blob, { contentType: "audio/webm", upsert: false });
+        .upload(fileName, blob, { contentType: blob.type || "audio/webm", upsert: false });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(fileName);
       onSend(`🎙️ Message vocal (${Math.round(durationSec)}s)\n[voice:${urlData.publicUrl}]`, replyTo?.id);
