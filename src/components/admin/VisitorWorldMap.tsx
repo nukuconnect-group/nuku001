@@ -161,7 +161,7 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                     className: "visitor-badge-icon",
                     html: `<div style="display:flex;align-items:center;gap:4px;background:hsl(var(--background));border:2px solid hsl(var(--primary));border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:700;color:hsl(var(--foreground));box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;font-family:system-ui;">
                       <span style="font-size:13px;">${m.coords.flag}</span>
-                      <span>${m.count}</span>
+                      <span>${m.visitCount}</span>
                     </div>`,
                     iconSize: [60, 24],
                     iconAnchor: [30, 12],
