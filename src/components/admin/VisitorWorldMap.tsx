@@ -71,8 +71,9 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
       .filter(c => COUNTRY_COORDS[c.country])
       .map(c => ({
         ...c,
+        visitCount: getVisits(c),
         coords: COUNTRY_COORDS[c.country],
-        radius: Math.max(8, Math.min(30, (c.count / maxCount) * 30)),
+        radius: Math.max(8, Math.min(30, (getVisits(c) / maxCount) * 30)),
       })),
     [countryData, maxCount]
   );
