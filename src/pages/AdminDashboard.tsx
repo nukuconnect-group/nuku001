@@ -460,26 +460,28 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Visiteurs par pays — vraie carte détaillée */}
+                {/* Visiteurs par pays — données réelles */}
                 <Card>
                   <CardHeader className="p-3 sm:p-4 pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Globe className="w-4 h-4 text-primary" />Visiteurs par pays
                     </CardTitle>
                     <CardDescription className="text-[11px]">
-                      Détail des visites, part de couverture et ville principale
+                      Nombre de visites et visiteurs uniques par pays
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-3 sm:p-4 pt-0">
                     {countryData.length > 0 ? (
-                      <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                         {(() => {
-                          const total = countryData.reduce((s: number, c: any) => s + Number(c.count || 0), 0);
-                          return countryData.slice(0, 8).map((c: any, i: number) => {
-                            const pct = total > 0 ? Math.round((Number(c.count) / total) * 100) : 0;
+                          const totalVisits = countryData.reduce((s: number, c: any) => s + Number(c.visits || c.count || 0), 0);
+                          return countryData.slice(0, 10).map((c: any, i: number) => {
+                            const visits = Number(c.visits || c.count || 0);
+                            const uniqueV = Number(c.unique_visitors || 0);
+                            const pct = totalVisits > 0 ? Math.round((visits / totalVisits) * 100) : 0;
                             const topCity = (cityData || [])
-                              .filter((ci: any) => !c.country_code || ci.country_code === c.country_code)
-                              .sort((a: any, b: any) => Number(b.count) - Number(a.count))[0];
+                              .filter((ci: any) => ci.country === c.country)
+                              .sort((a: any, b: any) => Number(b.visits || b.count || 0) - Number(a.visits || a.count || 0))[0];
                             return (
                               <div key={i} className="p-2 rounded-lg bg-muted/40 border border-border/40">
                                 <div className="flex items-center justify-between gap-2 mb-1">
@@ -488,17 +490,22 @@ const AdminDashboard = () => {
                                     <span className="truncate">{c.country || "Inconnu"}</span>
                                   </span>
                                   <span className="text-[10px] font-semibold text-primary flex-shrink-0">
-                                    {c.count} ({pct}%)
+                                    {visits} visites ({pct}%)
                                   </span>
                                 </div>
                                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-1">
                                   <div className="h-full rounded-full bg-primary/70 transition-all" style={{ width: `${pct}%` }} />
                                 </div>
-                                {topCity && (
-                                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                    <MapPin className="w-2.5 h-2.5" />Top ville: <span className="font-medium">{topCity.city}</span>
-                                  </p>
-                                )}
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-2.5 h-2.5" />{uniqueV} visiteur{uniqueV > 1 ? "s" : ""} unique{uniqueV > 1 ? "s" : ""}
+                                  </span>
+                                  {topCity && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-2.5 h-2.5" />{topCity.city}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             );
                           });
