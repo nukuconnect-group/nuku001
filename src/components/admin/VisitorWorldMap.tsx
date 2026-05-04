@@ -181,16 +181,17 @@ const VisitorWorldMap = ({ countryData, onLiveVisit }: VisitorWorldMapProps) => 
                       <Marker position={[m.coords.lat, m.coords.lng]} icon={badgeIcon}>
                         <Tooltip direction="top" offset={[0, -10]} opacity={1}>
                           <div className="font-sans text-xs">
-                            <strong>{m.country}</strong> — {m.count} visites
+                            <strong>{m.country}</strong> — {m.visitCount} visites • {m.unique_visitors || 0} visiteurs
                           </div>
                         </Tooltip>
                         <Popup>
                           <div className="text-center font-sans">
                             <span className="text-2xl">{m.coords.flag}</span>
                             <div className="font-semibold mt-1">{m.country}</div>
-                            <div className="text-sm text-muted-foreground">{m.count} visites</div>
+                            <div className="text-sm text-muted-foreground">{m.visitCount} visites</div>
+                            <div className="text-sm text-muted-foreground">{m.unique_visitors || 0} visiteurs uniques</div>
                             <div className="text-[11px] text-muted-foreground mt-1">
-                              {totalVisits > 0 ? Math.round((m.count / totalVisits) * 100) : 0}% du total
+                              {totalVisits > 0 ? Math.round((m.visitCount / totalVisits) * 100) : 0}% du total
                             </div>
                           </div>
                         </Popup>
