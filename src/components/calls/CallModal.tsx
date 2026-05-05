@@ -32,6 +32,13 @@ export default function CallModal() {
 
   const isVideo = !!meta?.withVideo;
 
+  // Speaker toggle: use setSinkId when available
+  useEffect(() => {
+    if (audioRef.current && typeof (audioRef.current as any).setSinkId === "function") {
+      (audioRef.current as any).setSinkId(isSpeaker ? "default" : "").catch(() => {});
+    }
+  }, [isSpeaker]);
+
   useEffect(() => {
     if (audioRef.current && remoteStream) {
       audioRef.current.srcObject = remoteStream;
