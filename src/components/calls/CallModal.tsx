@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useCall } from "@/contexts/CallContext";
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Gauge, Wifi, WifiOff } from "lucide-react";
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Gauge, Wifi, WifiOff, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -23,12 +23,21 @@ export default function CallModal() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [showQualityDetails, setShowQualityDetails] = useState(false);
+  const [isSpeaker, setIsSpeaker] = useState(false);
+  const [videoSwapped, setVideoSwapped] = useState(false);
   const [orientation, setOrientation] = useState<"portrait" | "landscape">(
     typeof window !== "undefined" && window.matchMedia("(orientation: landscape)").matches
       ? "landscape" : "portrait"
   );
 
   const isVideo = !!meta?.withVideo;
+
+  // Speaker toggle: use setSinkId when available
+  useEffect(() => {
+    if (audioRef.current && typeof (audioRef.current as any).setSinkId === "function") {
+      (audioRef.current as any).setSinkId(isSpeaker ? "default" : "").catch(() => {});
+    }
+  }, [isSpeaker]);
 
   useEffect(() => {
     if (audioRef.current && remoteStream) {
@@ -101,30 +110,30 @@ export default function CallModal() {
       {/* Hidden audio element (always for fallback audio playback) */}
       <audio ref={audioRef} autoPlay playsInline />
 
-      {/* Remote video — fullscreen during in-call video, cadrage adaptatif portrait/paysage */}
+      {/* Main video (remote or local based on swap) */}
       {isVideo && isInCall && (
         <video
-          ref={remoteVideoRef}
+          ref={videoSwapped ? localVideoRef : remoteVideoRef}
           autoPlay
           playsInline
+          muted={videoSwapped}
           className={cn(
             "absolute inset-0 w-full h-full bg-black z-0 transition-[object-position] duration-300",
-            // En portrait on privilégie cover (remplit), en paysage on garde contain pour ne pas couper les visages
             orientation === "landscape" ? "object-contain" : "object-cover"
           )}
         />
       )}
 
-      {/* Local video preview (PiP) — visible whenever we have local video.
-          La position s'adapte à l'orientation pour rester hors des contrôles. */}
+      {/* PiP video (tap to swap) */}
       {isVideo && localStream && (
         <video
-          ref={localVideoRef}
+          ref={videoSwapped ? remoteVideoRef : localVideoRef}
           autoPlay
           playsInline
-          muted
+          muted={!videoSwapped}
+          onClick={() => isInCall && setVideoSwapped(!videoSwapped)}
           className={cn(
-            "absolute z-10 rounded-2xl border-2 border-white/30 shadow-xl object-cover bg-black transition-all duration-300",
+            "absolute z-10 rounded-2xl border-2 border-white/30 shadow-xl object-cover bg-black transition-all duration-300 cursor-pointer active:scale-95",
             isInCall
               ? orientation === "landscape"
                 ? "top-4 right-4 w-32 h-20 sm:w-44 sm:h-28"
@@ -239,6 +248,18 @@ export default function CallModal() {
                 aria-label={isMuted ? "Activer le micro" : "Couper le micro"}
               >
                 {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+              </Button>
+            )}
+            {isInCall && (
+              <Button
+                onClick={() => setIsSpeaker(!isSpeaker)}
+                className={cn(
+                  "w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg",
+                  isSpeaker ? "bg-emerald-500/80 hover:bg-emerald-500" : "bg-white/10 hover:bg-white/20"
+                )}
+                aria-label={isSpeaker ? "Désactiver le haut-parleur" : "Activer le haut-parleur"}
+              >
+                <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </Button>
             )}
             {isInCall && isVideo && (
