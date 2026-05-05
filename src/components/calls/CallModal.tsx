@@ -110,30 +110,30 @@ export default function CallModal() {
       {/* Hidden audio element (always for fallback audio playback) */}
       <audio ref={audioRef} autoPlay playsInline />
 
-      {/* Remote video — fullscreen during in-call video, cadrage adaptatif portrait/paysage */}
+      {/* Main video (remote or local based on swap) */}
       {isVideo && isInCall && (
         <video
-          ref={remoteVideoRef}
+          ref={videoSwapped ? localVideoRef : remoteVideoRef}
           autoPlay
           playsInline
+          muted={videoSwapped}
           className={cn(
             "absolute inset-0 w-full h-full bg-black z-0 transition-[object-position] duration-300",
-            // En portrait on privilégie cover (remplit), en paysage on garde contain pour ne pas couper les visages
             orientation === "landscape" ? "object-contain" : "object-cover"
           )}
         />
       )}
 
-      {/* Local video preview (PiP) — visible whenever we have local video.
-          La position s'adapte à l'orientation pour rester hors des contrôles. */}
+      {/* PiP video (tap to swap) */}
       {isVideo && localStream && (
         <video
-          ref={localVideoRef}
+          ref={videoSwapped ? remoteVideoRef : localVideoRef}
           autoPlay
           playsInline
-          muted
+          muted={!videoSwapped}
+          onClick={() => isInCall && setVideoSwapped(!videoSwapped)}
           className={cn(
-            "absolute z-10 rounded-2xl border-2 border-white/30 shadow-xl object-cover bg-black transition-all duration-300",
+            "absolute z-10 rounded-2xl border-2 border-white/30 shadow-xl object-cover bg-black transition-all duration-300 cursor-pointer active:scale-95",
             isInCall
               ? orientation === "landscape"
                 ? "top-4 right-4 w-32 h-20 sm:w-44 sm:h-28"
