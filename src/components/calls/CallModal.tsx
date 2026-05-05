@@ -250,6 +250,18 @@ export default function CallModal() {
                 {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
               </Button>
             )}
+            {isInCall && (
+              <Button
+                onClick={() => setIsSpeaker(!isSpeaker)}
+                className={cn(
+                  "w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg",
+                  isSpeaker ? "bg-emerald-500/80 hover:bg-emerald-500" : "bg-white/10 hover:bg-white/20"
+                )}
+                aria-label={isSpeaker ? "Désactiver le haut-parleur" : "Activer le haut-parleur"}
+              >
+                <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </Button>
+            )
             {isInCall && isVideo && (
               <Button
                 onClick={toggleCamera}
