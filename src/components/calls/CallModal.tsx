@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useCall } from "@/contexts/CallContext";
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Gauge, Wifi, WifiOff } from "lucide-react";
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Gauge, Wifi, WifiOff, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,8 @@ export default function CallModal() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [showQualityDetails, setShowQualityDetails] = useState(false);
+  const [isSpeaker, setIsSpeaker] = useState(false);
+  const [videoSwapped, setVideoSwapped] = useState(false);
   const [orientation, setOrientation] = useState<"portrait" | "landscape">(
     typeof window !== "undefined" && window.matchMedia("(orientation: landscape)").matches
       ? "landscape" : "portrait"
