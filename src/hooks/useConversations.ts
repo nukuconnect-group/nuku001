@@ -355,7 +355,21 @@ export function useConversations() {
         }
         scheduleRefetch();
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, scheduleRefetch)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
+        // When messages are marked as read (is_read update), update unread count locally
+        const m = payload.new as any;
+        if (m.is_read && cache.profileId && m.sender_id !== cache.profileId) {
+          // This message was just marked as read — reduce unread count locally
+          setConversations((prev) => {
+            const next = prev.map((c) => {
+              if (c.id !== m.conversation_id) return c;
+              return { ...c, unread: Math.max(0, (c.unread || 0) - 1) };
+            });
+            cache.conversations = next;
+            return next;
+          });
+        }
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "delivery_messages" }, (payload) => {
         const m = payload.new as any;
