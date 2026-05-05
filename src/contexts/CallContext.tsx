@@ -131,18 +131,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
    */
   const playRingtone = useCallback((mode: "incoming" | "outgoing" = "incoming") => {
     try {
-      // Audio
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx: AudioContext = new AudioCtx();
-      // Resume si suspendu (autoplay policy)
       ctx.resume?.().catch(() => {});
 
       let cancelled = false;
+      let loopTimeout: number | null = null;
       const playPattern = () => {
         if (cancelled) return;
         const now = ctx.currentTime;
-        // Deux "rings" successifs (440Hz pour entrant, 480Hz/620Hz alterné pour sortant)
         const freqs = mode === "incoming" ? [880, 880] : [480, 620];
         const ringDuration = 0.4;
         const gap = 0.15;
@@ -160,9 +158,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
           osc.start(start);
           osc.stop(start + ringDuration + 0.02);
         });
-        // Replay toute les ~2s (rythme téléphone)
         if (!cancelled) {
-          window.setTimeout(playPattern, 2000);
+          loopTimeout = window.setTimeout(playPattern, 2000);
         }
       };
       playPattern();
@@ -171,11 +168,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
         ctx,
         stop: () => {
           cancelled = true;
+          if (loopTimeout) { clearTimeout(loopTimeout); loopTimeout = null; }
           try { ctx.close(); } catch {}
         },
       };
 
-      // Vibration mobile en pattern téléphone (appel entrant uniquement)
       if (mode === "incoming" && typeof navigator !== "undefined" && "vibrate" in navigator) {
         const pattern = [600, 400, 600, 1500];
         navigator.vibrate?.(pattern);
