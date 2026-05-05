@@ -61,18 +61,23 @@ const CategoriesSection = () => {
   const { data: products = [] } = useProducts();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeCategories = categories.filter((c: any) => c.is_active).slice(0, 8);
-
   const productCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    activeCategories.forEach((cat: any) => {
+    categories.filter((c: any) => c.is_active).forEach((cat: any) => {
       const catName = cat.name.toLowerCase();
       counts[cat.id] = products.filter(
         (p: any) => p.category?.toLowerCase() === catName
       ).length;
     });
     return counts;
-  }, [activeCategories, products]);
+  }, [categories, products]);
+
+  // Only show categories that have products, limit to 8
+  const activeCategories = useMemo(() => {
+    return categories
+      .filter((c: any) => c.is_active && (productCounts[c.id] || 0) > 0)
+      .slice(0, 8);
+  }, [categories, productCounts]);
 
   if (isLoading) {
     return (

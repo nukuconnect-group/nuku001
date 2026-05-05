@@ -93,24 +93,7 @@ const SmartWatermarkedImage = ({
           userSelect: "none",
         } as React.CSSProperties}
       />
-      {/* Always-visible CSS overlay as visual guarantee during load & fallback */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center justify-center select-none z-10"
-      >
-        <img
-          src={watermarkLogo}
-          alt=""
-          draggable={false}
-          className="opacity-40"
-          style={{
-            width: `${watermarkScale * 100}%`,
-            maxWidth: "75%",
-            filter:
-              "drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 1px rgba(0,0,0,0.25))",
-          }}
-        />
-      </div>
+      {/* Watermark overlay removed from card view — only shown when image is zoomed/clicked */}
     </div>
   );
 };
