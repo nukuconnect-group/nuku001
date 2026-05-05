@@ -347,11 +347,12 @@ const ProductDetail = () => {
               <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
                 <DialogContent className="max-w-[95vw] sm:max-w-3xl p-0 bg-black/95 border-none overflow-hidden">
                   <div className="relative w-full h-[80vh] flex items-center justify-center touch-pinch-zoom">
-                    <img
-                      src={images[currentImageIndex] || product.image}
+                    <SmartWatermarkedImage
+                      originalSrc={images[currentImageIndex] || product.image}
                       alt={product.name}
                       className="max-w-full max-h-full object-contain select-none"
-                      style={{ touchAction: "pinch-zoom" }}
+                      wrapperClassName="flex items-center justify-center"
+                      style={{ touchAction: "pinch-zoom" } as React.CSSProperties}
                     />
                     {images.length > 1 && (
                       <>
