@@ -229,7 +229,7 @@ const ProductDetail = () => {
   const totalPrice = product.price * quantity;
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
       <SEO
         url={`/produit/${product.slug || id}`}
         title={product.name}
@@ -263,8 +263,8 @@ const ProductDetail = () => {
           </button>
         </div>
 
-        <div className="container mx-auto px-3 sm:px-4 pb-6 sm:pb-12">
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10">
+        <div className="container mx-auto px-3 sm:px-4 pb-6 sm:pb-12 overflow-hidden">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10 min-w-0">
 
             {/* ===== IMAGE SECTION ===== */}
             <div className="space-y-2 sm:space-y-3">
@@ -465,7 +465,7 @@ const ProductDetail = () => {
             </div>
 
             {/* ===== DETAILS SECTION ===== */}
-            <div className="space-y-4 sm:space-y-5 px-1 sm:px-0">
+            <div className="space-y-4 sm:space-y-5 px-1 sm:px-0 min-w-0 overflow-hidden">
               {/* Category + location + currency */}
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary" className="capitalize text-[10px] sm:text-xs">{product.category}</Badge>
