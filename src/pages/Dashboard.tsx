@@ -237,9 +237,8 @@ const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
-                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/40 text-primary">Fournisseur</Badge>
-                  {profile?.business_name || "Espace fournisseur"}
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  {profile?.business_name || "Bienvenue dans votre espace fournisseur"}
                 </p>
               </div>
             </div>
@@ -399,7 +398,7 @@ const Dashboard = () => {
             </details>
            )}
 
-          {/* Besoins d'achat — Section compacte miniature pour les fournisseurs */}
+          {/* Besoins d'achat — Section visible pour les fournisseurs */}
           <Card className="mb-4 sm:mb-6 border-accent/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -412,7 +411,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <DemandsList limit={4} compact />
+              <DemandsList limit={6} />
             </CardContent>
           </Card>
 

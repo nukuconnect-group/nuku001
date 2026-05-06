@@ -8,30 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket, History, Trash2, Edit } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket, History } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 
 interface DemandsListProps {
   category?: string;
   limit?: number;
   searchQuery?: string;
-  /** Show only current user's demands (for buyer dashboard) */
-  ownerOnly?: boolean;
-  /** Compact card style for dashboard embeds */
-  compact?: boolean;
 }
 
-const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact = false }: DemandsListProps) => {
+const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useProfile();
   const { data: demands, isLoading } = useDemands(category);
   const { formatPrice } = useLanguage();
-  const queryClient = useQueryClient();
-  const [deleting, setDeleting] = useState<string | null>(null);
   const [offerValues, setOfferValues] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
@@ -153,27 +146,11 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
     }
   };
 
-  const handleDeleteDemand = async (demandId: string) => {
-    setDeleting(demandId);
-    const { error } = await supabase.from("demands").delete().eq("id", demandId);
-    if (error) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Demande supprimée" });
-      queryClient.invalidateQueries({ queryKey: ["demands"] });
-    }
-    setDeleting(null);
-  };
-
   if (isLoading) {
     return <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>;
   }
 
   let items = demands || [];
-  // Filter to owner's demands only when in buyer dashboard
-  if (ownerOnly && profile) {
-    items = items.filter((d) => d.profile_id === profile.id);
-  }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     items = items.filter((d) =>
@@ -185,10 +162,7 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
   }
   if (limit) items = items.slice(0, limit);
 
-  if (items.length === 0) {
-    if (ownerOnly) return <p className="text-xs text-muted-foreground text-center py-3">Aucune demande publiée.</p>;
-    return null;
-  }
+  if (items.length === 0) return null;
 
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
@@ -203,54 +177,10 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
 
   return (
     <>
-      <div className={compact
-        ? "grid grid-cols-1 gap-2"
-        : "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3"
-      }>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {items.map((demand) => {
           const isOwner = !!profile && demand.profile_id === profile.id;
           const isBoosted = (demand as any).is_boosted && (!(demand as any).boosted_until || new Date((demand as any).boosted_until) > new Date());
-
-          // Compact mode: horizontal mini card for dashboard
-          if (compact) {
-            return (
-              <div
-                key={demand.id}
-                className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:bg-muted/50 cursor-pointer transition-all"
-                onClick={() => setSelectedDemand(demand)}
-              >
-                {(demand as any).image_url ? (
-                  <img src={(demand as any).image_url} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <Package className="w-4 h-4 text-accent/50" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-foreground truncate">{demand.title}</p>
-                  <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-                    {demand.budget && <span className="font-medium text-primary">{formatPrice(demand.budget)}</span>}
-                    {demand.quantity && <span>• {demand.quantity} {demand.unit}</span>}
-                  </div>
-                </div>
-                {isOwner && (
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={(e) => { e.stopPropagation(); handleDeleteDemand(demand.id); }}
-                      disabled={deleting === demand.id}
-                    >
-                      {deleting === demand.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3 text-destructive" />}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          // Standard card (marketplace grid)
           return (
           <Card
             key={demand.id}
@@ -261,62 +191,67 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
             {(demand as any).image_url ? (
               <div className="relative w-full aspect-[4/3] bg-muted">
                 <img src={(demand as any).image_url} alt={demand.title} className="absolute inset-0 w-full h-full object-cover" />
-                <Badge className="absolute top-1 left-1 bg-accent text-accent-foreground text-[8px] px-1 py-0 font-bold shadow">ACHAT</Badge>
+                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
                 {isBoosted && (
-                  <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-[8px] px-1 py-0 font-bold shadow flex items-center gap-0.5">
-                    <Rocket className="w-2 h-2" /> BOOST
+                  <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] px-1.5 py-0 font-bold shadow flex items-center gap-1">
+                    <Rocket className="w-2.5 h-2.5" /> BOOST
                   </Badge>
                 )}
               </div>
             ) : (
               <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/5 flex items-center justify-center">
-                <Package className="w-8 h-8 text-accent/40" />
-                <Badge className="absolute top-1 left-1 bg-accent text-accent-foreground text-[8px] px-1 py-0 font-bold shadow">ACHAT</Badge>
+                <Package className="w-10 h-10 text-accent/40" />
+                <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 font-bold shadow">ACHAT</Badge>
                 {isBoosted && (
-                  <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-[8px] px-1 py-0 font-bold shadow flex items-center gap-0.5">
-                    <Rocket className="w-2 h-2" /> BOOST
+                  <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] px-1.5 py-0 font-bold shadow flex items-center gap-1">
+                    <Rocket className="w-2.5 h-2.5" /> BOOST
                   </Badge>
                 )}
               </div>
             )}
 
-            <CardContent className="p-2 sm:p-3 flex-1 flex flex-col">
-              <h4 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1">{demand.title}</h4>
+            <CardContent className="p-3 flex-1 flex flex-col">
+              {/* User */}
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {demand.profile?.avatar_url ? (
+                    <img src={demand.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-3 h-3 text-accent-foreground" />
+                  )}
+                </div>
+                <span className="text-[10px] font-medium text-foreground truncate">{demand.profile?.full_name || "Utilisateur"}</span>
+                <span className="text-[9px] text-muted-foreground ml-auto flex-shrink-0">{timeAgo(demand.created_at)}</span>
+              </div>
 
-              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[8px] sm:text-[9px] text-muted-foreground mt-auto">
+              <h4 className="font-semibold text-xs text-foreground line-clamp-2 mb-1">{demand.title}</h4>
+
+              {demand.description && (
+                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed mb-1.5">{demand.description}</p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-muted-foreground mt-auto">
                 {demand.quantity && <span className="whitespace-nowrap">📦 {demand.quantity} {demand.unit}</span>}
-                {demand.budget && <span className="whitespace-nowrap font-medium text-primary">{formatPrice(demand.budget)}</span>}
+                {demand.budget && <span className="whitespace-nowrap">💰 {formatPrice(demand.budget)}</span>}
                 {demand.location && (
                   <span className="flex items-center gap-0.5 whitespace-nowrap">
-                    <MapPin className="w-2 h-2 flex-shrink-0" />{demand.location}
+                    <MapPin className="w-2.5 h-2.5 flex-shrink-0" />{demand.location}
                   </span>
                 )}
               </div>
 
               {isOwner && (
-                <div className="flex gap-1 mt-1.5">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-[9px] px-1.5 gap-0.5 text-destructive"
-                    onClick={(e) => { e.stopPropagation(); handleDeleteDemand(demand.id); }}
-                    disabled={deleting === demand.id}
-                  >
-                    {deleting === demand.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Trash2 className="w-2.5 h-2.5" />}
-                    Suppr.
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={isBoosted ? "outline" : "hero"}
-                    className="h-6 text-[9px] px-1.5 gap-0.5 ml-auto"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setBoostDemand({ id: demand.id, title: demand.title, category: demand.category });
-                    }}
-                  >
-                    <Rocket className="w-2.5 h-2.5" /> Boost
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant={isBoosted ? "outline" : "hero"}
+                  className="mt-2 h-7 text-[10px] gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setBoostDemand({ id: demand.id, title: demand.title, category: demand.category });
+                  }}
+                >
+                  <Rocket className="w-3 h-3" /> {isBoosted ? "Re-booster" : "Booster"}
+                </Button>
               )}
             </CardContent>
           </Card>

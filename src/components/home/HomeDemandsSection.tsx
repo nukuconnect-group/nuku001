@@ -126,7 +126,7 @@ const HomeDemandsSection = () => {
         <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-3 -mx-3 px-3 sm:-mx-4 sm:px-4 snap-x snap-mandatory scrollbar-hide">
           {finalItems.map((d) => {
             const isDemo = d.id.startsWith("demo-");
-            const linkHref = isDemo ? "/marketplace?tab=demands" : `/marketplace?tab=demands&demandId=${d.id}`;
+            const linkHref = isDemo ? "/marketplace?tab=demands" : "/marketplace?tab=demands";
             return (
               <Link
                 key={d.id}
@@ -191,19 +191,20 @@ const HomeDemandsSection = () => {
           })}
         </div>
 
-        {/* "Voir plus" button — links to marketplace demands tab */}
-        <div className="flex justify-center mt-3">
-          <Link to="/marketplace?tab=demands">
+        {/* Pagination "Voir plus" */}
+        {hasMore && (
+          <div className="flex justify-center mt-3">
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="gap-1.5 text-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               Voir plus de demandes
             </Button>
-          </Link>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

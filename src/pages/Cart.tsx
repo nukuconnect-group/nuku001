@@ -13,9 +13,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
+import { paymentMethods, validateMobileMoneyPhone } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
@@ -422,7 +422,15 @@ const Cart = () => {
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
-  // KKiaPay replaces Paygate polling — payment callbacks are handled inline in handleCheckout
+  usePaygatePolling({
+    identifier: paymentIdentifier,
+    enabled: pollingEnabled,
+    intervalMs: 5000,
+    maxAttempts: 60,
+    onCompleted: handlePaymentCompleted,
+    onFailed: handlePaymentFailed,
+    onExpired: handlePaymentExpired,
+  });
 
   // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
   const handleVerifyNow = useCallback(async () => {
@@ -509,6 +517,18 @@ const Cart = () => {
       return;
     }
 
+    // Validation Mobile Money (numéro + auto-détection du réseau)
+    const phoneValidation = validateMobileMoneyPhone(mobileNumber);
+    if (!phoneValidation.valid || !phoneValidation.network) {
+      toast({
+        title: "Numéro Mobile Money invalide",
+        description: phoneValidation.reason || "Vérifiez votre numéro avant de payer.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const detectedNetwork = phoneValidation.network;
+
     setIsCheckingOut(true);
     setPayStatus({ kind: "initiating" });
     try {
@@ -525,7 +545,7 @@ const Cart = () => {
       const identifier = `NUKU-${Date.now()}`;
       setPaymentIdentifier(identifier);
 
-      // Create orders BEFORE payment
+      // Create orders BEFORE payment so the webhook can find them by tx_reference
       const isValidUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
       const orderIds: string[] = [];
       for (const item of items) {
@@ -540,17 +560,21 @@ const Cart = () => {
           quantity: item.quantity,
           total_price: item.product.price * item.quantity,
           status: "pending",
-          delivery_method: deliveryMethod,
+          delivery_method: deliveryMethod, // 'pickup' | 'livreur' | 'international'
           notes: [
             `Client: ${buyerFullName} | ${billing.phone}`,
             deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
-            `Paiement: KKiaPay`,
+            `Paiement: ${selectedPayment?.name}`,
             selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "",
+            mobileNumber ? `Tél paiement: ${mobileNumber}` : "",
             `tx_ref: ${identifier}`,
           ].filter(Boolean).join(" | "),
         } as any).select("id").single();
 
-        if (orderErr) throw new Error("Erreur lors de la création de la commande.");
+        if (orderErr) {
+          console.error("Order insert error:", orderErr);
+          throw new Error("Erreur lors de la création de la commande.");
+        }
         if (orderData) orderIds.push(orderData.id);
       }
 
@@ -558,27 +582,35 @@ const Cart = () => {
       setPendingCheckoutData(checkoutData);
       pendingCheckoutRef.current = checkoutData;
 
-      // Open KKiaPay widget
-      openKKiaPay({
-        amount: finalTotal,
-        reason: `Commande NUKUCONNECT - ${identifier}`,
-        name: buyerFullName,
-        phone: billing.phone,
-        email: billing.email,
-        onSuccess: (data) => {
-          setPayStatus({ kind: "pending", message: "Finalisation de la commande..." });
-          handlePaymentCompleted(data);
-        },
-        onFailed: () => {
-          handlePaymentFailed();
+      const phoneDigits = cleanPhone(mobileNumber);
+      const { data, error } = await supabase.functions.invoke("paygate-init", {
+        body: {
+          amount: finalTotal,
+          description: `Commande NUKUCONNECT - ${finalTotal} FCFA`,
+          identifier,
+          phone_number: phoneDigits,
+          network: detectedNetwork,
+          // Mobile Money: paiement direct via push USSD (pas de redirection)
+          use_redirect: false,
         },
       });
 
+      if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Échec de l'initialisation du paiement.");
+      }
+
+      // Mobile Money direct: l'utilisateur reçoit une notification push sur son téléphone
+      setPollingEnabled(true);
       setPayStatus({
         kind: "pending",
-        message: "Complétez le paiement dans la fenêtre KKiaPay.",
+        message: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}. Le statut sera confirmé automatiquement.`,
       });
-      toast({ title: "💳 Paiement ouvert", description: "Complétez le paiement dans la fenêtre KKiaPay." });
+      toast({
+        title: "📱 Paiement initié",
+        description: `Validez la transaction sur votre téléphone ${detectedNetwork === "FLOOZ" ? "Moov Money" : "Mixx by Yas"}.`,
+      });
 
     } catch (error: any) {
       console.error("Checkout error:", error);

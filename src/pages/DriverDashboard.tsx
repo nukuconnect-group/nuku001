@@ -360,7 +360,7 @@ const DriverDashboard = () => {
       <Header />
       <DashboardLayout
         sidebarTitle="Espace Livreur"
-        sidebarSubtitle={`${profile?.full_name || "Mon compte"} • Livreur`}
+        sidebarSubtitle={profile?.full_name || "Mon compte"}
         items={driverSidebar}
         activeTab={activeTab}
         onTabChange={setActiveTab}
