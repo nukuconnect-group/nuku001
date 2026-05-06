@@ -24,7 +24,7 @@ interface DemandsListProps {
   compact?: boolean;
 }
 
-const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
+const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact = false }: DemandsListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useProfile();
