@@ -30,6 +30,8 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
   const { profile } = useProfile();
   const { data: demands, isLoading } = useDemands(category);
   const { formatPrice } = useLanguage();
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [offerValues, setOfferValues] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
