@@ -126,7 +126,7 @@ const HomeDemandsSection = () => {
         <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-3 -mx-3 px-3 sm:-mx-4 sm:px-4 snap-x snap-mandatory scrollbar-hide">
           {finalItems.map((d) => {
             const isDemo = d.id.startsWith("demo-");
-            const linkHref = isDemo ? "/marketplace?tab=demands" : "/marketplace?tab=demands";
+            const linkHref = isDemo ? "/marketplace?tab=demands" : `/marketplace?tab=demands&demandId=${d.id}`;
             return (
               <Link
                 key={d.id}
