@@ -153,11 +153,27 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
     }
   };
 
+  const handleDeleteDemand = async (demandId: string) => {
+    setDeleting(demandId);
+    const { error } = await supabase.from("demands").delete().eq("id", demandId);
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Demande supprimée" });
+      queryClient.invalidateQueries({ queryKey: ["demands"] });
+    }
+    setDeleting(null);
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>;
   }
 
   let items = demands || [];
+  // Filter to owner's demands only when in buyer dashboard
+  if (ownerOnly && profile) {
+    items = items.filter((d) => d.profile_id === profile.id);
+  }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     items = items.filter((d) =>
@@ -169,7 +185,10 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
   }
   if (limit) items = items.slice(0, limit);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (ownerOnly) return <p className="text-xs text-muted-foreground text-center py-3">Aucune demande publiée.</p>;
+    return null;
+  }
 
   const timeAgo = (date: string) => {
     const diff = Date.now() - new Date(date).getTime();
