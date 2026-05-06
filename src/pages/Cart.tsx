@@ -422,15 +422,7 @@ const Cart = () => {
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
-  usePaygatePolling({
-    identifier: paymentIdentifier,
-    enabled: pollingEnabled,
-    intervalMs: 5000,
-    maxAttempts: 60,
-    onCompleted: handlePaymentCompleted,
-    onFailed: handlePaymentFailed,
-    onExpired: handlePaymentExpired,
-  });
+  // KKiaPay replaces Paygate polling — payment callbacks are handled inline in handleCheckout
 
   // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
   const handleVerifyNow = useCallback(async () => {
