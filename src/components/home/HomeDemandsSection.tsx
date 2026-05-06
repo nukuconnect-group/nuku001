@@ -191,20 +191,19 @@ const HomeDemandsSection = () => {
           })}
         </div>
 
-        {/* Pagination "Voir plus" */}
-        {hasMore && (
-          <div className="flex justify-center mt-3">
+        {/* "Voir plus" button — links to marketplace demands tab */}
+        <div className="flex justify-center mt-3">
+          <Link to="/marketplace?tab=demands">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="gap-1.5 text-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               Voir plus de demandes
             </Button>
-          </div>
-        )}
+          </Link>
+        </div>
       </div>
     </section>
   );
