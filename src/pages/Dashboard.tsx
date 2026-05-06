@@ -237,8 +237,9 @@ const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  {profile?.business_name || "Bienvenue dans votre espace fournisseur"}
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/40 text-primary">Fournisseur</Badge>
+                  {profile?.business_name || "Espace fournisseur"}
                 </p>
               </div>
             </div>
