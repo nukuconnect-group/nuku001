@@ -322,7 +322,7 @@ const BuyerDashboard = () => {
               <CreateDemandModal open={showCreateDemand} onOpenChange={setShowCreateDemand} />
               <div className="mt-3 sm:mt-4">
                 <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
-                <DemandsList limit={3} />
+                <DemandsList limit={5} ownerOnly compact />
               </div>
             </CardContent>
           </Card>
