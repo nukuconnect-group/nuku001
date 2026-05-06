@@ -8,15 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket, History } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, User, Package, X, Calendar, Rocket, History, Trash2, Edit } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 
 interface DemandsListProps {
   category?: string;
   limit?: number;
   searchQuery?: string;
+  /** Show only current user's demands (for buyer dashboard) */
+  ownerOnly?: boolean;
+  /** Compact card style for dashboard embeds */
+  compact?: boolean;
 }
 
 const DemandsList = ({ category, limit, searchQuery }: DemandsListProps) => {
