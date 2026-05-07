@@ -122,7 +122,7 @@ const FormationDetail = () => {
   // Confirm enrollment after a successful payment via the secured edge function
   const confirmPaidEnrollment = async (transactionId: string) => {
     if (!formation) return;
-    setPayState({ kind: "verifying" });
+    setPayState({ kind: "pending", message: "Vérification en cours…" });
     const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
       body: { formation_id: formation.id, identifier: transactionId, tx_reference: transactionId },
     });
