@@ -120,37 +120,25 @@ const FormationDetail = () => {
   };
 
   // Confirm enrollment after a successful payment via the secured edge function
-  const confirmPaidEnrollment = async (identifier: string, tx_reference?: string) => {
+  const confirmPaidEnrollment = async (transactionId: string) => {
     if (!formation) return;
+    setPayState({ kind: "verifying" });
     const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
-      body: { formation_id: formation.id, identifier, tx_reference },
+      body: { formation_id: formation.id, identifier: transactionId, tx_reference: transactionId },
     });
     const result = (data as any) || {};
     if (error || !result.success) {
-      const state = (result.state || "unknown") as
-        | "pending" | "expired" | "failed" | "unknown" | string;
-      const msg =
-        result.user_message ||
-        result.error ||
-        error?.message ||
-        "Le paiement n'a pas encore été confirmé. Si le montant a été débité, le service va se synchroniser sous peu.";
-      const kind: "pending" | "expired" | "failed" | "unknown" =
-        state === "pending" ? "pending" :
-        state === "expired" ? "expired" :
-        state === "failed" ? "failed" : "unknown";
-      setPayState({ kind, message: msg });
-      toast({
-        title:
-          kind === "expired" ? "Paiement expiré" :
-          kind === "failed" ? "Paiement échoué" :
-          kind === "pending" ? "Paiement en attente" : "Statut inconnu",
-        description: msg,
-        variant: kind === "pending" || kind === "unknown" ? "default" : "destructive",
-      });
+      setPayState({ kind: "failed", message: result.error || error?.message || "Erreur inscription." });
+      toast({ title: "Erreur", description: result.error || "Erreur inscription.", variant: "destructive" });
       return;
     }
     setIsEnrolled(true);
     setPayOpen(false);
+    const successMsg = result.user_message || "Vous avez désormais accès à la formation.";
+    setPayState({ kind: "success", message: successMsg });
+    toast({ title: "Paiement confirmé ✅", description: successMsg });
+  };
+
   const initiatePayment = async () => {
     if (!userId || !formation || payInitiating) return;
     setPayInitiating(true);
@@ -174,22 +162,6 @@ const FormationDetail = () => {
     });
 
     setPayState({ kind: "pending", message: "Complétez le paiement dans la fenêtre KKiaPay." });
-  };
-
-  const confirmPaidEnrollment = async (transactionId: string, txRef?: string) => {
-    setPayState({ kind: "verifying" });
-    const { data: result, error: enrollErr } = await supabase.functions.invoke("enroll-paid-formation", {
-      body: { formation_id: formation?.id, payment_identifier: transactionId, tx_reference: txRef },
-    });
-    if (enrollErr || (result as any)?.error) {
-      setPayState({ kind: "failed", message: (result as any)?.error || enrollErr?.message || "Erreur inscription." });
-      return;
-    }
-    setIsEnrolled(true);
-    setPayOpen(false);
-    const successMsg = (result as any)?.user_message || "Vous avez désormais accès à la formation.";
-    setPayState({ kind: "success", message: successMsg });
-    toast({ title: "Paiement confirmé ✅", description: successMsg });
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
