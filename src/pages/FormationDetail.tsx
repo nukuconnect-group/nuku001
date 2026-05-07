@@ -378,6 +378,8 @@ const FormationDetail = () => {
                   </p>
                 </div>
               )}
+            </div>
+          )}
 
           {/* Visitors not logged-in on a paid formation */}
           {!userId && formation.is_paid && (
