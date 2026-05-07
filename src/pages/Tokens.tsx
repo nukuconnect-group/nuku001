@@ -7,27 +7,15 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Coins, Sparkles, Gift, Loader2, Phone, ShieldCheck, CheckCircle2, XCircle, Clock, History, TrendingUp, AlertCircle, Crown, Rocket, Star, ArrowRight, Zap } from "lucide-react";
+import { Coins, Sparkles, Gift, Loader2, ShieldCheck, CheckCircle2, Clock, History, TrendingUp, AlertCircle, Crown, Rocket, Star, ArrowRight, Zap } from "lucide-react";
 import { useTokens, TokenPack } from "@/hooks/useTokens";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import { useSubscription } from "@/hooks/useSubscription";
 import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
 import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
-import moovFloozLogo from "@/assets/moov-flooz.png";
-import mixxYasLogo from "@/assets/mixx-yas.png";
-import visaMcLogo from "@/assets/visa-mastercard.png";
+import { openKKiaPay } from "@/lib/kkiapay";
 
-const networks = [
-  { id: "FLOOZ", label: "Moov / Flooz", logo: moovFloozLogo },
-  { id: "TMONEY", label: "T-Money", logo: mixxYasLogo },
-  { id: "CARD", label: "Visa / MC", logo: visaMcLogo },
-];
-
-// Plans alignés sur /plans (compact, redirige vers /plans pour le checkout complet)
 const subscriptionPlans = [
   { id: "free", name: "Gratuit", price: 0, credits: 0, icon: Zap, popular: false, perks: ["5 produits", "Messagerie", "KYC vérifié"] },
   { id: "starter", name: "Starter", price: 2500, credits: 4, icon: Sparkles, popular: false, perks: ["15 produits", "4 crédits", "Traçabilité"] },
@@ -42,112 +30,50 @@ const Tokens = () => {
   const { subscription } = useSubscription();
   usePremiumAlerts(userId);
 
-  const [paymentStep, setPaymentStep] = useState<string | null>(null);
-  const [purchaseId, setPurchaseId] = useState<string | null>(null);
-  const [identifier, setIdentifier] = useState("");
-  const [network, setNetwork] = useState("");
-  const [phone, setPhone] = useState("");
-  const [pollingEnabled, setPollingEnabled] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<string | null>(null);
 
-  const onCompleted = useCallback(async (data: any) => {
-    setPollingEnabled(false);
-    if (!purchaseId) return;
-    const { error } = await supabase.rpc("complete_token_purchase", {
-      p_purchase_id: purchaseId,
-      p_payment_reference: data?.tx_reference ?? null,
-    });
-    if (error) {
-      toast({ title: "Erreur crédit", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "🎁 Jetons crédités !", description: "Votre solde a été mis à jour." });
-      await refresh();
-    }
-    setPaymentStep(null);
-    setPurchaseId(null);
-    setSubmitting(false);
-  }, [purchaseId, toast, refresh]);
-
-  const onFailed = useCallback(() => {
-    setPollingEnabled(false);
-    setSubmitting(false);
-    toast({ title: "❌ Paiement échoué", description: "Réessayez ou changez de moyen.", variant: "destructive" });
-  }, [toast]);
-
-  const onExpired = useCallback(() => {
-    setPollingEnabled(false);
-    setSubmitting(false);
-    toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé.", variant: "destructive" });
-  }, [toast]);
-
-  const { status: pollingStatus, attempts } = usePaygatePolling({
-    identifier,
-    enabled: pollingEnabled,
-    intervalMs: 5000,
-    maxAttempts: 60,
-    onCompleted,
-    onFailed,
-    onExpired,
-  });
-
-  const startPayment = (pack: TokenPack) => {
+  const startPayment = useCallback((pack: TokenPack) => {
     if (!userId) {
       toast({ title: "Connexion requise", description: "Connectez-vous pour acheter des jetons." });
       navigate("/auth?returnTo=/jetons");
       return;
     }
-    setPaymentStep(pack.code);
-    setNetwork("");
-    setPhone("");
-  };
 
-  const initiatePayment = async (pack: TokenPack) => {
-    if (network !== "CARD" && !phone) {
-      toast({ title: "Numéro requis", description: "Entrez votre numéro Mobile Money.", variant: "destructive" });
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const id = `NUKU-TOKEN-${userId}-${pack.code}-${Date.now()}`;
-      setIdentifier(id);
+    setSubmitting(pack.code);
 
-      const { data: pid, error: pidErr } = await supabase.rpc("create_token_purchase", {
-        p_pack_code: pack.code,
-        p_payment_identifier: id,
-      });
-      if (pidErr) throw pidErr;
-      setPurchaseId(pid as unknown as string);
+    const id = `NUKU-TOKEN-${userId}-${pack.code}-${Date.now()}`;
 
-      const { data, error } = await supabase.functions.invoke("paygate-init", {
-        body: {
-          amount: pack.price_fcfa,
-          description: `${pack.name} - ${pack.tokens + pack.bonus_tokens} jetons NukuConnect`,
-          identifier: id,
-          phone_number: phone.replace(/\s/g, ""),
-          network: network === "CARD" ? "" : network,
-        },
-      });
-      if (error) throw error;
-      if (data?.mode === "redirect" && data?.payment_url) {
-        window.open(data.payment_url, "_blank");
-      }
-      setPollingEnabled(true);
-      toast({
-        title: "Paiement initié",
-        description: network === "CARD" ? "Complétez dans la fenêtre." : "Validez sur votre téléphone.",
-      });
-    } catch (e: any) {
-      setSubmitting(false);
-      toast({ title: "Erreur", description: e.message ?? "Réessayez.", variant: "destructive" });
-    }
-  };
+    openKKiaPay({
+      amount: pack.price_fcfa,
+      reason: `${pack.name} - ${pack.tokens + pack.bonus_tokens} jetons NukuConnect`,
+      onSuccess: async (data) => {
+        try {
+          const { data: pid, error: pidErr } = await supabase.rpc("create_token_purchase", {
+            p_pack_code: pack.code,
+            p_payment_identifier: id,
+          });
+          if (pidErr) throw pidErr;
 
-  const cancel = () => {
-    setPaymentStep(null);
-    setPollingEnabled(false);
-    setSubmitting(false);
-    setPurchaseId(null);
-  };
+          const { error } = await supabase.rpc("complete_token_purchase", {
+            p_purchase_id: pid as unknown as string,
+            p_payment_reference: data.transactionId,
+          });
+          if (error) throw error;
+
+          toast({ title: "🎁 Jetons crédités !", description: "Votre solde a été mis à jour." });
+          await refresh();
+        } catch (err: any) {
+          toast({ title: "Erreur crédit", description: err.message, variant: "destructive" });
+        } finally {
+          setSubmitting(null);
+        }
+      },
+      onFailed: () => {
+        setSubmitting(null);
+        toast({ title: "❌ Paiement échoué", description: "Réessayez ou changez de moyen.", variant: "destructive" });
+      },
+    });
+  }, [userId, toast, navigate, refresh]);
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -192,7 +118,7 @@ const Tokens = () => {
         </div>
       </section>
 
-      {/* Plans d'abonnement (vue compacte, identique à /plans) */}
+      {/* Plans d'abonnement (vue compacte) */}
       <section className="py-8 sm:py-12 bg-muted/20">
         <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
           <div className="text-center mb-6">
@@ -278,12 +204,13 @@ const Tokens = () => {
           <div className="text-center mb-6">
             <Badge variant="secondary" className="mb-2 text-[11px]"><Coins className="w-3 h-3 mr-1" /> Recharger des jetons</Badge>
             <h2 className="font-heading text-lg sm:text-2xl font-bold">Packs de jetons</h2>
+            <p className="text-[10px] text-muted-foreground mt-1">🔒 Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {packs.map((pack) => {
-              const isPaying = paymentStep === pack.code;
               const totalTokens = pack.tokens + pack.bonus_tokens;
               const pricePerToken = Math.round(pack.price_fcfa / totalTokens);
+              const isProcessing = submitting === pack.code;
 
               return (
                 <Card key={pack.id} className={`relative overflow-hidden ${pack.is_popular ? "border-primary shadow-elevated ring-2 ring-primary" : ""}`}>
@@ -331,60 +258,21 @@ const Tokens = () => {
                       <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-primary" />Traçabilité (1 jeton)</li>
                     </ul>
 
-                    {isPaying ? (
-                      <div className="rounded-xl border-2 border-primary bg-primary/5 p-3 space-y-3">
-                        <p className="text-xs font-semibold">Choisir le moyen de paiement</p>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {networks.map((n) => (
-                            <button
-                              key={n.id}
-                              type="button"
-                              disabled={pollingEnabled}
-                              onClick={() => setNetwork(n.id)}
-                              className={`rounded-lg bg-background border-2 p-1.5 text-center transition-all ${network === n.id ? "border-primary" : "border-border"} ${pollingEnabled ? "opacity-50" : ""}`}
-                            >
-                              <img src={n.logo} alt={n.label} className="h-6 mx-auto object-contain" />
-                              <p className="text-[8px] font-medium mt-0.5">{n.label}</p>
-                            </button>
-                          ))}
-                        </div>
-
-                        {network && network !== "CARD" && !pollingEnabled && (
-                          <div className="space-y-1">
-                            <Label className="text-[10px] flex items-center gap-1">
-                              <Phone className="w-3 h-3" /> Numéro
-                            </Label>
-                            <Input type="tel" placeholder="+228 XX XX XX XX" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-8 text-xs" />
-                          </div>
-                        )}
-
-                        {pollingEnabled && (
-                          <div className="rounded-lg bg-muted/50 p-2 flex items-center gap-2">
-                            {pollingStatus === "pending" && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
-                            {pollingStatus === "completed" && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
-                            {(pollingStatus === "failed" || pollingStatus === "expired") && <XCircle className="w-3.5 h-3.5 text-destructive" />}
-                            <span className="text-[10px] font-medium">
-                              {pollingStatus === "pending" ? `Vérification... (${attempts}/60)` : pollingStatus === "completed" ? "Confirmé !" : "Échoué"}
-                            </span>
-                          </div>
-                        )}
-
-                        {network && !pollingEnabled && (
-                          <Button variant="hero" size="sm" className="w-full gap-1.5 text-xs h-8" disabled={submitting} onClick={() => initiatePayment(pack)}>
-                            {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                            Payer {pack.price_fcfa.toLocaleString("en-US")} FCFA
-                          </Button>
-                        )}
-
-                        <button type="button" onClick={cancel} className="text-[10px] text-muted-foreground underline w-full text-center">
-                          Annuler
-                        </button>
-                      </div>
-                    ) : (
-                      <Button variant={pack.is_popular ? "hero" : "outline"} className="w-full gap-2 text-xs sm:text-sm h-9 sm:h-10" onClick={() => startPayment(pack)}>
-                        <Coins className="w-4 h-4" /> Acheter
-                      </Button>
-                    )}
+                    <Button
+                      variant={pack.is_popular ? "hero" : "outline"}
+                      className="w-full gap-2 text-xs sm:text-sm h-9 sm:h-10"
+                      onClick={() => startPayment(pack)}
+                      disabled={!!submitting}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4" />
+                          Acheter {pack.price_fcfa.toLocaleString("en-US")} FCFA
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
               );

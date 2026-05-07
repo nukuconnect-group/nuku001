@@ -7,18 +7,13 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Phone, CheckCircle2, XCircle, Sparkles, AlertTriangle } from "lucide-react";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { usePaygatePolling } from "@/hooks/usePaygatePolling";
 import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
-import moovFloozLogo from "@/assets/moov-flooz.png";
-import mixxYasLogo from "@/assets/mixx-yas.png";
-import visaMcLogo from "@/assets/visa-mastercard.png";
+import { openKKiaPay } from "@/lib/kkiapay";
 
 const PENDING_PLAN_KEY = "nuku:pendingPlan";
 
@@ -48,35 +43,31 @@ const plans = [
       "Accès à NukuConnect IA",
       "Statistiques avancées",
       "Recommandations IA",
-      "Badge Vérifié",
-      "Support standard",
     ],
     limitations: [],
   },
   {
     id: "standard", name: "Standard", price: 5000, maxProducts: 30, commission: 8, credits: 8,
-    description: "Le plus populaire — recommandé", icon: Star, color: "bg-primary", popular: true,
+    description: "Le choix populaire", icon: Star, color: "bg-primary", popular: true,
     features: [
       "Jusqu'à 30 produits publiés",
       "8 crédits disponibles",
-      "Accès à la traçabilité des produits",
-      "Mise en avant des produits",
-      "Accès à NukuConnect IA",
-      "Statistiques avancées",
-      "Recommandations IA",
-      "Badge Vérifié Premium",
+      "Traçabilité QR avancée",
+      "Mise en avant prioritaire",
+      "Dashboard analytics",
       "Support prioritaire",
+      "Badge vérifié Pro",
     ],
     limitations: [],
   },
   {
     id: "premium", name: "Premium", price: 10000, maxProducts: 9999, commission: 5, credits: 20,
-    description: "Toutes les fonctionnalités incluses", icon: Rocket, color: "bg-gradient-hero", popular: false,
+    description: "Pour les professionnels", icon: Rocket, color: "bg-primary", popular: false,
     features: [
-      "Annonces produits illimitées",
+      "Annonces illimitées",
       "20 crédits disponibles",
-      "Toutes les fonctionnalités du Standard",
-      "Intégration API (ERP / CRM)",
+      "Accès API NukuConnect",
+      "Conseiller dédié NukuAI",
       "Dashboard analytics avancées (BI)",
       "Mises en avant homepage prioritaires",
       "Account Manager dédié",
@@ -102,25 +93,14 @@ const plans = [
   },
 ];
 
-const networks = [
-  { id: "FLOOZ", label: "Moov / Flooz", logo: moovFloozLogo },
-  { id: "TMONEY", label: "T-Money", logo: mixxYasLogo },
-  { id: "CARD", label: "Visa / MC", logo: visaMcLogo },
-];
-
 const Plans = () => {
   const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [paymentStep, setPaymentStep] = useState<string | null>(null);
-  const [selectedNetwork, setSelectedNetwork] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [paymentIdentifier, setPaymentIdentifier] = useState("");
-  const [pollingEnabled, setPollingEnabled] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
 
-  const activateSubscription = useCallback(async (planId: string, paymentProof?: { identifier?: string; tx_reference?: string }) => {
+  const activateSubscription = useCallback(async (planId: string, paymentProof?: { transactionId?: string }) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
     let session;
@@ -128,7 +108,6 @@ const Plans = () => {
       session = await getFreshAuthSession();
       setSessionExpired(false);
     } catch {
-      // Persist intent so we can resume after reconnection
       try {
         sessionStorage.setItem(PENDING_PLAN_KEY, JSON.stringify({ planId, paymentProof, ts: Date.now() }));
       } catch { /* noop */ }
@@ -145,8 +124,7 @@ const Plans = () => {
     const data = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
       plan: planId,
       billing_period: "annual",
-      payment_identifier: paymentProof?.identifier,
-      payment_tx_reference: paymentProof?.tx_reference,
+      payment_identifier: paymentProof?.transactionId,
     }, session);
 
     if (data?.error) throw new Error(data.error);
@@ -162,8 +140,6 @@ const Plans = () => {
 
     await refreshSubscription();
     toast({ title: "🎉 Abonnement activé !", description: `Plan ${plan.name} activé avec succès.` });
-    setPaymentStep(null);
-    setPollingEnabled(false);
     setSubscribing(null);
   }, [refreshSubscription, toast]);
 
@@ -171,13 +147,12 @@ const Plans = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let pending: { planId: string; paymentProof?: { identifier?: string; tx_reference?: string }; ts: number } | null = null;
+      let pending: { planId: string; paymentProof?: { transactionId?: string }; ts: number } | null = null;
       try {
         const raw = sessionStorage.getItem(PENDING_PLAN_KEY);
         if (raw) pending = JSON.parse(raw);
       } catch { /* noop */ }
       if (!pending) return;
-      // Stale > 30 min
       if (Date.now() - pending.ts > 30 * 60 * 1000) {
         sessionStorage.removeItem(PENDING_PLAN_KEY);
         return;
@@ -197,45 +172,6 @@ const Plans = () => {
   const handleReconnect = useCallback(() => {
     navigate("/auth?redirect=/plans");
   }, [navigate]);
-
-  const handlePaymentCompleted = useCallback((data: any) => {
-    setPollingEnabled(false);
-    if (paymentStep) {
-      void activateSubscription(paymentStep, {
-        identifier: paymentIdentifier,
-        tx_reference: data?.tx_reference,
-      }).catch((error: any) => {
-        setSubscribing(null);
-        toast({
-          title: "Erreur d'abonnement",
-          description: error?.message || "Impossible d'activer votre abonnement.",
-          variant: "destructive",
-        });
-      });
-    }
-  }, [paymentIdentifier, paymentStep, activateSubscription, toast]);
-
-  const handlePaymentFailed = useCallback(() => {
-    setPollingEnabled(false);
-    setSubscribing(null);
-    toast({ title: "❌ Paiement échoué", description: "Réessayez ou choisissez un autre moyen.", variant: "destructive" });
-  }, [toast]);
-
-  const handlePaymentExpired = useCallback(() => {
-    setPollingEnabled(false);
-    setSubscribing(null);
-    toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé.", variant: "destructive" });
-  }, [toast]);
-
-  const { status: pollingStatus, attempts } = usePaygatePolling({
-    identifier: paymentIdentifier,
-    enabled: pollingEnabled,
-    intervalMs: 5000,
-    maxAttempts: 60,
-    onCompleted: handlePaymentCompleted,
-    onFailed: handlePaymentFailed,
-    onExpired: handlePaymentExpired,
-  });
 
   const handleSubscribe = async (planId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -262,50 +198,29 @@ const Plans = () => {
       return;
     }
 
-    setPaymentStep(planId);
-  };
-
-  const initiatePayment = async (planId: string) => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
-    const price = plan.price;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-
-    if (selectedNetwork !== "CARD" && !phoneNumber) {
-      toast({ title: "Numéro requis", description: "Entrez votre numéro Mobile Money.", variant: "destructive" });
-      return;
-    }
 
     setSubscribing(planId);
-    try {
-      const identifier = `NUKU-SUB-${session.user.id}-${planId}-${Date.now()}`;
-      setPaymentIdentifier(identifier);
 
-      const { data, error } = await supabase.functions.invoke("paygate-init", {
-        body: {
-          amount: price,
-          description: `Plan ${plan.name} - NUKUCONNECT`,
-          identifier,
-          phone_number: phoneNumber.replace(/\s/g, ""),
-          network: selectedNetwork === "CARD" ? "" : selectedNetwork,
-        },
-      });
-
-      if (error) throw error;
-      if (data?.mode === "redirect" && data?.payment_url) {
-        window.open(data.payment_url, "_blank");
-      }
-
-      setPollingEnabled(true);
-      toast({ title: "Paiement initié", description: selectedNetwork === "CARD" ? "Complétez le paiement dans la fenêtre." : "Validez sur votre téléphone." });
-    } catch (err: any) {
-      setSubscribing(null);
-      toast({ title: "Erreur", description: err.message || "Réessayez.", variant: "destructive" });
-    }
+    openKKiaPay({
+      amount: plan.price,
+      reason: `Plan ${plan.name} - NUKUCONNECT`,
+      email: session.user.email,
+      onSuccess: async (data) => {
+        try {
+          await activateSubscription(planId, { transactionId: data.transactionId });
+        } catch (error: any) {
+          toast({ title: "Erreur d'abonnement", description: error?.message || "Impossible d'activer.", variant: "destructive" });
+        } finally {
+          setSubscribing(null);
+        }
+      },
+      onFailed: () => {
+        setSubscribing(null);
+        toast({ title: "❌ Paiement échoué", description: "Réessayez ou choisissez un autre moyen.", variant: "destructive" });
+      },
+    });
   };
 
   const currentPlan = subscription?.plan;
@@ -368,7 +283,6 @@ const Plans = () => {
               const price = plan.price;
               const isCustom = price === -1;
               const isCurrent = currentPlan === plan.id;
-              const isPayingThis = paymentStep === plan.id;
 
               return (
                 <Card key={plan.id} className={`relative overflow-hidden flex flex-col ${plan.popular ? "border-primary shadow-elevated lg:scale-105 z-10" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
@@ -421,70 +335,18 @@ const Plans = () => {
                       ))}
                     </ul>
 
-                    {isPayingThis && (
-                      <div className="rounded-xl border-2 border-primary bg-primary/5 p-2.5 space-y-2">
-                        <p className="text-[10px] font-semibold text-foreground">Moyen de paiement</p>
-                        <div className="grid grid-cols-3 gap-1">
-                          {networks.map((n) => (
-                            <button
-                              key={n.id}
-                              type="button"
-                              onClick={() => !pollingEnabled && setSelectedNetwork(n.id)}
-                              className={`rounded-lg bg-background border-2 p-1 text-center transition-all ${selectedNetwork === n.id ? "border-primary" : "border-border"} ${pollingEnabled ? "opacity-50" : ""}`}
-                            >
-                              <img src={n.logo} alt={n.label} className="h-5 mx-auto object-contain" />
-                              <p className="text-[7px] font-medium text-foreground mt-0.5">{n.label}</p>
-                            </button>
-                          ))}
-                        </div>
-
-                        {selectedNetwork && selectedNetwork !== "CARD" && !pollingEnabled && (
-                          <div className="space-y-1">
-                            <Label className="text-[9px] flex items-center gap-1">
-                              <Phone className="w-2.5 h-2.5" />Numéro
-                            </Label>
-                            <Input type="tel" placeholder="+228..." value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-7 text-[10px]" disabled={pollingEnabled} />
-                          </div>
-                        )}
-
-                        {pollingEnabled && (
-                          <div className="rounded-lg bg-muted/50 p-1.5 flex items-center gap-1.5">
-                            {pollingStatus === "pending" && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
-                            {pollingStatus === "completed" && <CheckCircle2 className="w-3 h-3 text-primary" />}
-                            {(pollingStatus === "failed" || pollingStatus === "expired") && <XCircle className="w-3 h-3 text-destructive" />}
-                            <span className="text-[9px] font-medium">
-                              {pollingStatus === "pending" ? `Vérification (${attempts}/60)` : pollingStatus === "completed" ? "Confirmé !" : "Échoué"}
-                            </span>
-                          </div>
-                        )}
-
-                        {selectedNetwork && !pollingEnabled && (
-                          <Button variant="hero" size="sm" className="w-full gap-1 text-[10px] h-7" disabled={!!subscribing} onClick={() => initiatePayment(plan.id)}>
-                            {subscribing === plan.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
-                            Payer {price.toLocaleString("en-US")} FCFA
-                          </Button>
-                        )}
-
-                        <button type="button" onClick={() => { setPaymentStep(null); setSubscribing(null); setPollingEnabled(false); }} className="text-[9px] text-muted-foreground underline w-full text-center">
-                          Annuler
-                        </button>
-                      </div>
-                    )}
-
-                    {!isPayingThis && (
-                      <Button
-                        variant={plan.popular ? "hero" : "outline"}
-                        className="w-full gap-1.5 text-[11px] sm:text-xs h-8 sm:h-9 mt-auto"
-                        disabled={isCurrent || !!subscribing}
-                        onClick={() => handleSubscribe(plan.id)}
-                      >
-                        {subscribing === plan.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : isCurrent ? "Plan actuel" : plan.id === "enterprise" ? "Nous contacter" : (
-                          <>{plan.id === "free" ? "Commencer" : "Choisir"}<ArrowRight className="w-3 h-3" /></>
-                        )}
-                      </Button>
-                    )}
+                    <Button
+                      variant={plan.popular ? "hero" : "outline"}
+                      className="w-full gap-1.5 text-[11px] sm:text-xs h-8 sm:h-9 mt-auto"
+                      disabled={isCurrent || !!subscribing}
+                      onClick={() => handleSubscribe(plan.id)}
+                    >
+                      {subscribing === plan.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : isCurrent ? "Plan actuel" : plan.id === "enterprise" ? "Nous contacter" : (
+                        <>{plan.id === "free" ? "Commencer" : <><ShieldCheck className="w-3 h-3" /> Choisir</>}<ArrowRight className="w-3 h-3" /></>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
               );
@@ -494,6 +356,9 @@ const Plans = () => {
           <div className="mt-8 max-w-3xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 text-center">
             <p className="text-xs sm:text-sm font-medium text-foreground">
               💡 Tous les packs payants sont valables <strong>12 mois</strong>. Annonces, badge vérifié, traçabilité, NukuAI et boosts inclus selon le plan choisi.
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              🔒 Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard
             </p>
           </div>
         </div>

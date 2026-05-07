@@ -15,7 +15,7 @@ import {
   GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { openKKiaPay } from "@/lib/kkiapay";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
@@ -30,11 +30,6 @@ const FormationDetail = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
-  // Paid formation payment flow
-  const [payIdentifier, setPayIdentifier] = useState<string | null>(null);
-  const [payTxRef, setPayTxRef] = useState<string | null>(null);
-  const [payNetwork, setPayNetwork] = useState<"FLOOZ" | "TMONEY" | "CARD">("CARD");
-  const [payPhone, setPayPhone] = useState("");
   const [payInitiating, setPayInitiating] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   // Persistent payment status (shared model with Cart)
@@ -125,114 +120,48 @@ const FormationDetail = () => {
   };
 
   // Confirm enrollment after a successful payment via the secured edge function
-  const confirmPaidEnrollment = async (identifier: string, tx_reference?: string) => {
+  const confirmPaidEnrollment = async (transactionId: string) => {
     if (!formation) return;
+    setPayState({ kind: "pending", message: "Vérification en cours…" });
     const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
-      body: { formation_id: formation.id, identifier, tx_reference },
+      body: { formation_id: formation.id, identifier: transactionId, tx_reference: transactionId },
     });
     const result = (data as any) || {};
     if (error || !result.success) {
-      const state = (result.state || "unknown") as
-        | "pending" | "expired" | "failed" | "unknown" | string;
-      const msg =
-        result.user_message ||
-        result.error ||
-        error?.message ||
-        "Le paiement n'a pas encore été confirmé. Si le montant a été débité, le service va se synchroniser sous peu.";
-      const kind: "pending" | "expired" | "failed" | "unknown" =
-        state === "pending" ? "pending" :
-        state === "expired" ? "expired" :
-        state === "failed" ? "failed" : "unknown";
-      setPayState({ kind, message: msg });
-      toast({
-        title:
-          kind === "expired" ? "Paiement expiré" :
-          kind === "failed" ? "Paiement échoué" :
-          kind === "pending" ? "Paiement en attente" : "Statut inconnu",
-        description: msg,
-        variant: kind === "pending" || kind === "unknown" ? "default" : "destructive",
-      });
+      setPayState({ kind: "failed", message: result.error || error?.message || "Erreur inscription." });
+      toast({ title: "Erreur", description: result.error || "Erreur inscription.", variant: "destructive" });
       return;
     }
     setIsEnrolled(true);
     setPayOpen(false);
-    setPayIdentifier(null);
-    setPayTxRef(null);
     const successMsg = result.user_message || "Vous avez désormais accès à la formation.";
     setPayState({ kind: "success", message: successMsg });
-    toast({
-      title: result.state === "already_enrolled" ? "Déjà inscrit" : "Paiement confirmé ✅",
-      description: successMsg,
-    });
+    toast({ title: "Paiement confirmé ✅", description: successMsg });
   };
-
-  usePaygatePolling({
-    identifier: payIdentifier || undefined,
-    tx_reference: payTxRef || undefined,
-    enabled: !!payIdentifier,
-    onCompleted: () => confirmPaidEnrollment(payIdentifier!, payTxRef || undefined),
-    onFailed: () => {
-      setPayState({
-        kind: "failed",
-        message: "Le paiement a été refusé ou annulé. Aucun montant n'a été débité. Vous pouvez relancer le paiement.",
-      });
-      setPayIdentifier(null);
-      setPayTxRef(null);
-      toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
-    },
-    onExpired: () => {
-      setPayState({
-        kind: "expired",
-        message: "La session de paiement a expiré sans confirmation. Relancez le paiement pour réessayer.",
-      });
-      setPayIdentifier(null);
-      setPayTxRef(null);
-      toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" });
-    },
-  });
 
   const initiatePayment = async () => {
     if (!userId || !formation || payInitiating) return;
-    if (payNetwork !== "CARD" && !payPhone.trim()) {
-      toast({ title: "Numéro requis", description: "Entrez un numéro Mobile Money.", variant: "destructive" });
-      return;
-    }
     setPayInitiating(true);
     setPayState({ kind: "initiating" });
-    const identifier = `formation-${formation.id}-${userId}-${Date.now()}`;
-    const { data, error } = await supabase.functions.invoke("paygate-init", {
-      body: {
-        amount: Number(formation.price) || 0,
-        description: `Formation : ${formation.title}`.slice(0, 200),
-        identifier,
-        phone_number: payNetwork !== "CARD" ? payPhone : undefined,
-        network: payNetwork,
-        use_redirect: payNetwork === "CARD",
+
+    openKKiaPay({
+      amount: Number(formation.price) || 0,
+      reason: `Formation : ${formation.title}`.slice(0, 200),
+      onSuccess: async (data) => {
+        setPayInitiating(false);
+        await confirmPaidEnrollment(data.transactionId);
+      },
+      onFailed: () => {
+        setPayInitiating(false);
+        setPayState({
+          kind: "failed",
+          message: "Le paiement a été refusé ou annulé. Vous pouvez relancer le paiement.",
+        });
+        toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
       },
     });
-    setPayInitiating(false);
-    if (error || (data as any)?.error) {
-      const errMsg = (data as any)?.error || error?.message || "Impossible d'initier le paiement.";
-      setPayState({ kind: "failed", message: errMsg });
-      toast({ title: "Erreur paiement", description: errMsg, variant: "destructive" });
-      return;
-    }
-    setPayIdentifier(identifier);
-    if ((data as any)?.tx_reference) setPayTxRef((data as any).tx_reference);
-    if ((data as any)?.payment_url) {
-      window.open((data as any).payment_url, "_blank", "noopener,noreferrer");
-      setPayState({
-        kind: "pending",
-        message: "Terminez le paiement dans la nouvelle fenêtre. L'inscription sera automatique après confirmation Paygate.",
-      });
-      toast({ title: "Paiement ouvert", description: "Terminez le paiement dans la nouvelle fenêtre. Vous serez inscrit automatiquement." });
-    } else {
-      setPayState({
-        kind: "pending",
-        message: `Validez la demande sur votre téléphone ${payNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Nous vérifions le statut automatiquement toutes les 5 secondes.`,
-      });
-      toast({ title: "Paiement en attente", description: "Validez la demande sur votre téléphone Mobile Money." });
-    }
+
+    setPayState({ kind: "pending", message: "Complétez le paiement dans la fenêtre KKiaPay." });
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
@@ -418,105 +347,34 @@ const FormationDetail = () => {
                 )}
               </div>
 
-              {/* Persistent payment status panel — shared model with Cart */}
-              <PaymentStatusPanel
-                status={payState as any}
-                variant="compact"
-                onVerifyNow={
-                  payIdentifier
-                    ? async () => {
-                        setVerifyingPay(true);
-                        try {
-                          const { data } = await supabase.functions.invoke("reconcile-order", {
-                            body: { identifier: payIdentifier, tx_reference: payTxRef || undefined },
-                          });
-                          const r = (data as any) || {};
-                          if (r.state === "success") {
-                            await confirmPaidEnrollment(payIdentifier!, payTxRef || undefined);
-                          } else {
-                            const kind = mapBackendStateToKind(r.state);
-                            setPayState({
-                              kind,
-                              message: r.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES[kind],
-                              details: {
-                                amount: (r.amount ?? Number(formation?.price)) || undefined,
-                                method: payNetwork === "CARD" ? "Carte bancaire" : payNetwork,
-                                identifier: payIdentifier!,
-                                txReference: payTxRef || undefined,
-                                formationTitle: formation?.title,
-                              },
-                            } as any);
-                          }
-                        } finally {
-                          setVerifyingPay(false);
-                        }
-                      }
-                    : undefined
-                }
-                isVerifying={verifyingPay}
-                onContactSupport={async () => {
-                  setContactingSupport(true);
-                  try {
-                    const { data } = await supabase.functions.invoke("report-payment-mismatch", {
-                      body: {
-                        identifier: payIdentifier || undefined,
-                        tx_reference: payTxRef || undefined,
-                        formation_id: formation?.id,
-                        observed_state: payState.kind,
-                      },
-                    });
-                    toast({
-                      title: "Support contacté",
-                      description: (data as any)?.user_message || "Un agent vous répondra rapidement.",
-                    });
-                  } finally {
-                    setContactingSupport(false);
-                  }
-                }}
-                isContactingSupport={contactingSupport}
-                onRetry={() => {
-                  setPayIdentifier(null);
-                  setPayTxRef(null);
-                  setPayState({ kind: "idle" });
-                }}
-              />
+              {/* Payment status */}
+              {payState.kind !== "idle" && payState.kind !== "initiating" && (
+                <div className="rounded-lg border p-3 text-xs">
+                  {payState.kind === "pending" && <p className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin text-primary" /> {payState.message}</p>}
+                  {payState.kind === "success" && <p className="flex items-center gap-2 text-primary"><CheckCircle2 className="w-3 h-3" /> {payState.message}</p>}
+                  {(payState.kind === "failed" || payState.kind === "expired") && (
+                    <div>
+                      <p className="text-destructive">{payState.message}</p>
+                      <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => { setPayState({ kind: "idle" }); setPayOpen(true); }}>
+                        Réessayer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {payOpen && (
                 <div className="border-t border-primary/20 pt-3 space-y-2">
-                  <div className="flex flex-wrap gap-1.5">
-                    {(["CARD", "TMONEY", "FLOOZ"] as const).map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setPayNetwork(n)}
-                        className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
-                          payNetwork === n ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
-                        }`}
-                      >
-                        {n === "CARD" ? "Carte bancaire" : n === "TMONEY" ? "T-Money" : "Flooz"}
-                      </button>
-                    ))}
-                  </div>
-                  {payNetwork !== "CARD" && (
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      placeholder="Numéro Mobile Money (ex: 90000000)"
-                      value={payPhone}
-                      onChange={(e) => setPayPhone(e.target.value)}
-                      className="w-full text-xs px-3 py-2 rounded-md border border-border bg-background"
-                    />
-                  )}
                   <div className="flex items-center gap-2">
-                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating || !!payIdentifier}>
-                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : payIdentifier ? "Paiement en cours…" : <><CreditCard className="w-3 h-3" /> Confirmer le paiement</>}
+                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating}>
+                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : <><CreditCard className="w-3 h-3" /> Payer {Number(formation.price || 0).toLocaleString("en-US")} FCFA</>}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setPayOpen(false); setPayIdentifier(null); setPayTxRef(null); }}>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setPayOpen(false)}>
                       Annuler
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Paygate. L'inscription est automatique après confirmation.
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard
                   </p>
                 </div>
               )}

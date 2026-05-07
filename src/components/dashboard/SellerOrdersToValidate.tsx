@@ -36,6 +36,7 @@ const SellerOrdersToValidate = ({ sellerProfileId }: Props) => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [validating, setValidating] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -98,8 +99,6 @@ const SellerOrdersToValidate = ({ sellerProfileId }: Props) => {
       </Card>
     );
   }
-
-  const [expanded, setExpanded] = useState(false);
 
   return (
     <Card>
