@@ -15,7 +15,7 @@ import {
   GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { usePaygatePolling } from "@/hooks/usePaygatePolling";
+import { openKKiaPay } from "@/lib/kkiapay";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
