@@ -99,60 +99,73 @@ const SellerOrdersToValidate = ({ sellerProfileId }: Props) => {
     );
   }
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <Card>
-      <CardHeader className="p-3 sm:p-4 pb-2">
+      <CardHeader className="p-3 sm:p-4 pb-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <CardTitle className="text-sm flex items-center gap-2">
           <ShoppingBag className="w-4 h-4 text-primary" />
           Commandes à valider
+          {orders.length > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground text-[10px] px-1.5 py-0 ml-1">
+              {orders.length}
+            </Badge>
+          )}
           <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
             <Radio className="w-2.5 h-2.5" /> Temps réel
           </span>
         </CardTitle>
-        <CardDescription className="text-[11px]">
-          Validez la réception/préparation pour démarrer le suivi pour l'acheteur.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-        {orders.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">Aucune commande en attente de votre validation.</p>
-        ) : (
-          orders.map(o => {
-            const meta = METHOD_META[o.delivery_method || "pickup"] || METHOD_META.pickup;
-            const Icon = meta.icon;
-            const isPaid = o.status === "confirmed";
-            return (
-              <div key={o.id} className="border border-border rounded-lg p-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="font-semibold text-xs truncate">{o.products?.name || "Produit"}</span>
-                    <Badge variant="outline" className="text-[9px] px-1 py-0">Qté {o.quantity}</Badge>
-                    <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full ${meta.tone}`}>
-                      <Icon className="w-2.5 h-2.5" /> {meta.label}
-                    </span>
-                    {!isPaid && <Badge variant="secondary" className="text-[9px]">Paiement en attente</Badge>}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {o.buyer?.full_name || "Acheteur"} • {Number(o.total_price).toLocaleString("fr-FR")} FCFA • {new Date(o.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}
-                  </div>
-                  {o.notes && <div className="text-[10px] text-muted-foreground/80 mt-0.5 line-clamp-1">{o.notes}</div>}
-                </div>
-                <Button
-                  size="sm"
-                  variant="hero"
-                  disabled={!isPaid || validating === o.id}
-                  onClick={() => validateOrder(o)}
-                  className="flex-shrink-0"
-                >
-                  {validating === o.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Valider la réception
-                </Button>
-              </div>
-            );
-          })
+        {!expanded && (
+          <CardDescription className="text-[11px]">
+            {orders.length === 0
+              ? "Aucune commande en attente."
+              : `${orders.length} commande${orders.length > 1 ? "s" : ""} en attente — cliquez pour voir`}
+          </CardDescription>
         )}
-      </CardContent>
+      </CardHeader>
+      {expanded && (
+        <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
+          {orders.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Aucune commande en attente de votre validation.</p>
+          ) : (
+            orders.map(o => {
+              const meta = METHOD_META[o.delivery_method || "pickup"] || METHOD_META.pickup;
+              const Icon = meta.icon;
+              const isPaid = o.status === "confirmed";
+              return (
+                <div key={o.id} className="border border-border rounded-lg p-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="font-semibold text-xs truncate">{o.products?.name || "Produit"}</span>
+                      <Badge variant="outline" className="text-[9px] px-1 py-0">Qté {o.quantity}</Badge>
+                      <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full ${meta.tone}`}>
+                        <Icon className="w-2.5 h-2.5" /> {meta.label}
+                      </span>
+                      {!isPaid && <Badge variant="secondary" className="text-[9px]">Paiement en attente</Badge>}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                      {o.buyer?.full_name || "Acheteur"} • {Number(o.total_price).toLocaleString("fr-FR")} FCFA • {new Date(o.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}
+                    </div>
+                    {o.notes && <div className="text-[10px] text-muted-foreground/80 mt-0.5 line-clamp-1">{o.notes}</div>}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="hero"
+                    disabled={!isPaid || validating === o.id}
+                    onClick={() => validateOrder(o)}
+                    className="flex-shrink-0"
+                  >
+                    {validating === o.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    Valider la réception
+                  </Button>
+                </div>
+              );
+            })
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 };

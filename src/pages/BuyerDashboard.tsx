@@ -234,7 +234,8 @@ const BuyerDashboard = () => {
                 <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/40 text-primary">Acheteur</Badge>
                   Bienvenue dans votre espace acheteur
                 </p>
               </div>
@@ -322,7 +323,7 @@ const BuyerDashboard = () => {
               <CreateDemandModal open={showCreateDemand} onOpenChange={setShowCreateDemand} />
               <div className="mt-3 sm:mt-4">
                 <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Mes demandes récentes</h4>
-                <DemandsList limit={3} />
+                <DemandsList limit={5} ownerOnly compact />
               </div>
             </CardContent>
           </Card>
