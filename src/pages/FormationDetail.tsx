@@ -151,83 +151,45 @@ const FormationDetail = () => {
     }
     setIsEnrolled(true);
     setPayOpen(false);
-    setPayIdentifier(null);
-    setPayTxRef(null);
-    const successMsg = result.user_message || "Vous avez désormais accès à la formation.";
-    setPayState({ kind: "success", message: successMsg });
-    toast({
-      title: result.state === "already_enrolled" ? "Déjà inscrit" : "Paiement confirmé ✅",
-      description: successMsg,
-    });
-  };
-
-  usePaygatePolling({
-    identifier: payIdentifier || undefined,
-    tx_reference: payTxRef || undefined,
-    enabled: !!payIdentifier,
-    onCompleted: () => confirmPaidEnrollment(payIdentifier!, payTxRef || undefined),
-    onFailed: () => {
-      setPayState({
-        kind: "failed",
-        message: "Le paiement a été refusé ou annulé. Aucun montant n'a été débité. Vous pouvez relancer le paiement.",
-      });
-      setPayIdentifier(null);
-      setPayTxRef(null);
-      toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
-    },
-    onExpired: () => {
-      setPayState({
-        kind: "expired",
-        message: "La session de paiement a expiré sans confirmation. Relancez le paiement pour réessayer.",
-      });
-      setPayIdentifier(null);
-      setPayTxRef(null);
-      toast({ title: "Paiement expiré", description: "Veuillez relancer le paiement.", variant: "destructive" });
-    },
-  });
-
   const initiatePayment = async () => {
     if (!userId || !formation || payInitiating) return;
-    if (payNetwork !== "CARD" && !payPhone.trim()) {
-      toast({ title: "Numéro requis", description: "Entrez un numéro Mobile Money.", variant: "destructive" });
-      return;
-    }
     setPayInitiating(true);
     setPayState({ kind: "initiating" });
-    const identifier = `formation-${formation.id}-${userId}-${Date.now()}`;
-    const { data, error } = await supabase.functions.invoke("paygate-init", {
-      body: {
-        amount: Number(formation.price) || 0,
-        description: `Formation : ${formation.title}`.slice(0, 200),
-        identifier,
-        phone_number: payNetwork !== "CARD" ? payPhone : undefined,
-        network: payNetwork,
-        use_redirect: payNetwork === "CARD",
+
+    openKKiaPay({
+      amount: Number(formation.price) || 0,
+      reason: `Formation : ${formation.title}`.slice(0, 200),
+      onSuccess: async (data) => {
+        setPayInitiating(false);
+        await confirmPaidEnrollment(data.transactionId);
+      },
+      onFailed: () => {
+        setPayInitiating(false);
+        setPayState({
+          kind: "failed",
+          message: "Le paiement a été refusé ou annulé. Vous pouvez relancer le paiement.",
+        });
+        toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
       },
     });
-    setPayInitiating(false);
-    if (error || (data as any)?.error) {
-      const errMsg = (data as any)?.error || error?.message || "Impossible d'initier le paiement.";
-      setPayState({ kind: "failed", message: errMsg });
-      toast({ title: "Erreur paiement", description: errMsg, variant: "destructive" });
+
+    setPayState({ kind: "pending", message: "Complétez le paiement dans la fenêtre KKiaPay." });
+  };
+
+  const confirmPaidEnrollment = async (transactionId: string, txRef?: string) => {
+    setPayState({ kind: "verifying" });
+    const { data: result, error: enrollErr } = await supabase.functions.invoke("enroll-paid-formation", {
+      body: { formation_id: formation?.id, payment_identifier: transactionId, tx_reference: txRef },
+    });
+    if (enrollErr || (result as any)?.error) {
+      setPayState({ kind: "failed", message: (result as any)?.error || enrollErr?.message || "Erreur inscription." });
       return;
     }
-    setPayIdentifier(identifier);
-    if ((data as any)?.tx_reference) setPayTxRef((data as any).tx_reference);
-    if ((data as any)?.payment_url) {
-      window.open((data as any).payment_url, "_blank", "noopener,noreferrer");
-      setPayState({
-        kind: "pending",
-        message: "Terminez le paiement dans la nouvelle fenêtre. L'inscription sera automatique après confirmation Paygate.",
-      });
-      toast({ title: "Paiement ouvert", description: "Terminez le paiement dans la nouvelle fenêtre. Vous serez inscrit automatiquement." });
-    } else {
-      setPayState({
-        kind: "pending",
-        message: `Validez la demande sur votre téléphone ${payNetwork === "FLOOZ" ? "Moov" : "Togocel"}. Nous vérifions le statut automatiquement toutes les 5 secondes.`,
-      });
-      toast({ title: "Paiement en attente", description: "Validez la demande sur votre téléphone Mobile Money." });
-    }
+    setIsEnrolled(true);
+    setPayOpen(false);
+    const successMsg = (result as any)?.user_message || "Vous avez désormais accès à la formation.";
+    setPayState({ kind: "success", message: successMsg });
+    toast({ title: "Paiement confirmé ✅", description: successMsg });
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
