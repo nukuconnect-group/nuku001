@@ -347,110 +347,37 @@ const FormationDetail = () => {
                 )}
               </div>
 
-              {/* Persistent payment status panel — shared model with Cart */}
-              <PaymentStatusPanel
-                status={payState as any}
-                variant="compact"
-                onVerifyNow={
-                  payIdentifier
-                    ? async () => {
-                        setVerifyingPay(true);
-                        try {
-                          const { data } = await supabase.functions.invoke("reconcile-order", {
-                            body: { identifier: payIdentifier, tx_reference: payTxRef || undefined },
-                          });
-                          const r = (data as any) || {};
-                          if (r.state === "success") {
-                            await confirmPaidEnrollment(payIdentifier!, payTxRef || undefined);
-                          } else {
-                            const kind = mapBackendStateToKind(r.state);
-                            setPayState({
-                              kind,
-                              message: r.user_message || PAYMENT_STATUS_DEFAULT_MESSAGES[kind],
-                              details: {
-                                amount: (r.amount ?? Number(formation?.price)) || undefined,
-                                method: payNetwork === "CARD" ? "Carte bancaire" : payNetwork,
-                                identifier: payIdentifier!,
-                                txReference: payTxRef || undefined,
-                                formationTitle: formation?.title,
-                              },
-                            } as any);
-                          }
-                        } finally {
-                          setVerifyingPay(false);
-                        }
-                      }
-                    : undefined
-                }
-                isVerifying={verifyingPay}
-                onContactSupport={async () => {
-                  setContactingSupport(true);
-                  try {
-                    const { data } = await supabase.functions.invoke("report-payment-mismatch", {
-                      body: {
-                        identifier: payIdentifier || undefined,
-                        tx_reference: payTxRef || undefined,
-                        formation_id: formation?.id,
-                        observed_state: payState.kind,
-                      },
-                    });
-                    toast({
-                      title: "Support contacté",
-                      description: (data as any)?.user_message || "Un agent vous répondra rapidement.",
-                    });
-                  } finally {
-                    setContactingSupport(false);
-                  }
-                }}
-                isContactingSupport={contactingSupport}
-                onRetry={() => {
-                  setPayIdentifier(null);
-                  setPayTxRef(null);
-                  setPayState({ kind: "idle" });
-                }}
-              />
+              {/* Payment status */}
+              {payState.kind !== "idle" && payState.kind !== "initiating" && (
+                <div className="rounded-lg border p-3 text-xs">
+                  {payState.kind === "pending" && <p className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin text-primary" /> {payState.message}</p>}
+                  {payState.kind === "success" && <p className="flex items-center gap-2 text-primary"><CheckCircle2 className="w-3 h-3" /> {payState.message}</p>}
+                  {(payState.kind === "failed" || payState.kind === "expired") && (
+                    <div>
+                      <p className="text-destructive">{payState.message}</p>
+                      <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => { setPayState({ kind: "idle" }); setPayOpen(true); }}>
+                        Réessayer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {payOpen && (
                 <div className="border-t border-primary/20 pt-3 space-y-2">
-                  <div className="flex flex-wrap gap-1.5">
-                    {(["CARD", "TMONEY", "FLOOZ"] as const).map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setPayNetwork(n)}
-                        className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors ${
-                          payNetwork === n ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
-                        }`}
-                      >
-                        {n === "CARD" ? "Carte bancaire" : n === "TMONEY" ? "T-Money" : "Flooz"}
-                      </button>
-                    ))}
-                  </div>
-                  {payNetwork !== "CARD" && (
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      placeholder="Numéro Mobile Money (ex: 90000000)"
-                      value={payPhone}
-                      onChange={(e) => setPayPhone(e.target.value)}
-                      className="w-full text-xs px-3 py-2 rounded-md border border-border bg-background"
-                    />
-                  )}
                   <div className="flex items-center gap-2">
-                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating || !!payIdentifier}>
-                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : payIdentifier ? "Paiement en cours…" : <><CreditCard className="w-3 h-3" /> Confirmer le paiement</>}
+                    <Button variant="hero" size="sm" className="text-xs gap-1 flex-1" onClick={initiatePayment} disabled={payInitiating}>
+                      {payInitiating ? <Loader2 className="w-3 h-3 animate-spin" /> : <><CreditCard className="w-3 h-3" /> Payer {Number(formation.price || 0).toLocaleString("en-US")} FCFA</>}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setPayOpen(false); setPayIdentifier(null); setPayTxRef(null); }}>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setPayOpen(false)}>
                       Annuler
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Paygate. L'inscription est automatique après confirmation.
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard
                   </p>
                 </div>
               )}
-            </div>
-          )}
 
           {/* Visitors not logged-in on a paid formation */}
           {!userId && formation.is_paid && (
