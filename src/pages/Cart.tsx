@@ -48,7 +48,7 @@ const Cart = () => {
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("paygate");
+  const [paymentMethod, setPaymentMethod] = useState("kkiapay");
   const [mobileNumber, setMobileNumber] = useState("");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState("");
@@ -61,7 +61,7 @@ const Cart = () => {
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
 
-  // Paygate polling state
+  // Payment polling state
   const [paymentIdentifier, setPaymentIdentifier] = useState("");
   const [pollingEnabled, setPollingEnabled] = useState(false);
   const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
@@ -144,7 +144,7 @@ const Cart = () => {
   const deliveryPrice = dynamicDeliveryPrice || selectedDelivery?.price || 0;
   const finalTotal = total + deliveryPrice - promoDiscount;
 
-  // Strip phone to digits only for Paygate API
+  // Strip phone to digits
   const cleanPhone = (phone: string) => phone.replace(/[^\d]/g, "").replace(/^228/, "");
 
   // Finalize order after payment success
@@ -360,7 +360,7 @@ const Cart = () => {
     }
   }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
 
-  // Paygate polling callbacks — use ref to avoid stale closure
+  // Payment polling callbacks — use ref to avoid stale closure
   const handlePaymentCompleted = useCallback((data: any) => {
     setPollingEnabled(false);
     setIsCheckingOut(false);
@@ -422,7 +422,7 @@ const Cart = () => {
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
-  // KKiaPay replaces Paygate polling — payment callbacks are handled inline in handleCheckout
+  // KKiaPay payment callbacks
 
   // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
   const handleVerifyNow = useCallback(async () => {
