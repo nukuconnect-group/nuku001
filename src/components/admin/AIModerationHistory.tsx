@@ -248,6 +248,45 @@ export default function AIModerationHistory() {
           )}
         </CardContent>
       </Card>
+
+      {/* Republish Dialog */}
+      <Dialog open={!!republishProduct} onOpenChange={(open) => !open && setRepublishProduct(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-primary" /> Modifier & Republier
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Nom du produit</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Description</Label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="text-xs min-h-[100px]"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Le produit sera republié comme "approuvé" et le propriétaire sera notifié par email et dans l'app.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRepublishProduct(null)} disabled={republishing}>Annuler</Button>
+            <Button variant="hero" size="sm" onClick={handleRepublish} disabled={republishing || !editName.trim()} className="gap-1">
+              {republishing && <Loader2 className="w-3 h-3 animate-spin" />}
+              Republier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
