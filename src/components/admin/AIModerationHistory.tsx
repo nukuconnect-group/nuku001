@@ -3,9 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Search, CheckCircle2, XCircle, Clock, Bell, Loader2, Mail } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Search, CheckCircle2, XCircle, Clock, Bell, Loader2, Mail, RotateCcw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Historique des décisions IA (moderation_logs) et notifications envoyées
