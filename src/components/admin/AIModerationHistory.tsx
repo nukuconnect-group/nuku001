@@ -16,10 +16,15 @@ import { useToast } from "@/hooks/use-toast";
  * aux fournisseurs. Permet à l'admin d'auditer la modération.
  */
 export default function AIModerationHistory() {
+  const { toast } = useToast();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [republishProduct, setRepublishProduct] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [republishing, setRepublishing] = useState(false);
 
   const load = async () => {
     setLoading(true);
