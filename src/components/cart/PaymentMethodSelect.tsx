@@ -4,10 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet, ShieldCheck, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 
 const paymentMethods = [
-  { id: "kkiapay", name: "KKiaPay", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
+  { id: "moneroo", name: "Moneroo", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
 ];
 export { paymentMethods };
 
@@ -40,20 +40,17 @@ const PaymentMethodSelect = ({
     if (!amount || amount <= 0) return;
     setIsProcessing(true);
 
-    openKKiaPay({
+    openMonerooPay({
       amount,
-      reason: `Commande NUKUCONNECT - ${amount} FCFA`,
-      onSuccess: (data) => {
+      description: `Commande NUKUCONNECT - ${amount} FCFA`,
+      context: "direct",
+      contextData: {},
+      onError: (msg) => {
         setIsProcessing(false);
-        toast({ title: "✅ Paiement confirmé !", description: `Transaction ${data.transactionId} réussie.` });
-        onPaymentSuccess?.(data.transactionId);
-      },
-      onFailed: () => {
-        setIsProcessing(false);
-        toast({ title: "❌ Paiement échoué", description: "La transaction n'a pas abouti. Réessayez.", variant: "destructive" });
+        toast({ title: "❌ Paiement échoué", description: msg, variant: "destructive" });
       },
     });
-  }, [amount, onPaymentSuccess, toast]);
+  }, [amount, toast]);
 
   const showPolling = hidePayButton ? isPolling : false;
 
@@ -73,7 +70,7 @@ const PaymentMethodSelect = ({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">KKiaPay</p>
+                <p className="font-semibold text-sm text-foreground">Moneroo</p>
                 <Badge className="text-[9px] bg-primary/20 text-primary border-0">Sécurisé</Badge>
               </div>
               <p className="text-[11px] text-muted-foreground">Mobile Money • Visa • Mastercard</p>
@@ -88,7 +85,7 @@ const PaymentMethodSelect = ({
           )}
 
           <p className="text-[10px] text-muted-foreground text-center">
-            🔒 Transaction chiffrée et sécurisée via KKiaPay
+            🔒 Transaction chiffrée et sécurisée via Moneroo
           </p>
         </div>
 
@@ -104,7 +101,7 @@ const PaymentMethodSelect = ({
             ) : (
               <CheckCircle2 className="w-4 h-4" />
             )}
-            {isProcessing ? "Ouverture du paiement..." : `Payer ${amount.toLocaleString("fr-FR")} FCFA`}
+            {isProcessing ? "Redirection..." : `Payer ${amount.toLocaleString("fr-FR")} FCFA`}
           </Button>
         )}
       </CardContent>
