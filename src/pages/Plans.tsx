@@ -203,22 +203,15 @@ const Plans = () => {
 
     setSubscribing(planId);
 
-    openKKiaPay({
+    openMonerooPay({
       amount: plan.price,
-      reason: `Plan ${plan.name} - NUKUCONNECT`,
-      email: session.user.email,
-      onSuccess: async (data) => {
-        try {
-          await activateSubscription(planId, { transactionId: data.transactionId });
-        } catch (error: any) {
-          toast({ title: "Erreur d'abonnement", description: error?.message || "Impossible d'activer.", variant: "destructive" });
-        } finally {
-          setSubscribing(null);
-        }
-      },
-      onFailed: () => {
+      description: `Plan ${plan.name} - NUKUCONNECT (12 mois)`,
+      customer: { email: session.user.email || "" },
+      context: "plan",
+      contextData: { planId, planName: plan.name },
+      onError: (msg) => {
         setSubscribing(null);
-        toast({ title: "❌ Paiement échoué", description: "Réessayez ou choisissez un autre moyen.", variant: "destructive" });
+        toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
       },
     });
   };
@@ -358,7 +351,7 @@ const Plans = () => {
               💡 Tous les packs payants sont valables <strong>12 mois</strong>. Annonces, badge vérifié, traçabilité, NukuAI et boosts inclus selon le plan choisi.
             </p>
             <p className="text-[10px] text-muted-foreground mt-2">
-              🔒 Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard
+              🔒 Paiement sécurisé via Moneroo — Mobile Money, Visa, Mastercard
             </p>
           </div>
         </div>
