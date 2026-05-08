@@ -16,10 +16,11 @@ interface Props {
 }
 
 const PLAN_OPTIONS = [
-  { value: "free", label: "Gratuit (3 produits)" },
-  { value: "pro", label: "Pro (50 produits + 100 jetons)" },
-  { value: "premium", label: "Premium (200 produits + 500 jetons)" },
-  { value: "business", label: "Business (1000 produits + 2000 jetons)" },
+  { value: "free", label: "Gratuit (5 produits, 0 crédits)" },
+  { value: "starter", label: "Starter (15 produits, 4 crédits)" },
+  { value: "standard", label: "Standard (30 produits, 8 crédits)" },
+  { value: "premium", label: "Premium (Illimité, 20 crédits)" },
+  { value: "enterprise", label: "Entreprise (Illimité, sur mesure)" },
 ];
 
 export default function UserSubscriptionActions({ userId, userName, currentPlan, onUpdated }: Props) {
