@@ -85,6 +85,7 @@ const AccountAccess = lazy(() => import("./pages/AccountAccess"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
