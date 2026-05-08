@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
 import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 
 const subscriptionPlans = [
   { id: "free", name: "Gratuit", price: 0, credits: 0, icon: Zap, popular: false, perks: ["5 produits", "Messagerie", "KYC vérifié"] },

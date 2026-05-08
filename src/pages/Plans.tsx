@@ -13,7 +13,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 
 const PENDING_PLAN_KEY = "nuku:pendingPlan";
 

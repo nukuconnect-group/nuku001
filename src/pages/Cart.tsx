@@ -15,7 +15,7 @@ import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "l
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
