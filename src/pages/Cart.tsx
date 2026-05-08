@@ -15,7 +15,7 @@ import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "l
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
 import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
@@ -48,7 +48,7 @@ const Cart = () => {
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("kkiapay");
+  const [paymentMethod, setPaymentMethod] = useState("moneroo");
   const [mobileNumber, setMobileNumber] = useState("");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState("");
@@ -422,7 +422,7 @@ const Cart = () => {
     toast({ title: "⏰ Délai expiré", description: "Le paiement n'a pas été confirmé. Vos commandes ont été annulées.", variant: "destructive" });
   }, [toast, markOrdersFailed, paymentIdentifier]);
 
-  // KKiaPay payment callbacks
+  // Moneroo payment callbacks
 
   // -- Manual reconciliation (link from PaymentStatusPanel "Vérifier maintenant") --
   const handleVerifyNow = useCallback(async () => {
@@ -544,7 +544,7 @@ const Cart = () => {
           notes: [
             `Client: ${buyerFullName} | ${billing.phone}`,
             deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
-            `Paiement: KKiaPay`,
+            `Paiement: Moneroo`,
             selectedRealDriverId ? `Livreur: ${selectedDriver?.profile?.full_name || "Livreur"}` : "",
             `tx_ref: ${identifier}`,
           ].filter(Boolean).join(" | "),
@@ -558,27 +558,38 @@ const Cart = () => {
       setPendingCheckoutData(checkoutData);
       pendingCheckoutRef.current = checkoutData;
 
-      // Open KKiaPay widget
-      openKKiaPay({
+      // Redirect to Moneroo checkout
+      openMonerooPay({
         amount: finalTotal,
-        reason: `Commande NUKUCONNECT - ${identifier}`,
-        name: buyerFullName,
-        phone: billing.phone,
-        email: billing.email,
-        onSuccess: (data) => {
-          setPayStatus({ kind: "pending", message: "Finalisation de la commande..." });
-          handlePaymentCompleted(data);
+        description: `Commande NUKUCONNECT - ${identifier}`,
+        customer: {
+          first_name: billing.firstName,
+          last_name: billing.lastName,
+          phone: billing.phone,
+          email: billing.email,
         },
-        onFailed: () => {
-          handlePaymentFailed();
+        context: "cart",
+        contextData: {
+          orderIds,
+          buyerEmail: billing.email,
+          buyerFullName,
+          emailData: {
+            buyerName: buyerFullName,
+            invoiceNumber: identifier,
+          },
+        },
+        onError: (msg) => {
+          setIsCheckingOut(false);
+          setPayStatus({ kind: "failed", message: msg });
+          toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
         },
       });
 
       setPayStatus({
         kind: "pending",
-        message: "Complétez le paiement dans la fenêtre KKiaPay.",
+        message: "Redirection vers Moneroo...",
       });
-      toast({ title: "💳 Paiement ouvert", description: "Complétez le paiement dans la fenêtre KKiaPay." });
+      toast({ title: "💳 Paiement", description: "Redirection vers la page de paiement..." });
 
     } catch (error: any) {
       console.error("Checkout error:", error);

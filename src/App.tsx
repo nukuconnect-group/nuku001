@@ -85,6 +85,7 @@ const AccountAccess = lazy(() => import("./pages/AccountAccess"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Invoices = lazy(() => import("./pages/Invoices"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -246,6 +247,7 @@ const App = () => {
                   <Route path="/faq-nuku-ai" element={<FAQNukuAI />} />
                   <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
                   <Route path="/delete-account" element={<DeleteAccount />} />
+                  <Route path="/payment-callback" element={<PaymentCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SmartSuspense>

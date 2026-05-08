@@ -15,7 +15,7 @@ import {
   GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { openKKiaPay } from "@/lib/kkiapay";
+import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
@@ -144,24 +144,20 @@ const FormationDetail = () => {
     setPayInitiating(true);
     setPayState({ kind: "initiating" });
 
-    openKKiaPay({
+    openMonerooPay({
       amount: Number(formation.price) || 0,
-      reason: `Formation : ${formation.title}`.slice(0, 200),
-      onSuccess: async (data) => {
-        setPayInitiating(false);
-        await confirmPaidEnrollment(data.transactionId);
-      },
-      onFailed: () => {
+      description: `Formation : ${formation.title}`.slice(0, 200),
+      context: "formation",
+      contextData: { formationId: formation.id, formationTitle: formation.title },
+      onError: (msg) => {
         setPayInitiating(false);
         setPayState({
           kind: "failed",
-          message: "Le paiement a été refusé ou annulé. Vous pouvez relancer le paiement.",
+          message: msg || "Impossible d'ouvrir le paiement.",
         });
-        toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
+        toast({ title: "Erreur paiement", description: msg, variant: "destructive" });
       },
     });
-
-    setPayState({ kind: "pending", message: "Complétez le paiement dans la fenêtre KKiaPay." });
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
@@ -374,7 +370,7 @@ const FormationDetail = () => {
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via KKiaPay — Mobile Money, Visa, Mastercard
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Moneroo — Mobile Money, Visa, Mastercard
                   </p>
                 </div>
               )}

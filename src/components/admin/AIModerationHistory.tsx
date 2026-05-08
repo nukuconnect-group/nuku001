@@ -3,19 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Search, CheckCircle2, XCircle, Clock, Bell, Loader2, Mail } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Search, CheckCircle2, XCircle, Clock, Bell, Loader2, Mail, RotateCcw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Historique des décisions IA (moderation_logs) et notifications envoyées
  * aux fournisseurs. Permet à l'admin d'auditer la modération.
  */
 export default function AIModerationHistory() {
+  const { toast } = useToast();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [republishProduct, setRepublishProduct] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [republishing, setRepublishing] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -38,6 +47,86 @@ export default function AIModerationHistory() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const openRepublish = async (log: any) => {
+    if (!log.product_id) return;
+    const { data } = await supabase.from("products").select("*").eq("id", log.product_id).single();
+    if (!data) {
+      toast({ title: "Produit introuvable", variant: "destructive" });
+      return;
+    }
+    setEditName((data as any).name || "");
+    setEditDescription((data as any).description || "");
+    setRepublishProduct({ ...data, log });
+  };
+
+  const handleRepublish = async () => {
+    if (!republishProduct) return;
+    setRepublishing(true);
+    try {
+      // Update product name/description and set status to approved
+      const { error } = await supabase.from("products")
+        .update({
+          name: editName,
+          description: editDescription,
+          status: "approved",
+          moderation_status: "approved",
+        } as any)
+        .eq("id", republishProduct.id);
+      if (error) throw error;
+
+      // Log the admin override in moderation_logs
+      await supabase.from("moderation_logs").insert({
+        product_id: republishProduct.id,
+        decision: "approved",
+        reason: "Republié par l'administrateur après modification",
+        confidence: 1,
+        attempt_number: (republishProduct.log?.attempt_number || 0) + 1,
+      } as any);
+
+      // Notify the product owner via notification
+      if (republishProduct.producer_id) {
+        const { data: profile } = await supabase.from("profiles")
+          .select("user_id, full_name")
+          .eq("id", republishProduct.producer_id)
+          .single();
+        if (profile) {
+          await supabase.from("notifications").insert({
+            user_id: (profile as any).user_id,
+            type: "product",
+            title: "✅ Produit republié par l'admin",
+            description: `Votre produit "${editName}" a été modifié et approuvé par l'administrateur. Il est maintenant visible sur la marketplace.`,
+          });
+          // Send email notification
+          const { data: users } = await supabase.rpc("get_admin_users" as any);
+          const owner = (users as any[] | null)?.find((u: any) => u.user_id === (profile as any).user_id);
+          if (owner?.email) {
+            supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "product-moderation",
+                recipientEmail: owner.email,
+                idempotencyKey: `admin-republish-${republishProduct.id}-${Date.now()}`,
+                templateData: {
+                  recipientName: (profile as any).full_name || owner.full_name,
+                  productName: editName,
+                  decision: "approved",
+                  reason: "Votre produit a été modifié et approuvé par l'administrateur.",
+                },
+              },
+            }).catch(() => {});
+          }
+        }
+      }
+
+      toast({ title: "✅ Produit republié", description: `"${editName}" est maintenant visible.` });
+      setRepublishProduct(null);
+      load();
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+    } finally {
+      setRepublishing(false);
+    }
+  };
 
   const filtered = logs.filter((l) => {
     if (!search) return true;
@@ -108,6 +197,16 @@ export default function AIModerationHistory() {
                       {l.confidence != null && <span className="px-1.5 py-0.5 bg-background rounded">Confiance {Math.round(Number(l.confidence) * 100)}%</span>}
                       {l.content_safety && <span className="px-1.5 py-0.5 bg-background rounded">Sécurité : {l.content_safety}</span>}
                       {l.category_check && <span className="px-1.5 py-0.5 bg-background rounded">Catégorie : {l.category_check}</span>}
+                      {l.decision === "rejected" && l.product_id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-5 text-[9px] gap-1 ml-1 border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => openRepublish(l)}
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" /> Republier
+                        </Button>
+                      )}
                       <span className="ml-auto">{new Date(l.created_at).toLocaleString("fr-FR")}</span>
                     </div>
                   </div>
@@ -149,6 +248,45 @@ export default function AIModerationHistory() {
           )}
         </CardContent>
       </Card>
+
+      {/* Republish Dialog */}
+      <Dialog open={!!republishProduct} onOpenChange={(open) => !open && setRepublishProduct(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-primary" /> Modifier & Republier
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Nom du produit</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Description</Label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="text-xs min-h-[100px]"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Le produit sera republié comme "approuvé" et le propriétaire sera notifié par email et dans l'app.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRepublishProduct(null)} disabled={republishing}>Annuler</Button>
+            <Button variant="hero" size="sm" onClick={handleRepublish} disabled={republishing || !editName.trim()} className="gap-1">
+              {republishing && <Loader2 className="w-3 h-3 animate-spin" />}
+              Republier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
