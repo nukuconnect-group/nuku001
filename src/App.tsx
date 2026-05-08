@@ -247,6 +247,7 @@ const App = () => {
                   <Route path="/faq-nuku-ai" element={<FAQNukuAI />} />
                   <Route path="/nuku-ai/faq" element={<FAQNukuAI />} />
                   <Route path="/delete-account" element={<DeleteAccount />} />
+                  <Route path="/payment-callback" element={<PaymentCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SmartSuspense>
