@@ -48,7 +48,7 @@ const Cart = () => {
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState("kkiapay");
+  const [paymentMethod, setPaymentMethod] = useState("moneroo");
   const [mobileNumber, setMobileNumber] = useState("");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState("");
