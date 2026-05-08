@@ -144,24 +144,20 @@ const FormationDetail = () => {
     setPayInitiating(true);
     setPayState({ kind: "initiating" });
 
-    openKKiaPay({
+    openMonerooPay({
       amount: Number(formation.price) || 0,
-      reason: `Formation : ${formation.title}`.slice(0, 200),
-      onSuccess: async (data) => {
-        setPayInitiating(false);
-        await confirmPaidEnrollment(data.transactionId);
-      },
-      onFailed: () => {
+      description: `Formation : ${formation.title}`.slice(0, 200),
+      context: "formation",
+      contextData: { formationId: formation.id, formationTitle: formation.title },
+      onError: (msg) => {
         setPayInitiating(false);
         setPayState({
           kind: "failed",
-          message: "Le paiement a été refusé ou annulé. Vous pouvez relancer le paiement.",
+          message: msg || "Impossible d'ouvrir le paiement.",
         });
-        toast({ title: "Paiement échoué", description: "Veuillez réessayer.", variant: "destructive" });
+        toast({ title: "Erreur paiement", description: msg, variant: "destructive" });
       },
     });
-
-    setPayState({ kind: "pending", message: "Complétez le paiement dans la fenêtre KKiaPay." });
   };
 
   const toggleModuleComplete = async (moduleId: string) => {
