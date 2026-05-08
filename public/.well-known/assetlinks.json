@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nukuconnect.app",
+      "sha256_cert_fingerprints": [
+        "E5:A9:1D:84:E8:1A:21:D9:66:3D:E2:9E:3E:86:2F:4D:A5:9A:0A:1E:57:CF:D3:23:B7:7F:11:E5:68:CB:A8:7A"
+      ]
+    }
+  }
+]
