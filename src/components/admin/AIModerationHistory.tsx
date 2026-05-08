@@ -197,6 +197,16 @@ export default function AIModerationHistory() {
                       {l.confidence != null && <span className="px-1.5 py-0.5 bg-background rounded">Confiance {Math.round(Number(l.confidence) * 100)}%</span>}
                       {l.content_safety && <span className="px-1.5 py-0.5 bg-background rounded">Sécurité : {l.content_safety}</span>}
                       {l.category_check && <span className="px-1.5 py-0.5 bg-background rounded">Catégorie : {l.category_check}</span>}
+                      {l.decision === "rejected" && l.product_id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-5 text-[9px] gap-1 ml-1 border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => openRepublish(l)}
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" /> Republier
+                        </Button>
+                      )}
                       <span className="ml-auto">{new Date(l.created_at).toLocaleString("fr-FR")}</span>
                     </div>
                   </div>
