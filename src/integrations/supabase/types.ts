@@ -1402,6 +1402,66 @@ export type Database = {
           },
         ]
       }
+      moneroo_transactions: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          completed_at: string | null
+          context: string
+          context_data: Json
+          created_at: string
+          currency: string
+          customer_email: string | null
+          description: string | null
+          failure_reason: string | null
+          id: string
+          payment_id: string
+          provider_response: Json
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount?: number
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          payment_id: string
+          provider_response?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          payment_id?: string
+          provider_response?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -2840,6 +2900,15 @@ export type Database = {
       admin_delete_user_data: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      admin_republish_product: {
+        Args: {
+          p_description: string
+          p_name: string
+          p_product_id: string
+          p_reason?: string
+        }
+        Returns: Json
       }
       admin_set_user_subscription:
         | {
