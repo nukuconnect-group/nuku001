@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -105,6 +106,21 @@ Deno.serve(async (req) => {
         }
       );
     }
+
+    const admin = createClient(supabaseUrl, serviceRoleKey);
+    await admin.from("moneroo_transactions").upsert({
+      user_id: user.id,
+      payment_id: monerooData.data.id,
+      status: "initiated",
+      amount: Math.round(amount),
+      currency: currency || "XOF",
+      context: metadata?.context || "direct",
+      context_data: metadata || {},
+      checkout_url: monerooData.data.checkout_url,
+      description: description || "Paiement NUKUCONNECT",
+      customer_email: customer?.email || user.email || "",
+      provider_response: monerooData.data,
+    }, { onConflict: "payment_id" });
 
     return new Response(
       JSON.stringify({

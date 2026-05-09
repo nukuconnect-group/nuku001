@@ -62,21 +62,17 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
       return;
     }
 
-    // Save context so we can resume after redirect
-    try {
-      sessionStorage.setItem(
-        PENDING_PAYMENT_KEY,
-        JSON.stringify({
-          context,
-          contextData,
-          amount,
-          paymentId: data.payment_id,
-          ts: Date.now(),
-        })
-      );
-    } catch {
-      // sessionStorage unavailable — continue anyway
-    }
+    // Save context so we can resume after redirect or browser refresh
+    const pendingPayload = JSON.stringify({
+      context,
+      contextData,
+      amount,
+      paymentId: data.payment_id,
+      checkoutUrl: data.checkout_url,
+      ts: Date.now(),
+    });
+    try { sessionStorage.setItem(PENDING_PAYMENT_KEY, pendingPayload); } catch {}
+    try { localStorage.setItem(PENDING_PAYMENT_KEY, pendingPayload); } catch {}
 
     // Redirect to Moneroo checkout
     window.location.href = data.checkout_url;
@@ -96,12 +92,14 @@ export function getPendingPayment(): {
   ts: number;
 } | null {
   try {
-    const raw = sessionStorage.getItem(PENDING_PAYMENT_KEY);
+    const raw = sessionStorage.getItem(PENDING_PAYMENT_KEY) || localStorage.getItem(PENDING_PAYMENT_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
     // Expire after 30 minutes
     if (Date.now() - data.ts > 30 * 60 * 1000) {
       sessionStorage.removeItem(PENDING_PAYMENT_KEY);
+    localStorage.removeItem(PENDING_PAYMENT_KEY);
+      localStorage.removeItem(PENDING_PAYMENT_KEY);
       return null;
     }
     return data;
@@ -116,6 +114,7 @@ export function getPendingPayment(): {
 export function clearPendingPayment() {
   try {
     sessionStorage.removeItem(PENDING_PAYMENT_KEY);
+    localStorage.removeItem(PENDING_PAYMENT_KEY);
   } catch {
     // noop
   }
