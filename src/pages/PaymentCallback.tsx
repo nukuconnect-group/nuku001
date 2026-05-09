@@ -27,145 +27,57 @@ const PaymentCallback = () => {
 
   const finalize = useCallback(async () => {
     const pending = getPendingPayment();
-    if (!pending) {
+    const payment_id = paymentId || pending?.paymentId;
+    if (!payment_id) {
       setStatus("expired");
-      setMessage("Aucun paiement en attente trouvé. Retournez à la page précédente.");
-      return;
-    }
-
-    const isSuccess = paymentStatus === "success" || paymentStatus === "completed";
-
-    if (!isSuccess) {
-      setStatus("failed");
-      setMessage("Le paiement n'a pas abouti. Aucun montant n'a été débité.");
-      clearPendingPayment();
+      setMessage("Aucun paiement Moneroo en attente trouvé. Retournez à la page précédente.");
       return;
     }
 
     setProcessing(true);
-    const { context, contextData } = pending;
-    const txId = paymentId || pending.paymentId || `moneroo-${Date.now()}`;
-
     try {
-      if (context === "plan") {
-        // Activate subscription
-        let session;
-        try { session = await getFreshAuthSession(); } catch {
-          toast({ title: "Session expirée", description: "Reconnectez-vous.", variant: "destructive" });
-          setStatus("failed");
-          setMessage("Session expirée. Reconnectez-vous et réessayez.");
-          return;
-        }
-        const data = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
-          plan: contextData.planId,
-          billing_period: "annual",
-          payment_identifier: txId,
-        }, session);
-        if (data?.error) throw new Error(data.error);
+      const { data, error } = await supabase.functions.invoke("moneroo-verify", {
+        body: { payment_id, context: pending?.context, context_data: pending?.contextData },
+      });
+      const result = (data as any) || {};
+      if (error || result.error) throw new Error(result.error || error?.message || "Vérification Moneroo impossible");
 
-        await supabase.from("notifications").insert({
-          user_id: session.user.id,
-          type: "subscription",
-          title: `🎉 Plan ${contextData.planName || contextData.planId} activé !`,
-          description: `Votre abonnement a été activé avec succès.`,
-        });
-
-        toast({ title: "🎉 Abonnement activé !", description: `Plan ${contextData.planName || contextData.planId} activé.` });
+      if (result.status === "success") {
         clearPendingPayment();
         setStatus("success");
-        setMessage(`Plan ${contextData.planName || contextData.planId} activé avec succès !`);
-        setTimeout(() => navigate("/plans"), 3000);
-
-      } else if (context === "tokens") {
-        // Complete token purchase
-        const { data: pid, error: pidErr } = await supabase.rpc("create_token_purchase", {
-          p_pack_code: contextData.packCode,
-          p_payment_identifier: txId,
-        });
-        if (pidErr) throw pidErr;
-
-        const { error } = await supabase.rpc("complete_token_purchase", {
-          p_purchase_id: pid as unknown as string,
-          p_payment_reference: txId,
-        });
-        if (error) throw error;
-
-        toast({ title: "🎁 Jetons crédités !", description: "Votre solde a été mis à jour." });
-        clearPendingPayment();
-        setStatus("success");
-        setMessage("Jetons crédités avec succès !");
-        setTimeout(() => navigate("/jetons"), 3000);
-
-      } else if (context === "formation") {
-        // Enroll in paid formation
-        const { data, error } = await supabase.functions.invoke("enroll-paid-formation", {
-          body: { formation_id: contextData.formationId, identifier: txId, tx_reference: txId },
-        });
-        if (error || !(data as any)?.success) throw new Error((data as any)?.error || error?.message || "Erreur inscription");
-
-        toast({ title: "✅ Inscription confirmée", description: "Vous avez maintenant accès à la formation." });
-        clearPendingPayment();
-        setStatus("success");
-        setMessage("Inscription à la formation confirmée !");
-        setTimeout(() => navigate(`/formations/${contextData.formationId}`), 3000);
-
-      } else if (context === "cart") {
-        // Finalize cart orders
-        const orderIds: string[] = contextData.orderIds || [];
-        for (const orderId of orderIds) {
-          await supabase.from("orders")
-            .update({ status: "confirmed", notes: `Paiement Moneroo confirmé | ${txId}` })
-            .eq("id", orderId)
-            .eq("status", "pending");
-        }
-
-        // Send order confirmation email
-        if (contextData.buyerEmail) {
-          supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "order-confirmation",
-              recipientEmail: contextData.buyerEmail,
-              idempotencyKey: `order-confirm-${txId}`,
-              templateData: contextData.emailData || {},
-            },
-          }).catch(() => {});
-        }
-
-        // Notify buyer
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await supabase.from("notifications").insert({
-            user_id: session.user.id,
-            type: "order",
-            title: "✅ Commande confirmée !",
-            description: `Votre commande a été confirmée. Paiement reçu.`,
-          });
-        }
-
-        toast({ title: "✅ Commande confirmée !", description: "Votre paiement a été reçu." });
-        clearPendingPayment();
-        setStatus("success");
-        setMessage("Commande confirmée avec succès !");
+        setMessage("Paiement confirmé et opération finalisée automatiquement.");
+        toast({ title: "✅ Paiement confirmé", description: "Moneroo a confirmé le paiement." });
+        const ctx = result.transaction?.context || pending?.context;
+        const ctxData = result.transaction?.context_data || pending?.contextData || {};
         setTimeout(() => {
-          if (orderIds.length === 1) navigate(`/commande/${orderIds[0]}`);
-          else navigate("/suivi-livraison");
-        }, 3000);
-
-      } else {
-        clearPendingPayment();
-        setStatus("success");
-        setMessage("Paiement confirmé !");
-        setTimeout(() => navigate("/"), 3000);
+          if (ctx === "cart" && ctxData.orderIds?.length === 1) navigate(`/commande/${ctxData.orderIds[0]}`);
+          else if (ctx === "tokens") navigate("/jetons");
+          else if (ctx === "plan") navigate("/plans");
+          else if (ctx === "formation" && ctxData.formationId) navigate(`/formations/${ctxData.formationId}`);
+          else navigate("/suivi-paiement");
+        }, 2500);
+        return;
       }
+
+      if (result.status === "failed" || result.status === "cancelled") {
+        clearPendingPayment();
+        setStatus("failed");
+        setMessage("Le paiement Moneroo a échoué ou a été annulé. Aucun montant confirmé n’a été finalisé.");
+        return;
+      }
+
+      setStatus("loading");
+      setMessage("Paiement encore en attente chez Moneroo. Vous pouvez suivre ou vérifier manuellement.");
+      setTimeout(() => navigate("/suivi-paiement"), 1500);
     } catch (err: any) {
       console.error("Payment callback error:", err);
       setStatus("failed");
-      setMessage(err.message || "Erreur lors de la finalisation du paiement.");
+      setMessage(err.message || "Erreur lors de la vérification sécurisée du paiement.");
       toast({ title: "Erreur", description: err.message, variant: "destructive" });
     } finally {
       setProcessing(false);
     }
-  }, [paymentStatus, paymentId, navigate, toast]);
+  }, [paymentId, navigate, toast]);
 
   useEffect(() => {
     finalize();
