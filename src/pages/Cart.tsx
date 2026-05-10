@@ -90,7 +90,7 @@ const Cart = () => {
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
-    setBilling(prev => ({ ...prev, email: sessionUser.email || "" }));
+    setBilling(prev => ({ ...prev, email: prev.email || sessionUser.email || "" }));
     const { data } = await supabase.from("profiles").select("*").eq("user_id", sessionUser.id).single();
     if (data) {
       setProfile(data);
@@ -99,12 +99,12 @@ const Cart = () => {
       const phone = privateData?.phone || "";
       setBilling(prev => ({
         ...prev,
-        firstName: nameParts[0] || "",
-        lastName: nameParts.slice(1).join(" ") || "",
-        phone,
+        firstName: prev.firstName || nameParts[0] || "",
+        lastName: prev.lastName || nameParts.slice(1).join(" ") || "",
+        phone: prev.phone || phone,
       }));
-      if (data.location) setDeliveryCity(data.location);
-      if (phone) setMobileNumber(phone);
+      if (data.location && !hasSavedCheckoutFormRef.current) setDeliveryCity(data.location);
+      if (phone && !hasSavedCheckoutFormRef.current) setMobileNumber(phone);
     }
   };
 
@@ -535,7 +535,7 @@ const Cart = () => {
 
       if (!buyerProfile) throw new Error("Profile not found");
 
-      const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
+      const selectedPayment = { id: "moneroo", name: "Moneroo" };
       const fullAddress = [deliveryQuarter, deliveryAddress].filter(Boolean).join(", ");
       const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
       const selectedRealDriverId = selectedDriver && !String(selectedDriver.id).startsWith("demo-") ? selectedDriver.id : null;
@@ -589,6 +589,7 @@ const Cart = () => {
         context: "cart",
         contextData: {
           orderIds,
+          orderIdsCsv: orderIds.join(","),
           buyerEmail: billing.email,
           buyerFullName,
           emailData: {
