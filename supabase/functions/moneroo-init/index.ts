@@ -62,6 +62,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Moneroo only accepts scalar metadata values (string|number|boolean).
+    // Stringify any object/array values to keep the payload valid.
+    const rawMeta = (metadata && typeof metadata === "object") ? metadata : {};
+    const flatMetadata: Record<string, string | number | boolean> = {};
+    for (const [k, v] of Object.entries(rawMeta)) {
+      if (v === null || v === undefined) continue;
+      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+        flatMetadata[k] = v;
+      } else {
+        try { flatMetadata[k] = JSON.stringify(v); } catch { /* skip */ }
+      }
+    }
+
     const monerooPayload = {
       amount: Math.round(amount),
       currency: currency || "XOF",
@@ -74,7 +87,7 @@ Deno.serve(async (req) => {
         last_name: customer?.last_name || "",
         phone: customer?.phone || "",
       },
-      metadata: metadata || {},
+      metadata: flatMetadata,
     };
 
     const monerooRes = await fetch(
