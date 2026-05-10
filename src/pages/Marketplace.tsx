@@ -259,7 +259,7 @@ const Marketplace = () => {
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
   const [imageSearchOpen, setImageSearchOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
-  const [marketView, setMarketView] = useState<"products" | "demands">("products");
+  const [marketView, setMarketView] = useState<"products" | "demands">(searchParams.get("tab") === "demands" ? "demands" : "products");
   const sponsoredRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 20;
@@ -298,8 +298,11 @@ const Marketplace = () => {
   useEffect(() => {
     const category = searchParams.get("category");
     const search = searchParams.get("search");
+    const tab = searchParams.get("tab");
     if (category) setSelectedCategory(category);
     if (search) setSearchQuery(search);
+    if (tab === "demands") setMarketView("demands");
+    if (tab === "products") setMarketView("products");
   }, [searchParams]);
 
   const activeFiltersCount = useMemo(() => {
@@ -808,6 +811,7 @@ const Marketplace = () => {
             </div>
             <DemandsList
               searchQuery={searchQuery}
+              focusDemandId={searchParams.get("demandId") || undefined}
             />
           </div>
         </section>
