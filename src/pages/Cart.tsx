@@ -110,6 +110,7 @@ const Cart = () => {
 
   const filledRef = useRef(false);
   const filledForUserIdRef = useRef<string | null>(null);
+  const hasSavedCheckoutFormRef = useRef(!!savedCheckoutForm);
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -141,19 +142,20 @@ const Cart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Auto-scroll to payment section when "Payer" is clicked (showPaymentStep activated)
   useEffect(() => {
-    if (showPaymentStep) {
-      // Wait for lazy-loaded PaymentMethodSelect to mount
-      const timer = setTimeout(() => {
-        const el = document.getElementById("payment-section");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+    try {
+      localStorage.setItem(CHECKOUT_FORM_KEY, JSON.stringify({
+        billing,
+        deliveryMethod,
+        deliveryCity,
+        deliveryAddress,
+        deliveryQuarter,
+        mobileNumber: mobileNumber || billing.phone,
+      }));
+    } catch {
+      // Ignore storage failures
     }
-  }, [showPaymentStep]);
+  }, [billing, deliveryMethod, deliveryCity, deliveryAddress, deliveryQuarter, mobileNumber]);
 
   const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
