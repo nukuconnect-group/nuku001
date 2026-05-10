@@ -793,8 +793,6 @@ const Cart = () => {
                 onCheckout={handleCheckout}
                 onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
                 isPolling={pollingEnabled}
-                showPaymentStep={showPaymentStep}
-                onShowPayment={() => setShowPaymentStep(true)}
               />
             </div>
           </div>
