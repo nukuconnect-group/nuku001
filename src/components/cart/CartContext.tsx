@@ -41,9 +41,32 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isReady) return;
 
-    setItems(readStoredCart(cartStorageKey));
+    const storedItems = readStoredCart(cartStorageKey);
+    if (user?.id) {
+      const guestKey = getCartStorageKey(null);
+      const guestItems = readStoredCart(guestKey);
+      if (guestItems.length > 0) {
+        const merged = [...storedItems];
+        for (const guestItem of guestItems) {
+          const existing = merged.find((item) => item.product.id === guestItem.product.id);
+          if (existing) existing.quantity += guestItem.quantity;
+          else merged.push(guestItem);
+        }
+        try {
+          localStorage.setItem(cartStorageKey, JSON.stringify(merged));
+          localStorage.removeItem(guestKey);
+        } catch {
+          // Ignore storage write failures silently
+        }
+        setItems(merged);
+        setActiveStorageKey(cartStorageKey);
+        return;
+      }
+    }
+
+    setItems(storedItems);
     setActiveStorageKey(cartStorageKey);
-  }, [isReady, cartStorageKey]);
+  }, [isReady, cartStorageKey, user?.id]);
 
   useEffect(() => {
     if (!isReady || !activeStorageKey) return;
