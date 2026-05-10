@@ -26,8 +26,6 @@ interface OrderSummaryProps {
   onCheckout: () => void;
   onDiscountChange?: (discount: number, code: string) => void;
   isPolling?: boolean;
-  showPaymentStep?: boolean;
-  onShowPayment?: () => void;
 }
 
 const purchasePolicyContent = `Dernière mise à jour : 09 février 2025
@@ -91,7 +89,7 @@ La décision finale pourra, si nécessaire, être soumise aux juridictions comp�
 Nukuconnect SA se réserve le droit de modifier cette politique à tout moment.
 Toute modification sera publiée sur la Plateforme et applicable aux commandes passées après sa date d'entrée en vigueur.`;
 
-const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange, isPolling = false, showPaymentStep = false, onShowPayment }: OrderSummaryProps) => {
+const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, onDiscountChange, isPolling = false }: OrderSummaryProps) => {
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const { formatPrice } = useLanguage();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
