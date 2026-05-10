@@ -89,6 +89,7 @@ export function getPendingPayment(): {
   contextData: Record<string, any>;
   amount: number;
   paymentId: string;
+  checkoutUrl?: string;
   ts: number;
 } | null {
   try {
