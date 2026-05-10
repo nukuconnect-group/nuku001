@@ -10,7 +10,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import SEO from "@/components/SEO";
-import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
+import { invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
 
 type CallbackStatus = "loading" | "success" | "failed" | "expired";
 
@@ -36,11 +36,12 @@ const PaymentCallback = () => {
 
     setProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("moneroo-verify", {
-        body: { payment_id, context: pending?.context, context_data: pending?.contextData },
+      const result = await invokeAuthenticatedFunction<any>("moneroo-verify", {
+        payment_id,
+        context: pending?.context,
+        context_data: pending?.contextData || {},
       });
-      const result = (data as any) || {};
-      if (error || result.error) throw new Error(result.error || error?.message || "Vérification Moneroo impossible");
+      if (result.error) throw new Error(result.error || "Vérification Moneroo impossible");
 
       if (result.status === "success") {
         clearPendingPayment();
