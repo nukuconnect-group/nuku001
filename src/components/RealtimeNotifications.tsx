@@ -153,9 +153,11 @@ const RealtimeNotifications = () => {
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
+        { event: "UPDATE", schema: "public", table: "orders" },
         async (payload) => {
           const order = payload.new as any;
+          const oldOrder = payload.old as any;
+          if (order.status !== "confirmed" || oldOrder?.status === "confirmed") return;
           const userId = await getCurrentUserId();
           if (!userId) return;
 
@@ -166,8 +168,8 @@ const RealtimeNotifications = () => {
             .single();
 
           if (sellerProfile?.user_id === userId) {
-            const title = "🎉 Nouvelle commande reçue !";
-            const body = `Commande de ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString("en-US")} FCFA`;
+            const title = "🎉 Commande payée reçue !";
+            const body = `Paiement confirmé : ${order.quantity} unité(s) pour ${Number(order.total_price).toLocaleString("en-US")} FCFA`;
             
             notifyUser(title, body, () => navigate("/suivi-livraison"));
             toast({ title, description: body });

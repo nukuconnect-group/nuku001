@@ -13,7 +13,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
@@ -21,37 +20,54 @@ import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind }
 
 const BillingForm = lazy(() => import("@/components/cart/BillingForm"));
 const DeliveryZoneMap = lazy(() => import("@/components/cart/DeliveryZoneMap"));
-const PaymentMethodSelect = lazy(() => import("@/components/cart/PaymentMethodSelect"));
 const AvailableDrivers = lazy(() => import("@/components/checkout/AvailableDrivers"));
 const AddressSelector = lazy(() => import("@/components/checkout/AddressSelector"));
 const OrderSummary = lazy(() => import("@/components/cart/OrderSummary"));
+
+const CHECKOUT_FORM_KEY = "nuku:checkoutForm";
+const CART_RETURN_KEY = "nuku:cartReturn";
+
+const readSavedCheckoutForm = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CHECKOUT_FORM_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 const Cart = () => {
   const { items, clearCart, total, itemCount } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t, formatPrice } = useLanguage();
+  const savedCheckoutForm = readSavedCheckoutForm();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Billing
   const [billing, setBilling] = useState({
-    firstName: "", lastName: "", email: "", phone: "", company: "", country: "Togo",
+    firstName: savedCheckoutForm?.billing?.firstName || "",
+    lastName: savedCheckoutForm?.billing?.lastName || "",
+    email: savedCheckoutForm?.billing?.email || "",
+    phone: savedCheckoutForm?.billing?.phone || "",
+    company: savedCheckoutForm?.billing?.company || "",
+    country: savedCheckoutForm?.billing?.country || "Togo",
   });
 
   // Delivery
-  const [deliveryMethod, setDeliveryMethod] = useState("pickup");
-  const [deliveryCity, setDeliveryCity] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliveryQuarter, setDeliveryQuarter] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState(savedCheckoutForm?.deliveryMethod || "pickup");
+  const [deliveryCity, setDeliveryCity] = useState(savedCheckoutForm?.deliveryCity || "");
+  const [deliveryAddress, setDeliveryAddress] = useState(savedCheckoutForm?.deliveryAddress || "");
+  const [deliveryQuarter, setDeliveryQuarter] = useState(savedCheckoutForm?.deliveryQuarter || "");
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("moneroo");
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [mobileNumber, setMobileNumber] = useState(savedCheckoutForm?.mobileNumber || savedCheckoutForm?.billing?.phone || "");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState("");
 
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -74,7 +90,7 @@ const Cart = () => {
 
   // Load user profile and auto-fill billing
   const fillBillingFromUser = async (sessionUser: any) => {
-    setBilling(prev => ({ ...prev, email: sessionUser.email || "" }));
+    setBilling(prev => ({ ...prev, email: prev.email || sessionUser.email || "" }));
     const { data } = await supabase.from("profiles").select("*").eq("user_id", sessionUser.id).single();
     if (data) {
       setProfile(data);
@@ -83,17 +99,18 @@ const Cart = () => {
       const phone = privateData?.phone || "";
       setBilling(prev => ({
         ...prev,
-        firstName: nameParts[0] || "",
-        lastName: nameParts.slice(1).join(" ") || "",
-        phone,
+        firstName: prev.firstName || nameParts[0] || "",
+        lastName: prev.lastName || nameParts.slice(1).join(" ") || "",
+        phone: prev.phone || phone,
       }));
-      if (data.location) setDeliveryCity(data.location);
-      if (phone) setMobileNumber(phone);
+      if (data.location && !hasSavedCheckoutFormRef.current) setDeliveryCity(data.location);
+      if (phone && !hasSavedCheckoutFormRef.current) setMobileNumber(phone);
     }
   };
 
   const filledRef = useRef(false);
   const filledForUserIdRef = useRef<string | null>(null);
+  const hasSavedCheckoutFormRef = useRef(!!savedCheckoutForm);
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -125,19 +142,20 @@ const Cart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Auto-scroll to payment section when "Payer" is clicked (showPaymentStep activated)
   useEffect(() => {
-    if (showPaymentStep) {
-      // Wait for lazy-loaded PaymentMethodSelect to mount
-      const timer = setTimeout(() => {
-        const el = document.getElementById("payment-section");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+    try {
+      localStorage.setItem(CHECKOUT_FORM_KEY, JSON.stringify({
+        billing,
+        deliveryMethod,
+        deliveryCity,
+        deliveryAddress,
+        deliveryQuarter,
+        mobileNumber: mobileNumber || billing.phone,
+      }));
+    } catch {
+      // Ignore storage failures
     }
-  }, [showPaymentStep]);
+  }, [billing, deliveryMethod, deliveryCity, deliveryAddress, deliveryQuarter, mobileNumber]);
 
   const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
@@ -494,8 +512,14 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     if (!user) {
+      try {
+        localStorage.setItem(CHECKOUT_FORM_KEY, JSON.stringify({ billing, deliveryMethod, deliveryCity, deliveryAddress, deliveryQuarter, mobileNumber: mobileNumber || billing.phone }));
+        localStorage.setItem(CART_RETURN_KEY, "/panier");
+      } catch {
+        // Ignore storage failures
+      }
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
-      navigate("/auth?returnTo=/panier");
+      navigate(`/auth?returnTo=${encodeURIComponent("/panier")}`);
       return;
     }
 
@@ -517,7 +541,7 @@ const Cart = () => {
 
       if (!buyerProfile) throw new Error("Profile not found");
 
-      const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
+      const selectedPayment = { id: "moneroo", name: "Moneroo" };
       const fullAddress = [deliveryQuarter, deliveryAddress].filter(Boolean).join(", ");
       const buyerFullName = `${billing.firstName} ${billing.lastName}`.trim();
       const selectedRealDriverId = selectedDriver && !String(selectedDriver.id).startsWith("demo-") ? selectedDriver.id : null;
@@ -559,7 +583,7 @@ const Cart = () => {
       pendingCheckoutRef.current = checkoutData;
 
       // Redirect to Moneroo checkout
-      openMonerooPay({
+      const opened = await openMonerooPay({
         amount: finalTotal,
         description: `Commande NUKUCONNECT - ${identifier}`,
         customer: {
@@ -571,6 +595,7 @@ const Cart = () => {
         context: "cart",
         contextData: {
           orderIds,
+          orderIdsCsv: orderIds.join(","),
           buyerEmail: billing.email,
           buyerFullName,
           emailData: {
@@ -584,6 +609,8 @@ const Cart = () => {
           toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
         },
       });
+
+      if (!opened) return;
 
       setPayStatus({
         kind: "pending",
@@ -755,21 +782,6 @@ const Cart = () => {
                 </>
               )}
 
-              {/* Payment section: only shown after clicking "Passer la commande" */}
-              {showPaymentStep && (
-                <div className="animate-fade-in" id="payment-section">
-                <PaymentMethodSelect
-                    paymentMethod={paymentMethod}
-                    onPaymentMethodChange={setPaymentMethod}
-                    mobileNumber={mobileNumber}
-                    onMobileNumberChange={setMobileNumber}
-                    amount={finalTotal}
-                    hidePayButton
-                    isPolling={pollingEnabled}
-                    onNetworkChange={setSelectedNetwork}
-                  />
-                </div>
-              )}
             </div>
 
             {/* Right: Order Summary */}
@@ -777,12 +789,10 @@ const Cart = () => {
               <OrderSummary
                 deliveryPrice={deliveryPrice}
                 isCheckingOut={isCheckingOut}
-                canCheckout={!!user}
+                canCheckout={true}
                 onCheckout={handleCheckout}
                 onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
                 isPolling={pollingEnabled}
-                showPaymentStep={showPaymentStep}
-                onShowPayment={() => setShowPaymentStep(true)}
               />
             </div>
           </div>

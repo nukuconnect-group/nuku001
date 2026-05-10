@@ -4,7 +4,7 @@
  * On payment completion, user is redirected back to /payment-callback.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
 
 const PENDING_PAYMENT_KEY = "nuku:pendingPayment";
 
@@ -45,21 +45,19 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
   const returnUrl = `${baseUrl}/payment-callback`;
 
   try {
-    const { data, error } = await supabase.functions.invoke("moneroo-init", {
-      body: {
-        amount,
-        currency,
-        description,
-        return_url: returnUrl,
-        customer,
-        metadata: { context, ...contextData },
-      },
+    const data = await invokeAuthenticatedFunction<{ checkout_url?: string; payment_id?: string; error?: string }>("moneroo-init", {
+      amount,
+      currency,
+      description,
+      return_url: returnUrl,
+      customer: customer || {},
+      metadata: { context, ...contextData },
     });
 
-    if (error || !data?.checkout_url) {
-      const msg = (data as any)?.error || error?.message || "Impossible d'ouvrir le paiement";
+    if (!data?.checkout_url) {
+      const msg = data?.error || "Impossible d'ouvrir le paiement";
       onError?.(msg);
-      return;
+      return false;
     }
 
     // Save context so we can resume after redirect or browser refresh
@@ -76,8 +74,10 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
 
     // Redirect to Moneroo checkout
     window.location.href = data.checkout_url;
+    return true;
   } catch (err: any) {
     onError?.(err.message || "Erreur réseau");
+    return false;
   }
 }
 
@@ -99,7 +99,6 @@ export function getPendingPayment(): {
     // Expire after 30 minutes
     if (Date.now() - data.ts > 30 * 60 * 1000) {
       sessionStorage.removeItem(PENDING_PAYMENT_KEY);
-    localStorage.removeItem(PENDING_PAYMENT_KEY);
       localStorage.removeItem(PENDING_PAYMENT_KEY);
       return null;
     }

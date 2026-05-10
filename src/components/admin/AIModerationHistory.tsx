@@ -64,59 +64,13 @@ export default function AIModerationHistory() {
     if (!republishProduct) return;
     setRepublishing(true);
     try {
-      // Update product name/description and set status to approved
-      const { error } = await supabase.from("products")
-        .update({
-          name: editName,
-          description: editDescription,
-          status: "approved",
-          moderation_status: "approved",
-        } as any)
-        .eq("id", republishProduct.id);
+      const { error } = await supabase.rpc("admin_republish_product" as any, {
+        p_product_id: republishProduct.id,
+        p_name: editName.trim(),
+        p_description: editDescription,
+        p_reason: "Republié par l'administrateur après modification depuis IA notifs",
+      });
       if (error) throw error;
-
-      // Log the admin override in moderation_logs
-      await supabase.from("moderation_logs").insert({
-        product_id: republishProduct.id,
-        decision: "approved",
-        reason: "Republié par l'administrateur après modification",
-        confidence: 1,
-        attempt_number: (republishProduct.log?.attempt_number || 0) + 1,
-      } as any);
-
-      // Notify the product owner via notification
-      if (republishProduct.producer_id) {
-        const { data: profile } = await supabase.from("profiles")
-          .select("user_id, full_name")
-          .eq("id", republishProduct.producer_id)
-          .single();
-        if (profile) {
-          await supabase.from("notifications").insert({
-            user_id: (profile as any).user_id,
-            type: "product",
-            title: "✅ Produit republié par l'admin",
-            description: `Votre produit "${editName}" a été modifié et approuvé par l'administrateur. Il est maintenant visible sur la marketplace.`,
-          });
-          // Send email notification
-          const { data: users } = await supabase.rpc("get_admin_users" as any);
-          const owner = (users as any[] | null)?.find((u: any) => u.user_id === (profile as any).user_id);
-          if (owner?.email) {
-            supabase.functions.invoke("send-transactional-email", {
-              body: {
-                templateName: "product-moderation",
-                recipientEmail: owner.email,
-                idempotencyKey: `admin-republish-${republishProduct.id}-${Date.now()}`,
-                templateData: {
-                  recipientName: (profile as any).full_name || owner.full_name,
-                  productName: editName,
-                  decision: "approved",
-                  reason: "Votre produit a été modifié et approuvé par l'administrateur.",
-                },
-              },
-            }).catch(() => {});
-          }
-        }
-      }
 
       toast({ title: "✅ Produit republié", description: `"${editName}" est maintenant visible.` });
       setRepublishProduct(null);
