@@ -134,17 +134,6 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
 
   const handleOrderClick = () => {
     if (!acceptedTerms) return;
-    // If payment step not yet shown, show it and scroll to it
-    if (!showPaymentStep && onShowPayment) {
-      onShowPayment();
-      // Scroll to payment section after a brief delay for render
-      setTimeout(() => {
-        const paymentEl = document.getElementById("payment-section");
-        if (paymentEl) paymentEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 150);
-      return;
-    }
-    // Otherwise proceed to checkout (payment already visible)
     onCheckout();
   };
 
@@ -333,33 +322,16 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
           </p>
         </div>
 
-        {/* Step 1: Commander button (shows payment options) */}
-        {!showPaymentStep && (
-          <Button
-            variant="hero"
-            className="w-full gap-2"
-            size="lg"
-            onClick={handleOrderClick}
-            disabled={!canCheckout || !acceptedTerms}
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Passer la commande
-          </Button>
-        )}
-
-        {/* Step 2: Confirm payment button (after payment method selected) */}
-        {showPaymentStep && (
-          <Button
-            variant="hero"
-            className="w-full gap-2"
-            size="lg"
-            onClick={onCheckout}
-            disabled={isCheckingOut || !canCheckout || !acceptedTerms || isPolling}
-          >
-            {isCheckingOut || isPolling ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-            {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Traitement..." : `Confirmer & payer ${formatPrice(finalTotal)}`}
-          </Button>
-        )}
+        <Button
+          variant="hero"
+          className="w-full gap-2"
+          size="lg"
+          onClick={handleOrderClick}
+          disabled={isCheckingOut || !canCheckout || !acceptedTerms || isPolling}
+        >
+          {isCheckingOut || isPolling ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag className="w-4 h-4" />}
+          {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Ouverture de Moneroo..." : `Commander et payer ${formatPrice(finalTotal)}`}
+        </Button>
 
         <div className="flex items-center gap-2 justify-center">
           <ShieldCheck className="w-3.5 h-3.5 text-primary" />
