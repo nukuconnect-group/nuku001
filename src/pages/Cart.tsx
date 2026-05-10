@@ -13,7 +13,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { paymentMethods } from "@/components/cart/PaymentMethodSelect";
 import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
 import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
@@ -21,37 +20,54 @@ import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind }
 
 const BillingForm = lazy(() => import("@/components/cart/BillingForm"));
 const DeliveryZoneMap = lazy(() => import("@/components/cart/DeliveryZoneMap"));
-const PaymentMethodSelect = lazy(() => import("@/components/cart/PaymentMethodSelect"));
 const AvailableDrivers = lazy(() => import("@/components/checkout/AvailableDrivers"));
 const AddressSelector = lazy(() => import("@/components/checkout/AddressSelector"));
 const OrderSummary = lazy(() => import("@/components/cart/OrderSummary"));
+
+const CHECKOUT_FORM_KEY = "nuku:checkoutForm";
+const CART_RETURN_KEY = "nuku:cartReturn";
+
+const readSavedCheckoutForm = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CHECKOUT_FORM_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 const Cart = () => {
   const { items, clearCart, total, itemCount } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t, formatPrice } = useLanguage();
+  const savedCheckoutForm = readSavedCheckoutForm();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Billing
   const [billing, setBilling] = useState({
-    firstName: "", lastName: "", email: "", phone: "", company: "", country: "Togo",
+    firstName: savedCheckoutForm?.billing?.firstName || "",
+    lastName: savedCheckoutForm?.billing?.lastName || "",
+    email: savedCheckoutForm?.billing?.email || "",
+    phone: savedCheckoutForm?.billing?.phone || "",
+    company: savedCheckoutForm?.billing?.company || "",
+    country: savedCheckoutForm?.billing?.country || "Togo",
   });
 
   // Delivery
-  const [deliveryMethod, setDeliveryMethod] = useState("pickup");
-  const [deliveryCity, setDeliveryCity] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliveryQuarter, setDeliveryQuarter] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState(savedCheckoutForm?.deliveryMethod || "pickup");
+  const [deliveryCity, setDeliveryCity] = useState(savedCheckoutForm?.deliveryCity || "");
+  const [deliveryAddress, setDeliveryAddress] = useState(savedCheckoutForm?.deliveryAddress || "");
+  const [deliveryQuarter, setDeliveryQuarter] = useState(savedCheckoutForm?.deliveryQuarter || "");
   const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Payment
   const [paymentMethod, setPaymentMethod] = useState("moneroo");
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [mobileNumber, setMobileNumber] = useState(savedCheckoutForm?.mobileNumber || savedCheckoutForm?.billing?.phone || "");
   const [showPaymentStep, setShowPaymentStep] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState("");
 
   // Promo
   const [promoDiscount, setPromoDiscount] = useState(0);
