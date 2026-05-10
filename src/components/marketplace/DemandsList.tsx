@@ -22,9 +22,11 @@ interface DemandsListProps {
   ownerOnly?: boolean;
   /** Compact card style for dashboard embeds */
   compact?: boolean;
+  /** Open a specific demand from deep links */
+  focusDemandId?: string;
 }
 
-const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact = false }: DemandsListProps) => {
+const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact = false, focusDemandId }: DemandsListProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile } = useProfile();
@@ -38,6 +40,12 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
   const [boostDemand, setBoostDemand] = useState<{ id: string; title: string; category: string } | null>(null);
   const [boostHistory, setBoostHistory] = useState<Array<{ id: string; created_at: string; amount: number; reason: string | null }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  useEffect(() => {
+    if (!focusDemandId || !demands?.length || selectedDemand?.id === focusDemandId) return;
+    const match = demands.find((d) => d.id === focusDemandId);
+    if (match) setSelectedDemand(match);
+  }, [focusDemandId, demands, selectedDemand?.id]);
 
   // Charge l'historique des boosts quand on ouvre le détail d'une demande dont on est le propriétaire
   useEffect(() => {
