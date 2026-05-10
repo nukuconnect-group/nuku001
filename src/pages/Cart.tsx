@@ -512,8 +512,14 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     if (!user) {
+      try {
+        localStorage.setItem(CHECKOUT_FORM_KEY, JSON.stringify({ billing, deliveryMethod, deliveryCity, deliveryAddress, deliveryQuarter, mobileNumber: mobileNumber || billing.phone }));
+        localStorage.setItem(CART_RETURN_KEY, "/panier");
+      } catch {
+        // Ignore storage failures
+      }
       toast({ title: t("cart.loginRequired"), description: t("cart.loginRequiredDesc"), variant: "destructive" });
-      navigate("/auth?returnTo=/panier");
+      navigate(`/auth?returnTo=${encodeURIComponent("/panier")}`);
       return;
     }
 
@@ -577,7 +583,7 @@ const Cart = () => {
       pendingCheckoutRef.current = checkoutData;
 
       // Redirect to Moneroo checkout
-      openMonerooPay({
+      const opened = await openMonerooPay({
         amount: finalTotal,
         description: `Commande NUKUCONNECT - ${identifier}`,
         customer: {
@@ -603,6 +609,8 @@ const Cart = () => {
           toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
         },
       });
+
+      if (!opened) return;
 
       setPayStatus({
         kind: "pending",
@@ -781,7 +789,7 @@ const Cart = () => {
               <OrderSummary
                 deliveryPrice={deliveryPrice}
                 isCheckingOut={isCheckingOut}
-                canCheckout={!!user}
+                canCheckout={true}
                 onCheckout={handleCheckout}
                 onDiscountChange={(discount, code) => { setPromoDiscount(discount); setPromoCode(code); }}
                 isPolling={pollingEnabled}
