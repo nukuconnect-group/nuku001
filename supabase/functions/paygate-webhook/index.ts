@@ -82,7 +82,9 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Use tx_reference or identifier as idempotency key
-    const idempotencyKey = tx_reference || identifier || "";
+    const idempotencyKeyRaw = tx_reference || identifier || "";
+    // Escape SQL LIKE wildcards (% and _) to prevent matching multiple unrelated orders
+    const idempotencyKey = idempotencyKeyRaw.replace(/[\\%_]/g, (c) => `\\${c}`);
 
     if (paymentStatus === "completed" && idempotencyKey) {
       // Find pending orders matching this transaction — idempotent: only update status=pending
