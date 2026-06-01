@@ -80,10 +80,36 @@ Deno.serve(async (req) => {
     if (!url || typeof url !== "string" || !/^https?:\/\//i.test(url)) {
       return new Response(JSON.stringify({ error: "URL invalide" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    // SSRF guard: only allow inspecting our own domains + known preview hosts;
+    // block private/link-local/loopback ranges to prevent metadata exfiltration.
+    let parsedTarget: URL;
+    try { parsedTarget = new URL(url); } catch {
+      return new Response(JSON.stringify({ error: "URL invalide" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const host = parsedTarget.hostname.toLowerCase();
+    const ALLOWED_SUFFIXES = [
+      "nukuconnect.com",
+      ".nukuconnect.com",
+      ".lovable.app",
+      ".lovable.dev",
+    ];
+    const isAllowed = parsedTarget.protocol === "https:" &&
+      ALLOWED_SUFFIXES.some((suf) => host === suf.replace(/^\./, "") || host.endsWith(suf));
+    const isBlockedHost =
+      host === "localhost" || host === "0.0.0.0" || host === "169.254.169.254" ||
+      /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host) ||
+      host.endsWith(".internal") || host.endsWith(".local");
+    if (!isAllowed || isBlockedHost) {
+      return new Response(JSON.stringify({ error: "Domaine non autorisé" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 10_000);
     const resp = await fetch(url, {
       headers: { "User-Agent": "facebookexternalhit/1.1 (NukuConnect SEO Inspector)" },
       redirect: "follow",
+      signal: ac.signal,
     });
+    clearTimeout(timer);
     const html = await resp.text();
     const tags = extract(html);
     return new Response(JSON.stringify({ success: true, status: resp.status, finalUrl: resp.url, tags }), {

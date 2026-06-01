@@ -33,8 +33,38 @@ Deno.serve(async (req) => {
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    // Auth: allow internal service-role calls, otherwise require a valid JWT
+    // and constrain the caller to notifying themselves (or admins to notify anyone).
+    const authHeader = req.headers.get('Authorization') || ''
+    const token = authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : ''
+    const isServiceRole = token && token === serviceRoleKey
+    let callerUserId: string | null = null
+    let callerIsAdmin = false
+    if (!isServiceRole) {
+      if (!token) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const authClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      })
+      const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(token)
+      if (claimsErr || !claimsData?.claims?.sub) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      callerUserId = claimsData.claims.sub as string
+      const { data: roleRow } = await supabase
+        .from('user_roles').select('role')
+        .eq('user_id', callerUserId).eq('role', 'admin').maybeSingle()
+      callerIsAdmin = !!roleRow
+    }
 
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
@@ -45,6 +75,12 @@ Deno.serve(async (req) => {
       });
     }
     const { user_id, title, body, url } = parsed.data;
+
+    if (!isServiceRole && !callerIsAdmin && user_id !== callerUserId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const { data: subscriptions, error } = await supabase
       .from('push_subscriptions')
