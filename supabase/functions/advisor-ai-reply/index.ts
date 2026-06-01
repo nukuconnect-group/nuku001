@@ -23,29 +23,58 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { ticket_id, user_id, user_message } = await req.json();
-    if (!user_id || !user_message) {
-      return new Response(JSON.stringify({ error: "user_id and user_message required" }), {
+    // Require a valid JWT — the caller can only request advice for themselves
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
+      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.slice(7).trim();
+    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Non autorisé" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authUserId = claimsData.claims.sub as string;
+
+    const body = await req.json();
+    const { ticket_id, user_message } = body || {};
+    // Force user_id from JWT — ignore any client-supplied value
+    const user_id = authUserId;
+    if (!user_message) {
+      return new Response(JSON.stringify({ error: "user_message required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    // Resolve caller's profile id once
+    const { data: callerProfile } = await admin
+      .from("profiles").select("id, full_name, business_name, user_type")
+      .eq("user_id", user_id).maybeSingle();
+    const profileId = (callerProfile as any)?.id || "";
+
     // Fetch user context: subscription, tokens, recent activity
-    const [historyRes, subRes, tokenRes, profileRes, productsRes, ordersRes] = await Promise.all([
+    const [historyRes, subRes, tokenRes, productsRes, ordersRes] = await Promise.all([
       admin.from("support_messages").select("content, sender_role, created_at").eq("user_id", user_id).order("created_at", { ascending: true }).limit(10),
       admin.from("subscriptions").select("plan, status, expires_at, max_products").eq("user_id", user_id).maybeSingle(),
       admin.rpc("get_user_token_balance", { p_user_id: user_id }),
-      admin.from("profiles").select("id, full_name, business_name, user_type").eq("user_id", user_id).maybeSingle(),
-      admin.from("products").select("id, moderation_status").eq("producer_id", (await admin.from("profiles").select("id").eq("user_id", user_id).maybeSingle()).data?.id || ""),
-      admin.from("orders").select("id, status, total_price, created_at").order("created_at", { ascending: false }).limit(5),
+      admin.from("products").select("id, moderation_status").eq("producer_id", profileId),
+      profileId
+        ? admin.from("orders").select("id, status, total_price, created_at").or(`seller_id.eq.${profileId},buyer_id.eq.${profileId}`).order("created_at", { ascending: false }).limit(5)
+        : Promise.resolve({ data: [] } as any),
     ]);
 
     const history = historyRes.data || [];
     const sub = subRes.data as any;
     const tokenBalance = typeof tokenRes.data === "number" ? tokenRes.data : 0;
-    const profile = profileRes.data as any;
+    const profile = callerProfile as any;
     const products = (productsRes.data as any[]) || [];
     const recentOrders = (ordersRes.data as any[]) || [];
 

@@ -84,9 +84,49 @@ Deno.serve(async (req) => {
     return new Response("invalid url", { status: 400, headers: corsHeaders });
   }
 
+  // SSRF guard: only allow well-known image hosts and our own Supabase storage
+  let parsedTarget: URL;
+  try {
+    parsedTarget = new URL(target);
+  } catch {
+    await logError({ source_url: target, error_kind: "invalid_url" });
+    return new Response("invalid url", { status: 400, headers: corsHeaders });
+  }
+  const host = parsedTarget.hostname.toLowerCase();
+  const ALLOWED_SUFFIXES = [
+    ".supabase.co",
+    ".supabase.in",
+    ".unsplash.com",
+    "images.unsplash.com",
+    "plus.unsplash.com",
+    ".googleusercontent.com",
+    ".gstatic.com",
+    ".cloudinary.com",
+    ".imgix.net",
+  ];
+  const isAllowed =
+    parsedTarget.protocol === "https:" &&
+    ALLOWED_SUFFIXES.some((suf) => host === suf.replace(/^\./, "") || host.endsWith(suf));
+  // Block any private / link-local / loopback addresses just in case a DNS name resolves there
+  const isBlockedHost =
+    host === "localhost" ||
+    host === "0.0.0.0" ||
+    host === "169.254.169.254" ||
+    /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host) ||
+    host.endsWith(".internal") ||
+    host.endsWith(".local");
+  if (!isAllowed || isBlockedHost) {
+    await logError({ source_url: target, error_kind: "blocked_host" });
+    return new Response("host not allowed", { status: 403, headers: corsHeaders });
+  }
+
   let upstreamStatus = 0;
   try {
-    const upstream = await fetch(target);
+    // Timeout + size guard
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 10_000);
+    const upstream = await fetch(target, { signal: ac.signal, redirect: "follow" });
+    clearTimeout(timer);
     upstreamStatus = upstream.status;
     if (!upstream.ok) {
       await logError({
@@ -96,6 +136,16 @@ Deno.serve(async (req) => {
         duration_ms: Date.now() - started,
       });
       return new Response("upstream error", { status: 502, headers: corsHeaders });
+    }
+    const upstreamType = (upstream.headers.get("content-type") || "").toLowerCase();
+    if (upstreamType && !upstreamType.startsWith("image/")) {
+      await logError({ source_url: target, error_kind: "non_image_content_type", upstream_status: upstreamStatus });
+      return new Response("not an image", { status: 415, headers: corsHeaders });
+    }
+    const lenHeader = Number(upstream.headers.get("content-length") || 0);
+    if (lenHeader && lenHeader > 15 * 1024 * 1024) {
+      await logError({ source_url: target, error_kind: "image_too_large", upstream_status: upstreamStatus });
+      return new Response("image too large", { status: 413, headers: corsHeaders });
     }
     const srcBytes = new Uint8Array(await upstream.arrayBuffer());
     const fmt = resolveFormat(reqFormat, upstream.headers.get("content-type"), target);

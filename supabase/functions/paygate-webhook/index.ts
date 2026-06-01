@@ -16,9 +16,32 @@ const WebhookSchema = z.object({
   datetime: z.string().optional(),
 });
 
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Shared-secret authentication: Paygate must include ?token=… or X-Paygate-Token header
+  // matching the PAYGATE_WEBHOOK_SECRET stored in Edge Function secrets.
+  const expectedSecret = Deno.env.get("PAYGATE_WEBHOOK_SECRET") || "";
+  const incomingToken =
+    new URL(req.url).searchParams.get("token") ||
+    req.headers.get("x-paygate-token") ||
+    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+    "";
+  if (!expectedSecret || !incomingToken || !safeEqual(incomingToken, expectedSecret)) {
+    console.warn("[paygate-webhook] Rejected: missing or invalid shared secret");
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -59,7 +82,9 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Use tx_reference or identifier as idempotency key
-    const idempotencyKey = tx_reference || identifier || "";
+    const idempotencyKeyRaw = tx_reference || identifier || "";
+    // Escape SQL LIKE wildcards (% and _) to prevent matching multiple unrelated orders
+    const idempotencyKey = idempotencyKeyRaw.replace(/[\\%_]/g, (c) => `\\${c}`);
 
     if (paymentStatus === "completed" && idempotencyKey) {
       // Find pending orders matching this transaction — idempotent: only update status=pending
