@@ -57,10 +57,11 @@ const WithdrawalPanel = () => {
       .select("total_price, status")
       .eq("seller_id", profile.id);
 
-    // Les gains tombent dès que le paiement est initié (statuts non annulés/refusés)
-    const EXCLUDED = new Set(["cancelled", "canceled", "refunded", "failed", "rejected"]);
+    // Gains comptabilisés uniquement quand le paiement Moneroo est confirmé/encaissé.
+    // Les commandes "pending" / "failed" / "cancelled" ne génèrent AUCUN gain.
+    const PAID = new Set(["confirmed", "completed", "paid", "delivered"]);
     const earnings = (orderData || [])
-      .filter((o: any) => !EXCLUDED.has(String(o.status || "").toLowerCase()))
+      .filter((o: any) => PAID.has(String(o.status || "").toLowerCase()))
       .reduce((sum: number, o: any) => sum + (Number(o.total_price) || 0), 0);
     setTotalEarnings(earnings);
 

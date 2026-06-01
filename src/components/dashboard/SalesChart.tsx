@@ -8,6 +8,10 @@ interface SalesChartProps {
   orders?: any[];
 }
 
+// Only paid orders are counted in revenue charts.
+const PAID_STATUSES = new Set(["confirmed", "completed", "paid", "delivered"]);
+const isPaid = (o: any) => PAID_STATUSES.has(String(o?.status || "").toLowerCase());
+
 const buildSalesData = (orders: any[]) => {
   const now = new Date();
   const monthMap: Record<string, { ventes: number; commandes: number }> = {};
@@ -18,7 +22,7 @@ const buildSalesData = (orders: any[]) => {
     monthMap[key] = { ventes: 0, commandes: 0 };
   }
 
-  orders.forEach(o => {
+  orders.filter(isPaid).forEach(o => {
     const d = new Date(o.created_at);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     if (monthMap[key]) {
@@ -35,7 +39,7 @@ const buildSalesData = (orders: any[]) => {
 
 const buildCategoryData = (orders: any[]) => {
   const catMap: Record<string, number> = {};
-  orders.forEach(o => {
+  orders.filter(isPaid).forEach(o => {
     const cat = o.products?.category || "Autre";
     catMap[cat] = (catMap[cat] || 0) + (Number(o.total_price) || 0);
   });

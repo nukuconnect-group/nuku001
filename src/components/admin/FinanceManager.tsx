@@ -44,9 +44,12 @@ const FinanceManager = ({ orders, users, stats }: Props) => {
     load();
   }, []);
 
-  // Build per-user revenue data
+  // Build per-user revenue data — only count orders with a confirmed/completed payment.
+  // Pending / failed / cancelled Moneroo orders must NOT appear in financial stats.
+  const PAID_STATUSES = new Set(["confirmed", "completed", "paid", "delivered"]);
   const sellerRevenue: Record<string, { name: string; sales: number; commission: number; net: number; plan: string; orderCount: number }> = {};
   orders.forEach((o: any) => {
+    if (!PAID_STATUSES.has(String(o.status || "").toLowerCase())) return;
     const sellerId = o.seller_name || "Unknown";
     if (!sellerRevenue[sellerId]) {
       const userMatch = users.find((u: any) => u.full_name === o.seller_name);

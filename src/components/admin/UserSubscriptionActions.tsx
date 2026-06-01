@@ -28,7 +28,7 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
   const [openSub, setOpenSub] = useState(false);
   const [openCredit, setOpenCredit] = useState(false);
   const [plan, setPlan] = useState(currentPlan || "pro");
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [duration, setDuration] = useState(30);
   const [credit, setCredit] = useState(50);
   const [reason, setReason] = useState("");
@@ -181,7 +181,7 @@ export default function UserSubscriptionActions({ userId, userName, currentPlan,
                   <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="monthly" className="text-xs">Mensuel</SelectItem>
-                    <SelectItem value="yearly" className="text-xs">Annuel</SelectItem>
+                    <SelectItem value="annual" className="text-xs">Annuel</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
