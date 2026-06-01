@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const history = historyRes.data || [];
     const sub = subRes.data as any;
     const tokenBalance = typeof tokenRes.data === "number" ? tokenRes.data : 0;
-    const profile = profileRes.data as any;
+    const profile = callerProfile as any;
     const products = (productsRes.data as any[]) || [];
     const recentOrders = (ordersRes.data as any[]) || [];
 
