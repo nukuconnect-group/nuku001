@@ -117,7 +117,11 @@ const BuyerDashboard = () => {
     return result;
   })();
 
-  const totalSpent = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+  // Dépenses comptabilisées uniquement quand le paiement Moneroo est confirmé/encaissé.
+  const PAID_STATUSES = new Set(["confirmed", "completed", "paid", "delivered"]);
+  const totalSpent = orders
+    .filter((o: any) => PAID_STATUSES.has(String(o.status || "").toLowerCase()))
+    .reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
   const pendingOrders = orders.filter(o => o.status === "pending").length;
   const unreadNotifs = notifications.filter(n => !n.is_read).length;
 
