@@ -130,9 +130,10 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
         .gte("created_at", since)
         .lte("created_at", until);
       const orders = orderRows?.length ?? 0;
-      const EXCLUDED = new Set(["cancelled", "canceled", "refunded", "failed", "rejected"]);
+      // Revenu réel = uniquement commandes au paiement Moneroo confirmé.
+      const PAID = new Set(["confirmed", "completed", "paid", "delivered"]);
       const revenue = (orderRows || [])
-        .filter((o: any) => !EXCLUDED.has(String(o.status || "").toLowerCase()))
+        .filter((o: any) => PAID.has(String(o.status || "").toLowerCase()))
         .reduce((s: number, o: any) => s + (Number(o.total_price) || 0), 0);
 
       if (cancelled) return;
