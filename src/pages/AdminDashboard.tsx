@@ -313,6 +313,7 @@ const AdminDashboard = () => {
     { id: "overview", label: "Vue d'ensemble", icon: BarChart3 },
     { id: "recent-actions", label: "Actions récentes", icon: Activity },
     { id: "analytics", label: "Analytics", icon: Activity },
+    { id: "search-analytics", label: "Recherches", icon: SearchIcon },
     { id: "users", label: "Utilisateurs", icon: Users },
     { id: "orders", label: "Commandes", icon: ShoppingCart },
     { id: "products", label: "Produits", icon: Package },
