@@ -40,3 +40,15 @@ export async function trackSearch(params: {
     /* silencieux : ne pas casser l'UX si l'analytics échoue */
   }
 }
+
+const MODE_KEY = "nk_last_search_mode";
+export function rememberSearchMode(mode: SearchMode) {
+  try { sessionStorage.setItem(MODE_KEY, mode); } catch { /* ignore */ }
+}
+export function consumeSearchMode(): SearchMode {
+  try {
+    const m = sessionStorage.getItem(MODE_KEY) as SearchMode | null;
+    sessionStorage.removeItem(MODE_KEY);
+    return m || "text";
+  } catch { return "text"; }
+}
