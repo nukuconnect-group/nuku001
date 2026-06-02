@@ -710,7 +710,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 value={newProduct.location}
                 onChange={(v) => setNewProduct({ ...newProduct, location: v })}
               />
-            </div>
+              <Button
+                type="button" size="sm" variant="outline" className="gap-1.5 h-8 text-[11px] w-full"
+                onClick={() => {
+                  if (!navigator.geolocation) { toast({ title: "Géolocalisation indisponible", variant: "destructive" }); return; }
+                  toast({ title: "📍 Localisation en cours..." });
+                  navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    try {
+                      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reverse-geocode?lat=${lat}&lng=${lng}`;
+                      const res = await fetch(url);
+                      const j = await res.json();
+                      setNewProduct((p) => ({
+                        ...p, lat, lng,
+                        country: j.country || "", city: j.city || "", quarter: j.quarter || "",
+                        location: j.display || p.location,
+                      }));
+                      toast({ title: "📍 Position détectée", description: j.display || `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+                    } catch {
+                      setNewProduct((p) => ({ ...p, lat, lng }));
+                      toast({ title: "Coordonnées GPS enregistrées", description: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+                    }
+                  }, (err) => toast({ title: "Erreur géolocalisation", description: err.message, variant: "destructive" }),
+                  { enableHighAccuracy: true, timeout: 10000 });
+                }}
+              >
+                <MapPin className="w-3.5 h-3.5" /> Utiliser ma position actuelle
+              </Button>
+              {newProduct.lat && newProduct.lng && (
+                <p className="text-[10px] text-muted-foreground">GPS: {Number(newProduct.lat).toFixed(4)}, {Number(newProduct.lng).toFixed(4)}</p>
+              )}
 
             <div className="space-y-2">
               <Label>Délai de livraison estimé</Label>
