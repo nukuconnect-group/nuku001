@@ -506,6 +506,8 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+
+          <PixelsManager />
         </div>
       </main>
       <Footer />
