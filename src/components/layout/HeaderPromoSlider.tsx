@@ -104,9 +104,6 @@ const HeaderPromoSlider = () => {
                   <h3 className="font-heading text-primary-foreground font-black leading-[1.05] mt-2 sm:mt-3 text-[19px] sm:text-3xl md:text-4xl lg:text-[42px] drop-shadow-sm">
                     {slide.title}
                   </h3>
-                  <p className="text-primary-foreground font-extrabold text-[11px] sm:text-sm md:text-base mt-2 drop-shadow-sm">
-                    {slide.highlight}
-                  </p>
                   <p className="text-primary-foreground/95 text-[11px] sm:text-sm md:text-base mt-2 max-w-[34ch] leading-snug drop-shadow-sm">
                     {slide.subtitle}
                   </p>
