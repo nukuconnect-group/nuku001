@@ -279,6 +279,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         shipping_delay_days: Math.max(0, Math.min(30, parseInt(newProduct.shipping_delay_days || "1", 10) || 1)),
         producer_id: profileId,
         images: imageUrls.length > 0 ? imageUrls : null,
+        lat: newProduct.lat,
+        lng: newProduct.lng,
+        country: newProduct.country || null,
+        city: newProduct.city || null,
+        quarter: newProduct.quarter || null,
       };
 
       let savedProductId: string | null = null;
