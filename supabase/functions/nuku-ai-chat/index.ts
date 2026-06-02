@@ -122,7 +122,9 @@ serve(async (req) => {
               if (!json) continue;
               try {
                 const parsed = JSON.parse(json);
-                const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                const text = parsed?.candidates?.[0]?.content?.parts
+                  ?.map((part: { text?: string }) => part.text || "")
+                  .join("");
                 if (text) {
                   const chunk = { choices: [{ delta: { content: text } }] };
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
