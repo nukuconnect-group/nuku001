@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NukuAIFloating from "@/components/home/NukuAIFloating";
 import HeroCarousel from "@/components/home/HeroCarousel";
-import PromoBannerSlider from "@/components/home/PromoBannerSlider";
+
 import SolutionsSection from "@/components/home/SolutionsSection";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategoriesSection from "@/components/home/CategoriesSection";
