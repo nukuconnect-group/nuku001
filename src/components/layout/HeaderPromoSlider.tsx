@@ -82,39 +82,29 @@ const HeaderPromoSlider = () => {
           </div>
 
           <div className="relative z-10 min-h-[248px] sm:min-h-[288px] md:min-h-[320px] lg:min-h-[340px] flex flex-col justify-between">
-            <div className="px-4 sm:px-7 md:px-10 pt-5 sm:pt-8 md:pt-10 w-[64%] sm:w-[57%] md:w-[52%]">
-              {slides.map((slide, i) => {
-                const { Icon } = slide;
-                return (
-                  <div
-                    key={slide.title}
-                    className={`transition-all duration-700 ease-out ${
-                      i === current ? "opacity-100 translate-y-0" : "pointer-events-none absolute opacity-0 translate-y-3"
-                    }`}
-                  >
-                    <p className="inline-flex items-center gap-1.5 bg-primary-foreground/12 px-2.5 py-1 text-accent text-[9px] sm:text-[11px] md:text-xs font-extrabold uppercase tracking-[0.14em] leading-none">
-                      <Sparkles className="w-3 h-3" />
-                      {slide.eyebrow}
-                    </p>
-                    <h3 className="font-heading text-primary-foreground font-black leading-[1.05] mt-2 sm:mt-3 text-[19px] sm:text-3xl md:text-4xl lg:text-[42px] drop-shadow-sm">
-                      {slide.title}
-                    </h3>
-                    <p className="text-accent font-extrabold text-[11px] sm:text-sm md:text-base mt-2">
-                      {slide.highlight}
-                    </p>
-                    <p className="text-primary-foreground/95 text-[11px] sm:text-sm md:text-base mt-2 max-w-[34ch] leading-snug drop-shadow-sm">
-                      {slide.subtitle}
-                    </p>
-                    <Link
-                      to={slide.href}
-                      className="mt-3 sm:mt-5 inline-flex items-center gap-1.5 bg-accent text-accent-foreground font-extrabold text-[10px] sm:text-xs md:text-sm uppercase tracking-wide px-3 sm:px-5 py-2 sm:py-2.5 rounded-none shadow-md hover:bg-accent/90 hover:shadow-lg transition-all"
-                    >
-                      <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      {slide.cta}
-                    </Link>
-                  </div>
-                );
-              })}
+            <div className="px-4 sm:px-7 md:px-10 pt-5 sm:pt-8 md:pt-10 pb-4 w-[64%] sm:w-[57%] md:w-[52%]">
+              {slides.map((slide, i) => (
+                <div
+                  key={slide.title}
+                  className={`transition-all duration-700 ease-out ${
+                    i === current ? "opacity-100 translate-y-0" : "pointer-events-none absolute opacity-0 translate-y-3"
+                  }`}
+                >
+                  <p className="inline-flex items-center gap-1.5 bg-primary-foreground/15 px-2.5 py-1 text-primary-foreground text-[9px] sm:text-[11px] md:text-xs font-extrabold uppercase tracking-[0.14em] leading-none">
+                    <Sparkles className="w-3 h-3" />
+                    {slide.eyebrow}
+                  </p>
+                  <h3 className="font-heading text-primary-foreground font-black leading-[1.05] mt-2 sm:mt-3 text-[19px] sm:text-3xl md:text-4xl lg:text-[42px] drop-shadow-sm">
+                    {slide.title}
+                  </h3>
+                  <p className="text-primary-foreground font-extrabold text-[11px] sm:text-sm md:text-base mt-2 drop-shadow-sm">
+                    {slide.highlight}
+                  </p>
+                  <p className="text-primary-foreground/95 text-[11px] sm:text-sm md:text-base mt-2 max-w-[34ch] leading-snug drop-shadow-sm">
+                    {slide.subtitle}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div className="grid grid-cols-3 border-t border-primary-foreground/15 bg-primary-foreground/10 backdrop-blur-sm">
