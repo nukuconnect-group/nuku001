@@ -107,12 +107,13 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               onError={() => setListImgError(true)}
             />
             <div className="absolute top-2 left-2 flex gap-1">
-              <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
-              {product.discount && (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{product.discount}%</Badge>
+              {computedDiscount > 0 ? (
+                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
+              ) : (
+                <Badge className="bg-accent text-accent-foreground font-bold text-[10px] animate-pulse">⚡ NEW</Badge>
               )}
-              {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">NEW</Badge>}
             </div>
+
           </div>
           <CardContent className="flex-1 p-4">
             <div className="flex flex-col h-full justify-between">
