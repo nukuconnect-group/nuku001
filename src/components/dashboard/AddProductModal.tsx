@@ -741,6 +741,9 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               {newProduct.lat && newProduct.lng && (
                 <p className="text-[10px] text-muted-foreground">GPS: {Number(newProduct.lat).toFixed(4)}, {Number(newProduct.lng).toFixed(4)}</p>
               )}
+            </div>
+
+
 
             <div className="space-y-2">
               <Label>Délai de livraison estimé</Label>
