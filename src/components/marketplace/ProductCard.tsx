@@ -180,9 +180,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {!minimal && (
               computedDiscount > 0 ? (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                  -{computedDiscount}%
-                </Badge>
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    PROMO
+                  </Badge>
+                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    -{computedDiscount}%
+                  </Badge>
+                </div>
               ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
                   ⚡ NEW
