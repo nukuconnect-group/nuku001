@@ -197,6 +197,7 @@ const App = () => {
                   <Route path="/produit/:id" element={<ProductDetail />} />
                   <Route path="/producteurs" element={<Producers />} />
                   <Route path="/producteurs/:name" element={<ProducerProfile />} />
+                  <Route path="/@:username" element={<UserShopRedirect />} />
                   <Route path="/nuku-ai" element={<NukuAI />} />
                   <Route path="/formations" element={<Formations />} />
                   <Route path="/formations/:id" element={<FormationDetail />} />
