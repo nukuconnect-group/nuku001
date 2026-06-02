@@ -25,7 +25,7 @@ const RecentPublications = () => {
         {/* Mobile: horizontal scroll */}
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 scrollbar-hide md:hidden">
           {recentProducts.map((product) => (
-            <div key={product.id} className="flex-shrink-0 w-[140px] h-[260px]">
+            <div key={product.id} className="flex-shrink-0 w-[140px]">
               <ProductCard product={product} viewMode="grid" hideProducer />
             </div>
           ))}
@@ -34,7 +34,7 @@ const RecentPublications = () => {
         {/* Desktop: grid */}
         <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-5 gap-3">
           {recentProducts.slice(0, 5).map((product) => (
-            <div key={product.id} className="h-[300px]">
+            <div key={product.id}>
               <ProductCard product={product} viewMode="grid" hideProducer />
             </div>
           ))}

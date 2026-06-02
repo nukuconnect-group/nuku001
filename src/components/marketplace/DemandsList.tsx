@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDemands, type Demand } from "@/hooks/useDemands";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -28,6 +28,7 @@ interface DemandsListProps {
 
 const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact = false, focusDemandId }: DemandsListProps) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { profile } = useProfile();
   const { data: demands, isLoading } = useDemands(category);
@@ -37,15 +38,27 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
   const [offerValues, setOfferValues] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [selectedDemand, setSelectedDemand] = useState<Demand | null>(null);
+  const [dismissedFocusId, setDismissedFocusId] = useState<string | null>(null);
   const [boostDemand, setBoostDemand] = useState<{ id: string; title: string; category: string } | null>(null);
   const [boostHistory, setBoostHistory] = useState<Array<{ id: string; created_at: string; amount: number; reason: string | null }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     if (!focusDemandId || !demands?.length || selectedDemand?.id === focusDemandId) return;
+    if (dismissedFocusId === focusDemandId) return;
     const match = demands.find((d) => d.id === focusDemandId);
     if (match) setSelectedDemand(match);
-  }, [focusDemandId, demands, selectedDemand?.id]);
+  }, [focusDemandId, demands, selectedDemand?.id, dismissedFocusId]);
+
+  const closeSelectedDemand = () => {
+    if (focusDemandId) setDismissedFocusId(focusDemandId);
+    setSelectedDemand(null);
+    if (searchParams.get("demandId")) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("demandId");
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   // Charge l'historique des boosts quand on ouvre le détail d'une demande dont on est le propriétaire
   useEffect(() => {
@@ -152,7 +165,7 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
         title: mode === "offer" ? "Proposition envoyée" : "Discussion ouverte",
         description: mode === "offer" ? "Votre quantité disponible a été envoyée au demandeur. Il a été notifié." : "Vous pouvez maintenant discuter avec le demandeur.",
       });
-      setSelectedDemand(null);
+      closeSelectedDemand();
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error: any) {
       toast({ title: "Erreur", description: error?.message || "Impossible d'ouvrir la discussion pour le moment.", variant: "destructive" });
@@ -340,7 +353,7 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
       />
 
       {/* Demand Detail Sheet */}
-      <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && setSelectedDemand(null)}>
+      <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && closeSelectedDemand()}>
         <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
           {selectedDemand && (
             <>

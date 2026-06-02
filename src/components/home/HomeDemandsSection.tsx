@@ -11,53 +11,6 @@ import { useState } from "react";
  * Affiche les vraies demandes + complète avec des exemples pro
  * pour toujours offrir un visuel riche aux fournisseurs.
  */
-const SAMPLE_DEMANDS = [
-  {
-    id: "demo-1",
-    title: "Recherche 500 kg de maïs blanc",
-    category: "Céréales",
-    quantity: 500,
-    unit: "kg",
-    budget: 175000,
-    location: "Lomé, Togo",
-    profile: { full_name: "Boulangerie Étoile", avatar_url: null },
-    image_url: "https://images.unsplash.com/photo-1601593768799-76d3ca2fbd58?w=400&q=80",
-  },
-  {
-    id: "demo-2",
-    title: "Sacs de riz local 50 kg — 1 tonne",
-    category: "Céréales",
-    quantity: 1000,
-    unit: "kg",
-    budget: 450000,
-    location: "Kara, Togo",
-    profile: { full_name: "Coopérative Agro-Nord", avatar_url: null },
-    image_url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80",
-  },
-  {
-    id: "demo-3",
-    title: "Poissons frais (tilapia) 200 kg/semaine",
-    category: "Pisciculture",
-    quantity: 200,
-    unit: "kg",
-    budget: 350000,
-    location: "Abidjan, Côte d'Ivoire",
-    profile: { full_name: "Chaîne SuperFrais", avatar_url: null },
-    image_url: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?w=400&q=80",
-  },
-  {
-    id: "demo-4",
-    title: "Œufs de poule plein air — 2000 unités",
-    category: "Aviculture",
-    quantity: 2000,
-    unit: "unités",
-    budget: 240000,
-    location: "Accra, Ghana",
-    profile: { full_name: "Hôtel Akwaaba", avatar_url: null },
-    image_url: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400&q=80",
-  },
-];
-
 const DemandImage = ({ src, category, title }: { src?: string; category: string; title: string }) => {
   const [errored, setErrored] = useState(false);
   const finalSrc = !src || errored ? getCategoryFallbackImage(category, title) : src;
@@ -80,8 +33,8 @@ const HomeDemandsSection = () => {
 
   if (isLoading) return null;
 
-  // Combiner les vraies demandes + exemples pour toujours avoir un visuel riche
-  const realDemands = demands.slice(0, 20).map((d) => ({
+  // Seulement les vraies demandes — pas de démo
+  const allItems = demands.slice(0, 20).map((d) => ({
     id: d.id,
     title: d.title,
     category: d.category,
@@ -92,7 +45,6 @@ const HomeDemandsSection = () => {
     profile: d.profile,
     image_url: (d as any).image_url,
   }));
-  const allItems = [...realDemands, ...SAMPLE_DEMANDS];
   if (allItems.length === 0) return null;
 
   const finalItems = allItems.slice(0, visibleCount);
@@ -125,8 +77,7 @@ const HomeDemandsSection = () => {
         {/* Scroll horizontal compact */}
         <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-3 -mx-3 px-3 sm:-mx-4 sm:px-4 snap-x snap-mandatory scrollbar-hide">
           {finalItems.map((d) => {
-            const isDemo = d.id.startsWith("demo-");
-            const linkHref = isDemo ? "/marketplace?tab=demands" : `/marketplace?tab=demands&demandId=${d.id}`;
+            const linkHref = `/marketplace?tab=demands&demandId=${d.id}`;
             return (
               <Link
                 key={d.id}

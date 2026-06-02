@@ -16,6 +16,7 @@ import HomeDemandsSection from "@/components/home/HomeDemandsSection";
 import DirectFromFarmHero from "@/components/home/DirectFromFarmHero";
 import RecentPublications from "@/components/home/RecentPublications";
 import HelpAICard from "@/components/home/HelpAICard";
+import SellProductsCard from "@/components/home/SellProductsCard";
 import VerifiedSuppliersBar from "@/components/home/VerifiedSuppliersBar";
 
 import { useProfile } from "@/contexts/ProfileContext";
@@ -55,6 +56,7 @@ const Index = () => {
           <HeroCarousel />
         </div>
         <HelpAICard />
+        <SellProductsCard />
         <RecentPublications />
         <SolutionsSection />
         <CategoriesSection />
