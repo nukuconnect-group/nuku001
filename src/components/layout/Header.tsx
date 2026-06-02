@@ -434,9 +434,8 @@ const Header = () => {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
                   <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
-                    <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
-                      <img src={nukuLogo} alt="NUKUCONNECT" className="w-8 h-8 object-contain rounded-full bg-white p-0.5" />
-                      NUKUCONNECT
+                    <SheetTitle className="flex items-center justify-start text-primary-foreground text-sm">
+                      <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-9 w-auto object-contain" />
                     </SheetTitle>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100vh-60px)]">
