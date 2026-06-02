@@ -6,7 +6,6 @@ import mixxCloud from "@/assets/header-promo-mixx-cloud.png";
 import mixxLogo from "@/assets/header-promo-mixx-logo.png";
 import networkImg from "@/assets/promo-network-connected.jpg";
 import heroFarmers from "@/assets/hero-farmers-connected.jpg";
-import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 import heroOrganic from "@/assets/hero-organic-farm.jpg";
 
 const slides = [
