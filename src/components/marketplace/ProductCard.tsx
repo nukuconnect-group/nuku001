@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
+import { useAverageRating } from "@/hooks/useReviews";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
 
