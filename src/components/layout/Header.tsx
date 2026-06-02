@@ -644,7 +644,7 @@ const Header = () => {
 
                 {/* Account button - sidebar if logged in, full page auth if not */}
                 <Button variant="ghost" size="icon"
-                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden hidden lg:flex"
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden flex"
                   onClick={() => {
                     if (user) {
                       setAccountSidebarOpen(true);
