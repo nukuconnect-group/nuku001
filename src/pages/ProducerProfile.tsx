@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import ShareDialog from "@/components/share/ShareDialog";
+import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import PresenceIndicator from "@/components/profile/PresenceIndicator";
 import { buildDirectionsUrl } from "@/lib/location";
