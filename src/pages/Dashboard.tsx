@@ -621,30 +621,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Settings collapsible (was tab) */}
-          <details className="mb-4" id="settings-section">
-            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
-              <Settings className="w-4 h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-semibold text-foreground">Paramètres du compte</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-            </summary>
-            <div className="mt-2 space-y-3">
-              <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
-            </div>
-          </details>
-
-          {/* Withdrawals collapsible */}
-          <details className="mb-4" id="withdrawals-section">
-            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
-              <Wallet className="w-4 h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-semibold text-foreground">Retraits & paiements</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-            </summary>
-            <div className="mt-2">
-              <WithdrawalPanel />
-            </div>
-          </details>
+          {/* Paramètres & Retraits accessibles via icônes Actions rapides (dialogs) */}
 
         </div>
       </main>
