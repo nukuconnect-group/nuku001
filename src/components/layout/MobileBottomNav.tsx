@@ -24,6 +24,7 @@ const MobileBottomNav = () => {
   const [showAddFormation, setShowAddFormation] = useState(false);
   const [showPublishChoice, setShowPublishChoice] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [showProductSubmittedDialog, setShowProductSubmittedDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSellLoading, setShowSellLoading] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -267,8 +268,8 @@ const MobileBottomNav = () => {
             }}
             profileId={profile.id}
             onProductAdded={() => {
-              toast({ title: "Produit publié !", description: "Votre produit est visible sur le marketplace" });
               setShowAddProduct(false);
+              setShowProductSubmittedDialog(true);
             }}
           />
           <AddFormationModal
@@ -282,6 +283,24 @@ const MobileBottomNav = () => {
           />
         </Suspense>
       )}
+
+      {/* Popup confirmation : produit soumis pour analyse */}
+      <AlertDialog open={showProductSubmittedDialog} onOpenChange={setShowProductSubmittedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Produit soumis avec succès</AlertDialogTitle>
+            <AlertDialogDescription>
+              Votre produit a été pris en compte. Il sera analysé par l'équipe Nukuconnect dans environ
+              <strong> 20 minutes</strong> avant d'être publié sur la marketplace. Vous recevrez une notification dès qu'il sera validé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowProductSubmittedDialog(false)}>
+              Compris
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

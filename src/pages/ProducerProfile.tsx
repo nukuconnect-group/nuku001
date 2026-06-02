@@ -16,6 +16,7 @@ import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
+import { useGeocodeLocation } from "@/hooks/useGeocodeLocation";
 import PresenceIndicator from "@/components/profile/PresenceIndicator";
 import { buildDirectionsUrl } from "@/lib/location";
 import { 
@@ -256,7 +257,11 @@ const ProducerProfile = () => {
   }
 
   const rating = avgRating || 0;
-  const coords = getCoords(producer.location || "Togo");
+  const staticCoords = getCoords(producer.location || "Togo");
+  const { data: geocoded } = useGeocodeLocation(producer.location);
+  const coords: [number, number] = geocoded || ((producer as any).lat && (producer as any).lng
+    ? [(producer as any).lat, (producer as any).lng]
+    : staticCoords);
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">

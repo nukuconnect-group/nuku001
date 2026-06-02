@@ -565,7 +565,7 @@ const Header = () => {
                   <Input type="text" placeholder="Rechercher un produit ou une catégorie..." value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); onSearchType(); }}
                     onFocus={() => { setShowSearchResults(true); onSearchFocus(); }}
-                    className="w-full h-10 pl-4 pr-44 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
+                    className="w-full h-10 pl-4 pr-52 rounded-full bg-primary-foreground text-foreground placeholder:text-muted-foreground border-0 text-sm" />
                   <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                     <button type="button" onClick={() => setQrScannerOpen(true)}
                       className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
@@ -678,7 +678,7 @@ const Header = () => {
               <Input type="text" placeholder="Rechercher un produit ou une catégorie..." value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearchResults(true); onSearchType(); }}
               onFocus={() => { setShowSearchResults(true); onSearchFocus(); }}
-              className="w-full h-9 pl-4 pr-28 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
+              className="w-full h-9 pl-4 pr-32 rounded-full bg-primary-foreground/90 text-foreground placeholder:text-muted-foreground border-0 text-xs" />
             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
               <button type="button" onClick={() => setQrScannerOpen(true)}
                 className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors">
