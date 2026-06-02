@@ -81,12 +81,21 @@ Deno.serve(async (req) => {
       description: description || "Paiement NUKUCONNECT",
       return_url:
         return_url || "https://nukuconnect.com/payment-callback",
-      customer: {
-        email: customer?.email || user.email || "",
-        first_name: customer?.first_name || "",
-        last_name: customer?.last_name || "",
-        phone: customer?.phone || "",
-      },
+      customer: (() => {
+        const email = String(customer?.email || user.email || "");
+        const rawFirst = String(customer?.first_name || "").trim();
+        const rawLast = String(customer?.last_name || "").trim();
+        const emailLocal = email.split("@")[0] || "Client";
+        const parts = (user.user_metadata?.full_name || "").trim().split(/\s+/).filter(Boolean);
+        const first_name = rawFirst || parts[0] || emailLocal || "Client";
+        const last_name = rawLast || parts.slice(1).join(" ") || parts[0] || "Nukuconnect";
+        return {
+          email,
+          first_name: String(first_name),
+          last_name: String(last_name),
+          phone: String(customer?.phone || user.user_metadata?.phone || ""),
+        };
+      })(),
       metadata: flatMetadata,
     };
 
