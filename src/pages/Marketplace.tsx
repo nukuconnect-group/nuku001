@@ -399,6 +399,8 @@ const Marketplace = () => {
     return result;
   }, [searchQuery, selectedCategory, priceRange, organicOnly, verifiedOnly, inStockOnly, discountOnly, minRating, location, sortBy, allProducts, shippingFilter, t]);
 
+  useEffect(() => { filteredProductsCountRef.current = filteredProducts.length; }, [filteredProducts.length]);
+
   // ID set des produits sponsorisés — pour les EXCLURE des autres sections
   // (populaire, flash, nouveautés, par catégorie). Ils restent visibles uniquement
   // dans la section dédiée "Produits sponsorisés".
