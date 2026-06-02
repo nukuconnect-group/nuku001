@@ -8,7 +8,7 @@ import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.j
 const slides = [
   {
     eyebrow: "Marketplace agricole",
-    title: "Achetez frais, directement aux producteurs",
+    title: "Achetez frais, directement auprès des producteurs",
     highlight: "Femmes et hommes agricoles connectés",
     subtitle: "Produits locaux vérifiés, commandes rapides et paiement sécurisé.",
     cta: "Explorer",
@@ -18,8 +18,8 @@ const slides = [
   },
   {
     eyebrow: "Réseau NukuConnect",
-    title: "Producteurs, fournisseurs et acheteurs en réseau",
-    highlight: "Transactions agricoles intelligentes",
+    title: "Producteurs, fournisseurs et acheteurs réunis",
+    highlight: "Des transactions agricoles intelligentes",
     subtitle: "Connectez votre production au marché avec une expérience simple et fiable.",
     cta: "Rejoindre",
     href: "/marketplace",
@@ -29,8 +29,8 @@ const slides = [
   {
     eyebrow: "Commerce sécurisé",
     title: "Vendez, payez et livrez en toute confiance",
-    highlight: "Traçabilité + livraison NukuConnect",
-    subtitle: "Des transactions agricoles claires, de la boutique jusqu’à la livraison.",
+    highlight: "Traçabilité et livraison NukuConnect",
+    subtitle: "Des échanges agricoles transparents, de la boutique jusqu’à la livraison.",
     cta: "Commander",
     href: "/marketplace",
     Icon: Truck,
