@@ -386,12 +386,7 @@ const Dashboard = () => {
 
           {/* KYC Reminder removed: SupplierKYCSection above already handles unverified state */}
 
-          {/* Affiliation */}
-          {user && (
-            <div className="mb-4 sm:mb-6">
-              <AffiliationCard userId={user.id} />
-            </div>
-          )}
+          {/* Affiliation & Boosts moved to Quick Actions icons (dialogs) */}
 
           {/* AI Recommendations - Collapsible */}
           {user && profile && (
