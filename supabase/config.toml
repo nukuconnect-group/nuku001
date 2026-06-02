@@ -29,3 +29,5 @@ project_id = "fpnhdihvnfsiymopbjgt"
     verify_jwt = true
   [functions.paygate-webhook]
     verify_jwt = false
+  [functions.reverse-geocode]
+    verify_jwt = false
