@@ -836,7 +836,7 @@ const Cart = () => {
             </div>
 
             {/* Right: Order Summary */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 min-w-0">
               <OrderSummary
                 deliveryPrice={deliveryPrice}
                 isCheckingOut={isCheckingOut}
