@@ -119,7 +119,7 @@ const HeaderPromoSlider = () => {
                 aria-label={`Slide ${i + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   i === current
-                    ? "w-5 bg-[hsl(var(--accent))]"
+                    ? "w-5 bg-accent"
                     : "w-1.5 bg-primary-foreground/50"
                 }`}
               />
