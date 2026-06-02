@@ -6,6 +6,7 @@ import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
 import driverLogistics from "@/assets/header-slide-driver-logistics.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
+import agriDrone from "@/assets/header-slide-agri-drone.jpg";
 
 const slides = [
   {
@@ -37,9 +38,16 @@ const slides = [
     image: aiAssistant,
   },
   {
+    eyebrow: "AgriTech & innovation",
+    title: "Des drones agricoles pour une production moderne",
+    subtitle: "Surveillance des cultures, cartographie et précision au service des producteurs.",
+    Icon: Sparkles,
+    image: agriDrone,
+  },
+  {
     eyebrow: "Commerce sécurisé",
     title: "Vendez, payez et livrez en toute confiance",
-    subtitle: "Des échanges agricoles transparents, de la boutique jusqu’à la livraison.",
+    subtitle: "Des échanges agricoles transparents, de la boutique jusqu'à la livraison.",
     Icon: ShieldCheck,
     image: agriTransactionDelivery,
   },
