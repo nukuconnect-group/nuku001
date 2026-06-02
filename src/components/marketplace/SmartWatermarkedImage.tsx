@@ -7,6 +7,7 @@ interface SmartWatermarkedImageProps extends React.ImgHTMLAttributes<HTMLImageEl
   timeoutMs?: number;
   watermarkScale?: number;
   wrapperClassName?: string;
+  showVisualWatermark?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ const SmartWatermarkedImage = ({
   timeoutMs = 4000,
   watermarkScale = 0.55,
   wrapperClassName,
+  showVisualWatermark = true,
   className,
   onError,
   onLoad,
@@ -93,7 +95,21 @@ const SmartWatermarkedImage = ({
           userSelect: "none",
         } as React.CSSProperties}
       />
-      {/* Watermark overlay removed from card view — only shown when image is zoomed/clicked */}
+      {showVisualWatermark && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none z-10">
+          <img
+            src={watermarkLogo}
+            alt=""
+            draggable={false}
+            className="h-auto w-auto opacity-85"
+            style={{
+              width: `${watermarkScale * 100}%`,
+              maxWidth: "78%",
+              filter: "drop-shadow(0 3px 10px rgba(0,0,0,0.65)) drop-shadow(0 0 2px rgba(255,255,255,0.45))",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

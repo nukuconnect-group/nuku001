@@ -7,8 +7,13 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
     const url = new URL(req.url);
-    const lat = url.searchParams.get('lat');
-    const lng = url.searchParams.get('lng');
+    let lat = url.searchParams.get('lat');
+    let lng = url.searchParams.get('lng');
+    if ((!lat || !lng) && req.method !== 'GET') {
+      const body = await req.json().catch(() => ({}));
+      lat = body?.lat !== undefined ? String(body.lat) : lat;
+      lng = body?.lng !== undefined ? String(body.lng) : lng;
+    }
     if (!lat || !lng) {
       return new Response(JSON.stringify({ error: 'lat/lng required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

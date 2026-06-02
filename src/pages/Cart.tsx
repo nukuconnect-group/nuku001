@@ -13,7 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, ArrowLeft, LogIn, CheckCircle2, MapPin, Loader2 } from "lucide-react";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
-import { deliveryOptions, buildDeliveryOptions } from "@/components/cart/DeliveryZoneMap";
+import { deliveryOptions, buildDeliveryOptions, type DeliveryDistanceInfo } from "@/components/cart/DeliveryZoneMap";
 import { openMonerooPay } from "@/lib/moneroo";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
@@ -58,7 +58,7 @@ const Cart = () => {
   });
 
   // Delivery
-  const [deliveryMethod, setDeliveryMethod] = useState(savedCheckoutForm?.deliveryMethod || "pickup");
+  const [deliveryMethod, setDeliveryMethod] = useState(savedCheckoutForm?.deliveryMethod || "livreur");
   const [deliveryCity, setDeliveryCity] = useState(savedCheckoutForm?.deliveryCity || "");
   const [deliveryAddress, setDeliveryAddress] = useState(savedCheckoutForm?.deliveryAddress || "");
   const [deliveryQuarter, setDeliveryQuarter] = useState(savedCheckoutForm?.deliveryQuarter || "");
@@ -158,8 +158,10 @@ const Cart = () => {
   }, [billing, deliveryMethod, deliveryCity, deliveryAddress, deliveryQuarter, mobileNumber]);
 
   const [dynamicDeliveryPrice, setDynamicDeliveryPrice] = useState(0);
+  const [deliveryDistanceInfo, setDeliveryDistanceInfo] = useState<DeliveryDistanceInfo | null>(null);
   const selectedDelivery = deliveryOptions.find(d => d.id === deliveryMethod);
   const deliveryPrice = dynamicDeliveryPrice || selectedDelivery?.price || 0;
+  const actualDeliveryDistanceKm = deliveryDistanceInfo?.maxDistance ?? null;
   const finalTotal = total + deliveryPrice - promoDiscount;
 
   // Strip phone to digits
@@ -210,8 +212,8 @@ const Cart = () => {
               delivery_fee: deliveryPrice,
               driver_fee: driverFee,
               platform_fee: platformFee,
-              distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null,
-              estimated_minutes: dynamicDeliveryPrice > 0 ? Math.round((dynamicDeliveryPrice / 100) * 5) : null,
+              distance_km: actualDeliveryDistanceKm,
+              estimated_minutes: actualDeliveryDistanceKm ? Math.round(actualDeliveryDistanceKm * 3) : null,
               status: selectedRealDriverId ? "accepted" : "pending",
               accepted_at: selectedRealDriverId ? new Date().toISOString() : null,
             }).select("id").single();
@@ -244,7 +246,7 @@ const Cart = () => {
                       delivery_id: deliveryData.id,
                       pickup_address: items[0]?.product?.location || "Collecte",
                       dropoff_address: `${deliveryCity}, ${fullAddress}`,
-                      distance_km: dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : undefined,
+                      distance_km: actualDeliveryDistanceKm ?? undefined,
                       driver_fee: driverFee,
                     },
                   });
@@ -427,7 +429,7 @@ const Cart = () => {
       });
       toast({ title: "Erreur lors de la finalisation", description: err.message || "Une erreur est survenue. Contactez le support.", variant: "destructive" });
     }
-  }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, clearCart, navigate, toast, t]);
+  }, [items, total, deliveryPrice, finalTotal, deliveryMethod, selectedDelivery, deliveryCity, billing, mobileNumber, user, selectedDriver, dynamicDeliveryPrice, actualDeliveryDistanceKm, clearCart, navigate, toast, t]);
 
   // Payment polling callbacks — use ref to avoid stale closure
   const handlePaymentCompleted = useCallback((data: any) => {
@@ -786,6 +788,7 @@ const Cart = () => {
                 quarter={deliveryQuarter}
                 onQuarterChange={setDeliveryQuarter}
                 onDynamicPriceChange={setDynamicDeliveryPrice}
+                onDistanceInfoChange={setDeliveryDistanceInfo}
               />
 
               {deliveryMethod === "livreur" && (
@@ -801,6 +804,7 @@ const Cart = () => {
                         {items.map((item) => {
                           const sellerLoc = item.product.location || "Non définie";
                           const buyerLoc = deliveryCity || "Non définie";
+                          const distance = deliveryDistanceInfo?.sellerDistances.find((d) => d.location === sellerLoc)?.distanceKm;
                           return (
                             <div key={item.product.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-[11px] bg-muted/50 rounded-lg p-2 gap-1">
                               <div className="flex items-center gap-2 min-w-0">
@@ -811,6 +815,7 @@ const Cart = () => {
                                 <span className="truncate max-w-[80px] sm:max-w-none">{sellerLoc}</span>
                                 <span>→</span>
                                 <span className="truncate max-w-[80px] sm:max-w-none">{buyerLoc}</span>
+                                {distance !== undefined && <span className="font-semibold text-primary">{distance} km</span>}
                               </div>
                             </div>
                           );
@@ -818,14 +823,14 @@ const Cart = () => {
                       </div>
                       {dynamicDeliveryPrice > 0 && (
                         <p className="text-[10px] text-muted-foreground mt-2">
-                          💡 Le prix de livraison ({(dynamicDeliveryPrice).toLocaleString("en-US")} FCFA) est calculé en fonction de la distance réelle entre vous et le fournisseur.
+                          💡 Distance réelle : {actualDeliveryDistanceKm ? `${actualDeliveryDistanceKm} km` : "calcul en cours"}. Prix de livraison : {(dynamicDeliveryPrice).toLocaleString("en-US")} FCFA.
                         </p>
                       )}
                     </CardContent>
                   </Card>
                   <AvailableDrivers
                     city={deliveryCity}
-                    distanceKm={dynamicDeliveryPrice > 0 ? (dynamicDeliveryPrice / 100) : null}
+                    distanceKm={actualDeliveryDistanceKm}
                     cartItems={items.map(item => ({ name: item.product.name, id: item.product.id, quantity: item.quantity, price: item.product.price }))}
                     selectedDriverId={selectedDriver?.id || null}
                     onSelectDriver={setSelectedDriver}
