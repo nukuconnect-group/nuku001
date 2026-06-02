@@ -36,6 +36,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const ProducerProfile = lazy(() => import("./pages/ProducerProfile"));
+const UserShopRedirect = lazy(() => import("./pages/UserShopRedirect"));
 const Producers = lazy(() => import("./pages/Producers"));
 const NukuAI = lazy(() => import("./pages/NukuAI"));
 const Formations = lazy(() => import("./pages/Formations"));
@@ -196,6 +197,7 @@ const App = () => {
                   <Route path="/produit/:id" element={<ProductDetail />} />
                   <Route path="/producteurs" element={<Producers />} />
                   <Route path="/producteurs/:name" element={<ProducerProfile />} />
+                  <Route path="/@:username" element={<UserShopRedirect />} />
                   <Route path="/nuku-ai" element={<NukuAI />} />
                   <Route path="/formations" element={<Formations />} />
                   <Route path="/formations/:id" element={<FormationDetail />} />

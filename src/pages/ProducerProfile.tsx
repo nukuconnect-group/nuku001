@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import ShareDialog from "@/components/share/ShareDialog";
+import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import PresenceIndicator from "@/components/profile/PresenceIndicator";
 import { buildDirectionsUrl } from "@/lib/location";
@@ -92,6 +94,7 @@ const ProducerProfile = () => {
   const { toast } = useToast();
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { data: producer, isLoading: loadingProducer } = useQuery({
     queryKey: ["producer-profile", profileId],
@@ -385,18 +388,7 @@ const ProducerProfile = () => {
                       variant="outline"
                       size="sm"
                       className="gap-1.5 text-xs h-8"
-                      onClick={async () => {
-                        const url = window.location.href;
-                        const title = (producer as any).business_name || producer.full_name || "Profil";
-                        try {
-                          if (navigator.share) {
-                            await navigator.share({ title, url });
-                          } else {
-                            await navigator.clipboard.writeText(url);
-                            toast({ title: "Lien copié", description: "Le lien du profil a été copié." });
-                          }
-                        } catch {/* user cancel */}
-                      }}
+                      onClick={() => setShareOpen(true)}
                     >
                       <Share2 className="w-3.5 h-3.5" />Partager
                     </Button>
@@ -527,6 +519,14 @@ const ProducerProfile = () => {
       </main>
       <Footer />
       <MobileBottomNav />
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={(producer as any)?.business_name || producer?.full_name || "Boutique"}
+        description="Découvrez cette boutique sur NukuConnect"
+      />
+      {producer?.user_id && <UserPixels ownerUserId={producer.user_id} />}
     </div>
   );
 };

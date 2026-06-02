@@ -987,6 +987,7 @@ export type Database = {
       }
       formation_payments: {
         Row: {
+          affiliate_code: string | null
           amount: number | null
           created_at: string
           formation_id: string
@@ -1000,6 +1001,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          affiliate_code?: string | null
           amount?: number | null
           created_at?: string
           formation_id: string
@@ -1013,6 +1015,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          affiliate_code?: string | null
           amount?: number | null
           created_at?: string
           formation_id?: string
@@ -1538,6 +1541,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          affiliate_code: string | null
           buyer_id: string
           created_at: string
           delivery_method: string
@@ -1552,6 +1556,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          affiliate_code?: string | null
           buyer_id: string
           created_at?: string
           delivery_method?: string
@@ -1566,6 +1571,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          affiliate_code?: string | null
           buyer_id?: string
           created_at?: string
           delivery_method?: string
@@ -1811,12 +1817,16 @@ export type Database = {
       products: {
         Row: {
           category: string
+          city: string | null
+          country: string | null
           created_at: string
           description: string | null
           id: string
           images: string[] | null
           is_negotiable: boolean
           is_organic: boolean
+          lat: number | null
+          lng: number | null
           location: string | null
           min_order: number | null
           moderated_at: string | null
@@ -1827,6 +1837,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          quarter: string | null
           shipping_delay_days: number
           slug: string | null
           stock_status: string
@@ -1835,12 +1846,16 @@ export type Database = {
         }
         Insert: {
           category: string
+          city?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
           images?: string[] | null
           is_negotiable?: boolean
           is_organic?: boolean
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           min_order?: number | null
           moderated_at?: string | null
@@ -1851,6 +1866,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available?: number
+          quarter?: string | null
           shipping_delay_days?: number
           slug?: string | null
           stock_status?: string
@@ -1859,12 +1875,16 @@ export type Database = {
         }
         Update: {
           category?: string
+          city?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
           images?: string[] | null
           is_negotiable?: boolean
           is_organic?: boolean
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           min_order?: number | null
           moderated_at?: string | null
@@ -1875,6 +1895,7 @@ export type Database = {
           price?: number
           producer_id?: string
           quantity_available?: number
+          quarter?: string | null
           shipping_delay_days?: number
           slug?: string | null
           stock_status?: string
@@ -1940,6 +1961,7 @@ export type Database = {
           updated_at: string
           user_id: string
           user_type: string
+          username: string | null
           years_active: number | null
         }
         Insert: {
@@ -1960,6 +1982,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           user_type?: string
+          username?: string | null
           years_active?: number | null
         }
         Update: {
@@ -1980,6 +2003,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: string
+          username?: string | null
           years_active?: number | null
         }
         Relationships: []
@@ -2716,6 +2740,36 @@ export type Database = {
           },
         ]
       }
+      tracking_pixels: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          pixel_id: string
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pixel_id: string
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pixel_id?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           is_online: boolean
@@ -2751,6 +2805,36 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_movements: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          type?: string
           user_id?: string
         }
         Relationships: []
@@ -3017,12 +3101,16 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: {
           category: string
+          city: string | null
+          country: string | null
           created_at: string
           description: string | null
           id: string
           images: string[] | null
           is_negotiable: boolean
           is_organic: boolean
+          lat: number | null
+          lng: number | null
           location: string | null
           min_order: number | null
           moderated_at: string | null
@@ -3033,6 +3121,7 @@ export type Database = {
           price: number
           producer_id: string
           quantity_available: number
+          quarter: string | null
           shipping_delay_days: number
           slug: string | null
           stock_status: string
@@ -3076,6 +3165,7 @@ export type Database = {
         }[]
       }
       get_user_token_balance: { Args: { p_user_id: string }; Returns: number }
+      get_wallet_balance: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

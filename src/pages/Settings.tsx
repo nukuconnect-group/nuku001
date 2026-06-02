@@ -8,6 +8,7 @@ import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/Langua
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import PixelsManager from "@/components/dashboard/PixelsManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -505,6 +506,8 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+
+          <PixelsManager />
         </div>
       </main>
       <Footer />

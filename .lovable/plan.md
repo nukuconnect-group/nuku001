@@ -1,140 +1,86 @@
+# Plan — Enchaînement des lots restants
 
-
-# Plan: Corrections multiples, Blog, Affiliation, et améliorations UX
-
-## Vue d'ensemble
-
-Ce plan couvre 10 chantiers principaux demandés par l'utilisateur, regroupés par priorité.
+Suite au lot 1 (bugs critiques) déjà livré, voici l'exécution séquentielle des 3 lots restants.
 
 ---
 
-## 1. Tableau de bord livreur : rendre la livraison opérationnelle
+## Lot 2 — UX Marketplace
 
-**Probleme**: Les produits s'affichent mais le livreur ne peut pas initier une livraison depuis l'onglet "Produits". Le bouton "Voir le produit" redirige simplement vers la page produit sans option de livraison.
+**Géolocalisation automatique à la mise en vente**
+- Sur le formulaire d'ajout/édition produit (`ProductFormDialog` / `ProductForm`) : bouton "📍 Utiliser ma position actuelle" qui appelle `navigator.geolocation.getCurrentPosition`
+- Reverse-geocoding via une nouvelle edge function `reverse-geocode` (utilise Nominatim/OpenStreetMap, gratuit) → renvoie `country`, `city`, `quarter`
+- Auto-remplissage des champs pays / ville / quartier + stockage `lat`/`lng` sur le produit
+- Migration : ajouter colonnes `lat numeric`, `lng numeric` à `products` si absentes
 
-**Corrections**:
-- Dans le dialog `selectedProduct` du `DriverDashboard.tsx`, remplacer le bouton "Voir le produit" par un bouton **"Proposer une livraison"** qui crée une entrée dans `deliveries` avec statut `pending` et les coordonnées du produit comme point de collecte
-- Ajouter un calcul automatique du `driver_fee` basé sur la distance (ex: 500 FCFA de base + 200 FCFA/km)
-- Supprimer les `demoProducts` (lignes 58-64) et afficher uniquement les produits réels de la base de données. Si aucun produit n'existe, afficher un message "Aucun produit disponible"
-- Le driver doit être `is_approved = true` pour pouvoir livrer — ajouter une logique d'auto-approbation temporaire ou un message clair "Compte en attente de vérification KYC"
-
-**Fichiers**: `src/pages/DriverDashboard.tsx`
-
----
-
-## 2. KYC pour les livreurs
-
-**Nouveau**: Après inscription, le livreur doit soumettre ses documents KYC.
-
-- Créer une migration pour la table `driver_kyc_submissions` (user_id, id_type, id_number, id_front_url, id_back_url, selfie_url, status, submitted_at, reviewed_at)
-- Ajouter une section KYC dans le `DriverDashboard.tsx` qui s'affiche quand `is_approved = false`
-- Formulaire avec upload de pièce d'identité (CNI/Permis), photo selfie
-- Storage bucket `driver-kyc` pour les documents
-- L'admin peut approuver via le tableau de bord admin
-
-**Fichiers**: Migration SQL, `src/pages/DriverDashboard.tsx`, `src/pages/AdminDashboard.tsx`
+**Estimation prix de livraison par distance**
+- Helper `src/lib/deliveryPricing.ts` :
+  - `calculateDeliveryFee(distanceKm)` → barème : base 500 FCFA + 100 FCFA/km, min 500, max 5000
+- Sur la fiche produit + panier : afficher l'estimation dès qu'une adresse de livraison est sélectionnée (Haversine entre `product.lat/lng` et `address.lat/lng`)
+- Mise à jour de `OrderSummary` pour afficher la ligne "Livraison estimée"
 
 ---
 
-## 3. Isolation des comptes par rôle
+## Lot 3 — Boutique publique & partage
 
-**Probleme**: Un apprenant voit le tableau de bord fournisseur. Le routage dans `Auth.tsx` (lignes 116-119) est correct mais le `Dashboard.tsx` ne vérifie pas le `user_type` et s'affiche pour tous.
+**Pages publiques `/@username` (déjà `/producteurs/:name` existe)**
+- Nouvelle route `/@:username` (alias public, plus court à partager) → redirige vers `ProducerProfile` en résolvant par `profiles.username`
+- Migration : ajouter colonne `username text unique` à `profiles` + index, + génération auto depuis email/business_name au signup
+- Page `ProducerProfile` : section "Partager ma boutique" avec :
+  - Bouton copier le lien `https://nukuconnect.com/@username`
+  - QR code (lib `qrcode.react` déjà utilisée probablement, sinon `qrcode`) avec téléchargement PNG
+  - Boutons partage WhatsApp / Facebook / Twitter / X / LinkedIn
 
-**Corrections**:
-- Dans `Dashboard.tsx`, ajouter une vérification au chargement : si `profile.user_type !== "producer" && profile.user_type !== "trainer"`, rediriger vers le bon tableau de bord
-- Dans `BuyerDashboard.tsx`, vérifier que `profile.user_type === "buyer"` sinon rediriger
-- Dans `DriverDashboard.tsx`, vérifier `profile.user_type === "driver"` sinon rediriger
-- Dans `LearnerDashboard.tsx`, vérifier `profile.user_type === "learner"` sinon rediriger
-- Ajouter un garde dans chaque tableau de bord pour éviter tout accès croisé
+**Liens partageables produit + OG**
+- Sur `ProductDetail` : bloc "Partager" identique (copier lien, QR, boutons sociaux)
+- Améliorer SEO `ProductDetail` : utiliser `product.image_url` comme `og:image`, titre = nom produit, JSON-LD `Product` complet (prix, stock, vendeur)
+- Améliorer SEO `ProducerProfile` : `og:image` = logo/avatar vendeur, JSON-LD `Store`
+- Edge function `referral-og-image` existe déjà → étendre pour produit/boutique si besoin
 
-**Fichiers**: `src/pages/Dashboard.tsx`, `src/pages/BuyerDashboard.tsx`, `src/pages/DriverDashboard.tsx`, `src/pages/LearnerDashboard.tsx`
-
----
-
-## 4. Module Affiliation : finalisation
-
-**Corrections**:
-- Élargir la page à pleine largeur : remplacer `max-w-5xl` par `max-w-7xl` dans `Affiliation.tsx`
-- Corriger le lien de parrainage : dans `Auth.tsx`, vérifier que la mise à jour du `referrals` table fonctionne correctement (ligne 182-187) — actuellement le `.then()` ne vérifie pas si le update a réussi
-- Ajouter un trigger SQL (ou logique edge function) pour créer automatiquement une entrée `referral_earnings` quand un filleul effectue un achat ou souscrit un abonnement
-
-**Fichiers**: `src/pages/Affiliation.tsx`, `src/pages/Auth.tsx`, migration SQL pour trigger
+**QR codes formations**
+- Idem sur `FormationDetail` : bouton partage + QR
 
 ---
 
-## 5. Page Blog + Article "Togo Top Impact"
+## Lot 4 — Monétisation avancée
 
-**Nouveau**: Créer une page `/blog` avec un premier article sur le prix NukuConnect.
+**Wallet vendeur + commission auto**
+- Audit confirmé : table `withdrawals` existe + edge function `create-withdrawal` + `moneroo-webhook`
+- Ajout : edge function `moneroo-webhook` doit créer une ligne dans une nouvelle table `wallet_movements` (credit vendeur après paiement Moneroo, débit commission plateforme)
+- Migration : `wallet_movements (id, user_id, order_id, type [credit/debit/commission/withdrawal], amount, balance_after, created_at)` + RLS user-scoped + GRANTs
+- Helper SQL fonction `get_wallet_balance(_user_id uuid)` → somme des mouvements
+- UI `WithdrawalPanel` : afficher le solde calculé via cette fonction au lieu de l'ancienne logique
 
-- Créer `src/pages/Blog.tsx` avec une liste d'articles (données en dur pour commencer)
-- Créer `src/pages/BlogPost.tsx` pour afficher un article individuel
-- Premier article : "Togo Top Impact 2025 : NukuConnect sacré meilleure innovation de l'année" avec le contenu récupéré de l'article (date: 5 février 2026, image: `https://actu-togo.tg/wp-content/uploads/2026/02/e94cd754-4f38-46cd-829e-ee84411210b4.jpeg`)
-- Ajouter les routes `/blog` et `/blog/:slug` dans `App.tsx`
-- Ajouter "Blog" dans le header `navLinks`
+**Pixels publicitaires (Meta / TikTok / GA4 / GTM)**
+- Migration : table `tracking_pixels (id, user_id, provider [meta|tiktok|ga4|gtm|snapchat], pixel_id, is_active)` RLS user-scoped
+- Composant `<UserPixels />` monté dans `App.tsx` : si l'utilisateur a configuré ses pixels, injecte les scripts dans `<head>` via react-helmet-async
+- Page admin/dashboard "Marketing & Pixels" pour CRUD des pixels
 
-**Fichiers**: `src/pages/Blog.tsx`, `src/pages/BlogPost.tsx`, `src/App.tsx`, `src/components/layout/Header.tsx`
-
----
-
-## 6. Section "NukuConnect sacré meilleure innovation" sur l'accueil
-
-- Ajouter une nouvelle section/bannière sur la page d'accueil (`Index.tsx`) avec un lien vers l'article de blog
-- Intégrer dans le `HeroCarousel` ou créer un composant dédié avec l'image du prix et un CTA "Lire l'article"
-
-**Fichiers**: `src/pages/Index.tsx`, nouveau composant ou intégration dans `HeroCarousel.tsx`
-
----
-
-## 7. Supprimer les données de démonstration
-
-- `DriverDashboard.tsx` : supprimer `demoProducts` (lignes 58-64), ne plus fallback sur les demo
-- `Dashboard.tsx` (fournisseur) : vérifier et supprimer toute donnée de démo
-- `AdminDashboard.tsx` : vérifier que toutes les stats sont des requêtes réelles (elles le sont déjà d'après le code)
-- `BuyerDashboard.tsx` : vérifier et supprimer toute donnée de démo
-- Section "Fournisseurs actifs" sur l'accueil : s'assurer qu'elle requête les vrais profils avec `user_type = "producer"`
-
-**Fichiers**: `src/pages/DriverDashboard.tsx`, vérification des autres dashboards, composants accueil
+**Extension du programme d'affiliation aux produits/formations**
+- L'affiliation existe déjà (abonnements 10% / achats 3%)
+- Ajouter sur `ProductDetail` et `FormationDetail` un bouton "Lien d'affiliation" pour les utilisateurs connectés → génère `?ref=CODE`
+- Le tracking `?ref=CODE` est déjà géré au signup → étendre pour tracker aussi sur achat produit / inscription formation (logique côté `Cart.tsx` et `enroll-paid-formation`)
+- Migration : ajouter colonne `affiliate_code text` sur `orders` et `formation_payments` pour attribution
 
 ---
 
-## 8. Chat NukuConnect IA : augmenter la taille du texte
+## Ordre d'exécution
 
-- Dans `NukuAI.tsx`, changer la classe du contenu des messages de `text-xs sm:text-sm` à `text-sm sm:text-base` (ligne 320)
-- Augmenter aussi la taille du timestamp
-
-**Fichiers**: `src/pages/NukuAI.tsx`
-
----
-
-## 9. Recherche vocale, QR et image : vérifier le fonctionnement
-
-- **Recherche vocale** (`VoiceSearchModal.tsx`) : le code est déjà implémenté avec l'API Web Speech. Vérifier que le `onResult` est bien connecté au champ de recherche du Header
-- **Recherche par image** (`ImageSearchModal.tsx`) : le code appelle déjà l'edge function `image-search`. Vérifier que l'edge function est déployée et fonctionne
-- **QR Scanner** (`QRScanner.tsx`) : vérifier le branchement
-- S'assurer que les 3 boutons (mic, camera, QR) dans le Header déclenchent correctement les modales et que les résultats sont injectés dans la recherche
-
-**Fichiers**: `src/components/layout/Header.tsx`, vérification des edge functions
+1. Migration DB combinée (lots 2 + 3 + 4) en un seul appel
+2. Edge functions : `reverse-geocode`, mise à jour `moneroo-webhook`
+3. Frontend lot 2 (géoloc + delivery pricing)
+4. Frontend lot 3 (pages publiques /@ + partage + QR + OG)
+5. Frontend lot 4 (wallet UI + pixels UI + affiliation buttons)
 
 ---
 
-## 10. Header desktop : améliorer le slide des boutons d'action
+## Détails techniques
 
-- Vérifier que la barre de navigation horizontale sur desktop défile correctement avec des animations fluides
-- S'assurer que les liens de navigation sont bien visibles et accessibles
+- Bibliothèque QR : utiliser `qrcode` (déjà importée dans `OwnerBatchQRGenerator.tsx` probablement) — sinon `bun add qrcode @types/qrcode`
+- Reverse-geocoding : Nominatim (gratuit, attribution OSM, User-Agent obligatoire)
+- Haversine : implémentation maison, ~10 lignes
+- Pas de nouveau secret requis (Nominatim sans clé)
+- Pas de modification des fichiers Supabase auto-générés
 
-**Fichiers**: `src/components/layout/Header.tsx`
+**Volume estimé** : ~3 migrations, 2 nouvelles edge functions, ~15 fichiers frontend modifiés/créés.
 
----
-
-## Ordre d'implémentation
-
-1. Isolation des comptes (critique, bug actif)
-2. Supprimer données de démo (tous dashboards)
-3. Driver dashboard : livraison opérationnelle + KYC
-4. Affiliation pleine largeur + trigger gains
-5. Blog + article Togo Top Impact
-6. Section accueil innovation
-7. Taille texte NukuConnect IA
-8. Vérification recherche vocale/image/QR
-9. Header desktop slide
-
+Confirmes-tu pour démarrer l'exécution ?

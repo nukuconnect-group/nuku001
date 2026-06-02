@@ -41,6 +41,8 @@ import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
+import ShareDialog from "@/components/share/ShareDialog";
+import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -55,6 +57,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
   const isUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
@@ -322,20 +325,7 @@ const ProductDetail = () => {
                     <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWishlist(product.id) ? "text-destructive fill-destructive" : "text-muted-foreground"}`} />
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const shareData = {
-                        title: product.name,
-                        text: `${product.name} — ${formatPrice(product.price)}/${product.unit} sur NukuConnect`,
-                        url: window.location.href,
-                      };
-                      if (navigator.share) {
-                        navigator.share(shareData).catch(() => {});
-                      } else {
-                        navigator.clipboard.writeText(window.location.href);
-                        toast({ title: "Lien copié ✓", description: "Le lien du produit a été copié dans le presse-papier" });
-                      }
-                    }}
+                    onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
                   >
                     <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
@@ -882,6 +872,13 @@ const ProductDetail = () => {
       </main>
       <Footer />
       <MobileBottomNav />
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={product?.name || "Produit"}
+        description={`${product?.name || ""} sur NukuConnect`}
+      />
     </div>
   );
 };
