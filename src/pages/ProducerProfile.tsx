@@ -388,18 +388,7 @@ const ProducerProfile = () => {
                       variant="outline"
                       size="sm"
                       className="gap-1.5 text-xs h-8"
-                      onClick={async () => {
-                        const url = window.location.href;
-                        const title = (producer as any).business_name || producer.full_name || "Profil";
-                        try {
-                          if (navigator.share) {
-                            await navigator.share({ title, url });
-                          } else {
-                            await navigator.clipboard.writeText(url);
-                            toast({ title: "Lien copié", description: "Le lien du profil a été copié." });
-                          }
-                        } catch {/* user cancel */}
-                      }}
+                      onClick={() => setShareOpen(true)}
                     >
                       <Share2 className="w-3.5 h-3.5" />Partager
                     </Button>
