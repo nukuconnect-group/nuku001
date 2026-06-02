@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Leaf, Truck, GraduationCap, Network } from "lucide-react";
 import networkImg from "@/assets/promo-network-connected.jpg";
+import heroFarmers from "@/assets/hero-farmers-connected.jpg";
+import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
+import heroOrganic from "@/assets/hero-organic-farm.jpg";
 
 const slides = [
   {
@@ -10,7 +13,7 @@ const slides = [
     cta: "EXPLORER",
     href: "/marketplace",
     Icon: Leaf,
-    image: null as string | null,
+    image: heroOrganic,
   },
   {
     title: "LIVRAISON EXPRESS",
@@ -18,7 +21,7 @@ const slides = [
     cta: "COMMANDER",
     href: "/marketplace",
     Icon: Truck,
-    image: null,
+    image: heroShopping,
   },
   {
     title: "FORMATIONS GRATUITES",
@@ -26,7 +29,7 @@ const slides = [
     cta: "APPRENDRE",
     href: "/formations",
     Icon: GraduationCap,
-    image: null,
+    image: heroFarmers,
   },
   {
     title: "RÉSEAU AGRICOLE CONNECTÉ",
@@ -44,63 +47,117 @@ const HeaderPromoSlider = () => {
   const next = useCallback(() => setCurrent(c => (c + 1) % slides.length), []);
 
   useEffect(() => {
-    const timer = setInterval(next, 4000);
+    const timer = setInterval(next, 4500);
     return () => clearInterval(timer);
   }, [next]);
 
   return (
-    <div className="relative overflow-hidden h-8 sm:h-9 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--secondary)/0.9)] to-[hsl(var(--primary)/0.85)]">
-      <div
-        className="flex transition-transform duration-500 ease-in-out h-full"
-        style={{ transform: `translateX(-${current * 100}%)` }}
-      >
-        {slides.map((slide, i) => {
-          const { Icon } = slide;
-          return (
-            <Link
+    <>
+      {/* MOBILE — bannière promo style "Mixx" : fond bleu, gros titre jaune, photo à droite */}
+      <div className="sm:hidden bg-background px-3 pt-2 pb-1">
+        <div className="relative overflow-hidden rounded-2xl shadow-lg">
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${current * 100}%)` }}
+          >
+            {slides.map((slide, i) => {
+              const { Icon } = slide;
+              return (
+                <Link
+                  key={i}
+                  to={slide.href}
+                  className="relative flex-shrink-0 w-full h-32 flex items-stretch bg-[hsl(var(--primary))]"
+                >
+                  {/* Photo à droite avec découpe diagonale */}
+                  {slide.image && (
+                    <div
+                      className="absolute inset-y-0 right-0 w-1/2"
+                      style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0 100%)" }}
+                    >
+                      <img
+                        src={slide.image}
+                        alt=""
+                        aria-hidden="true"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
+                  {/* Texte à gauche */}
+                  <div className="relative z-10 flex-1 flex flex-col justify-center pl-4 pr-2 py-3 max-w-[58%]">
+                    <h3 className="font-heading text-[hsl(var(--accent))] font-black italic text-base leading-tight tracking-tight">
+                      {slide.title}
+                    </h3>
+                    <p className="text-primary-foreground/90 text-[10px] italic mt-0.5 leading-snug">
+                      {slide.subtitle}
+                    </p>
+                    <div className="mt-2 inline-flex items-center gap-1 self-start bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md">
+                      <Icon className="w-2.5 h-2.5" />
+                      {slide.cta}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Dots centrés sous la bannière */}
+          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.preventDefault(); setCurrent(i); }}
+                aria-label={`Slide ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === current
+                    ? "w-5 bg-[hsl(var(--accent))]"
+                    : "w-1.5 bg-primary-foreground/50"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP / TABLETTE — bande fine inchangée */}
+      <div className="hidden sm:block relative overflow-hidden h-9 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--secondary)/0.9)] to-[hsl(var(--primary)/0.85)]">
+        <div
+          className="flex transition-transform duration-500 ease-in-out h-full"
+          style={{ transform: `translateX(-${current * 100}%)` }}
+        >
+          {slides.map((slide, i) => {
+            const { Icon } = slide;
+            return (
+              <Link
+                key={i}
+                to={slide.href}
+                className="relative flex-shrink-0 w-full h-full flex items-center justify-center gap-3 px-4 overflow-hidden"
+              >
+                <div className="relative w-6 h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-3.5 h-3.5 text-primary-foreground" />
+                </div>
+                <span className="relative text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
+                  {slide.title}
+                </span>
+                <span className="relative text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
+                  {slide.cta}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-1">
+          {slides.map((_, i) => (
+            <button
               key={i}
-              to={slide.href}
-              className="relative flex-shrink-0 w-full h-full flex items-center justify-center gap-2 sm:gap-3 px-4 overflow-hidden"
-            >
-              {slide.image && (
-                <>
-                  <img
-                    src={slide.image}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover opacity-40"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--secondary)/0.9)] via-[hsl(var(--secondary)/0.7)] to-[hsl(var(--primary)/0.85)]" />
-                </>
-              )}
-              <div className="relative w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary-foreground" />
-              </div>
-              <span className="relative text-[10px] sm:text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
-                {slide.title}
-              </span>
-              <span className="relative text-[8px] sm:text-[9px] text-primary-foreground/60 hidden font-medium tracking-wide">
-                — {slide.subtitle}
-              </span>
-              <span className="relative text-[8px] sm:text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
-                {slide.cta}
-              </span>
-            </Link>
-          );
-        })}
+              onClick={() => setCurrent(i)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary-foreground w-3" : "bg-primary-foreground/25 w-1.5"}`}
+            />
+          ))}
+        </div>
       </div>
-      {/* Dots */}
-      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-1">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary-foreground w-2.5 sm:w-3" : "bg-primary-foreground/25"}`}
-          />
-        ))}
-      </div>
-    </div>
+    </>
   );
 };
 
