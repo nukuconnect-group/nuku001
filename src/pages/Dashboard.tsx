@@ -350,6 +350,8 @@ const Dashboard = () => {
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/mes-commandes", badge: pendingOrders },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
+              { icon: Rocket, label: "Mes boosts", color: "bg-primary/10 text-primary", onClick: () => setShowBoostsDialog(true) },
+              { icon: Gift, label: "Parrainage", color: "bg-pink-500/10 text-pink-600", onClick: () => setShowAffiliationDialog(true) },
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
               { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.getElementById("withdrawals-section");
