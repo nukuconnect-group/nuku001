@@ -67,11 +67,8 @@ const SellerOrdersToValidate = ({ sellerProfileId }: Props) => {
   const validateOrder = async (order: OrderRow) => {
     setValidating(order.id);
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ seller_confirmed_at: new Date().toISOString() } as any)
-        .eq("id", order.id);
-      if (error) throw error;
+      const { data, error } = await (supabase as any).rpc("confirm_seller_order", { _order_id: order.id });
+      if (error || data?.error) throw error || new Error(data.error);
 
       const meta = METHOD_META[order.delivery_method || "pickup"] || METHOD_META.pickup;
       toast({
