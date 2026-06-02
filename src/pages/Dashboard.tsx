@@ -505,30 +505,7 @@ const Dashboard = () => {
             );
           })()}
 
-          {/* Boosted products — stats détaillées */}
-          {(() => {
-            const boostedProducts = products.filter(p => isProductBoosted(activeBoosts, p.id));
-            if (boostedProducts.length === 0) return null;
-            return (
-              <details className="mb-4" open>
-                <summary className="cursor-pointer flex items-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/30 hover:bg-primary/15 transition-colors">
-                  <Rocket className="w-4 h-4 text-primary" />
-                  <span className="text-xs sm:text-sm font-semibold text-foreground">
-                    Produits boostés ({boostedProducts.length})
-                  </span>
-                  <Badge className="bg-primary text-primary-foreground text-[9px] gap-0.5 animate-pulse">
-                    <Rocket className="w-2.5 h-2.5" /> Actif
-                  </Badge>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-                </summary>
-                <div className="mt-2 space-y-3">
-                  {boostedProducts.map((p) => (
-                    <ProductBoostStats key={p.id} productId={p.id} productName={p.name} />
-                  ))}
-                </div>
-              </details>
-            );
-          })()}
+          {/* Produits boostés et parrainage — accessibles via icônes Actions rapides (dialogs) */}
 
           <Card className="mb-4" id="products-section">
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
