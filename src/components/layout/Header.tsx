@@ -34,6 +34,7 @@ const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal
 const ImageSearchModal = lazy(() => import("@/components/search/ImageSearchModal"));
 const QRScanner = lazy(() => import("@/components/QRScanner"));
 const LocationPickerDialog = lazy(() => import("@/components/layout/LocationPickerDialog"));
+import { trackSearch, rememberSearchMode } from "@/lib/searchTracking";
 
 const languages = [
   { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
@@ -820,7 +821,12 @@ const Header = () => {
           <VoiceSearchModal
             open={voiceSearchOpen}
             onClose={() => setVoiceSearchOpen(false)}
-            onResult={(text) => { setSearchQuery(text); setShowSearchResults(true); navigate(`/marketplace?search=${text}`); }}
+            onResult={(text) => {
+              setSearchQuery(text);
+              setShowSearchResults(true);
+              rememberSearchMode("voice");
+              navigate(`/marketplace?search=${text}`);
+            }}
           />
         </Suspense>
       )}
@@ -829,7 +835,11 @@ const Header = () => {
           <ImageSearchModal
             open={imageSearchOpen}
             onClose={() => setImageSearchOpen(false)}
-            onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
+            onSearch={(query) => {
+              setSearchQuery(query);
+              setShowSearchResults(true);
+              trackSearch({ query, mode: "image" });
+            }}
           />
         </Suspense>
       )}
@@ -838,7 +848,11 @@ const Header = () => {
           <QRScanner
             isOpen={qrScannerOpen}
             onClose={() => setQrScannerOpen(false)}
-            onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
+            onScan={(code) => {
+              setSearchQuery(code);
+              rememberSearchMode("qr");
+              navigate(`/marketplace?search=${code}`);
+            }}
           />
         </Suspense>
       )}

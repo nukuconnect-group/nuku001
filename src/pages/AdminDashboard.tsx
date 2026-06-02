@@ -23,6 +23,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import CategoryManager from "@/components/admin/CategoryManager";
+import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
@@ -312,6 +313,7 @@ const AdminDashboard = () => {
     { id: "overview", label: "Vue d'ensemble", icon: BarChart3 },
     { id: "recent-actions", label: "Actions récentes", icon: Activity },
     { id: "analytics", label: "Analytics", icon: Activity },
+    { id: "search-analytics", label: "Recherches", icon: SearchIcon },
     { id: "users", label: "Utilisateurs", icon: Users },
     { id: "orders", label: "Commandes", icon: ShoppingCart },
     { id: "products", label: "Produits", icon: Package },
@@ -1171,6 +1173,11 @@ const AdminDashboard = () => {
             {/* Categories Tab */}
             {activeTab === "categories" && (
               <CategoryManager />
+            )}
+
+            {/* Search Analytics Tab */}
+            {activeTab === "search-analytics" && (
+              <SearchAnalytics />
             )}
 
             {/* Finances Tab */}
