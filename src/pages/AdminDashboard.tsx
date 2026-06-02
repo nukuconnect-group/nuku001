@@ -1175,6 +1175,11 @@ const AdminDashboard = () => {
               <CategoryManager />
             )}
 
+            {/* Search Analytics Tab */}
+            {activeTab === "search-analytics" && (
+              <SearchAnalytics />
+            )}
+
             {/* Finances Tab */}
             {activeTab === "finances" && (
               <FinanceManager orders={orders} users={users} stats={stats} />
