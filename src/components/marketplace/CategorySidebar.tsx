@@ -52,7 +52,11 @@ export const CategorySidebar = ({ selectedCategory, onCategoryChange }: Category
                       : "hover:bg-muted text-foreground"
                   }`}
                 >
-                  <span className="text-lg flex-shrink-0">{category.emoji || "📦"}</span>
+                  {category.image_url ? (
+                    <img src={category.image_url} alt={category.name} className="w-7 h-7 rounded object-cover flex-shrink-0 border border-border/40" loading="lazy" />
+                  ) : (
+                    <span className="text-lg flex-shrink-0">{category.emoji || "📦"}</span>
+                  )}
                   <span className="flex-1 text-left text-sm font-medium truncate">{category.name}</span>
                   {category.subcategories && category.subcategories.length > 0 && (
                     <ChevronRight
