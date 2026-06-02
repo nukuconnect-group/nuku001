@@ -147,12 +147,9 @@ Deno.serve(async (req) => {
             .eq("id", order.id)
             .eq("status", "pending");
 
-          await supabase.from("notifications").insert({
-            user_id: order.buyer_id,
-            type: "order",
-            title: paymentStatus === "failed" ? "❌ Paiement échoué" : "⏰ Paiement expiré",
-            description: `Votre paiement n'a pas abouti. La commande a été annulée.`,
-          });
+          // Ne pas créer de notification pour les paiements échoués / expirés :
+          // seules les commandes payées et confirmées doivent générer une notification.
+        
         }
         console.log(`[paygate-webhook] ${orders.length} orders cancelled (${paymentStatus})`);
       }
