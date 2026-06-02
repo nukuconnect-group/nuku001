@@ -23,6 +23,7 @@ interface Props {
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any; color: string }> = {
   pending: { label: "En attente", variant: "secondary", icon: Clock, color: "text-yellow-600" },
   confirmed: { label: "Confirmée", variant: "default", icon: CheckCircle, color: "text-blue-600" },
+  processing: { label: "En préparation", variant: "outline", icon: Package, color: "text-purple-600" },
   shipped: { label: "Expédiée", variant: "outline", icon: Truck, color: "text-purple-600" },
   completed: { label: "Livrée", variant: "default", icon: Package, color: "text-green-600" },
   cancelled: { label: "Annulée", variant: "destructive", icon: XCircle, color: "text-destructive" },
@@ -30,7 +31,8 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
 
 const NEXT_STATUS: Record<string, string[]> = {
   pending: ["confirmed", "cancelled"],
-  confirmed: ["shipped", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
   shipped: ["completed"],
   completed: [],
   cancelled: [],
@@ -57,6 +59,7 @@ const OrderManager = ({ orders, stats, onRefresh }: Props) => {
     all: orders.length,
     pending: orders.filter((o: any) => o.status === "pending").length,
     confirmed: orders.filter((o: any) => o.status === "confirmed").length,
+    processing: orders.filter((o: any) => o.status === "processing").length,
     shipped: orders.filter((o: any) => o.status === "shipped").length,
     completed: orders.filter((o: any) => o.status === "completed").length,
     cancelled: orders.filter((o: any) => o.status === "cancelled").length,
