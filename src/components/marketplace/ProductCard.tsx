@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
+import { useAverageRating } from "@/hooks/useReviews";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
 
@@ -99,8 +100,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
     return (Date.now() - created) < 7 * 24 * 60 * 60 * 1000;
   })();
   const isNew = isRecent || product.promoType === "nouveau";
-  const reviewCount = Math.floor(product.producer.rating * 12);
-  const totalSales = product.producer.totalSales || Math.floor(Math.random() * 500 + 50);
+  const { average: realRating, count: realReviewCount } = useAverageRating(product.id);
+  const hasReviews = realReviewCount > 0;
+  const totalSales = product.producer.totalSales || 0;
 
   if (viewMode === "list") {
     return (
@@ -128,12 +130,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               <div>
                 <h3 className="font-heading font-semibold text-foreground text-lg mb-1 line-clamp-1">{product.name}</h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{product.description}</p>
-                <div className="flex items-center gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-3 h-3 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
-                  ))}
-                  <span className="text-[10px] text-muted-foreground ml-1">({reviewCount} avis)</span>
-                </div>
+                {hasReviews && (
+                  <div className="flex items-center gap-1 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < Math.round(realRating) ? "text-accent fill-accent" : "text-muted"}`} />
+                    ))}
+                    <span className="text-[10px] text-muted-foreground ml-1">({realReviewCount} avis)</span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -176,9 +180,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {!minimal && (
               computedDiscount > 0 ? (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                  -{computedDiscount}%
-                </Badge>
+                <div className="flex items-center gap-1">
+                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    PROMO
+                  </Badge>
+                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    -{computedDiscount}%
+                  </Badge>
+                </div>
               ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
                   ⚡ NEW
@@ -289,14 +298,22 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
                 <ShippingDelayBadge days={shippingDays} />
               </div>
 
-              {/* Reviews + Sales */}
-              <div className="flex items-center gap-1 mt-auto">
-                <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
-                <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
-                <span className="text-[8px] text-muted-foreground">({reviewCount})</span>
-                <span className="text-border text-[8px]">|</span>
-                <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
-              </div>
+              {/* Reviews + Sales (uniquement avec de vraies données) */}
+              {(hasReviews || totalSales > 0) && (
+                <div className="flex items-center gap-1 mt-auto">
+                  {hasReviews && (
+                    <>
+                      <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
+                      <span className="text-[9px] font-medium text-foreground">{realRating.toFixed(1)}</span>
+                      <span className="text-[8px] text-muted-foreground">({realReviewCount})</span>
+                    </>
+                  )}
+                  {hasReviews && totalSales > 0 && <span className="text-border text-[8px]">|</span>}
+                  {totalSales > 0 && (
+                    <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
+                  )}
+                </div>
+              )}
 
               {/* Supplier info */}
               {!hideProducer && (

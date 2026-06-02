@@ -37,7 +37,7 @@ export default function ProductQuickView({ product, open, onOpenChange }: Props)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
+      <DialogContent className="w-[92vw] max-w-[340px] sm:max-w-2xl p-0 overflow-hidden rounded-xl max-h-[85vh] overflow-y-auto">
         <DialogTitle className="sr-only">Aperçu de {product.name}</DialogTitle>
         <DialogDescription className="sr-only">
           Aperçu rapide du produit avec image, prix et informations principales.
