@@ -717,6 +717,46 @@ const Dashboard = () => {
         <SupplierVerificationPopup userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
       )}
       <MobileBottomNav />
+
+      {/* Dialog: Mes boosts */}
+      <Dialog open={showBoostsDialog} onOpenChange={setShowBoostsDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-primary" /> Mes produits boostés
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const boostedProducts = products.filter(p => isProductBoosted(activeBoosts, p.id));
+            if (boostedProducts.length === 0) {
+              return (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  Aucun produit boosté pour le moment. Boostez vos produits depuis la liste pour leur donner plus de visibilité.
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-3">
+                {boostedProducts.map((p) => (
+                  <ProductBoostStats key={p.id} productId={p.id} productName={p.name} />
+                ))}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Parrainage */}
+      <Dialog open={showAffiliationDialog} onOpenChange={setShowAffiliationDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-pink-600" /> Mes gains de parrainage
+            </DialogTitle>
+          </DialogHeader>
+          {user && <AffiliationCard userId={user.id} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
