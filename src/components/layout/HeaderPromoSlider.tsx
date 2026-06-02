@@ -67,7 +67,7 @@ const HeaderPromoSlider = () => {
   if (location.pathname !== "/") return null;
 
   return (
-    <div className="bg-background pt-2 sm:pt-3 pb-3 sm:pb-5">
+    <div className="bg-background pt-2 sm:pt-3 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
       <div className="mx-auto px-3 sm:px-4 max-w-6xl">
         <div className="relative overflow-hidden rounded-none shadow-xl bg-primary ring-1 ring-primary/20">
           <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[58%] md:w-[56%] overflow-hidden">
@@ -88,8 +88,8 @@ const HeaderPromoSlider = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent" />
           </div>
 
-          <div className="relative z-10 min-h-[248px] sm:min-h-[288px] md:min-h-[320px] lg:min-h-[340px] flex flex-col justify-between">
-            <div className="px-4 sm:px-7 md:px-10 pt-5 sm:pt-8 md:pt-10 pb-4 w-[64%] sm:w-[57%] md:w-[52%]">
+          <div className="relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[320px] flex flex-col justify-center">
+            <div className="px-4 sm:px-7 md:px-10 py-6 sm:py-8 md:py-10 w-[64%] sm:w-[57%] md:w-[52%]">
               {slides.map((slide, i) => (
                 <div
                   key={slide.title}
@@ -107,20 +107,6 @@ const HeaderPromoSlider = () => {
                   <p className="text-primary-foreground/95 text-[11px] sm:text-sm md:text-base mt-2 max-w-[34ch] leading-snug drop-shadow-sm">
                     {slide.subtitle}
                   </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-3 border-t border-primary-foreground/15 bg-primary-foreground/10 backdrop-blur-sm">
-              {stats.map(({ value, label, Icon }) => (
-                <div key={label} className="flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 py-2.5 sm:py-3 border-r border-primary-foreground/10 last:border-r-0 min-w-0">
-                  <span className="flex h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center bg-accent text-accent-foreground rounded-none">
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </span>
-                  <span className="min-w-0 leading-none">
-                    <span className="block font-heading text-primary-foreground font-black text-sm sm:text-xl">{value}</span>
-                    <span className="block text-[8px] sm:text-[10px] text-primary-foreground/85 truncate mt-1">{label}</span>
-                  </span>
                 </div>
               ))}
             </div>
@@ -157,6 +143,23 @@ const HeaderPromoSlider = () => {
               />
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Stats bar — détaché du slider, carte indépendante */}
+      <div className="mx-auto px-3 sm:px-4 max-w-6xl">
+        <div className="grid grid-cols-3 bg-card border border-border rounded-none shadow-sm overflow-hidden">
+          {stats.map(({ value, label, Icon }) => (
+            <div key={label} className="flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 py-3 sm:py-4 border-r border-border last:border-r-0 min-w-0">
+              <span className="flex h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center bg-primary/10 text-primary rounded-none">
+                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </span>
+              <span className="min-w-0 leading-none">
+                <span className="block font-heading text-foreground font-black text-sm sm:text-xl">{value}</span>
+                <span className="block text-[9px] sm:text-[10px] text-muted-foreground truncate mt-1">{label}</span>
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

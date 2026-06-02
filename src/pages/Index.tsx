@@ -15,6 +15,7 @@ import CTASection from "@/components/home/CTASection";
 import HomeDemandsSection from "@/components/home/HomeDemandsSection";
 import DirectFromFarmHero from "@/components/home/DirectFromFarmHero";
 import RecentPublications from "@/components/home/RecentPublications";
+import HelpAICard from "@/components/home/HelpAICard";
 import VerifiedSuppliersBar from "@/components/home/VerifiedSuppliersBar";
 
 import { useProfile } from "@/contexts/ProfileContext";
@@ -53,6 +54,7 @@ const Index = () => {
         <div className="hidden md:block">
           <HeroCarousel />
         </div>
+        <HelpAICard />
         <RecentPublications />
         <SolutionsSection />
         <CategoriesSection />
