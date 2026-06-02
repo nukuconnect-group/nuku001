@@ -3014,6 +3014,10 @@ export type Database = {
             }
             Returns: Json
           }
+      admin_update_order_status: {
+        Args: { _note?: string; _order_id: string; _status: string }
+        Returns: Json
+      }
       can_access_formation_document: {
         Args: { p_formation_id: string }
         Returns: boolean
@@ -3027,6 +3031,7 @@ export type Database = {
         Args: { p_payment_reference?: string; p_purchase_id: string }
         Returns: Json
       }
+      confirm_seller_order: { Args: { _order_id: string }; Returns: Json }
       count_user_products: { Args: { p_user_id: string }; Returns: number }
       create_token_purchase: {
         Args: { p_pack_code: string; p_payment_identifier: string }
