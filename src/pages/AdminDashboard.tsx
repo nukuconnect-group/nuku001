@@ -23,6 +23,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import CategoryManager from "@/components/admin/CategoryManager";
+import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import BroadcastNotification from "@/components/admin/BroadcastNotification";
 import WithdrawalManager from "@/components/admin/WithdrawalManager";
 import VisitorWorldMap from "@/components/admin/VisitorWorldMap";
