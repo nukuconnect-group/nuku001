@@ -505,7 +505,7 @@ const Dashboard = () => {
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" /> Mes produits ({products.length})
+                  <Package className="w-4 h-4 text-primary" /> Ma boutique ({products.length})
                 </CardTitle>
                 <CardDescription className="text-[10px]">Gérez et boostez votre catalogue</CardDescription>
               </div>
