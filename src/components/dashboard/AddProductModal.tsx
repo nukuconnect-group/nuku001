@@ -153,20 +153,19 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       try {
-        const { data, error } = await supabase.functions.invoke("reverse-geocode", {
-          body: null,
-          method: "GET" as any,
-          headers: {},
-        } as any);
-        if (error) throw error;
-        const display = (data as any)?.display || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reverse-geocode?lat=${lat}&lng=${lng}`, {
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        });
+        if (!res.ok) throw new Error("reverse-geocode failed");
+        const data = await res.json();
+        const display = data?.display || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         setNewProduct((p) => ({
           ...p,
           lat,
           lng,
-          country: (data as any)?.country || "",
-          city: (data as any)?.city || "",
-          quarter: (data as any)?.quarter || "",
+          country: data?.country || "",
+          city: data?.city || "",
+          quarter: data?.quarter || "",
           location: display,
         }));
         toast({ title: "📍 Position détectée", description: display });
