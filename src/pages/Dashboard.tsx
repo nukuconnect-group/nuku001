@@ -49,7 +49,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 const Dashboard = () => {
+  const [showBoostsDialog, setShowBoostsDialog] = useState(false);
+  const [showAffiliationDialog, setShowAffiliationDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -346,6 +350,8 @@ const Dashboard = () => {
               { icon: QrCode, label: "Traçabilité", color: "bg-blue-500/10 text-blue-500", href: "/tracabilite" },
               { icon: ShoppingCart, label: "Commandes", color: "bg-secondary/10 text-secondary", href: "/mes-commandes", badge: pendingOrders },
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
+              { icon: Rocket, label: "Mes boosts", color: "bg-primary/10 text-primary", onClick: () => setShowBoostsDialog(true) },
+              { icon: Gift, label: "Parrainage", color: "bg-pink-500/10 text-pink-600", onClick: () => setShowAffiliationDialog(true) },
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
               { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
                 const el = document.getElementById("withdrawals-section");
@@ -380,12 +386,7 @@ const Dashboard = () => {
 
           {/* KYC Reminder removed: SupplierKYCSection above already handles unverified state */}
 
-          {/* Affiliation */}
-          {user && (
-            <div className="mb-4 sm:mb-6">
-              <AffiliationCard userId={user.id} />
-            </div>
-          )}
+          {/* Affiliation & Boosts moved to Quick Actions icons (dialogs) */}
 
           {/* AI Recommendations - Collapsible */}
           {user && profile && (
@@ -504,30 +505,7 @@ const Dashboard = () => {
             );
           })()}
 
-          {/* Boosted products — stats détaillées */}
-          {(() => {
-            const boostedProducts = products.filter(p => isProductBoosted(activeBoosts, p.id));
-            if (boostedProducts.length === 0) return null;
-            return (
-              <details className="mb-4" open>
-                <summary className="cursor-pointer flex items-center gap-2 p-3 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/30 hover:bg-primary/15 transition-colors">
-                  <Rocket className="w-4 h-4 text-primary" />
-                  <span className="text-xs sm:text-sm font-semibold text-foreground">
-                    Produits boostés ({boostedProducts.length})
-                  </span>
-                  <Badge className="bg-primary text-primary-foreground text-[9px] gap-0.5 animate-pulse">
-                    <Rocket className="w-2.5 h-2.5" /> Actif
-                  </Badge>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-                </summary>
-                <div className="mt-2 space-y-3">
-                  {boostedProducts.map((p) => (
-                    <ProductBoostStats key={p.id} productId={p.id} productName={p.name} />
-                  ))}
-                </div>
-              </details>
-            );
-          })()}
+          {/* Produits boostés et parrainage — accessibles via icônes Actions rapides (dialogs) */}
 
           <Card className="mb-4" id="products-section">
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
@@ -739,6 +717,46 @@ const Dashboard = () => {
         <SupplierVerificationPopup userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
       )}
       <MobileBottomNav />
+
+      {/* Dialog: Mes boosts */}
+      <Dialog open={showBoostsDialog} onOpenChange={setShowBoostsDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-primary" /> Mes produits boostés
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const boostedProducts = products.filter(p => isProductBoosted(activeBoosts, p.id));
+            if (boostedProducts.length === 0) {
+              return (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  Aucun produit boosté pour le moment. Boostez vos produits depuis la liste pour leur donner plus de visibilité.
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-3">
+                {boostedProducts.map((p) => (
+                  <ProductBoostStats key={p.id} productId={p.id} productName={p.name} />
+                ))}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Parrainage */}
+      <Dialog open={showAffiliationDialog} onOpenChange={setShowAffiliationDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-pink-600" /> Mes gains de parrainage
+            </DialogTitle>
+          </DialogHeader>
+          {user && <AffiliationCard userId={user.id} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
