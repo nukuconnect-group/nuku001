@@ -26,7 +26,7 @@ project_id = "fpnhdihvnfsiymopbjgt"
   [functions.send-message-reminders]
     verify_jwt = false
   [functions.nuku-ai-chat]
-    verify_jwt = true
+    verify_jwt = false
   [functions.paygate-webhook]
     verify_jwt = false
   [functions.reverse-geocode]
