@@ -165,7 +165,7 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
         title: mode === "offer" ? "Proposition envoyée" : "Discussion ouverte",
         description: mode === "offer" ? "Votre quantité disponible a été envoyée au demandeur. Il a été notifié." : "Vous pouvez maintenant discuter avec le demandeur.",
       });
-      setSelectedDemand(null);
+      closeSelectedDemand();
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error: any) {
       toast({ title: "Erreur", description: error?.message || "Impossible d'ouvrir la discussion pour le moment.", variant: "destructive" });
