@@ -84,7 +84,7 @@ serve(async (req) => {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
         contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
       }),
     });
 
@@ -122,9 +122,16 @@ serve(async (req) => {
               if (!json) continue;
               try {
                 const parsed = JSON.parse(json);
-                const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+                const text = parsed?.candidates?.[0]?.content?.parts
+                  ?.map((part: { text?: string }) => part.text || "")
+                  .join("");
                 if (text) {
                   const chunk = { choices: [{ delta: { content: text } }] };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+                }
+                const finishReason = parsed?.candidates?.[0]?.finishReason;
+                if (finishReason === "MAX_TOKENS") {
+                  const chunk = { choices: [{ delta: { content: "\n\n… réponse trop longue, demandez-moi de continuer si nécessaire." } }] };
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
                 }
               } catch { /* partial line, skip */ }

@@ -133,6 +133,8 @@ const PremiumDashboard = () => {
 
   // ============ Analytics ============
   const analytics = useMemo(() => {
+    const paidStatuses = new Set(["confirmed", "processing", "shipped", "completed", "paid", "delivered"]);
+    const paidOrders = orders.filter((o) => paidStatuses.has(String(o.status || "").toLowerCase()));
     const last30 = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(); d.setDate(d.getDate() - (29 - i));
       const key = d.toISOString().slice(0, 10);
@@ -143,7 +145,7 @@ const PremiumDashboard = () => {
     const byCategory: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     const byHour: Record<number, number> = {};
-    orders.forEach((o) => {
+    paidOrders.forEach((o) => {
       const k = (o.created_at || "").slice(0, 10);
       const slot = map.get(k);
       const rev = Number(o.total_price) || 0;
@@ -169,7 +171,7 @@ const PremiumDashboard = () => {
     const forecast30 = avg7 * 30;
     // Top 5 products by revenue
     const productRev: Record<string, { name: string; revenue: number; count: number }> = {};
-    orders.forEach((o) => {
+    paidOrders.forEach((o) => {
       const p = products.find((pp) => pp.id === o.product_id);
       if (!p) return;
       productRev[p.id] = productRev[p.id] || { name: p.name, revenue: 0, count: 0 };

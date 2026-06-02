@@ -140,6 +140,50 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
   const [priceTiers, setPriceTiers] = useState<TierDraft[]>([]);
+  const [locating, setLocating] = useState(false);
+
+  const detectProductLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Géolocalisation indisponible", description: "Saisissez votre localisation manuellement.", variant: "destructive" });
+      return;
+    }
+    setLocating(true);
+    toast({ title: "📍 Localisation en cours..." });
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      try {
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reverse-geocode?lat=${lat}&lng=${lng}`, {
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        });
+        if (!res.ok) throw new Error("reverse-geocode failed");
+        const data = await res.json();
+        const display = data?.display || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        setNewProduct((p) => ({
+          ...p,
+          lat,
+          lng,
+          country: data?.country || "",
+          city: data?.city || "",
+          quarter: data?.quarter || "",
+          location: display,
+        }));
+        toast({ title: "📍 Position détectée", description: display });
+      } catch {
+        setNewProduct((p) => ({ ...p, lat, lng, location: p.location || `${lat.toFixed(4)}, ${lng.toFixed(4)}` }));
+        toast({ title: "Coordonnées GPS enregistrées", description: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+      } finally {
+        setLocating(false);
+      }
+    }, (err) => {
+      setLocating(false);
+      toast({
+        title: "Position non autorisée",
+        description: err.code === 1 ? "Autorisez la localisation dans votre navigateur ou saisissez l'adresse manuellement." : "Impossible de détecter la position. Réessayez ou saisissez manuellement.",
+        variant: "destructive",
+      });
+    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
+  };
 
   // Load existing price tiers in edit mode
   useEffect(() => {
@@ -712,31 +756,10 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               />
               <Button
                 type="button" size="sm" variant="outline" className="gap-1.5 h-8 text-[11px] w-full"
-                onClick={() => {
-                  if (!navigator.geolocation) { toast({ title: "Géolocalisation indisponible", variant: "destructive" }); return; }
-                  toast({ title: "📍 Localisation en cours..." });
-                  navigator.geolocation.getCurrentPosition(async (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    try {
-                      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reverse-geocode?lat=${lat}&lng=${lng}`;
-                      const res = await fetch(url);
-                      const j = await res.json();
-                      setNewProduct((p) => ({
-                        ...p, lat, lng,
-                        country: j.country || "", city: j.city || "", quarter: j.quarter || "",
-                        location: j.display || p.location,
-                      }));
-                      toast({ title: "📍 Position détectée", description: j.display || `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-                    } catch {
-                      setNewProduct((p) => ({ ...p, lat, lng }));
-                      toast({ title: "Coordonnées GPS enregistrées", description: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-                    }
-                  }, (err) => toast({ title: "Erreur géolocalisation", description: err.message, variant: "destructive" }),
-                  { enableHighAccuracy: true, timeout: 10000 });
-                }}
+                disabled={locating}
+                onClick={detectProductLocation}
               >
-                <MapPin className="w-3.5 h-3.5" /> Utiliser ma position actuelle
+                {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />} Utiliser ma position actuelle
               </Button>
               {newProduct.lat && newProduct.lng && (
                 <p className="text-[10px] text-muted-foreground">GPS: {Number(newProduct.lat).toFixed(4)}, {Number(newProduct.lng).toFixed(4)}</p>
