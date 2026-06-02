@@ -54,6 +54,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const Dashboard = () => {
   const [showBoostsDialog, setShowBoostsDialog] = useState(false);
   const [showAffiliationDialog, setShowAffiliationDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showWithdrawalsDialog, setShowWithdrawalsDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
