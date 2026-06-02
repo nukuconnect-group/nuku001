@@ -55,10 +55,15 @@ const Index = () => {
         <div className="hidden md:block">
           <HeroCarousel />
         </div>
-        <HelpAICard />
-        <SellProductsCard />
-        <RecentPublications />
+        <div className="md:hidden">
+          <HelpAICard />
+          <SellProductsCard />
+          <RecentPublications />
+        </div>
         <SolutionsSection />
+        <div className="hidden md:block">
+          <RecentPublications />
+        </div>
         <CategoriesSection />
         
         <DirectFromFarmHero />

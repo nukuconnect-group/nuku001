@@ -146,17 +146,17 @@ const HeaderPromoSlider = () => {
         </div>
       </div>
 
-      {/* Stats bar — détaché du slider, carte indépendante */}
-      <div className="mx-auto px-3 sm:px-4 max-w-6xl">
+      {/* Stats bar — mobile uniquement */}
+      <div className="md:hidden mx-auto px-3 max-w-6xl">
         <div className="grid grid-cols-3 bg-card border border-border rounded-none shadow-sm overflow-hidden">
           {stats.map(({ value, label, Icon }) => (
-            <div key={label} className="flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 py-3 sm:py-4 border-r border-border last:border-r-0 min-w-0">
-              <span className="flex h-7 w-7 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center bg-primary/10 text-primary rounded-none">
-                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div key={label} className="flex items-center justify-center gap-1.5 px-1.5 py-3 border-r border-border last:border-r-0 min-w-0">
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center bg-primary/10 text-primary rounded-none">
+                <Icon className="h-3.5 w-3.5" />
               </span>
               <span className="min-w-0 leading-none">
-                <span className="block font-heading text-foreground font-black text-sm sm:text-xl">{value}</span>
-                <span className="block text-[9px] sm:text-[10px] text-muted-foreground truncate mt-1">{label}</span>
+                <span className="block font-heading text-foreground font-black text-sm">{value}</span>
+                <span className="block text-[9px] text-muted-foreground truncate mt-1">{label}</span>
               </span>
             </div>
           ))}

@@ -434,9 +434,8 @@ const Header = () => {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
                   <SheetHeader className="p-3 border-b border-border bg-primary text-primary-foreground">
-                    <SheetTitle className="flex items-center gap-2 text-primary-foreground text-sm">
-                      <img src={nukuLogo} alt="NUKUCONNECT" className="w-8 h-8 object-contain rounded-full bg-white p-0.5" />
-                      NUKUCONNECT
+                    <SheetTitle className="flex items-center justify-start text-primary-foreground text-sm">
+                      <img src={nukuLogoWhite} alt="NUKUCONNECT" className="h-9 w-auto object-contain" />
                     </SheetTitle>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100vh-60px)]">
@@ -642,7 +641,12 @@ const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Account button - sidebar if logged in, full page auth if not */}
+                <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)}
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
+                  <CartIcon showBadgeOnly />
+                </Button>
+
+                {/* Account button - after cart */}
                 <Button variant="ghost" size="icon"
                   className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden flex"
                   onClick={() => {
@@ -660,11 +664,6 @@ const Header = () => {
                     </div>
                   )}
                   {user && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />}
-                </Button>
-
-                <Button variant="ghost" size="icon" onClick={() => setCartOpen(true)}
-                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9">
-                  <CartIcon showBadgeOnly />
                 </Button>
               </div>
             </div>
