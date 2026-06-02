@@ -9,7 +9,7 @@ import { Truck, Store, Package, MapPin, Navigation, Ruler, AlertCircle, Loader2,
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "./CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
