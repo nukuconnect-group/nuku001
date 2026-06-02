@@ -519,6 +519,14 @@ const ProducerProfile = () => {
       </main>
       <Footer />
       <MobileBottomNav />
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={(producer as any)?.business_name || producer?.full_name || "Boutique"}
+        description="Découvrez cette boutique sur NukuConnect"
+      />
+      {producer?.user_id && <UserPixels ownerUserId={producer.user_id} />}
     </div>
   );
 };
