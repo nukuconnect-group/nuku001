@@ -236,18 +236,24 @@ const DeliveryZoneMap = ({
         }
         setGeoLoading(false);
       },
-      () => {
-        // Fallback to Lomé when position unavailable
-        const defaultZone = togoZones[0]; // Lomé
+      (err) => {
+        // Fallback à Lomé si position indisponible, avec message clair selon la cause
+        const defaultZone = togoZones[0];
         if (!city) {
           onCityChange(defaultZone.name);
           setCitySearch(defaultZone.name);
           setMarkerPos([defaultZone.lat, defaultZone.lng]);
         }
-        setGeoError("Position non disponible — Lomé sélectionné par défaut");
+        const msg =
+          err.code === 1
+            ? "Autorisez la localisation dans votre navigateur pour détecter votre position réelle."
+            : err.code === 3
+              ? "Délai de localisation dépassé — réessayez en plein air."
+              : "Position GPS indisponible — sélectionnez votre ville manuellement.";
+        setGeoError(msg);
         setGeoLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   }, [onCityChange, onQuarterChange, onAddressChange, city]);
 
