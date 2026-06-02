@@ -26,6 +26,7 @@ import { useLanguage, type LangCode, type CurrencyCode } from "@/contexts/Langua
 import nukuLogo from "@/assets/nukuconnect-logo-header.png";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import AccountSidebar from "@/components/layout/AccountSidebar";
+import HeaderPromoSlider from "@/components/layout/HeaderPromoSlider";
 import { useSearchSuggestionsPrefetch } from "@/hooks/useSearchSuggestionsPrefetch";
 
 // Lazy load heavy components (QR scanner, maps, search modals with framer-motion)
@@ -702,6 +703,8 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      <HeaderPromoSlider />
 
 
       {/* Row 4: Desktop Nav with categories in menu */}
