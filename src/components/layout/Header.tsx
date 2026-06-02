@@ -824,7 +824,7 @@ const Header = () => {
             onResult={(text) => {
               setSearchQuery(text);
               setShowSearchResults(true);
-              trackSearch({ query: text, mode: "voice" });
+              rememberSearchMode("voice");
               navigate(`/marketplace?search=${text}`);
             }}
           />
