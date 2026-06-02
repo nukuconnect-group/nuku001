@@ -116,15 +116,10 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             />
             <div className="absolute top-2 left-2 flex gap-1">
               {computedDiscount > 0 ? (
-                <>
-                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
-                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[10px]">VENTE</Badge>
-                </>
+                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
               ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[10px] animate-pulse">⚡ NEW</Badge>
-              ) : (
-                <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
-              )}
+              ) : null}
             </div>
 
           </div>
@@ -181,23 +176,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {!minimal && (
               computedDiscount > 0 ? (
-                <>
-                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                    -{computedDiscount}%
-                  </Badge>
-                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                    VENTE
-                  </Badge>
-                </>
+                <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                  -{computedDiscount}%
+                </Badge>
               ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
                   ⚡ NEW
                 </Badge>
-              ) : (
-                <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                  VENTE
-                </Badge>
-              )
+              ) : null
             )}
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">

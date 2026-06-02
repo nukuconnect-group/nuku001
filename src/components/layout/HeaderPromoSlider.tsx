@@ -6,6 +6,7 @@ import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
 import driverLogistics from "@/assets/header-slide-driver-logistics.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
+import agriDrone from "@/assets/header-slide-agri-drone.jpg";
 
 const slides = [
   {
@@ -37,9 +38,16 @@ const slides = [
     image: aiAssistant,
   },
   {
+    eyebrow: "AgriTech & innovation",
+    title: "Des drones agricoles pour une production moderne",
+    subtitle: "Surveillance des cultures, cartographie et précision au service des producteurs.",
+    Icon: Sparkles,
+    image: agriDrone,
+  },
+  {
     eyebrow: "Commerce sécurisé",
     title: "Vendez, payez et livrez en toute confiance",
-    subtitle: "Des échanges agricoles transparents, de la boutique jusqu’à la livraison.",
+    subtitle: "Des échanges agricoles transparents, de la boutique jusqu'à la livraison.",
     Icon: ShieldCheck,
     image: agriTransactionDelivery,
   },
@@ -84,8 +92,8 @@ const HeaderPromoSlider = () => {
                 loading={i === 0 ? "eager" : "lazy"}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/55 to-primary/10" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
           </div>
 
           <div className="relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[420px] lg:min-h-[500px] xl:min-h-[560px] flex flex-col justify-center">
