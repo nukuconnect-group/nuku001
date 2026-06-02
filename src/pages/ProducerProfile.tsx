@@ -94,6 +94,7 @@ const ProducerProfile = () => {
   const { toast } = useToast();
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { data: producer, isLoading: loadingProducer } = useQuery({
     queryKey: ["producer-profile", profileId],
