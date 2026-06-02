@@ -218,15 +218,13 @@ const Categories = () => {
                   <div className="overflow-hidden rounded-xl border border-border bg-card hover:shadow-lg transition-all duration-300">
                     <div className="relative h-36 sm:h-44 lg:h-52 overflow-hidden">
                       <img
-                        src={getCategoryImage(cat.name)}
+                        src={cat.image_url || getCategoryImage(cat.name)}
                         alt={cat.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = getCategoryImage(cat.name); }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                      <div className="absolute top-3 left-3">
-                        <span className="text-2xl sm:text-3xl">{cat.emoji || "📦"}</span>
-                      </div>
                       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                         <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-white line-clamp-1">
                           {cat.name}
