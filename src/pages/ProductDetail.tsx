@@ -872,6 +872,13 @@ const ProductDetail = () => {
       </main>
       <Footer />
       <MobileBottomNav />
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={product?.name || "Produit"}
+        description={`${product?.name || ""} sur NukuConnect`}
+      />
     </div>
   );
 };
