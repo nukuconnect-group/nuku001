@@ -355,16 +355,8 @@ const Dashboard = () => {
               { icon: Rocket, label: "Mes boosts", color: "bg-primary/10 text-primary", onClick: () => setShowBoostsDialog(true) },
               { icon: Gift, label: "Parrainage", color: "bg-pink-500/10 text-pink-600", onClick: () => setShowAffiliationDialog(true) },
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
-              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                const el = document.getElementById("withdrawals-section");
-                el?.setAttribute("open", "true");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }},
-              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => {
-                const el = document.getElementById("settings-section");
-                el?.setAttribute("open", "true");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }},
+              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => setShowWithdrawalsDialog(true) },
+              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => setShowSettingsDialog(true) },
             ].map((action: any, i) => {
               const content = (
                 <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group h-full">
