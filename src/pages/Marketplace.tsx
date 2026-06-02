@@ -305,6 +305,29 @@ const Marketplace = () => {
     if (tab === "products") setMarketView("products");
   }, [searchParams]);
 
+  // Track each search query (text/voice/qr) once filtered results are computed
+  const lastTrackedSearchRef = useRef<string>("");
+  useEffect(() => {
+    const search = (searchParams.get("search") || "").trim();
+    if (!search) return;
+    const key = `${search}|${selectedCategory}`;
+    if (lastTrackedSearchRef.current === key) return;
+    lastTrackedSearchRef.current = key;
+    // Defer slightly so filteredProducts is up to date
+    const t = setTimeout(async () => {
+      const { trackSearch, consumeSearchMode } = await import("@/lib/searchTracking");
+      trackSearch({
+        query: search,
+        mode: consumeSearchMode(),
+        category: selectedCategory !== "all" ? selectedCategory : null,
+        resultCount: filteredProductsCountRef.current,
+      });
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, selectedCategory]);
+  const filteredProductsCountRef = useRef(0);
+
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedCategory !== "all") count++;
