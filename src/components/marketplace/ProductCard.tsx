@@ -90,7 +90,15 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
     toast({ title: "Comparaison", description: `${product.name} ajouté à la comparaison` });
   };
 
-  const isNew = product.promoType === "nouveau";
+  // Considère un produit "nouveau" s'il a été créé il y a moins de 7 jours
+  const isRecent = (() => {
+    const dateStr = (product as any).createdAt || (product as any).created_at;
+    if (!dateStr) return false;
+    const created = new Date(dateStr).getTime();
+    if (Number.isNaN(created)) return false;
+    return (Date.now() - created) < 7 * 24 * 60 * 60 * 1000;
+  })();
+  const isNew = isRecent || product.promoType === "nouveau";
   const reviewCount = Math.floor(product.producer.rating * 12);
   const totalSales = product.producer.totalSales || Math.floor(Math.random() * 500 + 50);
 
@@ -108,9 +116,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             />
             <div className="absolute top-2 left-2 flex gap-1">
               {computedDiscount > 0 ? (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
-              ) : (
+                <>
+                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
+                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[10px]">VENTE</Badge>
+                </>
+              ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[10px] animate-pulse">⚡ NEW</Badge>
+              ) : (
+                <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
               )}
             </div>
 
@@ -168,12 +181,21 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {!minimal && (
               computedDiscount > 0 ? (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                  -{computedDiscount}%
-                </Badge>
-              ) : (
+                <>
+                  <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    -{computedDiscount}%
+                  </Badge>
+                  <Badge className="bg-destructive/90 text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                    VENTE
+                  </Badge>
+                </>
+              ) : isNew ? (
                 <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
                   ⚡ NEW
+                </Badge>
+              ) : (
+                <Badge className="bg-primary text-primary-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                  VENTE
                 </Badge>
               )
             )}

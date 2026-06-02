@@ -110,9 +110,9 @@
                    <ArrowRight className="w-3 h-3" />
                  </Button>
                </Link>
-               <p className="text-[10px] text-muted-foreground text-center mt-2">
-                 DHL International • Gozem National
-               </p>
+                <p className="text-[10px] text-muted-foreground text-center mt-2">
+                  Koko International • Livreur NukuConnect
+                </p>
              </div>
            </>
          )}
