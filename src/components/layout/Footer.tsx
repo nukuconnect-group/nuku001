@@ -16,6 +16,7 @@ const Footer = () => {
       { label: t("net.suppliers"), href: "/producteurs" },
       { label: t("net.buyers"), href: "/buyer-dashboard" },
       { label: "NUKUCONNECT IA", href: "/nuku-ai" },
+      { label: t("footer.legal"), href: "/legal" },
     ],
     resources: [
       { label: t("nav.formations"), href: "/formations" },
@@ -23,17 +24,14 @@ const Footer = () => {
       { label: t("nav.plans"), href: "/plans" },
       { label: "FAQ Nuku AI", href: "/faq-nuku-ai" },
       { label: t("nav.help"), href: "/aide" },
+      { label: "Politique d'achat & remboursement", href: "/politique-achat" },
     ],
     company: [
       { label: t("nav.about"), href: "/a-propos" },
       { label: t("nav.contact"), href: "/contact" },
       { label: "Affiliation", href: "/affiliation" },
-    ],
-    legal: [
       { label: t("footer.terms"), href: "/terms" },
       { label: t("footer.privacy"), href: "/privacy" },
-      { label: t("footer.legal"), href: "/legal" },
-      { label: "Politique d'achat & remboursement", href: "/politique-achat" },
     ],
   };
 
@@ -171,21 +169,10 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs sm:text-sm text-white/50 text-center md:text-left">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15 flex justify-center items-center">
+          <p className="text-xs sm:text-sm text-white/50 text-center">
             © 2025 NUKUCONNECT. {t("footer.rights")}
           </p>
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-            {footerLinks.legal.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="text-xs sm:text-sm text-white/50 hover:text-white transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
       </footer>
