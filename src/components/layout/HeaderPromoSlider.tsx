@@ -1,39 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket } from "lucide-react";
+import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot } from "lucide-react";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
+import driverLogistics from "@/assets/header-slide-driver-logistics.jpg";
+import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 
 const slides = [
   {
     eyebrow: "Marketplace agricole",
     title: "Achetez frais, directement auprès des producteurs",
-    highlight: "Femmes et hommes agricoles connectés",
     subtitle: "Produits locaux vérifiés, commandes rapides et paiement sécurisé.",
-    cta: "Explorer",
-    href: "/marketplace",
     Icon: Leaf,
     image: agriWomanSmartphone,
   },
   {
     eyebrow: "Réseau NukuConnect",
     title: "Producteurs, fournisseurs et acheteurs réunis",
-    highlight: "Des transactions agricoles intelligentes",
     subtitle: "Connectez votre production au marché avec une expérience simple et fiable.",
-    cta: "Rejoindre",
-    href: "/marketplace",
     Icon: Users,
     image: agriFarmersPhones,
   },
   {
+    eyebrow: "Livraison NukuConnect",
+    title: "Vos commandes livrées par notre flotte interne",
+    subtitle: "Livreurs vérifiés, suivi GPS en temps réel et tarifs transparents.",
+    Icon: Truck,
+    image: driverLogistics,
+  },
+  {
+    eyebrow: "Assistant IA agricole",
+    title: "NukuConnect IA accompagne agriculteurs et acheteurs",
+    subtitle: "Conseils techniques, recommandations et support intelligent à tout moment.",
+    Icon: Bot,
+    image: aiAssistant,
+  },
+  {
     eyebrow: "Commerce sécurisé",
     title: "Vendez, payez et livrez en toute confiance",
-    highlight: "Traçabilité et livraison NukuConnect",
     subtitle: "Des échanges agricoles transparents, de la boutique jusqu’à la livraison.",
-    cta: "Commander",
-    href: "/marketplace",
-    Icon: Truck,
+    Icon: ShieldCheck,
     image: agriTransactionDelivery,
   },
 ];
@@ -97,9 +104,6 @@ const HeaderPromoSlider = () => {
                   <h3 className="font-heading text-primary-foreground font-black leading-[1.05] mt-2 sm:mt-3 text-[19px] sm:text-3xl md:text-4xl lg:text-[42px] drop-shadow-sm">
                     {slide.title}
                   </h3>
-                  <p className="text-primary-foreground font-extrabold text-[11px] sm:text-sm md:text-base mt-2 drop-shadow-sm">
-                    {slide.highlight}
-                  </p>
                   <p className="text-primary-foreground/95 text-[11px] sm:text-sm md:text-base mt-2 max-w-[34ch] leading-snug drop-shadow-sm">
                     {slide.subtitle}
                   </p>

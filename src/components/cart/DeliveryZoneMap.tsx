@@ -156,31 +156,27 @@ const DeliveryZoneMap = ({
   const hasAutoDetected = useRef(false);
   const markerRef = useRef<L.Marker>(null);
 
-  // Auto-detect location on mount: always prefer the buyer's real GPS position for delivery.
+  // Auto-detect location on mount: TOUJOURS forcer la géolocalisation GPS de l'acheteur
+  // pour pré-remplir l'adresse de livraison (style Alibaba/Amazon).
   useEffect(() => {
     if (hasAutoDetected.current) return;
     hasAutoDetected.current = true;
-    
-    // If city is already a valid zone, just sync the search field
+
+    // Sync visuel immédiat si une ville est déjà connue
     const exactZone = togoZones.find(z => z.name === city);
     if (exactZone) {
       setCitySearch(exactZone.name);
       setMarkerPos([exactZone.lat, exactZone.lng]);
-      if (address) return;
-    }
-    
-    // Try fuzzy-matching the city prop (e.g. "Lome, Togo" → "Lomé")
-    if (city) {
+    } else if (city) {
       const matched = matchLocationToZone(city);
       if (matched) {
         onCityChange(matched.name);
         setCitySearch(matched.name);
         setMarkerPos([matched.lat, matched.lng]);
-        if (address) return;
       }
     }
-    
-    // Fall back to GPS detection
+
+    // Toujours déclencher le GPS pour avoir la position réelle de l'acheteur
     detectLocation();
   }, [city]);
 
@@ -240,18 +236,24 @@ const DeliveryZoneMap = ({
         }
         setGeoLoading(false);
       },
-      () => {
-        // Fallback to Lomé when position unavailable
-        const defaultZone = togoZones[0]; // Lomé
+      (err) => {
+        // Fallback à Lomé si position indisponible, avec message clair selon la cause
+        const defaultZone = togoZones[0];
         if (!city) {
           onCityChange(defaultZone.name);
           setCitySearch(defaultZone.name);
           setMarkerPos([defaultZone.lat, defaultZone.lng]);
         }
-        setGeoError("Position non disponible — Lomé sélectionné par défaut");
+        const msg =
+          err.code === 1
+            ? "Autorisez la localisation dans votre navigateur pour détecter votre position réelle."
+            : err.code === 3
+              ? "Délai de localisation dépassé — réessayez en plein air."
+              : "Position GPS indisponible — sélectionnez votre ville manuellement.";
+        setGeoError(msg);
         setGeoLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   }, [onCityChange, onQuarterChange, onAddressChange, city]);
 
