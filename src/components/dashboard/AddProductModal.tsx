@@ -180,6 +180,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         negotiable: editProduct.is_negotiable || false,
         deliveryAvailable: true,
         stockStatus: editProduct.stock_status || "in_stock",
+        lat: (editProduct as any).lat ?? null,
+        lng: (editProduct as any).lng ?? null,
+        country: (editProduct as any).country || "",
+        city: (editProduct as any).city || "",
+        quarter: (editProduct as any).quarter || "",
       });
       if (editProduct.images?.length) {
         setImagePreviews(editProduct.images);
