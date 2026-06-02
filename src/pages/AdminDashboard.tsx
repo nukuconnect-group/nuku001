@@ -283,7 +283,7 @@ const AdminDashboard = () => {
     { label: "Utilisateurs", value: stats?.total_users || 0, icon: Users, color: "bg-primary/15 text-primary" },
     { label: "Produits", value: stats?.total_products || 0, icon: Package, color: "bg-secondary/15 text-secondary" },
     { label: "Commandes", value: stats?.total_orders || 0, icon: ShoppingCart, color: "bg-accent/15 text-accent-foreground" },
-    { label: "Revenus", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-accent/20 text-accent-foreground" },
+    { label: "Revenus réels", value: formatPrice(Number(stats?.total_revenue || 0)), icon: DollarSign, color: "bg-accent/20 text-accent-foreground" },
     { label: "Visites", value: analytics?.total_visits || 0, icon: Eye, color: "bg-primary/10 text-primary" },
     { label: "Visiteurs", value: analytics?.unique_visitors || 0, icon: Globe, color: "bg-secondary/10 text-secondary" },
     { label: "Aujourd'hui", value: analytics?.today_visits || 0, icon: Activity, color: "bg-destructive/10 text-destructive" },
