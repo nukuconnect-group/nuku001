@@ -53,9 +53,6 @@ const Index = () => {
           <HeroCarousel />
         </div>
         <SolutionsSection />
-        <div className="hidden md:block">
-          <PromoBannerSlider />
-        </div>
         <CategoriesSection />
         
         <DirectFromFarmHero />
