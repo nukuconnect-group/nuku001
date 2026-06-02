@@ -493,9 +493,7 @@ const DeliveryZoneMap = ({
                   <div className="bg-background rounded-lg p-2 text-center">
                     <p className="text-muted-foreground">Frais livraison</p>
                     <p className="text-lg font-bold text-primary">{formatPrice(currentPrice)}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {getDeliveryPriceByDistance(distanceInfo.maxDistance).tier}
-                    </p>
+                    <p className="text-[10px] text-muted-foreground">Tarif réel selon la distance</p>
                   </div>
                 </div>
                 {distanceInfo.hasMultiple && distanceInfo.minDistance !== distanceInfo.maxDistance && (
