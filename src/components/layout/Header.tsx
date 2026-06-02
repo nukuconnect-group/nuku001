@@ -850,7 +850,7 @@ const Header = () => {
             onClose={() => setQrScannerOpen(false)}
             onScan={(code) => {
               setSearchQuery(code);
-              trackSearch({ query: code, mode: "qr" });
+              rememberSearchMode("qr");
               navigate(`/marketplace?search=${code}`);
             }}
           />
