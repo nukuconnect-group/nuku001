@@ -49,7 +49,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 const Dashboard = () => {
+  const [showBoostsDialog, setShowBoostsDialog] = useState(false);
+  const [showAffiliationDialog, setShowAffiliationDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
