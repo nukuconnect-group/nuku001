@@ -800,6 +800,9 @@ const Header = () => {
           </div>
       </nav>
 
+      <HeaderPromoSlider />
+
+
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
       <AccountSidebar isOpen={accountSidebarOpen} onClose={() => setAccountSidebarOpen(false)} />
 
