@@ -76,6 +76,7 @@ const CategoriesSection = () => {
   const activeCategories = useMemo(() => {
     return categories
       .filter((c: any) => c.is_active && (productCounts[c.id] || 0) > 0)
+      .sort((a: any, b: any) => (productCounts[b.id] || 0) - (productCounts[a.id] || 0))
       .slice(0, 8);
   }, [categories, productCounts]);
 

@@ -84,8 +84,8 @@ const HeaderPromoSlider = () => {
                 loading={i === 0 ? "eager" : "lazy"}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/55 to-primary/10" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
           </div>
 
           <div className="relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[420px] lg:min-h-[500px] xl:min-h-[560px] flex flex-col justify-center">

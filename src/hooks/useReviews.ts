@@ -23,11 +23,22 @@ export function useReviews(productId: string) {
       if (!isUUID(productId)) return [];
       const { data, error } = await supabase
         .from("reviews" as any)
-        .select("*, profiles:user_id(full_name, avatar_url)")
+        .select("*")
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as Review[];
+      const reviews = (data || []) as any[];
+      if (reviews.length === 0) return [];
+      const userIds = Array.from(new Set(reviews.map((r) => r.user_id)));
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      return reviews.map((r) => ({
+        ...r,
+        profiles: profileMap.get(r.user_id) || null,
+      })) as Review[];
     },
     enabled: !!productId,
     staleTime: 2 * 60 * 1000,
