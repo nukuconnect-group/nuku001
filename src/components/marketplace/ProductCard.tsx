@@ -293,14 +293,22 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
                 <ShippingDelayBadge days={shippingDays} />
               </div>
 
-              {/* Reviews + Sales */}
-              <div className="flex items-center gap-1 mt-auto">
-                <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
-                <span className="text-[9px] font-medium text-foreground">{product.producer.rating.toFixed(1)}</span>
-                <span className="text-[8px] text-muted-foreground">({reviewCount})</span>
-                <span className="text-border text-[8px]">|</span>
-                <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
-              </div>
+              {/* Reviews + Sales (uniquement avec de vraies données) */}
+              {(hasReviews || totalSales > 0) && (
+                <div className="flex items-center gap-1 mt-auto">
+                  {hasReviews && (
+                    <>
+                      <Star className="w-2.5 h-2.5 text-accent fill-accent flex-shrink-0" />
+                      <span className="text-[9px] font-medium text-foreground">{realRating.toFixed(1)}</span>
+                      <span className="text-[8px] text-muted-foreground">({realReviewCount})</span>
+                    </>
+                  )}
+                  {hasReviews && totalSales > 0 && <span className="text-border text-[8px]">|</span>}
+                  {totalSales > 0 && (
+                    <span className="text-[8px] text-muted-foreground truncate">{totalSales}+ vendus</span>
+                  )}
+                </div>
+              )}
 
               {/* Supplier info */}
               {!hideProducer && (
