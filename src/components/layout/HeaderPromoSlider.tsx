@@ -129,43 +129,7 @@ const HeaderPromoSlider = () => {
         </div>
       </div>
 
-      {/* DESKTOP / TABLETTE — bande fine inchangée */}
-      <div className="hidden sm:block relative overflow-hidden h-9 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--secondary)/0.9)] to-[hsl(var(--primary)/0.85)]">
-        <div
-          className="flex transition-transform duration-500 ease-in-out h-full"
-          style={{ transform: `translateX(-${current * 100}%)` }}
-        >
-          {slides.map((slide, i) => {
-            const { Icon } = slide;
-            return (
-              <Link
-                key={i}
-                to={slide.href}
-                className="relative flex-shrink-0 w-full h-full flex items-center justify-center gap-3 px-4 overflow-hidden"
-              >
-                <div className="relative w-6 h-6 rounded-full bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-3.5 h-3.5 text-primary-foreground" />
-                </div>
-                <span className="relative text-[11px] font-black uppercase text-primary-foreground tracking-[0.18em] leading-none">
-                  {slide.title}
-                </span>
-                <span className="relative text-[9px] font-extrabold text-primary-foreground uppercase tracking-[0.15em] ml-1 border border-primary-foreground/40 rounded-sm px-1.5 py-0.5 leading-none">
-                  {slide.cta}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-1">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "bg-primary-foreground w-3" : "bg-primary-foreground/25 w-1.5"}`}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Pas de bannière promo tablette/desktop : correction demandée mobile seulement. */}
     </>
   );
 };
