@@ -41,6 +41,8 @@ import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
 
 import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
+import ShareDialog from "@/components/share/ShareDialog";
+import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
 
 const ProductDetail = () => {
   const { id } = useParams();
