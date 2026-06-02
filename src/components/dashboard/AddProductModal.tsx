@@ -131,6 +131,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     negotiable: false,
     deliveryAvailable: true,
     stockStatus: "in_stock",
+    lat: null as number | null,
+    lng: null as number | null,
+    country: "",
+    city: "",
+    quarter: "",
   };
 
   const [newProduct, setNewProduct] = useState(defaultProduct);
