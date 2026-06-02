@@ -493,9 +493,7 @@ const DeliveryZoneMap = ({
                   <div className="bg-background rounded-lg p-2 text-center">
                     <p className="text-muted-foreground">Frais livraison</p>
                     <p className="text-lg font-bold text-primary">{formatPrice(currentPrice)}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {getDeliveryPriceByDistance(distanceInfo.maxDistance).tier}
-                    </p>
+                    <p className="text-[10px] text-muted-foreground">Tarif réel selon la distance</p>
                   </div>
                 </div>
                 {distanceInfo.hasMultiple && distanceInfo.minDistance !== distanceInfo.maxDistance && (
@@ -567,30 +565,6 @@ const DeliveryZoneMap = ({
               </div>
             )}
 
-            {/* Pricing scale */}
-            {!isInternational && (
-              <div className="text-[10px] text-muted-foreground space-y-1 pt-1">
-                <p className="font-semibold text-xs text-foreground mb-1">Grille tarifaire (min. {formatPrice(MIN_DELIVERY_PRICE)}) :</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                  {[
-                    { label: "≤ 3 km", price: 1000 },
-                    { label: "≤ 7 km", price: 1200 },
-                    { label: "≤ 15 km", price: 1500 },
-                    { label: "≤ 30 km", price: 2500 },
-                    { label: "≤ 80 km", price: 4000 },
-                    { label: "> 80 km", price: 6000 },
-                  ].map(t => (
-                    <div key={t.label} className={`rounded px-2 py-1 ${
-                      currentPrice === t.price
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "bg-muted"
-                    }`}>
-                      {t.label} → {formatPrice(t.price)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </CardContent>

@@ -710,7 +710,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-clip w-full max-w-[100vw]">
       <Header />
 
       {/* Success banner */}
@@ -725,7 +725,7 @@ const Cart = () => {
       </div>
 
       <main>
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-full overflow-hidden">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-full overflow-x-clip">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm">
             <ArrowLeft className="w-4 h-4" /><span>Retour</span>
           </button>
@@ -836,7 +836,7 @@ const Cart = () => {
             </div>
 
             {/* Right: Order Summary */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 min-w-0">
               <OrderSummary
                 deliveryPrice={deliveryPrice}
                 isCheckingOut={isCheckingOut}
