@@ -55,6 +55,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [traceabilityOpen, setTraceabilityOpen] = useState(false);
 
   const isUUID = id ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) : false;
