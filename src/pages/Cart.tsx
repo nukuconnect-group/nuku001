@@ -710,7 +710,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-clip w-full max-w-[100vw]">
       <Header />
 
       {/* Success banner */}
