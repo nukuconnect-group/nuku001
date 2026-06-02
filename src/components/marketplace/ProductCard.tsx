@@ -54,18 +54,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const lowestTierPrice = tiers.length > 0 ? Math.min(...tiers.map((t) => t.price)) : null;
   const shippingDays = product.shippingDelayDays;
 
-  // Promo : remise visuelle déterministe pour TOUS les produits sans promo réelle
-  // Sponsorisés : 10–25% (plus visible). Autres : 5–15%.
-  const hashId = (product.id || product.name || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const syntheticDiscount = isBoosted ? 10 + (hashId % 16) : 5 + (hashId % 11); // 10..25 vs 5..15
-  const computedOriginalPrice =
-    product.originalPrice ??
-    (syntheticDiscount > 0 ? Math.round(product.price / (1 - syntheticDiscount / 100)) : undefined);
+  // Promo : afficher uniquement les vraies remises (jamais de pourcentages factices)
+  const computedOriginalPrice = product.originalPrice;
   const computedDiscount =
-    product.discount ??
-    (computedOriginalPrice && computedOriginalPrice > product.price
-      ? Math.round(((computedOriginalPrice - product.price) / computedOriginalPrice) * 100)
-      : 0);
+    product.discount && product.discount > 0
+      ? product.discount
+      : computedOriginalPrice && computedOriginalPrice > product.price
+        ? Math.round(((computedOriginalPrice - product.price) / computedOriginalPrice) * 100)
+        : 0;
 
   const { data: matchingDemands = 0 } = useQuery({
     queryKey: ["demand-count", product.category],
