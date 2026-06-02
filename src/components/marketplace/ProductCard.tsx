@@ -107,12 +107,13 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               onError={() => setListImgError(true)}
             />
             <div className="absolute top-2 left-2 flex gap-1">
-              <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">VENTE</Badge>
-              {product.discount && (
-                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{product.discount}%</Badge>
+              {computedDiscount > 0 ? (
+                <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px]">-{computedDiscount}%</Badge>
+              ) : (
+                <Badge className="bg-accent text-accent-foreground font-bold text-[10px] animate-pulse">⚡ NEW</Badge>
               )}
-              {isNew && <Badge className="bg-primary text-primary-foreground font-bold text-[10px]">NEW</Badge>}
             </div>
+
           </div>
           <CardContent className="flex-1 p-4">
             <div className="flex flex-col h-full justify-between">
@@ -163,20 +164,23 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             onError={() => setImgError(true)}
           />
           
-          {/* Top-left badges (sale / sponsored / new / status) */}
+          {/* Top-left badges (promo % OR flash NEW / sponsored / status) */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
             {!minimal && (
-              <Badge className="bg-primary text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">
-                VENTE
-              </Badge>
+              computedDiscount > 0 ? (
+                <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
+                  -{computedDiscount}%
+                </Badge>
+              ) : (
+                <Badge className="bg-accent text-accent-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5 animate-pulse">
+                  ⚡ NEW
+                </Badge>
+              )
             )}
             {isBoosted && (
               <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm gap-0.5">
                 <Rocket className="w-2.5 h-2.5" />Sponsorisé
               </Badge>
-            )}
-            {isNew && (
-              <Badge className="bg-accent text-accent-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">NOUVEAU</Badge>
             )}
             {(product as any).is_negotiable && (
               <Badge className="bg-secondary text-secondary-foreground font-bold text-[8px] px-1.5 py-0.5 rounded-md shadow-sm">NÉGOCIABLE</Badge>
@@ -192,13 +196,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
             )}
           </div>
 
-          {/* Top-right area: discount badge (opposite side) + action buttons */}
+          {/* Top-right area: action buttons */}
           <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-            {computedDiscount > 0 && (
-              <Badge className="bg-destructive text-destructive-foreground font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow-sm">
-                -{computedDiscount}%
-              </Badge>
-            )}
+
             {!minimal && (
               <>
                 {/* Aperçu rapide — visible au survol sur ordinateur uniquement */}

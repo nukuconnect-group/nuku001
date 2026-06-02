@@ -648,7 +648,7 @@ const Header = () => {
 
                 {/* Account button - after cart */}
                 <Button variant="ghost" size="icon"
-                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden flex"
+                  className="relative text-primary-foreground hover:bg-primary-foreground/10 h-7 w-7 sm:h-9 sm:w-9 rounded-full overflow-hidden flex"
                   onClick={() => {
                     if (user) {
                       setAccountSidebarOpen(true);
@@ -660,11 +660,11 @@ const Header = () => {
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                   ) : (
                     <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center">
-                      <User className="w-4 h-4 text-muted-foreground/60" strokeWidth={1.5} />
+                      <User className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground/60" strokeWidth={1.5} />
                     </div>
                   )}
-                  {user && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-primary" />}
                 </Button>
+
               </div>
             </div>
           </div>
