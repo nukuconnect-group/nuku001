@@ -1,9 +1,25 @@
-import { Link } from "react-router-dom";
-import { Play } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Play, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 
 const HelpAICard = () => {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    setOpen(false);
+    setQuery("");
+    navigate(`/nuku-ai?q=${encodeURIComponent(q)}`);
+  };
+
   return (
     <section className="bg-background py-3 sm:py-4">
       <div className="mx-auto px-3 sm:px-4 max-w-6xl">
@@ -15,12 +31,15 @@ const HelpAICard = () => {
             <p className="text-muted-foreground text-xs sm:text-sm mt-1 leading-snug">
               Discutez avec notre Assistant IA pour trouver ce qu'il vous faut.
             </p>
-            <Link to="/nuku-ai" className="inline-block mt-3">
-              <Button variant="hero" size="sm" className="gap-1.5 rounded-md">
-                <Play className="w-3.5 h-3.5 fill-current" />
-                Discuter maintenant
-              </Button>
-            </Link>
+            <Button
+              variant="hero"
+              size="sm"
+              className="gap-1.5 rounded-md mt-3"
+              onClick={() => setOpen(true)}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Discuter maintenant
+            </Button>
           </div>
           <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden">
             <img
@@ -32,6 +51,30 @@ const HelpAICard = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Que recherchez-vous ?</DialogTitle>
+            <DialogDescription>
+              Décrivez votre question ou ce que vous recherchez. Notre IA NukuConnect vous répondra immédiatement.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submit} className="flex flex-col gap-3 mt-2">
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ex: Quel engrais pour le maïs ?"
+              className="h-11"
+            />
+            <Button type="submit" variant="hero" disabled={!query.trim()} className="gap-2">
+              <Send className="w-4 h-4" />
+              Envoyer à l'IA
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
