@@ -54,7 +54,6 @@ const Index = () => {
       <main className="space-y-0">
         <div className="md:hidden">
           <HelpAICard />
-          <SellProductsCard />
           <RecentPublications />
         </div>
         <SolutionsSection />
@@ -66,6 +65,9 @@ const Index = () => {
         <DirectFromFarmHero />
         <VerifiedSuppliersBar />
         <FeaturedProducts />
+        <div className="md:hidden">
+          <SellProductsCard />
+        </div>
         <HomeDemandsSection />
         <FeaturesSection />
         <HowItWorksSection />
