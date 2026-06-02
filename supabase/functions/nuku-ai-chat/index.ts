@@ -89,6 +89,82 @@ serve(async (req) => {
       });
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // Product context injection from the marketplace
+    // ───────────────────────────────────────────────────────────────
+    const STOP_WORDS = new Set([
+      "le","la","les","un","une","des","de","du","et","ou","aux","dans","sur","pour","par","avec","sans",
+      "je","tu","il","elle","nous","vous","ils","elles","mon","ma","mes","ton","ta","tes","son","sa","ses","ce","cette","ces",
+      "qui","que","quoi","quel","quelle","est","sont","ont","veux","voudrais","cherche","cherchez","acheter",
+      "payer","commander","trouver","besoin","produit","produits","disponible","disponibles","prix","stock",
+      "fournisseur","fournisseurs","vendeur","montre","montrez","affiche","affichez","detail","detaille",
+      "the","want","buy","need","please","show","find"
+    ]);
+    function extractKeywords(text: string): string[] {
+      return text.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length >= 3 && !STOP_WORDS.has(w))
+        .slice(0, 8);
+    }
+
+    let productContext = "";
+    try {
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+      const keywords = extractKeywords(lastUserMsg);
+      if (keywords.length > 0) {
+        const supaUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const admin = createClient(supaUrl, serviceKey);
+        const orFilter = keywords
+          .flatMap((k) => [`name.ilike.%${k}%`, `description.ilike.%${k}%`, `category.ilike.%${k}%`, `city.ilike.%${k}%`])
+          .join(",");
+        const { data: prods } = await admin
+          .from("products")
+          .select("id,name,description,category,price,unit,quantity_available,stock_status,city,country,location,images,slug,is_organic")
+          .eq("moderation_status", "approved")
+          .or(orFilter)
+          .order("quantity_available", { ascending: false })
+          .limit(6);
+
+        if (prods && prods.length > 0) {
+          const siteOrigin = "https://nukuconnect.com";
+          const lines = prods.map((p: any, i: number) => {
+            const img = Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : "";
+            const link = `${siteOrigin}/produit/${p.slug || p.id}`;
+            const place = [p.city, p.country].filter(Boolean).join(", ") || p.location || "Non précisé";
+            const stock = p.stock_status === "in_stock" ? `${p.quantity_available} ${p.unit} disponible(s)` : "Rupture de stock";
+            return `${i + 1}. ${p.name}
+   - Catégorie: ${p.category}${p.is_organic ? " (Bio)" : ""}
+   - Prix: ${p.price} FCFA / ${p.unit}
+   - Disponibilité: ${stock}
+   - Lieu: ${place}
+   - Image: ${img}
+   - Lien achat: ${link}
+   - Description: ${(p.description || "").slice(0, 200)}`;
+          }).join("\n\n");
+          productContext = `\n\nCONTEXTE PRODUITS NUKUCONNECT (résultats réels de la marketplace pour la question de l'utilisateur) :
+${lines}
+
+INSTRUCTIONS DE FORMATAGE DES PRODUITS :
+- Si la question concerne un achat, une disponibilité, un prix ou un produit spécifique, présente CHAQUE produit pertinent ci-dessus sous forme de carte markdown :
+  ![nom](URL_image)
+  **Nom du produit** — Prix FCFA / unité
+  📍 Lieu · 📦 Disponibilité
+  [Voir et acheter le produit](URL_lien)
+- N'invente JAMAIS de produits, prix ou images. Utilise uniquement les données ci-dessus.
+- Si aucun produit listé ne correspond vraiment à la demande, dis-le clairement et propose à l'utilisateur d'explorer /marketplace.`;
+        } else {
+          productContext = `\n\nCONTEXTE PRODUITS NUKUCONNECT : aucun produit ne correspond aux mots-clés "${keywords.join(", ")}" dans la marketplace en ce moment. Si l'utilisateur cherche à acheter, invite-le à reformuler ou à explorer la page /marketplace.`;
+        }
+      }
+    } catch (e) {
+      console.warn("product context lookup failed:", (e as Error)?.message);
+    }
+
+    const finalSystemPrompt = SYSTEM_PROMPT + productContext;
+
     // Convert OpenAI-style messages to Gemini "contents"
     const contents = messages.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -101,7 +177,7 @@ serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: finalSystemPrompt }] },
         contents,
         generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
       }),
