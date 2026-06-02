@@ -353,7 +353,7 @@ const DemandsList = ({ category, limit, searchQuery, ownerOnly = false, compact 
       />
 
       {/* Demand Detail Sheet */}
-      <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && setSelectedDemand(null)}>
+      <Sheet open={!!selectedDemand} onOpenChange={(open) => !open && closeSelectedDemand()}>
         <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
           {selectedDemand && (
             <>
