@@ -100,8 +100,9 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
     return (Date.now() - created) < 7 * 24 * 60 * 60 * 1000;
   })();
   const isNew = isRecent || product.promoType === "nouveau";
-  const reviewCount = Math.floor(product.producer.rating * 12);
-  const totalSales = product.producer.totalSales || Math.floor(Math.random() * 500 + 50);
+  const { average: realRating, count: realReviewCount } = useAverageRating(product.id);
+  const hasReviews = realReviewCount > 0;
+  const totalSales = product.producer.totalSales || 0;
 
   if (viewMode === "list") {
     return (
