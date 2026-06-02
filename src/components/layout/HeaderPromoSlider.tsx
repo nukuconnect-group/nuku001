@@ -68,7 +68,7 @@ const HeaderPromoSlider = () => {
 
   return (
     <div className="bg-background pt-2 sm:pt-3 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
-      <div className="mx-auto px-3 sm:px-4 lg:px-0 max-w-6xl lg:max-w-none">
+      <div className="mx-auto px-3 sm:px-0">
         <div className="relative overflow-hidden rounded-none shadow-xl bg-primary ring-1 ring-primary/20">
           <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[58%] md:w-[56%] overflow-hidden">
             {slides.map((slide, i) => (
