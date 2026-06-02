@@ -2240,6 +2240,42 @@ export type Database = {
           },
         ]
       }
+      search_queries: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          mode: string
+          page_path: string | null
+          query: string
+          result_count: number
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          mode?: string
+          page_path?: string | null
+          query: string
+          result_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          mode?: string
+          page_path?: string | null
+          query?: string
+          result_count?: number
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       seo_allowed_routes: {
         Row: {
           created_at: string
