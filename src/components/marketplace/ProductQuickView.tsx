@@ -9,6 +9,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import SmartWatermarkedImage from "@/components/marketplace/SmartWatermarkedImage";
 
 interface Props {
   product: Product | null;
@@ -44,8 +45,8 @@ export default function ProductQuickView({ product, open, onOpenChange }: Props)
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
           {/* Image */}
           <div className="relative aspect-square bg-muted">
-            <img
-              src={product.image || fallbackImg}
+            <SmartWatermarkedImage
+              originalSrc={product.image || fallbackImg}
               alt={product.name}
               className="w-full h-full object-cover"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImg; }}

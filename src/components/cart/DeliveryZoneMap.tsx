@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Truck, Store, Package, MapPin, Navigation, Ruler, AlertCircle, Loader2, LocateFixed } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "./CartContext";
+import { supabase } from "@/integrations/supabase/client";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -67,8 +68,20 @@ function matchLocationToZone(location: string): typeof togoZones[0] | null {
     if (normalized === zNorm || normalized.startsWith(zNorm + ",") || normalized.startsWith(zNorm + " ") || normalized.includes(zNorm)) {
       return z;
     }
+    if (z.quarters.some((q) => normalized.includes(q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))) {
+      return z;
+    }
   }
   return null;
+}
+
+export interface DeliveryDistanceInfo {
+  maxDistance: number;
+  minDistance: number;
+  closestSeller: string;
+  furthestSeller: string;
+  hasMultiple: boolean;
+  sellerDistances: Array<{ name: string; location: string; distanceKm: number }>;
 }
 
 // Gozem-inspired pricing tiers (base fare + per-km rate)
@@ -121,12 +134,13 @@ interface DeliveryZoneMapProps {
   quarter: string;
   onQuarterChange: (quarter: string) => void;
   onDynamicPriceChange?: (price: number) => void;
+  onDistanceInfoChange?: (info: DeliveryDistanceInfo | null) => void;
 }
 
 const DeliveryZoneMap = ({
   deliveryMethod, onDeliveryMethodChange,
   city, onCityChange, address, onAddressChange,
-  quarter, onQuarterChange, onDynamicPriceChange,
+  quarter, onQuarterChange, onDynamicPriceChange, onDistanceInfoChange,
 }: DeliveryZoneMapProps) => {
   const { t, formatPrice } = useLanguage();
   const { items } = useCart();
@@ -142,7 +156,7 @@ const DeliveryZoneMap = ({
   const hasAutoDetected = useRef(false);
   const markerRef = useRef<L.Marker>(null);
 
-  // Auto-detect location on mount - try matching city prop first, then GPS
+  // Auto-detect location on mount: always prefer the buyer's real GPS position for delivery.
   useEffect(() => {
     if (hasAutoDetected.current) return;
     hasAutoDetected.current = true;
@@ -152,7 +166,7 @@ const DeliveryZoneMap = ({
     if (exactZone) {
       setCitySearch(exactZone.name);
       setMarkerPos([exactZone.lat, exactZone.lng]);
-      return;
+      if (address) return;
     }
     
     // Try fuzzy-matching the city prop (e.g. "Lome, Togo" → "Lomé")
@@ -162,7 +176,7 @@ const DeliveryZoneMap = ({
         onCityChange(matched.name);
         setCitySearch(matched.name);
         setMarkerPos([matched.lat, matched.lng]);
-        return;
+        if (address) return;
       }
     }
     
@@ -200,13 +214,30 @@ const DeliveryZoneMap = ({
     setGeoLoading(true);
     setGeoError("");
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const zone = findClosestZone(lat, lng);
         onCityChange(zone.name);
         setCitySearch(zone.name);
         setMarkerPos([lat, lng]);
+        try {
+          const { data } = await supabase.functions.invoke("reverse-geocode", {
+            body: { lat, lng },
+          });
+          const geo = data as { city?: string; quarter?: string; display?: string } | null;
+          if (geo?.city) {
+            const matched = matchLocationToZone(geo.city) || matchLocationToZone(geo.display || "");
+            const finalZone = matched || zone;
+            onCityChange(finalZone.name);
+            setCitySearch(finalZone.name);
+          }
+          if (geo?.quarter) onQuarterChange(geo.quarter);
+          if (geo?.display) onAddressChange(geo.display);
+          else onAddressChange(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        } catch {
+          onAddressChange(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        }
         setGeoLoading(false);
       },
       () => {
@@ -222,7 +253,7 @@ const DeliveryZoneMap = ({
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [onCityChange, city]);
+  }, [onCityChange, onQuarterChange, onAddressChange, city]);
 
   const filteredCities = useMemo(() => {
     if (!citySearch.trim()) return togoZones;
@@ -245,26 +276,41 @@ const DeliveryZoneMap = ({
   const sellerLocations = useMemo(() => {
     const locs = new Set(items.map(i => i.product.location).filter(Boolean));
     return Array.from(locs).map(loc => {
-      const zone = togoZones.find(z => z.name === loc);
+      const zone = matchLocationToZone(loc);
       return { name: loc, zone };
     });
   }, [items]);
 
   const distanceInfo = useMemo(() => {
-    if (!buyerZone || sellerLocations.length === 0) return null;
+    const buyerPoint = markerPos
+      ? { lat: markerPos[0], lng: markerPos[1] }
+      : buyerZone
+        ? { lat: buyerZone.lat, lng: buyerZone.lng }
+        : null;
+    if (!buyerPoint || sellerLocations.length === 0) return null;
     let maxDist = 0;
     let closestSeller = "";
     let furthestSeller = "";
     let minDist = Infinity;
+    const sellerDistances: DeliveryDistanceInfo["sellerDistances"] = [];
 
     for (const sl of sellerLocations) {
       if (!sl.zone) continue;
-      const d = calcDistance(buyerZone.lat, buyerZone.lng, sl.zone.lat, sl.zone.lng);
+      const d = calcDistance(buyerPoint.lat, buyerPoint.lng, sl.zone.lat, sl.zone.lng);
+      sellerDistances.push({ name: sl.name, location: sl.name, distanceKm: Number(d.toFixed(1)) });
       if (d > maxDist) { maxDist = d; furthestSeller = sl.name; }
       if (d < minDist) { minDist = d; closestSeller = sl.name; }
     }
-    return { maxDistance: Math.round(maxDist), minDistance: Math.round(minDist), closestSeller, furthestSeller, hasMultiple: sellerLocations.length > 1 };
-  }, [buyerZone, sellerLocations]);
+    if (sellerDistances.length === 0) return null;
+    return {
+      maxDistance: Number(maxDist.toFixed(1)),
+      minDistance: Number(minDist.toFixed(1)),
+      closestSeller,
+      furthestSeller,
+      hasMultiple: sellerDistances.length > 1,
+      sellerDistances,
+    };
+  }, [buyerZone, markerPos, sellerLocations]);
 
   const computedOptions = useMemo(() => {
     return buildDeliveryOptions(distanceInfo?.maxDistance ?? null);
@@ -276,7 +322,8 @@ const DeliveryZoneMap = ({
 
   useEffect(() => {
     onDynamicPriceChange?.(currentPrice);
-  }, [currentPrice, onDynamicPriceChange]);
+    onDistanceInfoChange?.(distanceInfo);
+  }, [currentPrice, distanceInfo, onDynamicPriceChange, onDistanceInfoChange]);
 
   // Set initial marker position when city changes
   useEffect(() => {
