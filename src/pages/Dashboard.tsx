@@ -54,6 +54,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const Dashboard = () => {
   const [showBoostsDialog, setShowBoostsDialog] = useState(false);
   const [showAffiliationDialog, setShowAffiliationDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showWithdrawalsDialog, setShowWithdrawalsDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -191,7 +193,7 @@ const Dashboard = () => {
 
   const supplierSidebar: DashboardSidebarItem[] = [
     { label: "Tableau de bord", icon: LayoutDashboard, href: "/dashboard" },
-    { label: "Mes produits", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
+    { label: "Ma boutique", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
     { label: "Publier", icon: Plus, onClick: openPublishFlow },
     { label: "Modération", icon: ShieldCheck, href: "/moderation" },
     { label: "Commandes", icon: ShoppingCart, href: "/suivi-livraison" },
@@ -353,16 +355,8 @@ const Dashboard = () => {
               { icon: Rocket, label: "Mes boosts", color: "bg-primary/10 text-primary", onClick: () => setShowBoostsDialog(true) },
               { icon: Gift, label: "Parrainage", color: "bg-pink-500/10 text-pink-600", onClick: () => setShowAffiliationDialog(true) },
               { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
-              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => {
-                const el = document.getElementById("withdrawals-section");
-                el?.setAttribute("open", "true");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }},
-              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => {
-                const el = document.getElementById("settings-section");
-                el?.setAttribute("open", "true");
-                el?.scrollIntoView({ behavior: "smooth" });
-              }},
+              { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => setShowWithdrawalsDialog(true) },
+              { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => setShowSettingsDialog(true) },
             ].map((action: any, i) => {
               const content = (
                 <Card key={i} className="cursor-pointer hover:shadow-elevated transition-all group h-full">
@@ -511,7 +505,7 @@ const Dashboard = () => {
             <CardHeader className="p-3 sm:p-4 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" /> Mes produits ({products.length})
+                  <Package className="w-4 h-4 text-primary" /> Ma boutique ({products.length})
                 </CardTitle>
                 <CardDescription className="text-[10px]">Gérez et boostez votre catalogue</CardDescription>
               </div>
@@ -627,30 +621,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Settings collapsible (was tab) */}
-          <details className="mb-4" id="settings-section">
-            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
-              <Settings className="w-4 h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-semibold text-foreground">Paramètres du compte</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-            </summary>
-            <div className="mt-2 space-y-3">
-              <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
-            </div>
-          </details>
-
-          {/* Withdrawals collapsible */}
-          <details className="mb-4" id="withdrawals-section">
-            <summary className="cursor-pointer flex items-center gap-2 p-3 bg-card rounded-xl border border-border hover:bg-muted/50 transition-colors">
-              <Wallet className="w-4 h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-semibold text-foreground">Retraits & paiements</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-            </summary>
-            <div className="mt-2">
-              <WithdrawalPanel />
-            </div>
-          </details>
+          {/* Paramètres & Retraits accessibles via icônes Actions rapides (dialogs) */}
 
         </div>
       </main>
@@ -755,6 +726,33 @@ const Dashboard = () => {
             </DialogTitle>
           </DialogHeader>
           {user && <AffiliationCard userId={user.id} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Paramètres du compte */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" /> Paramètres du compte
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+            <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Retraits & paiements */}
+      <Dialog open={showWithdrawalsDialog} onOpenChange={setShowWithdrawalsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" /> Retraits & paiements
+            </DialogTitle>
+          </DialogHeader>
+          <WithdrawalPanel />
         </DialogContent>
       </Dialog>
     </div>
