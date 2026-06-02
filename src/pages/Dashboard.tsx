@@ -728,6 +728,33 @@ const Dashboard = () => {
           {user && <AffiliationCard userId={user.id} />}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog: Paramètres du compte */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" /> Paramètres du compte
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <SupplierKYCSection userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
+            <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Retraits & paiements */}
+      <Dialog open={showWithdrawalsDialog} onOpenChange={setShowWithdrawalsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" /> Retraits & paiements
+            </DialogTitle>
+          </DialogHeader>
+          <WithdrawalPanel />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
