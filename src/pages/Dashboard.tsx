@@ -196,7 +196,7 @@ const Dashboard = () => {
     { label: "Ma boutique", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
     { label: "Publier", icon: Plus, onClick: openPublishFlow },
     { label: "Modération", icon: ShieldCheck, href: "/moderation" },
-    { label: "Commandes", icon: ShoppingCart, href: "/suivi-livraison" },
+    { label: "Commandes", icon: ShoppingCart, href: "/mes-commandes" },
     { label: "Traçabilité", icon: QrCode, href: "/tracabilite" },
     { label: "Messages", icon: MessageCircle, href: "/messages" },
     { label: "Formations", icon: Calendar, href: "/formations" },

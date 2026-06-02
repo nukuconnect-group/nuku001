@@ -34,6 +34,8 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
   confirmed: { label: "Confirmée", icon: CheckCircle2, color: "bg-blue-100 text-blue-800 border-blue-300" },
   processing: { label: "En préparation", icon: Package, color: "bg-purple-100 text-purple-800 border-purple-300" },
   shipped: { label: "Expédiée", icon: Truck, color: "bg-orange-100 text-orange-800 border-orange-300" },
+  paid: { label: "Payée", icon: CheckCircle2, color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  delivered: { label: "Livrée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
   completed: { label: "Terminée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
   cancelled: { label: "Annulée", icon: XCircle, color: "bg-red-100 text-red-800 border-red-300" },
 };
@@ -78,15 +80,12 @@ const MesCommandes = () => {
 
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, products(name, images, price, unit), deliveries(id, status, delivered_at, driver_id, delivery_fee, driver_current_lat, driver_current_lng, pickup_address, dropoff_address)")
-        .or(`buyer_id.eq.${profile.id},seller_id.eq.${profile.id}`)
-        .order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).rpc("get_my_orders_with_tracking");
       if (error) {
+        console.error("[mes-commandes] load failed", error);
         toast.error("Impossible de charger vos commandes");
       } else {
-        setOrders(data || []);
+        setOrders(Array.isArray(data) ? data : []);
       }
       setLoading(false);
     };
@@ -106,16 +105,24 @@ const MesCommandes = () => {
         () => load(),
       )
       .subscribe();
+    const channelDeliveries = supabase
+      .channel(`orders-deliveries-${profile.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "deliveries" },
+        () => load(),
+      )
+      .subscribe();
     return () => {
       supabase.removeChannel(channelBuyer);
       supabase.removeChannel(channelSeller);
+      supabase.removeChannel(channelDeliveries);
     };
   }, [isReady, user, profile?.id, navigate]);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
       if (tab === "active" && !["pending", "confirmed", "processing", "shipped"].includes(o.status)) return false;
-      if (tab === "completed" && o.status !== "completed") return false;
+      if (tab === "completed" && !["completed", "delivered", "paid"].includes(o.status)) return false;
       if (tab === "cancelled" && o.status !== "cancelled") return false;
       if (!matchesDeliveryFilter(o.deliveries?.[0], deliveryFilter)) return false;
       if (search) {
@@ -133,7 +140,7 @@ const MesCommandes = () => {
       count: orders.length,
       total,
       pending: orders.filter((o) => ["pending", "confirmed", "processing", "shipped"].includes(o.status)).length,
-      completed: orders.filter((o) => o.status === "completed").length,
+      completed: orders.filter((o) => ["completed", "delivered", "paid"].includes(o.status)).length,
     };
   }, [orders]);
 
