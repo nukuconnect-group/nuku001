@@ -52,9 +52,6 @@ const Index = () => {
       />
       <Header />
       <main className="space-y-0">
-        <div className="hidden md:block">
-          <HeroCarousel />
-        </div>
         <div className="md:hidden">
           <HelpAICard />
           <SellProductsCard />
