@@ -69,7 +69,7 @@ const FinanceManager = ({ orders, users, stats }: Props) => {
     .sort((a, b) => b.sales - a.sales)
     .filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()));
 
-  const totalRevenue = Number(stats?.total_revenue || 0);
+  const totalRevenue = sellerList.reduce((s, r) => s + r.sales, 0);
   const proSubs = Number(stats?.pro_subscriptions || 0);
   const avgRate = sellerList.length > 0
     ? sellerList.reduce((s, r) => s + COMMISSION_RATES[r.plan], 0) / sellerList.length
@@ -79,7 +79,7 @@ const FinanceManager = ({ orders, users, stats }: Props) => {
   const platformTotal = totalCommissions + subRevenue;
 
   const totalPaidOut = withdrawals.filter(w => w.status === "completed").reduce((s, w) => s + Number(w.amount || 0), 0);
-  const pendingPayouts = withdrawals.filter(w => w.status === "pending").reduce((s, w) => s + Number(w.amount || 0), 0);
+  const pendingPayouts = 0;
 
   // Chart: top sellers
   const topSellers = sellerList.slice(0, 8).map(s => ({ name: s.name.split(" ")[0], ventes: s.sales, commission: s.commission }));
@@ -95,12 +95,12 @@ const FinanceManager = ({ orders, users, stats }: Props) => {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
-          { label: "Ventes totales", value: formatPrice(totalRevenue), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-500/10" },
+          { label: "Ventes réelles", value: formatPrice(totalRevenue), icon: ShoppingCart, color: "text-green-600", bg: "bg-green-500/10" },
           { label: "Commissions", value: formatPrice(totalCommissions), icon: HandCoins, color: "text-primary", bg: "bg-primary/10" },
           { label: "Abonnements", value: formatPrice(subRevenue), icon: Crown, color: "text-yellow-600", bg: "bg-yellow-500/10" },
           { label: "Revenus plateforme", value: formatPrice(platformTotal), icon: DollarSign, color: "text-blue-600", bg: "bg-blue-500/10" },
           { label: "Payé aux vendeurs", value: formatPrice(totalPaidOut), icon: ArrowUpRight, color: "text-purple-600", bg: "bg-purple-500/10" },
-          { label: "En attente paiement", value: formatPrice(pendingPayouts), icon: Wallet, color: "text-orange-600", bg: "bg-orange-500/10" },
+          { label: "Solde réel net", value: formatPrice(Math.max(0, sellerList.reduce((s, r) => s + r.net, 0) - totalPaidOut)), icon: Wallet, color: "text-orange-600", bg: "bg-orange-500/10" },
         ].map(c => (
           <Card key={c.label}>
             <CardContent className="p-3">
