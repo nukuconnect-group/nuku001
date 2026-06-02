@@ -119,8 +119,10 @@ const Dashboard = () => {
   }, [profile?.id]);
 
 
-  const totalSales = orders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
-  const completedOrders = orders.filter(o => o.status === "completed").length;
+  const paidStatuses = new Set(["confirmed", "processing", "shipped", "completed", "paid", "delivered"]);
+  const paidOrders = orders.filter(o => paidStatuses.has(String(o.status || "").toLowerCase()));
+  const totalSales = paidOrders.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+  const completedOrders = orders.filter(o => ["completed", "delivered"].includes(String(o.status || "").toLowerCase())).length;
   const pendingOrders = orders.filter(o => o.status === "pending").length;
   
   // Commission based on plan
@@ -130,8 +132,8 @@ const Dashboard = () => {
   
   const stats = [
     { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
-    { label: "Commandes", value: orders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
-    { label: "Ventes brutes", value: totalSales.toLocaleString("en-US") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
+    { label: "Commandes payées", value: paidOrders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
+    { label: "Ventes réelles", value: totalSales.toLocaleString("en-US") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
     { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
 
@@ -271,7 +273,7 @@ const Dashboard = () => {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-[10px] text-primary-foreground/70">Ventes brutes</p>
+                  <p className="text-[10px] text-primary-foreground/70">Ventes réelles</p>
                   <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString("en-US")} F</p>
                 </div>
                 <div>
