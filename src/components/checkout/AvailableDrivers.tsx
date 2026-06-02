@@ -29,12 +29,6 @@ interface Driver {
   profile?: { full_name: string; avatar_url: string; phone?: string };
 }
 
-const demoDrivers: Driver[] = [
-  { id: "demo-1", vehicle_type: "moto", rating: 4.8, total_deliveries: 127, zone: "Lomé Centre", profile: { full_name: "Kodjo Mensah", avatar_url: "", phone: "+22890123456" } },
-  { id: "demo-2", vehicle_type: "voiture", rating: 4.6, total_deliveries: 89, zone: "Adidogomé", profile: { full_name: "Ama Koffi", avatar_url: "", phone: "+22891234567" } },
-  { id: "demo-3", vehicle_type: "moto", rating: 4.9, total_deliveries: 215, zone: "Bè", profile: { full_name: "Yao Agbeko", avatar_url: "", phone: "+22892345678" } },
-];
-
 const AvailableDrivers = ({ city, distanceKm, cartItems = [], selectedDriverId = null, onSelectDriver }: Props) => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,45 +40,51 @@ const AvailableDrivers = ({ city, distanceKm, cartItems = [], selectedDriverId =
   const [chatInput, setChatInput] = useState("");
   const [sendingChat, setSendingChat] = useState(false);
 
-  useEffect(() => {
+  const loadDrivers = async () => {
     if (!city) { setDrivers([]); return; }
-    const load = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("driver_profiles" as any)
-        .select("id, vehicle_type, rating, total_deliveries, zone, profile_id")
-        .eq("is_available", true)
-        .limit(5);
+    setLoading(true);
+    const { data } = await supabase
+      .from("driver_profiles" as any)
+      .select("id, vehicle_type, rating, total_deliveries, zone, profile_id, user_id, current_lat, current_lng, license_plate")
+      .eq("is_available", true)
+      .limit(10);
 
-      if (data && data.length > 0) {
-        const profileIds = (data as any[]).map(d => d.profile_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .in("id", profileIds);
+    if (data && data.length > 0) {
+      const profileIds = (data as any[]).map(d => d.profile_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", profileIds);
+      const { data: privateData } = await supabase
+        .from("profile_private" as any)
+        .select("user_id, phone");
 
-        // Get phone numbers for drivers
-        const userIds = (profiles || []).map(p => p.id);
-        const { data: privateData } = await supabase
-          .from("profile_private" as any)
-          .select("user_id, phone");
+      const enriched = (data as any[]).map(d => {
+        const prof = (profiles || []).find(p => p.id === d.profile_id);
+        const privInfo = (privateData || []).find((pd: any) => pd.user_id === d.user_id);
+        return {
+          ...d,
+          profile: prof ? { ...prof, phone: (privInfo as any)?.phone || "" } : undefined,
+        };
+      });
+      setDrivers(enriched);
+    } else {
+      setDrivers([]);
+    }
+    setLoading(false);
+  };
 
-        const enriched = (data as any[]).map(d => {
-          const prof = (profiles || []).find(p => p.id === d.profile_id);
-          const privInfo = (privateData || []).find((pd: any) => pd.user_id === d.user_id);
-          return {
-            ...d,
-            profile: prof ? { ...prof, phone: (privInfo as any)?.phone || "" } : undefined,
-          };
-        });
-        setDrivers(enriched);
-      } else {
-        setDrivers(demoDrivers);
-      }
-      setLoading(false);
-    };
-    load();
+  useEffect(() => {
+    loadDrivers();
+    // Realtime: refresh on any change to driver availability
+    const ch = supabase
+      .channel("available-drivers")
+      .on("postgres_changes", { event: "*", schema: "public", table: "driver_profiles" }, () => loadDrivers())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city]);
+
 
   if (!city) return null;
 
