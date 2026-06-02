@@ -821,7 +821,12 @@ const Header = () => {
           <VoiceSearchModal
             open={voiceSearchOpen}
             onClose={() => setVoiceSearchOpen(false)}
-            onResult={(text) => { setSearchQuery(text); setShowSearchResults(true); navigate(`/marketplace?search=${text}`); }}
+            onResult={(text) => {
+              setSearchQuery(text);
+              setShowSearchResults(true);
+              trackSearch({ query: text, mode: "voice" });
+              navigate(`/marketplace?search=${text}`);
+            }}
           />
         </Suspense>
       )}
@@ -830,7 +835,11 @@ const Header = () => {
           <ImageSearchModal
             open={imageSearchOpen}
             onClose={() => setImageSearchOpen(false)}
-            onSearch={(query) => { setSearchQuery(query); setShowSearchResults(true); }}
+            onSearch={(query) => {
+              setSearchQuery(query);
+              setShowSearchResults(true);
+              trackSearch({ query, mode: "image" });
+            }}
           />
         </Suspense>
       )}
@@ -839,7 +848,11 @@ const Header = () => {
           <QRScanner
             isOpen={qrScannerOpen}
             onClose={() => setQrScannerOpen(false)}
-            onScan={(code) => { setSearchQuery(code); navigate(`/marketplace?search=${code}`); }}
+            onScan={(code) => {
+              setSearchQuery(code);
+              trackSearch({ query: code, mode: "qr" });
+              navigate(`/marketplace?search=${code}`);
+            }}
           />
         </Suspense>
       )}
