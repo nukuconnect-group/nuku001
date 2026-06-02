@@ -320,6 +320,57 @@ const Cart = () => {
         },
       }).catch(err => console.error("Transactional email error:", err));
 
+      // Notify each seller by email (group items by producer id)
+      (async () => {
+        try {
+          const bySeller = new Map<string, { items: typeof items; total: number }>();
+          for (const it of items) {
+            const sid = it.product.producer?.id;
+            if (!sid) continue;
+            const entry = bySeller.get(sid) || { items: [], total: 0 };
+            entry.items.push(it);
+            entry.total += it.product.price * it.quantity;
+            bySeller.set(sid, entry);
+          }
+          if (bySeller.size === 0) return;
+          const sellerIds = Array.from(bySeller.keys());
+          const { data: sellerProfiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", sellerIds);
+          for (const sp of sellerProfiles || []) {
+            const entry = bySeller.get((sp as any).id);
+            const email = (sp as any).email;
+            if (!entry || !email) continue;
+            supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "new-order-seller",
+                recipientEmail: email,
+                idempotencyKey: `new-order-seller-${invoiceNumber}-${(sp as any).id}`,
+                templateData: {
+                  sellerName: (sp as any).full_name || "Vendeur",
+                  buyerName: buyerFullName,
+                  invoiceNumber,
+                  orderDate: now.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }),
+                  orderItems: entry.items.map(item => ({
+                    name: item.product.name,
+                    quantity: item.quantity,
+                    unitPrice: item.product.price,
+                    unit: item.product.unit,
+                  })),
+                  total: entry.total,
+                  deliveryMethod: selectedDelivery?.name || "Retrait",
+                  deliveryCity,
+                  buyerPhone: billing.phone || "",
+                },
+              },
+            }).catch(err => console.error("Seller email error:", err));
+          }
+        } catch (err) {
+          console.error("Seller notification error (non-blocking):", err);
+        }
+      })();
+
       // Notify admin about the new order (non-blocking)
       const orderSummary = items.map(i => `${i.product.name} x${i.quantity}`).join(", ");
       supabase.from("notifications").insert({
