@@ -67,8 +67,8 @@ const HeaderPromoSlider = () => {
   if (location.pathname !== "/") return null;
 
   return (
-    <div className="bg-background pt-0 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
-      <div className="w-full px-3 sm:px-0">
+    <div className="bg-background pt-2 sm:pt-3 md:pt-0 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
+      <div className="mx-auto px-3 sm:px-0 md:w-full">
         <div className="relative overflow-hidden rounded-none shadow-xl bg-primary ring-1 ring-primary/20">
           <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[58%] md:w-[56%] overflow-hidden">
             {slides.map((slide, i) => (
@@ -88,7 +88,7 @@ const HeaderPromoSlider = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent" />
           </div>
 
-          <div className="relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[300px] lg:min-h-[320px] flex flex-col justify-center">
+          <div className="relative z-10 min-h-[220px] sm:min-h-[260px] md:min-h-[420px] lg:min-h-[500px] xl:min-h-[560px] flex flex-col justify-center">
             <div className="px-4 sm:px-7 md:px-10 py-6 sm:py-8 md:py-10 w-[64%] sm:w-[57%] md:w-[52%]">
               {slides.map((slide, i) => (
                 <div
