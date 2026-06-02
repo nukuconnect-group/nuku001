@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DollarSign, HandCoins, Crown, ShoppingCart, Search, Loader2,
-  User, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight
+  Wallet, ArrowUpRight
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -71,15 +71,11 @@ const FinanceManager = ({ orders, users, stats }: Props) => {
 
   const totalRevenue = sellerList.reduce((s, r) => s + r.sales, 0);
   const proSubs = Number(stats?.pro_subscriptions || 0);
-  const avgRate = sellerList.length > 0
-    ? sellerList.reduce((s, r) => s + COMMISSION_RATES[r.plan], 0) / sellerList.length
-    : 8;
   const totalCommissions = sellerList.reduce((s, r) => s + r.commission, 0);
   const subRevenue = proSubs * 5000;
   const platformTotal = totalCommissions + subRevenue;
 
   const totalPaidOut = withdrawals.filter(w => w.status === "completed").reduce((s, w) => s + Number(w.amount || 0), 0);
-  const pendingPayouts = 0;
 
   // Chart: top sellers
   const topSellers = sellerList.slice(0, 8).map(s => ({ name: s.name.split(" ")[0], ventes: s.sales, commission: s.commission }));
