@@ -3102,6 +3102,7 @@ export type Database = {
       }
       get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
       get_my_delivery_otp: { Args: { p_delivery_id: string }; Returns: string }
+      get_my_orders_with_tracking: { Args: never; Returns: Json }
       get_products_due_for_moderation: {
         Args: { p_limit?: number }
         Returns: {
