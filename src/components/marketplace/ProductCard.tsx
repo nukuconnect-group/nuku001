@@ -130,12 +130,14 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               <div>
                 <h3 className="font-heading font-semibold text-foreground text-lg mb-1 line-clamp-1">{product.name}</h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{product.description}</p>
-                <div className="flex items-center gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-3 h-3 ${i < Math.round(product.producer.rating) ? "text-accent fill-accent" : "text-muted"}`} />
-                  ))}
-                  <span className="text-[10px] text-muted-foreground ml-1">({reviewCount} avis)</span>
-                </div>
+                {hasReviews && (
+                  <div className="flex items-center gap-1 mb-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < Math.round(realRating) ? "text-accent fill-accent" : "text-muted"}`} />
+                    ))}
+                    <span className="text-[10px] text-muted-foreground ml-1">({realReviewCount} avis)</span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div>
