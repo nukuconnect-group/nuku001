@@ -65,15 +65,13 @@ const OrderManager = ({ orders, stats, onRefresh }: Props) => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdating(true);
     try {
-      const updateData: any = { status: newStatus };
-      if (adminNote.trim()) updateData.notes = adminNote.trim();
+      const { data, error } = await (supabase as any).rpc("admin_update_order_status", {
+        _order_id: orderId,
+        _status: newStatus,
+        _note: adminNote.trim() || null,
+      });
 
-      const { error } = await supabase
-        .from("orders")
-        .update(updateData)
-        .eq("id", orderId);
-
-      if (error) throw error;
+      if (error || data?.error) throw error || new Error(data.error);
       toast.success(`Commande ${STATUS_CONFIG[newStatus]?.label.toLowerCase() || newStatus}`);
       setSelectedOrder(null);
       setAdminNote("");
