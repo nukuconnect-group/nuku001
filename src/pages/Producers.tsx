@@ -283,15 +283,21 @@ const Producers = () => {
                         </div>
                       </div>
 
-                      {/* Avatar overlapping cover - toujours avatar réel ou défaut, jamais image aléatoire */}
+                      {/* Avatar overlapping cover - real avatar or outlined fallback icon (consistent across app) */}
                       <div className="flex justify-center -mt-8 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-none overflow-hidden border-3 border-card shadow-lg bg-card">
-                          <img
-                            src={producer.avatar || defaultAvatar}
-                            alt={producer.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = defaultAvatar; }}
-                          />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-[3px] border-card shadow-lg bg-card flex items-center justify-center">
+                          {producer.avatar ? (
+                            <img
+                              src={producer.avatar}
+                              alt={producer.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                            />
+                          ) : (
+                            <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center bg-transparent">
+                              <User className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground/60" strokeWidth={1.5} />
+                            </div>
+                          )}
                         </div>
                       </div>
 
