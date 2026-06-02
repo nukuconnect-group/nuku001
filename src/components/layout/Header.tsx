@@ -703,11 +703,9 @@ const Header = () => {
         </div>
       </div>
 
-      <HeaderPromoSlider />
-
-
       {/* Row 4: Desktop Nav with categories in menu */}
       <nav className="hidden lg:block bg-card border-b border-border z-40">
+
           <div className="container mx-auto px-4">
             <div className="flex items-center h-10 gap-1">
               {/* Categories Motta-style sidebar trigger */}
@@ -801,6 +799,9 @@ const Header = () => {
             </div>
           </div>
       </nav>
+
+      <HeaderPromoSlider />
+
 
       <CartSidebar open={cartOpen} onOpenChange={setCartOpen} />
       <AccountSidebar isOpen={accountSidebarOpen} onClose={() => setAccountSidebarOpen(false)} />
