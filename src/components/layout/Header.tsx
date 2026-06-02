@@ -34,7 +34,7 @@ const VoiceSearchModal = lazy(() => import("@/components/search/VoiceSearchModal
 const ImageSearchModal = lazy(() => import("@/components/search/ImageSearchModal"));
 const QRScanner = lazy(() => import("@/components/QRScanner"));
 const LocationPickerDialog = lazy(() => import("@/components/layout/LocationPickerDialog"));
-import { trackSearch } from "@/lib/searchTracking";
+import { trackSearch, rememberSearchMode } from "@/lib/searchTracking";
 
 const languages = [
   { code: "fr" as LangCode, name: "Français", flag: "🇫🇷" },
