@@ -81,7 +81,7 @@ const MesCommandes = () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*, products(name, images, price, unit), deliveries(id, status, delivered_at, driver_id, delivery_fee, driver_current_lat, driver_current_lng, pickup_address, dropoff_address)")
-        .eq("buyer_id", profile.id)
+        .or(`buyer_id.eq.${profile.id},seller_id.eq.${profile.id}`)
         .order("created_at", { ascending: false });
       if (error) {
         toast.error("Impossible de charger vos commandes");
@@ -92,14 +92,24 @@ const MesCommandes = () => {
     };
     load();
 
-    const channel = supabase
-      .channel("buyer-orders-realtime")
+    const channelBuyer = supabase
+      .channel(`orders-buyer-${profile.id}`)
       .on("postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `buyer_id=eq.${profile.id}` },
         () => load(),
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const channelSeller = supabase
+      .channel(`orders-seller-${profile.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `seller_id=eq.${profile.id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channelBuyer);
+      supabase.removeChannel(channelSeller);
+    };
   }, [isReady, user, profile?.id, navigate]);
 
   const filtered = useMemo(() => {
