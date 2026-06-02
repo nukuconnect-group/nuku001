@@ -134,16 +134,15 @@ const NukuAI = () => {
 
   const streamChat = async (userMessages: { role: string; content: string }[]) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nuku-ai-chat`;
+    // Auth optional — try to attach session token if available, otherwise fall back to anon
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      throw new Error("Veuillez vous connecter pour utiliser NUKUCONNECT IA.");
-    }
+    const accessToken = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ messages: userMessages }),
     });

@@ -12,12 +12,6 @@ import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
 
 const slides = [
   {
-    image: awardImage,
-    title: "NukuConnect sacrée Meilleure Innovation de l'Année 2025",
-    subtitle: "🏆 Prix Togo Top Impact",
-    description: "NukuConnect a été récompensée comme la meilleure innovation technologique de l'année 2025 lors de la cérémonie Togo Top Impact.",
-  },
-  {
     image: heroShopping,
     title: "Achetez vos produits agricoles en ligne, où que vous soyez",
     subtitle: "Achat en Ligne",
