@@ -74,8 +74,9 @@ serve(async (req) => {
       .select("total_price, status")
       .eq("seller_id", profile.id);
 
+    const paidStatuses = new Set(["confirmed", "processing", "shipped", "completed", "paid", "delivered"]);
     const totalEarnings = (orderData || [])
-      .filter((o: any) => o.status === "completed" || o.status === "delivered")
+      .filter((o: any) => paidStatuses.has(String(o.status || "").toLowerCase()))
       .reduce((sum: number, o: any) => sum + (Number(o.total_price) || 0), 0);
 
     const { data: wData } = await adminClient
