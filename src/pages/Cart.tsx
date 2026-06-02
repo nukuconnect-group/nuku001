@@ -725,7 +725,7 @@ const Cart = () => {
       </div>
 
       <main>
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-full overflow-hidden">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-full overflow-x-clip">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm">
             <ArrowLeft className="w-4 h-4" /><span>Retour</span>
           </button>
