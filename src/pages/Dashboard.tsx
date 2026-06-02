@@ -193,7 +193,7 @@ const Dashboard = () => {
 
   const supplierSidebar: DashboardSidebarItem[] = [
     { label: "Tableau de bord", icon: LayoutDashboard, href: "/dashboard" },
-    { label: "Mes produits", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
+    { label: "Ma boutique", icon: Package, onClick: () => document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" }) },
     { label: "Publier", icon: Plus, onClick: openPublishFlow },
     { label: "Modération", icon: ShieldCheck, href: "/moderation" },
     { label: "Commandes", icon: ShoppingCart, href: "/suivi-livraison" },
