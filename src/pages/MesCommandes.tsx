@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Package, Truck, CheckCircle2, Clock, XCircle, Receipt,
-  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download, Loader2,
+  ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download, Loader2, Ban, Trash2,
 } from "lucide-react";
 const DeliveryLiveMap = lazy(() => import("@/components/delivery/DeliveryLiveMap"));
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
@@ -119,8 +119,21 @@ const MesCommandes = () => {
     };
   }, [isReady, user, profile?.id, navigate]);
 
-  const filtered = useMemo(() => {
+  // Hide unpaid/failed orders: only show orders that were paid or whose payment is in progress with seller confirmation
+  const visibleOrders = useMemo(() => {
+    const PAID = ["confirmed", "processing", "shipped", "paid", "delivered", "completed"];
     return orders.filter((o) => {
+      // Always show paid lifecycle
+      if (PAID.includes(o.status)) return true;
+      // Show cancelled only if it was once paid (seller had confirmed)
+      if (o.status === "cancelled" && o.seller_confirmed_at) return true;
+      // Hide pending/failed/never-paid orders
+      return false;
+    });
+  }, [orders]);
+
+  const filtered = useMemo(() => {
+    return visibleOrders.filter((o) => {
       if (tab === "active" && !["pending", "confirmed", "processing", "shipped"].includes(o.status)) return false;
       if (tab === "completed" && !["completed", "delivered", "paid"].includes(o.status)) return false;
       if (tab === "cancelled" && o.status !== "cancelled") return false;
@@ -132,17 +145,39 @@ const MesCommandes = () => {
       }
       return true;
     });
-  }, [orders, tab, deliveryFilter, search]);
+  }, [visibleOrders, tab, deliveryFilter, search]);
 
   const stats = useMemo(() => {
-    const total = orders.reduce((s, o) => s + Number(o.total_price || 0), 0);
+    const total = visibleOrders.reduce((s, o) => s + Number(o.total_price || 0), 0);
     return {
-      count: orders.length,
+      count: visibleOrders.length,
       total,
-      pending: orders.filter((o) => ["pending", "confirmed", "processing", "shipped"].includes(o.status)).length,
-      completed: orders.filter((o) => ["completed", "delivered", "paid"].includes(o.status)).length,
+      pending: visibleOrders.filter((o) => ["pending", "confirmed", "processing", "shipped"].includes(o.status)).length,
+      completed: visibleOrders.filter((o) => ["completed", "delivered", "paid"].includes(o.status)).length,
     };
-  }, [orders]);
+  }, [visibleOrders]);
+
+  const handleCancel = async (orderId: string) => {
+    if (!confirm("Annuler cette commande ?")) return;
+    const { error } = await (supabase as any).rpc("buyer_cancel_order", { p_order_id: orderId });
+    if (error) {
+      toast.error("Impossible d'annuler", { description: error.message });
+    } else {
+      toast.success("Commande annulée");
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o)));
+    }
+  };
+
+  const handleDelete = async (orderId: string) => {
+    if (!confirm("Supprimer définitivement cette commande ?")) return;
+    const { error } = await (supabase as any).rpc("buyer_delete_order", { p_order_id: orderId });
+    if (error) {
+      toast.error("Impossible de supprimer", { description: error.message });
+    } else {
+      toast.success("Commande supprimée");
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    }
+  };
 
   const handleInvoice = async (order: any) => {
     try {
@@ -503,6 +538,16 @@ const MesCommandes = () => {
                             {delivery && (
                               <Button size="sm" variant="outline" asChild className="h-7 text-[11px]">
                                 <Link to="/suivi-livraison"><MapPin className="w-3 h-3 mr-1" />Suivre</Link>
+                              </Button>
+                            )}
+                            {["pending", "confirmed"].includes(o.status) && (
+                              <Button size="sm" variant="outline" onClick={() => handleCancel(o.id)} className="h-7 text-[11px] text-orange-600 hover:text-orange-700">
+                                <Ban className="w-3 h-3 mr-1" />Annuler
+                              </Button>
+                            )}
+                            {o.status === "cancelled" && (
+                              <Button size="sm" variant="outline" onClick={() => handleDelete(o.id)} className="h-7 text-[11px] text-destructive hover:text-destructive">
+                                <Trash2 className="w-3 h-3 mr-1" />Supprimer
                               </Button>
                             )}
                           </div>
