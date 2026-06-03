@@ -3054,6 +3054,8 @@ export type Database = {
         Args: { _note?: string; _order_id: string; _status: string }
         Returns: Json
       }
+      buyer_cancel_order: { Args: { p_order_id: string }; Returns: Json }
+      buyer_delete_order: { Args: { p_order_id: string }; Returns: Json }
       can_access_formation_document: {
         Args: { p_formation_id: string }
         Returns: boolean
