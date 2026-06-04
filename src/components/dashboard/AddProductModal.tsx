@@ -841,7 +841,17 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Description</Label>
+              <Button
+                type="button" size="sm" variant="outline"
+                onClick={generateDescription} disabled={generatingDesc}
+                className="h-7 gap-1.5 text-[11px]"
+              >
+                {generatingDesc ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                Générer avec IA
+              </Button>
+            </div>
             <Textarea
               value={newProduct.description}
               onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
