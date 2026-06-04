@@ -149,6 +149,14 @@ const AddressSelector = ({ onSelect, selectedId }: Props) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2">
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={useCurrentPosition} disabled={locating}
+          className="w-full gap-1.5 h-8 text-[11px]"
+        >
+          {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+          Utiliser ma position actuelle
+        </Button>
         {addresses.map((addr) => {
           const isSelected = selectedId === addr.id;
           const addressLine = [addr.quarter, addr.street, addr.city, addr.country].filter(Boolean).join(", ");
