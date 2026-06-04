@@ -689,11 +689,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="g">g</SelectItem>
                     <SelectItem value="tonne">tonne</SelectItem>
-                    <SelectItem value="unité">unité</SelectItem>
-                    <SelectItem value="sac">sac</SelectItem>
-                    <SelectItem value="carton">carton</SelectItem>
                     <SelectItem value="litre">litre</SelectItem>
+                    <SelectItem value="unité">unité</SelectItem>
+                    <SelectItem value="boîte">boîte</SelectItem>
+                    <SelectItem value="carton">carton</SelectItem>
+                    <SelectItem value="sac">sac</SelectItem>
                     <SelectItem value="panier">panier</SelectItem>
                     <SelectItem value="lot">lot</SelectItem>
                   </SelectContent>
