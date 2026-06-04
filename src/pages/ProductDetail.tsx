@@ -35,6 +35,21 @@ import { producerShopUrl } from "@/lib/producerLinks";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
+import { useAverageRating } from "@/hooks/useReviews";
+
+const ProductRatingLine = ({ productId }: { productId: string }) => {
+  const { average, count } = useAverageRating(productId);
+  if (!count) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      {[...Array(5)].map((_, i) => (
+        <Star key={i} className={`w-4 h-4 ${i < Math.round(average) ? "text-accent fill-accent" : "text-muted"}`} />
+      ))}
+      <span className="text-sm font-semibold text-foreground">{average.toFixed(1)}</span>
+      <span className="text-xs text-muted-foreground">({count} avis)</span>
+    </div>
+  );
+};
 import WholesalePricingPanel from "@/components/marketplace/WholesalePricingPanel";
 import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCalculator";
 import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
@@ -476,16 +491,32 @@ const ProductDetail = () => {
               <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">{product.name}</h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-                )}
-                <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
-                {(product as any).is_negotiable && (
-                  <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
-                )}
-              </div>
+              {(() => {
+                const discount = product.discount && product.discount > 0
+                  ? product.discount
+                  : (product.originalPrice && product.originalPrice > product.price)
+                    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+                    : 0;
+                return (
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-destructive">{formatPrice(product.price)}</span>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                      <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                    )}
+                    <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
+                    {discount > 0 && (
+                      <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs">-{discount}% PROMO</Badge>
+                    )}
+                    {(product as any).is_negotiable && (
+                      <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Avis (étoiles + nombre) — affichage forcé après le prix s'il y a des avis */}
+              <ProductRatingLine productId={product.id} />
+
 
               {/* Wholesale pricing — style Aliexpress (Prêt à expédié + tranches de prix) */}
               <WholesalePricingPanel
