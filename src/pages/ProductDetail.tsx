@@ -35,6 +35,21 @@ import { producerShopUrl } from "@/lib/producerLinks";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
+import { useAverageRating } from "@/hooks/useReviews";
+
+const ProductRatingLine = ({ productId }: { productId: string }) => {
+  const { average, count } = useAverageRating(productId);
+  if (!count) return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      {[...Array(5)].map((_, i) => (
+        <Star key={i} className={`w-4 h-4 ${i < Math.round(average) ? "text-accent fill-accent" : "text-muted"}`} />
+      ))}
+      <span className="text-sm font-semibold text-foreground">{average.toFixed(1)}</span>
+      <span className="text-xs text-muted-foreground">({count} avis)</span>
+    </div>
+  );
+};
 import WholesalePricingPanel from "@/components/marketplace/WholesalePricingPanel";
 import EffectivePriceCalculator from "@/components/marketplace/EffectivePriceCalculator";
 import OwnerBatchQRGenerator from "@/components/product/OwnerBatchQRGenerator";
