@@ -141,6 +141,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [newProduct, setNewProduct] = useState(defaultProduct);
   const [priceTiers, setPriceTiers] = useState<TierDraft[]>([]);
   const [locating, setLocating] = useState(false);
+  const [generatingDesc, setGeneratingDesc] = useState(false);
+
+  const generateDescription = async () => {
+    if (!newProduct.name.trim()) {
+      toast({ title: "Nom requis", description: "Renseignez d'abord le nom du produit.", variant: "destructive" });
+      return;
+    }
+    setGeneratingDesc(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-description", {
+        body: {
+          name: newProduct.name,
+          category: newProduct.category,
+          unit: newProduct.unit,
+          location: newProduct.location,
+          is_organic: newProduct.is_organic,
+          hints: newProduct.description,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const desc = (data as any)?.description;
+      if (!desc) throw new Error("Réponse vide");
+      setNewProduct((p) => ({ ...p, description: desc }));
+      toast({ title: "✨ Description générée", description: "Vous pouvez l'ajuster si besoin." });
+    } catch (e: any) {
+      toast({ title: "Erreur IA", description: e?.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingDesc(false);
+    }
+  };
 
   const detectProductLocation = () => {
     if (!navigator.geolocation) {
