@@ -476,16 +476,32 @@ const ProductDetail = () => {
               <h1 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">{product.name}</h1>
 
               {/* Price */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-                )}
-                <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
-                {(product as any).is_negotiable && (
-                  <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
-                )}
-              </div>
+              {(() => {
+                const discount = product.discount && product.discount > 0
+                  ? product.discount
+                  : (product.originalPrice && product.originalPrice > product.price)
+                    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+                    : 0;
+                return (
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-destructive">{formatPrice(product.price)}</span>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                      <span className="text-sm sm:text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                    )}
+                    <span className="text-xs sm:text-sm text-muted-foreground">/ {product.unit}</span>
+                    {discount > 0 && (
+                      <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs">-{discount}% PROMO</Badge>
+                    )}
+                    {(product as any).is_negotiable && (
+                      <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Avis (étoiles + nombre) — affichage forcé après le prix s'il y a des avis */}
+              <ProductRatingLine productId={product.id} />
+
 
               {/* Wholesale pricing — style Aliexpress (Prêt à expédié + tranches de prix) */}
               <WholesalePricingPanel

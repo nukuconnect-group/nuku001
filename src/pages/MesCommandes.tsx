@@ -168,6 +168,25 @@ const MesCommandes = () => {
     }
   };
 
+  const handleRequestCancellation = async (order: any) => {
+    const reason = prompt("Motif de la demande d'annulation (sera envoyé au vendeur) :");
+    if (!reason || !reason.trim()) return;
+    try {
+      const { error } = await (supabase as any).from("refund_requests").insert({
+        order_id: order.id,
+        buyer_id: profile?.id,
+        seller_id: order.seller_id,
+        reason: reason.trim(),
+        status: "pending",
+        type: "cancellation",
+      });
+      if (error) throw error;
+      toast.success("Demande d'annulation envoyée au vendeur");
+    } catch (e: any) {
+      toast.error("Impossible d'envoyer la demande", { description: e.message });
+    }
+  };
+
   const handleDelete = async (orderId: string) => {
     if (!confirm("Supprimer définitivement cette commande ?")) return;
     const { error } = await (supabase as any).rpc("buyer_delete_order", { p_order_id: orderId });
@@ -540,12 +559,17 @@ const MesCommandes = () => {
                                 <Link to="/suivi-livraison"><MapPin className="w-3 h-3 mr-1" />Suivre</Link>
                               </Button>
                             )}
-                            {["pending", "confirmed"].includes(o.status) && (
+                            {o.status === "pending" && !o.seller_confirmed_at && (
                               <Button size="sm" variant="outline" onClick={() => handleCancel(o.id)} className="h-7 text-[11px] text-orange-600 hover:text-orange-700">
                                 <Ban className="w-3 h-3 mr-1" />Annuler
                               </Button>
                             )}
-                            {o.status === "cancelled" && (
+                            {["confirmed", "processing", "shipped", "paid"].includes(o.status) && (
+                              <Button size="sm" variant="outline" onClick={() => handleRequestCancellation(o)} className="h-7 text-[11px] text-orange-600 hover:text-orange-700">
+                                <Ban className="w-3 h-3 mr-1" />Demander annulation
+                              </Button>
+                            )}
+                            {(o.status === "cancelled" || o.status === "completed" || o.status === "delivered") && (
                               <Button size="sm" variant="outline" onClick={() => handleDelete(o.id)} className="h-7 text-[11px] text-destructive hover:text-destructive">
                                 <Trash2 className="w-3 h-3 mr-1" />Supprimer
                               </Button>

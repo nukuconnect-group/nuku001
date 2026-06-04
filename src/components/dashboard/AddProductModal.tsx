@@ -596,13 +596,46 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
             <div className="space-y-2">
               <Label>Prix (FCFA) *</Label>
-              <Input
-                type="number"
-                value={newProduct.price}
-                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                placeholder="Ex: 5000"
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                  placeholder="Ex: 5000"
+                  required
+                  className="flex-1"
+                />
+                <Select
+                  value={newProduct.unit}
+                  onValueChange={(v) => setNewProduct({ ...newProduct, unit: v })}
+                >
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kg">/ kg</SelectItem>
+                    <SelectItem value="g">/ g</SelectItem>
+                    <SelectItem value="tonne">/ tonne</SelectItem>
+                    <SelectItem value="litre">/ litre</SelectItem>
+                    <SelectItem value="ml">/ ml</SelectItem>
+                    <SelectItem value="unité">/ unité</SelectItem>
+                    <SelectItem value="pièce">/ pièce</SelectItem>
+                    <SelectItem value="boîte">/ boîte</SelectItem>
+                    <SelectItem value="carton">/ carton</SelectItem>
+                    <SelectItem value="sac">/ sac</SelectItem>
+                    <SelectItem value="panier">/ panier</SelectItem>
+                    <SelectItem value="lot">/ lot</SelectItem>
+                    <SelectItem value="bouteille">/ bouteille</SelectItem>
+                    <SelectItem value="paquet">/ paquet</SelectItem>
+                    <SelectItem value="douzaine">/ douzaine</SelectItem>
+                    <SelectItem value="régime">/ régime</SelectItem>
+                    <SelectItem value="botte">/ botte</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Définissez le prix par unité (kg, lot, carton, sac…)
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -701,36 +734,19 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               <Label>
                 Quantité disponible {newProduct.stockStatus !== "restocking" && newProduct.stockStatus !== "out_of_stock" ? "*" : "(optionnel)"}
               </Label>
-              <div className="flex gap-2">
+              <div className="relative">
                 <Input
                   type="number"
                   value={newProduct.quantity_available}
                   onChange={(e) => setNewProduct({ ...newProduct, quantity_available: e.target.value })}
                   placeholder={newProduct.stockStatus === "restocking" || newProduct.stockStatus === "out_of_stock" ? "0" : "Ex: 100"}
-                  className="flex-1"
                   required={newProduct.stockStatus !== "restocking" && newProduct.stockStatus !== "out_of_stock"}
                   disabled={newProduct.stockStatus === "out_of_stock"}
+                  className="pr-16"
                 />
-                <Select
-                  value={newProduct.unit}
-                  onValueChange={(v) => setNewProduct({ ...newProduct, unit: v })}
-                >
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="g">g</SelectItem>
-                    <SelectItem value="tonne">tonne</SelectItem>
-                    <SelectItem value="litre">litre</SelectItem>
-                    <SelectItem value="unité">unité</SelectItem>
-                    <SelectItem value="boîte">boîte</SelectItem>
-                    <SelectItem value="carton">carton</SelectItem>
-                    <SelectItem value="sac">sac</SelectItem>
-                    <SelectItem value="panier">panier</SelectItem>
-                    <SelectItem value="lot">lot</SelectItem>
-                  </SelectContent>
-                </Select>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
+                  {newProduct.unit}
+                </span>
               </div>
               {(newProduct.stockStatus === "restocking" || newProduct.stockStatus === "out_of_stock") && (
                 <p className="text-[10px] text-muted-foreground">
