@@ -27,6 +27,55 @@ interface Props {
 const AddressSelector = ({ onSelect, selectedId }: Props) => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const { toast } = useToast();
+
+  const useCurrentPosition = () => {
+    if (!("geolocation" in navigator)) {
+      toast({ title: "Géolocalisation indisponible", variant: "destructive" });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          const { data, error } = await supabase.functions.invoke("reverse-geocode", { body: { lat, lng } });
+          if (error) throw error;
+          const city = (data as any)?.city || "";
+          const quarter = (data as any)?.quarter || "";
+          const country = (data as any)?.country || "";
+          const display = (data as any)?.display || [quarter, city, country].filter(Boolean).join(", ");
+          const synthetic: Address = {
+            id: `geo-${Date.now()}`,
+            label: "Ma position actuelle",
+            full_name: null,
+            phone: null,
+            city,
+            quarter,
+            street: null,
+            country,
+            is_default: false,
+          };
+          onSelect(synthetic);
+          toast({ title: "📍 Position détectée", description: display });
+        } catch (e: any) {
+          toast({ title: "Erreur", description: e?.message || "Reverse geocode impossible", variant: "destructive" });
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        toast({
+          title: "Position refusée",
+          description: err.code === 1 ? "Autorisez la localisation dans votre navigateur." : "Impossible de détecter la position.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   useEffect(() => {
     const load = async () => {
