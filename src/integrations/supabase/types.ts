@@ -3294,6 +3294,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      validate_promo_code: {
+        Args: { _code: string; _order_amount?: number }
+        Returns: {
+          discount_type: string
+          discount_value: number
+          message: string
+          valid: boolean
+        }[]
+      }
       verify_delivery_otp: {
         Args: { p_delivery_id: string; p_otp: string }
         Returns: Json
