@@ -106,14 +106,23 @@ const AddressSelector = ({ onSelect, selectedId }: Props) => {
   if (addresses.length === 0) {
     return (
       <Card className="border-dashed border-primary/30">
-        <CardContent className="p-4 text-center">
+        <CardContent className="p-4 text-center space-y-2">
           <MapPin className="w-6 h-6 mx-auto text-muted-foreground mb-2" />
           <p className="text-xs text-muted-foreground mb-3">Aucune adresse enregistrée</p>
-          <Link to="/adresse-livraison">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <Plus className="w-3.5 h-3.5" />Ajouter une adresse
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button
+              type="button" variant="outline" size="sm" className="gap-1.5 text-xs"
+              onClick={useCurrentPosition} disabled={locating}
+            >
+              {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+              Utiliser ma position
             </Button>
-          </Link>
+            <Link to="/adresse-livraison">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full">
+                <Plus className="w-3.5 h-3.5" />Ajouter une adresse
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     );
