@@ -141,6 +141,37 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [newProduct, setNewProduct] = useState(defaultProduct);
   const [priceTiers, setPriceTiers] = useState<TierDraft[]>([]);
   const [locating, setLocating] = useState(false);
+  const [generatingDesc, setGeneratingDesc] = useState(false);
+
+  const generateDescription = async () => {
+    if (!newProduct.name.trim()) {
+      toast({ title: "Nom requis", description: "Renseignez d'abord le nom du produit.", variant: "destructive" });
+      return;
+    }
+    setGeneratingDesc(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-description", {
+        body: {
+          name: newProduct.name,
+          category: newProduct.category,
+          unit: newProduct.unit,
+          location: newProduct.location,
+          is_organic: newProduct.is_organic,
+          hints: newProduct.description,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const desc = (data as any)?.description;
+      if (!desc) throw new Error("Réponse vide");
+      setNewProduct((p) => ({ ...p, description: desc }));
+      toast({ title: "✨ Description générée", description: "Vous pouvez l'ajuster si besoin." });
+    } catch (e: any) {
+      toast({ title: "Erreur IA", description: e?.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingDesc(false);
+    }
+  };
 
   const detectProductLocation = () => {
     if (!navigator.geolocation) {
@@ -689,11 +720,13 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="g">g</SelectItem>
                     <SelectItem value="tonne">tonne</SelectItem>
-                    <SelectItem value="unité">unité</SelectItem>
-                    <SelectItem value="sac">sac</SelectItem>
-                    <SelectItem value="carton">carton</SelectItem>
                     <SelectItem value="litre">litre</SelectItem>
+                    <SelectItem value="unité">unité</SelectItem>
+                    <SelectItem value="boîte">boîte</SelectItem>
+                    <SelectItem value="carton">carton</SelectItem>
+                    <SelectItem value="sac">sac</SelectItem>
                     <SelectItem value="panier">panier</SelectItem>
                     <SelectItem value="lot">lot</SelectItem>
                   </SelectContent>
@@ -808,7 +841,17 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Description</Label>
+              <Button
+                type="button" size="sm" variant="outline"
+                onClick={generateDescription} disabled={generatingDesc}
+                className="h-7 gap-1.5 text-[11px]"
+              >
+                {generatingDesc ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                Générer avec IA
+              </Button>
+            </div>
             <Textarea
               value={newProduct.description}
               onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}

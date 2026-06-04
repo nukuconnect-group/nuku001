@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Home, Building2, Check, Plus } from "lucide-react";
+import { MapPin, Home, Building2, Check, Plus, Loader2, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface Address {
   id: string;
@@ -26,6 +27,55 @@ interface Props {
 const AddressSelector = ({ onSelect, selectedId }: Props) => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const { toast } = useToast();
+
+  const useCurrentPosition = () => {
+    if (!("geolocation" in navigator)) {
+      toast({ title: "Géolocalisation indisponible", variant: "destructive" });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude: lat, longitude: lng } = pos.coords;
+          const { data, error } = await supabase.functions.invoke("reverse-geocode", { body: { lat, lng } });
+          if (error) throw error;
+          const city = (data as any)?.city || "";
+          const quarter = (data as any)?.quarter || "";
+          const country = (data as any)?.country || "";
+          const display = (data as any)?.display || [quarter, city, country].filter(Boolean).join(", ");
+          const synthetic: Address = {
+            id: `geo-${Date.now()}`,
+            label: "Ma position actuelle",
+            full_name: null,
+            phone: null,
+            city,
+            quarter,
+            street: null,
+            country,
+            is_default: false,
+          };
+          onSelect(synthetic);
+          toast({ title: "📍 Position détectée", description: display });
+        } catch (e: any) {
+          toast({ title: "Erreur", description: e?.message || "Reverse geocode impossible", variant: "destructive" });
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        toast({
+          title: "Position refusée",
+          description: err.code === 1 ? "Autorisez la localisation dans votre navigateur." : "Impossible de détecter la position.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -56,14 +106,23 @@ const AddressSelector = ({ onSelect, selectedId }: Props) => {
   if (addresses.length === 0) {
     return (
       <Card className="border-dashed border-primary/30">
-        <CardContent className="p-4 text-center">
+        <CardContent className="p-4 text-center space-y-2">
           <MapPin className="w-6 h-6 mx-auto text-muted-foreground mb-2" />
           <p className="text-xs text-muted-foreground mb-3">Aucune adresse enregistrée</p>
-          <Link to="/adresse-livraison">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <Plus className="w-3.5 h-3.5" />Ajouter une adresse
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button
+              type="button" variant="outline" size="sm" className="gap-1.5 text-xs"
+              onClick={useCurrentPosition} disabled={locating}
+            >
+              {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+              Utiliser ma position
             </Button>
-          </Link>
+            <Link to="/adresse-livraison">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full">
+                <Plus className="w-3.5 h-3.5" />Ajouter une adresse
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     );
@@ -90,6 +149,14 @@ const AddressSelector = ({ onSelect, selectedId }: Props) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-1 space-y-2">
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={useCurrentPosition} disabled={locating}
+          className="w-full gap-1.5 h-8 text-[11px]"
+        >
+          {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+          Utiliser ma position actuelle
+        </Button>
         {addresses.map((addr) => {
           const isSelected = selectedId === addr.id;
           const addressLine = [addr.quarter, addr.street, addr.city, addr.country].filter(Boolean).join(", ");
