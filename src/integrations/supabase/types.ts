@@ -3141,6 +3141,7 @@ export type Database = {
       get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
       get_my_delivery_otp: { Args: { p_delivery_id: string }; Returns: string }
       get_my_orders_with_tracking: { Args: never; Returns: Json }
+      get_platform_stats: { Args: never; Returns: Json }
       get_products_due_for_moderation: {
         Args: { p_limit?: number }
         Returns: {
@@ -3198,6 +3199,14 @@ export type Database = {
           route: string
           slow_count: number
           total_loads: number
+        }[]
+      }
+      get_seller_emails: {
+        Args: { p_profile_ids: string[] }
+        Returns: {
+          email: string
+          full_name: string
+          profile_id: string
         }[]
       }
       get_user_subscription: {
@@ -3283,6 +3292,15 @@ export type Database = {
         Returns: {
           api_key_id: string
           user_id: string
+        }[]
+      }
+      validate_promo_code: {
+        Args: { _code: string; _order_amount?: number }
+        Returns: {
+          discount_type: string
+          discount_value: number
+          message: string
+          valid: boolean
         }[]
       }
       verify_delivery_otp: {
