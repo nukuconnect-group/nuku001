@@ -91,12 +91,16 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
     publicProducer?.full_name?.trim() ||
     p.producer?.full_name?.trim() ||
     "Fournisseur";
+  const orig = (p as any).original_price != null ? Number((p as any).original_price) : undefined;
+  const hasPromo = orig != null && orig > Number(p.price);
   return {
     id: p.id,
     slug: (p as any).slug || undefined,
     name: p.name,
     category: p.category,
     price: p.price,
+    originalPrice: hasPromo ? orig : undefined,
+    discount: hasPromo ? Math.round(((orig! - Number(p.price)) / orig!) * 100) : undefined,
     unit: p.unit,
     quantity: p.quantity_available,
     location: p.location || "Togo",
@@ -111,8 +115,6 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
       name: displayName,
       avatar: publicProducer?.avatar_url || p.producer?.avatar_url || defaultAvatar,
       rating: 4.5,
-      // Priority to public RPC (always returns latest) then producer join
-      // Verified if profile flag is true OR latest supplier KYC is approved
       verified: Boolean(
         publicProducer?.is_verified ??
         p.producer?.is_verified ??
@@ -123,6 +125,7 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
     },
   };
 };
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;

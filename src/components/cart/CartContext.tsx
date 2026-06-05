@@ -1,6 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Product } from "@/data/marketplace";
 import { useProfile } from "@/contexts/ProfileContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
 
 export interface CartItem {
   product: Product;
@@ -68,6 +71,44 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setActiveStorageKey(cartStorageKey);
   }, [isReady, cartStorageKey, user?.id]);
 
+  // Auto-remove items already paid/confirmed by the user; remind for pending unpaid items
+  const reminderShownRef = useRef(false);
+  useEffect(() => {
+    if (!isReady || !user?.id || items.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const ids = items.map((i) => i.product.id);
+      // Get the buyer profile id
+      const { data: prof } = await supabase
+        .from("profiles").select("id").eq("user_id", user.id).maybeSingle();
+      if (!prof?.id || cancelled) return;
+      const { data: paidOrders } = await supabase
+        .from("orders")
+        .select("product_id,status")
+        .eq("buyer_id", prof.id)
+        .in("product_id", ids)
+        .in("status", ["paid", "confirmed", "completed", "delivered", "shipped", "processing"]);
+      if (cancelled) return;
+      const paidIds = new Set((paidOrders || []).map((o: any) => o.product_id));
+      if (paidIds.size > 0) {
+        setItems((prev) => prev.filter((i) => !paidIds.has(i.product.id)));
+        toast.success("Panier mis à jour", { description: "Les produits déjà payés ont été retirés." });
+      }
+      // Pending purchase reminder — items still in cart, never ordered
+      if (!reminderShownRef.current) {
+        reminderShownRef.current = true;
+        const pending = items.filter((i) => !paidIds.has(i.product.id));
+        if (pending.length > 0) {
+          toast(`🛒 ${pending.length} produit${pending.length > 1 ? "s" : ""} en attente d'achat`, {
+            description: "Finalisez votre commande avant rupture de stock.",
+            duration: 6000,
+          });
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isReady, user?.id, items.length]);
+
   useEffect(() => {
     if (!isReady || !activeStorageKey) return;
 
@@ -77,6 +118,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Ignore storage write failures silently
     }
   }, [items, isReady, activeStorageKey]);
+
 
   const addItem = (product: Product, quantity = 1) => {
     setItems((prev) => {

@@ -240,9 +240,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         name: editProduct.name || "",
         description: editProduct.description || "",
         price: String(editProduct.price || ""),
-        originalPrice: "",
-        discount: "",
-        promoType: "none",
+        originalPrice: editProduct.original_price ? String(editProduct.original_price) : "",
+        discount: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price))
+          ? String(Math.round(((Number(editProduct.original_price) - Number(editProduct.price)) / Number(editProduct.original_price)) * 100))
+          : "",
+        promoType: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price)) ? "promo" : "none",
+
         category: editProduct.category || "",
         unit: editProduct.unit || "kg",
         quantity_available: String(editProduct.quantity_available || ""),
@@ -339,10 +342,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       }
       const imageUrls = [...existingUrls, ...uploadedUrls];
 
+      const promoActive = newProduct.promoType !== "none" && parseFloat(newProduct.originalPrice || "0") > parseFloat(newProduct.price || "0");
       const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
+        original_price: promoActive ? parseFloat(newProduct.originalPrice) : null,
         category: newProduct.category,
         unit: newProduct.unit,
         quantity_available: parseFloat(newProduct.quantity_available) || 0,
@@ -360,6 +365,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         city: newProduct.city || null,
         quarter: newProduct.quarter || null,
       };
+
 
       let savedProductId: string | null = null;
       if (editProduct) {
