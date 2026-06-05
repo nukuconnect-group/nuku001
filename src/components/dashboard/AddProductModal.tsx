@@ -240,9 +240,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         name: editProduct.name || "",
         description: editProduct.description || "",
         price: String(editProduct.price || ""),
-        originalPrice: "",
-        discount: "",
-        promoType: "none",
+        originalPrice: editProduct.original_price ? String(editProduct.original_price) : "",
+        discount: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price))
+          ? String(Math.round(((Number(editProduct.original_price) - Number(editProduct.price)) / Number(editProduct.original_price)) * 100))
+          : "",
+        promoType: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price)) ? "promo" : "none",
+
         category: editProduct.category || "",
         unit: editProduct.unit || "kg",
         quantity_available: String(editProduct.quantity_available || ""),
