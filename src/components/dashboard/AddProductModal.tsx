@@ -342,10 +342,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       }
       const imageUrls = [...existingUrls, ...uploadedUrls];
 
+      const promoActive = newProduct.promoType !== "none" && parseFloat(newProduct.originalPrice || "0") > parseFloat(newProduct.price || "0");
       const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
         price: parseFloat(newProduct.price),
+        original_price: promoActive ? parseFloat(newProduct.originalPrice) : null,
         category: newProduct.category,
         unit: newProduct.unit,
         quantity_available: parseFloat(newProduct.quantity_available) || 0,
@@ -363,6 +365,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         city: newProduct.city || null,
         quarter: newProduct.quarter || null,
       };
+
 
       let savedProductId: string | null = null;
       if (editProduct) {
