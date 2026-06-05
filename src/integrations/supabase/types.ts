@@ -1834,6 +1834,7 @@ export type Database = {
           moderation_scheduled_at: string | null
           moderation_status: string
           name: string
+          original_price: number | null
           price: number
           producer_id: string
           quantity_available: number
@@ -1863,6 +1864,7 @@ export type Database = {
           moderation_scheduled_at?: string | null
           moderation_status?: string
           name: string
+          original_price?: number | null
           price: number
           producer_id: string
           quantity_available?: number
@@ -1892,6 +1894,7 @@ export type Database = {
           moderation_scheduled_at?: string | null
           moderation_status?: string
           name?: string
+          original_price?: number | null
           price?: number
           producer_id?: string
           quantity_available?: number
@@ -3163,6 +3166,7 @@ export type Database = {
           moderation_scheduled_at: string | null
           moderation_status: string
           name: string
+          original_price: number | null
           price: number
           producer_id: string
           quantity_available: number
