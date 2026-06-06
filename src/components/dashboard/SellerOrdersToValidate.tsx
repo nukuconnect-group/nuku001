@@ -39,11 +39,13 @@ const SellerOrdersToValidate = ({ sellerProfileId }: Props) => {
   const [expanded, setExpanded] = useState(false);
 
   const load = useCallback(async () => {
+    // Show ONLY orders that are actually paid (status=confirmed) and awaiting validation.
+    // Unpaid pending orders are hidden — they pollute the list and cannot be validated anyway.
     const { data, error } = await supabase
       .from("orders")
       .select("id, status, delivery_method, total_price, quantity, notes, created_at, seller_confirmed_at, product_id, buyer_id, products(name), buyer:profiles!orders_buyer_id_fkey(full_name)" as any)
       .eq("seller_id", sellerProfileId)
-      .in("status", ["confirmed", "pending"])
+      .eq("status", "confirmed")
       .is("seller_confirmed_at", null)
       .order("created_at", { ascending: false })
       .limit(50);
