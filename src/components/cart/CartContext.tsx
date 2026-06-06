@@ -74,13 +74,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [isReady, cartStorageKey, user?.id]);
 
   // Auto-remove items already paid/confirmed by the user; remind for pending unpaid items
+  // after a 5-minute delay so we don't spam the buyer the moment they add a product.
   const reminderShownRef = useRef(false);
+  const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!isReady || !user?.id || items.length === 0) return;
+    if (!isReady || !user?.id || items.length === 0) {
+      if (reminderTimerRef.current) {
+        clearTimeout(reminderTimerRef.current);
+        reminderTimerRef.current = null;
+      }
+      return;
+    }
     let cancelled = false;
     (async () => {
       const ids = items.map((i) => i.product.id);
-      // Get the buyer profile id
       const { data: prof } = await supabase
         .from("profiles").select("id").eq("user_id", user.id).maybeSingle();
       if (!prof?.id || cancelled) return;
@@ -96,19 +103,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setItems((prev) => prev.filter((i) => !paidIds.has(i.product.id)));
         toast.success("Panier mis à jour", { description: "Les produits déjà payés ont été retirés." });
       }
-      // Pending purchase reminder — items still in cart, never ordered
-      if (!reminderShownRef.current) {
-        reminderShownRef.current = true;
-        const pending = items.filter((i) => !paidIds.has(i.product.id));
-        if (pending.length > 0) {
+      // Schedule a single delayed reminder (5 min) for items still in cart and never ordered.
+      if (!reminderShownRef.current && !reminderTimerRef.current) {
+        reminderTimerRef.current = setTimeout(() => {
+          reminderTimerRef.current = null;
+          if (cancelled) return;
+          const pending = items.filter((i) => !paidIds.has(i.product.id));
+          if (pending.length === 0) return;
+          reminderShownRef.current = true;
           toast(`🛒 ${pending.length} produit${pending.length > 1 ? "s" : ""} en attente d'achat`, {
             description: "Finalisez votre commande avant rupture de stock.",
-            duration: 6000,
+            duration: 10000,
+            action: {
+              label: "Voir le panier",
+              onClick: () => { window.location.href = "/panier"; },
+            },
           });
-        }
+        }, PENDING_REMINDER_DELAY_MS);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isReady, user?.id, items.length]);
 
   useEffect(() => {
