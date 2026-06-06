@@ -64,13 +64,29 @@ RÈGLES DE COMMUNICATION :
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
+// In-memory IP/user rate limiter (per Edge Function instance) to protect
+// Gemini API quota from anonymous abuse while keeping the assistant open.
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_ANON = 20;
+const RATE_LIMIT_AUTH = 60;
+const rateBuckets = new Map<string, number[]>();
+function rateLimit(key: string, max: number): boolean {
+  const now = Date.now();
+  const arr = (rateBuckets.get(key) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (arr.length >= max) { rateBuckets.set(key, arr); return false; }
+  arr.push(now);
+  rateBuckets.set(key, arr);
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     // Authentication is optional — NUKUCONNECT IA is open to all visitors.
-    // We still try to read the user (when a valid bearer is provided) for analytics,
-    // but we never reject unauthenticated calls.
+    // We still try to read the user (when a valid bearer is provided) for analytics
+    // and to grant a higher rate limit.
+    let authUserId: string | null = null;
     const authHeader = req.headers.get("Authorization") || "";
     if (authHeader.toLowerCase().startsWith("bearer ")) {
       try {
@@ -80,8 +96,19 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_ANON_KEY")!,
           { global: { headers: { Authorization: `Bearer ${token}` } } },
         );
-        await userClient.auth.getClaims(token).catch(() => null);
+        const { data } = await userClient.auth.getClaims(token).catch(() => ({ data: null } as any));
+        authUserId = (data as any)?.claims?.sub ?? null;
       } catch { /* ignore — auth is optional */ }
+    }
+
+    // Rate limit by user id when authenticated, otherwise by client IP
+    const clientIp = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+    const rlKey = authUserId ? `u:${authUserId}` : `ip:${clientIp}`;
+    const rlMax = authUserId ? RATE_LIMIT_AUTH : RATE_LIMIT_ANON;
+    if (!rateLimit(rlKey, rlMax)) {
+      return new Response(JSON.stringify({ error: "Trop de requêtes, réessayez dans quelques minutes." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "600" },
+      });
     }
 
     const rawBody = await req.json();
