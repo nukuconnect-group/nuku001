@@ -4,6 +4,8 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const PENDING_REMINDER_DELAY_MS = 5 * 60 * 1000; // 5 minutes
+
 
 export interface CartItem {
   product: Product;
