@@ -115,7 +115,8 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
         onError={() => setImgError(true)}
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/30 to-transparent" />
+      {/* Gradient only on the lower 45% so the image stays visible */}
+      <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-foreground/85 via-foreground/40 to-transparent" />
 
       {/* Top badge */}
       <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
@@ -125,46 +126,25 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
         </Badge>
       </div>
 
-      {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 text-white">
-        <p className="text-[8px] sm:text-[10px] uppercase tracking-wider text-white/80 font-semibold mb-1 sm:mb-2 line-clamp-1">
+      {/* Bottom content — compact, no description, no review count */}
+      <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3 lg:p-4 text-white">
+        <p className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/80 font-semibold mb-0.5 line-clamp-1">
           {product.category}
         </p>
-        <h3 className="font-heading text-sm sm:text-lg lg:text-2xl font-bold leading-tight mb-1 sm:mb-1.5 line-clamp-2">
+        <h3 className="font-heading text-xs sm:text-sm lg:text-lg font-bold leading-tight mb-1 line-clamp-1">
           {product.name}
         </h3>
-        {product.description && (
-          <p className="hidden sm:block text-xs lg:text-sm text-white/85 line-clamp-1 mb-3">
-            {product.description}
-          </p>
-        )}
 
-        <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-3">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${
-                i < Math.round(product.producer.rating)
-                  ? "text-accent fill-accent"
-                  : "text-white/30"
-              }`}
-            />
-          ))}
-          <span className="text-[8px] sm:text-[10px] text-white/80 ml-0.5 sm:ml-1">
-            ({Math.floor(product.producer.rating * 12)})
-          </span>
-        </div>
-
-        <div className="flex items-end justify-between gap-2 sm:gap-3">
+        <div className="flex items-end justify-between gap-2">
           <div>
-            <p className="font-heading text-base sm:text-xl lg:text-3xl font-bold text-white">
+            <p className="font-heading text-sm sm:text-base lg:text-xl font-bold text-white">
               {formatPrice(product.price)}
             </p>
-            <p className="text-[8px] sm:text-[10px] text-white/70">/{product.unit}</p>
+            <p className="text-[8px] sm:text-[9px] text-white/70">/{product.unit}</p>
           </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] text-white/85">
+          <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] text-white/85">
             <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            <span className="truncate max-w-[70px] sm:max-w-[120px]">{product.location}</span>
+            <span className="truncate max-w-[70px] sm:max-w-[110px]">{product.location}</span>
           </div>
         </div>
       </div>

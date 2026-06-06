@@ -516,36 +516,72 @@ const BuyerDashboard = () => {
                         <Button variant="hero" className="text-xs sm:text-sm h-9">Découvrir les produits</Button>
                       </Link>
                     </div>
-                  ) : (
-                    <div className="space-y-2.5 sm:space-y-4">
-                      {orders.map((order) => (
-                        <Link key={order.id} to={`/commande/${order.id}`} className="block">
-                          <div className="flex items-center justify-between p-2.5 sm:p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
-                            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
-                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                <Package className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
+                  ) : (() => {
+                    const norm = (s: any) => String(s || "").toLowerCase();
+                    const inProgress = orders.filter(o => ["pending", "confirmed", "processing", "shipped", "in-transit"].includes(norm(o.status)));
+                    const done = orders.filter(o => ["completed", "delivered", "paid"].includes(norm(o.status)));
+                    const cancelled = orders.filter(o => ["cancelled", "canceled", "refunded"].includes(norm(o.status)));
+                    const known = new Set([...inProgress, ...done, ...cancelled].map(o => o.id));
+                    const others = orders.filter(o => !known.has(o.id));
+
+                    const renderList = (list: any[]) => (
+                      list.length === 0 ? (
+                        <p className="text-center text-[11px] sm:text-xs text-muted-foreground py-6">Aucune commande dans cette catégorie.</p>
+                      ) : (
+                        <div className="space-y-2.5 sm:space-y-4">
+                          {list.map((order) => (
+                            <Link key={order.id} to={`/commande/${order.id}`} className="block">
+                              <div className="flex items-center justify-between p-2.5 sm:p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors gap-2">
+                                <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <Package className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-xs sm:text-sm truncate">{order.products?.name || "Produit"}</p>
+                                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                      {order.quantity} × {formatPrice(Number(order.products?.price || 0))}
+                                    </p>
+                                    <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5">
+                                      {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right flex-shrink-0 ml-2">
+                                  {getStatusBadge(order.status)}
+                                  <p className="text-xs sm:text-sm font-semibold text-primary mt-1">
+                                    {formatPrice(Number(order.total_price))}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-xs sm:text-sm truncate">{order.products?.name || "Produit"}</p>
-                                <p className="text-[10px] sm:text-xs text-muted-foreground">
-                                  {order.quantity} × {formatPrice(Number(order.products?.price || 0))}
-                                </p>
-                                <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5">
-                                  {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right flex-shrink-0 ml-2">
-                              {getStatusBadge(order.status)}
-                              <p className="text-xs sm:text-sm font-semibold text-primary mt-1">
-                                {formatPrice(Number(order.total_price))}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                            </Link>
+                          ))}
+                        </div>
+                      )
+                    );
+
+                    return (
+                      <Tabs defaultValue="in-progress" className="w-full">
+                        <TabsList className="w-full grid grid-cols-4 h-auto p-1 bg-muted/60 mb-3">
+                          <TabsTrigger value="in-progress" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
+                            En cours <span className="ml-1 opacity-70">({inProgress.length})</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="done" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
+                            Terminé <span className="ml-1 opacity-70">({done.length})</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="cancelled" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
+                            Annulé <span className="ml-1 opacity-70">({cancelled.length})</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="others" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
+                            Autres <span className="ml-1 opacity-70">({others.length})</span>
+                          </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="in-progress">{renderList(inProgress)}</TabsContent>
+                        <TabsContent value="done">{renderList(done)}</TabsContent>
+                        <TabsContent value="cancelled">{renderList(cancelled)}</TabsContent>
+                        <TabsContent value="others">{renderList(others)}</TabsContent>
+                      </Tabs>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
