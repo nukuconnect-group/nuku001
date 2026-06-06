@@ -588,25 +588,25 @@ const DeliveryTracking = () => {
 
               {/* Detail view */}
               {selectedOrder && (
-                <Card>
-                  <CardHeader className="p-4 pb-2">
+                <Card className="overflow-hidden">
+                  <CardHeader className="p-3 sm:p-4 pb-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-base">{selectedOrder.products?.name || "Commande"}</CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-sm sm:text-base break-words">{selectedOrder.products?.name || "Commande"}</CardTitle>
+                        <p className="text-[11px] sm:text-xs text-muted-foreground">
                           {selectedOrder.quantity} {selectedOrder.products?.unit || "unités"} • {formatPrice(selectedOrder.total_price)}
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
                           Réf: {selectedOrder.id}
                         </p>
                       </div>
-                      <Badge className={`${getStatusColor(selectedOrder.status)} self-start gap-1`}>
+                      <Badge className={`${getStatusColor(selectedOrder.status)} self-start gap-1 whitespace-nowrap`}>
                         {getStatusIcon(selectedOrder.status)}
                         {getStatusLabel(selectedOrder.status)}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-4 pt-2">
+                  <CardContent className="p-3 sm:p-4 pt-2 overflow-hidden">
                     {/* Seller info */}
                     {selectedOrder.profiles?.full_name && (
                       <div className="p-3 bg-muted/50 rounded-xl mb-4 flex items-center gap-2">
