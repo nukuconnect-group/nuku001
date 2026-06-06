@@ -680,7 +680,7 @@ const DeliveryTracking = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
                       {deliveries[selectedOrder.id] && !["delivered", "cancelled"].includes(deliveries[selectedOrder.id].status) ? (
                         <DeliveryChat
                           deliveryId={deliveries[selectedOrder.id].id}
