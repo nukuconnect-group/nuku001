@@ -547,38 +547,38 @@ const DeliveryTracking = () => {
                 </Button>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 {orders.map((order) => (
                   <Card key={order.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${selectedOrder?.id === order.id ? "ring-2 ring-primary" : ""}`}
+                    className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${selectedOrder?.id === order.id ? "ring-2 ring-primary" : ""}`}
                     onClick={() => setSelectedOrder(order)}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           {order.products?.images?.[0] && (
                             <img src={order.products.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                           )}
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm text-foreground line-clamp-1">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 break-words">
                               {order.products?.name || "Produit"}
                             </p>
-                            <p className="text-[10px] text-muted-foreground font-mono">
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">
                               ID: {order.id.substring(0, 8)}...
                             </p>
                           </div>
                         </div>
-                        <Badge className={`${getStatusColor(order.status)} text-[10px] flex-shrink-0`}>
+                        <Badge className={`${getStatusColor(order.status)} text-[10px] flex-shrink-0 whitespace-nowrap`}>
                           {getStatusLabel(order.status)}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span>{order.quantity} × {formatPrice(order.products?.price || 0)}</span>
-                        <span className="font-bold text-primary text-xs">{formatPrice(order.total_price)}</span>
+                      <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                        <span className="truncate">{order.quantity} × {formatPrice(order.products?.price || 0)}</span>
+                        <span className="font-bold text-primary text-xs whitespace-nowrap">{formatPrice(order.total_price)}</span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-                        <span>{new Date(order.created_at).toLocaleDateString("fr-FR")}</span>
+                      <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground mt-1">
+                        <span className="whitespace-nowrap">{new Date(order.created_at).toLocaleDateString("fr-FR")}</span>
                         {order.products?.location && (
-                          <span className="truncate ml-2">{order.products.location}</span>
+                          <span className="truncate ml-2 text-right">{order.products.location}</span>
                         )}
                       </div>
                     </CardContent>
