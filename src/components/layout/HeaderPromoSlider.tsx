@@ -76,7 +76,83 @@ const HeaderPromoSlider = () => {
 
   return (
     <div className="bg-background pt-2 sm:pt-3 md:pt-0 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
-      <div className="mx-auto px-3 sm:px-0 md:w-full">
+      {/* === MOBILE redesign — inspired by reference card === */}
+      <div className="sm:hidden px-3">
+        <div className="relative overflow-hidden rounded-2xl bg-primary shadow-xl">
+          {/* Yellow circle accent behind image */}
+          <div className="absolute right-[-30px] top-1/2 -translate-y-1/2 w-[180px] h-[180px] rounded-full bg-accent/90" aria-hidden />
+
+          {/* Slides container */}
+          <div className="relative min-h-[200px] flex items-center">
+            {slides.map((slide, i) => {
+              const words = slide.title.trim().split(" ");
+              const accentLen = Math.min(2, Math.max(1, Math.ceil(words.length / 3)));
+              const head = words.slice(0, words.length - accentLen).join(" ");
+              const tail = words.slice(words.length - accentLen).join(" ");
+              return (
+                <div
+                  key={slide.title}
+                  className={`transition-all duration-700 ease-out w-full px-4 py-5 ${
+                    i === current ? "opacity-100 translate-y-0 relative" : "absolute inset-0 opacity-0 translate-y-2 pointer-events-none"
+                  }`}
+                >
+                  <div className="relative z-10 flex items-stretch gap-3">
+                    {/* Left: copy */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <span className="inline-flex self-start items-center gap-1 bg-foreground/90 text-primary-foreground px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider mb-2">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        {slide.eyebrow}
+                      </span>
+                      <h3 className="font-heading font-black leading-[1.05] text-[20px] text-primary-foreground">
+                        {head && <>{head}<br /></>}
+                        <span className="text-accent">{tail}</span>
+                      </h3>
+                      <p className="text-primary-foreground/90 text-[11px] mt-1.5 leading-snug line-clamp-2 max-w-[22ch]">
+                        {slide.subtitle}
+                      </p>
+                      <Link to="/marketplace" className="mt-3 self-start">
+                        <span className="inline-flex items-center gap-1.5 bg-background text-foreground rounded-full pl-3 pr-1 py-1 text-[11px] font-bold shadow-md hover:shadow-lg transition-shadow">
+                          Explorer maintenant
+                          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                            <ArrowRight className="w-3 h-3" />
+                          </span>
+                        </span>
+                      </Link>
+                    </div>
+
+                    {/* Right: image */}
+                    <div className="relative w-[110px] flex-shrink-0 flex items-center justify-center">
+                      <img
+                        src={slide.image}
+                        alt={slide.title}
+                        loading={i === 0 ? "eager" : "lazy"}
+                        className="relative z-10 w-[110px] h-[140px] object-cover rounded-xl shadow-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Dots */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrent(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === current ? "w-5 bg-primary-foreground" : "w-1.5 bg-primary-foreground/50"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* === DESKTOP / TABLET — version originale === */}
+      <div className="hidden sm:block mx-auto px-3 sm:px-0 md:w-full">
         <div className="relative overflow-hidden rounded-none shadow-xl bg-primary ring-1 ring-primary/20">
           <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[58%] md:w-[56%] overflow-hidden">
             {slides.map((slide, i) => (
@@ -120,7 +196,7 @@ const HeaderPromoSlider = () => {
             </div>
           </div>
 
-          {/* Arrows - hidden on small screens, visible from sm */}
+          {/* Arrows */}
           <button
             onClick={prev}
             aria-label="Précédent"
@@ -153,6 +229,7 @@ const HeaderPromoSlider = () => {
           </div>
         </div>
       </div>
+
 
       {/* Stats bar — mobile uniquement */}
       <div className="md:hidden mx-auto px-3 max-w-6xl">
