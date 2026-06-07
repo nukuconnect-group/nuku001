@@ -287,7 +287,7 @@ const ProductDetail = () => {
             {/* ===== IMAGE SECTION ===== */}
             <div className="space-y-2 sm:space-y-3">
               {/* Main image — 4:3 ratio, compact on mobile */}
-              <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square overflow-hidden bg-muted rounded-none sm:rounded-lg cursor-zoom-in" onClick={() => setZoomOpen(true)}>
+              <div className="relative aspect-[16/10] max-h-[260px] sm:max-h-none sm:aspect-[4/3] lg:aspect-square mx-auto sm:mx-0 max-w-[420px] sm:max-w-none overflow-hidden bg-muted rounded-lg cursor-zoom-in" onClick={() => setZoomOpen(true)}>
                 <SmartWatermarkedImage
                   originalSrc={images[currentImageIndex] || product.image}
                   alt={product.name}

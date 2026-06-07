@@ -69,21 +69,44 @@ const CategoryManager = () => {
     refresh();
   };
 
-  const uploadImage = async (id: string, file: File) => {
-    if (!file.type.startsWith("image/")) {
+  // Client-side compression for large images (>2 MB or width > 2000px)
+  const compressImage = async (file: File, maxBytes = 2 * 1024 * 1024, maxDim = 2000): Promise<File> => {
+    if (file.size <= maxBytes && !file.type.includes("png")) return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+      const w = Math.round(bitmap.width * scale);
+      const h = Math.round(bitmap.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.85));
+      if (!blob) return file;
+      return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+    } catch {
+      return file;
+    }
+  };
+
+  const uploadImage = async (id: string, rawFile: File) => {
+    if (!rawFile.type.startsWith("image/")) {
       toast({ title: "Format invalide", description: "Choisissez une image (JPG, PNG, WebP).", variant: "destructive" });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Image trop lourde", description: "Maximum 5 Mo.", variant: "destructive" });
+    // Garde-fou très large (50 Mo). Au-delà, on compresse côté client.
+    if (rawFile.size > 50 * 1024 * 1024) {
+      toast({ title: "Image trop lourde", description: "Maximum 50 Mo.", variant: "destructive" });
       return;
     }
     setUploadingId(id);
-    const ext = file.name.split(".").pop() || "jpg";
+    const file = await compressImage(rawFile);
+    const ext = (file.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
     const path = `${id}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("category-images")
-      .upload(path, file, { cacheControl: "3600", upsert: false });
+      .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
     if (uploadError) {
       setUploadingId(null);
       toast({ title: "Échec de l'upload", description: uploadError.message, variant: "destructive" });
@@ -241,7 +264,7 @@ const CategoryManager = () => {
                           )}
                         </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">JPG, PNG ou WebP — 5 Mo max. Si vide, une image par défaut s'affiche.</p>
+                      <p className="text-[10px] text-muted-foreground">JPG, PNG ou WebP — jusqu'à 50 Mo (compression automatique). Si vide, une image par défaut s'affiche.</p>
                     </div>
                     <div className="flex gap-1.5">
                       <Button size="sm" className="h-7 text-xs gap-1" onClick={() => updateCategory(cat.id)}>
