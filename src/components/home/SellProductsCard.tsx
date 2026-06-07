@@ -1,7 +1,12 @@
-import { Link } from "react-router-dom";
 import { Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import sellFarmer from "@/assets/sell-products-farmer.jpg";
+
+const scrollToVendre = (e: React.MouseEvent) => {
+  e.preventDefault();
+  const el = document.getElementById("vendre");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 
 const SellProductsCard = () => {
   return (
@@ -15,12 +20,12 @@ const SellProductsCard = () => {
             <p className="text-muted-foreground text-[11px] mt-1 leading-snug line-clamp-2">
               Touchez plus d'acheteurs partout en Afrique.
             </p>
-            <Link to="/become-seller" className="inline-block mt-2">
+            <a href="#vendre" onClick={scrollToVendre} className="inline-block mt-2">
               <Button variant="hero" size="sm" className="gap-1.5 rounded-md h-7 text-[11px] px-3">
                 <Store className="w-3 h-3" />
                 Commencer à vendre
               </Button>
-            </Link>
+            </a>
           </div>
           <div className="flex-shrink-0 w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden">
             <img

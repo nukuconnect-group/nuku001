@@ -94,7 +94,7 @@ const Categories = () => {
     return Array.from(subs).sort();
   }, [activeCategories]);
 
-  // Filter categories
+  // Filter + sort categories by product count desc (most populated first)
   const filteredCategories = useMemo(() => {
     let result = activeCategories;
     if (searchQuery) {
@@ -110,8 +110,10 @@ const Categories = () => {
         cat.subcategories?.includes(selectedSubcategory)
       );
     }
-    return result;
-  }, [activeCategories, searchQuery, selectedSubcategory]);
+    return [...result].sort(
+      (a: any, b: any) => (productCounts[b.id] || 0) - (productCounts[a.id] || 0)
+    );
+  }, [activeCategories, searchQuery, selectedSubcategory, productCounts]);
 
   return (
     <div className="min-h-screen pb-14 lg:pb-0">

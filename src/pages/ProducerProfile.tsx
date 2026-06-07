@@ -257,11 +257,12 @@ const ProducerProfile = () => {
   }
 
   const rating = avgRating || 0;
-  const staticCoords = getCoords(producer.location || "Togo");
-  const { data: geocoded } = useGeocodeLocation(producer.location);
-  const coords: [number, number] = geocoded || ((producer as any).lat && (producer as any).lng
+  // Coordonnées réelles : priorité au lat/lng du profil, puis geocoding live, sinon rien (carte masquée)
+  const { data: geocoded, isLoading: geocoding } = useGeocodeLocation(producer.location);
+  const profileCoords: [number, number] | null = (producer as any).lat && (producer as any).lng
     ? [(producer as any).lat, (producer as any).lng]
-    : staticCoords);
+    : null;
+  const coords: [number, number] | null = profileCoords || geocoded || null;
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
@@ -422,7 +423,7 @@ const ProducerProfile = () => {
             </CardContent>
           </Card>
 
-          {/* Map Location */}
+          {/* Map Location — coordonnées réelles uniquement */}
           {producer.location && (
             <Card className="mb-8">
               <CardHeader>
@@ -432,19 +433,25 @@ const ProducerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-48 sm:h-64 rounded-lg overflow-hidden">
-                  <MapContainer center={coords} zoom={12} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker position={coords}>
-                      <Popup>
-                        <strong>{producer.full_name}</strong><br />
-                        {producer.location}
-                      </Popup>
-                    </Marker>
-                  </MapContainer>
+                <div className="h-48 sm:h-64 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                  {coords ? (
+                    <MapContainer center={coords} zoom={13} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker position={coords}>
+                        <Popup>
+                          <strong>{producer.full_name}</strong><br />
+                          {producer.location}
+                        </Popup>
+                      </Marker>
+                    </MapContainer>
+                  ) : (
+                    <p className="text-xs text-muted-foreground px-4 text-center">
+                      {geocoding ? "Chargement de la carte…" : "Localisation précise non disponible pour cette adresse."}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
