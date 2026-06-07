@@ -272,12 +272,12 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
               ? (isLongPrice ? "text-[11px] sm:text-xs" : "text-xs sm:text-sm")
               : (isLongPrice ? "text-xs sm:text-sm" : "text-sm sm:text-base");
             return (
-              <div className="flex items-baseline flex-wrap gap-x-1 gap-y-0 min-w-0">
+              <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0 min-w-0">
                 <span className={`font-heading font-bold text-destructive break-words ${priceSize}`}>
                   {priceStr}
                 </span>
                 {computedOriginalPrice && computedOriginalPrice > product.price && (
-                  <span className={`text-muted-foreground line-through break-words ${minimal ? 'text-[8px]' : 'text-[9px] sm:text-[10px]'}`}>
+                  <span className={`text-muted-foreground line-through font-medium break-words ${minimal ? 'text-[9px]' : 'text-[10px] sm:text-xs'}`}>
                     {formatPrice(computedOriginalPrice)}
                   </span>
                 )}
