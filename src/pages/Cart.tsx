@@ -419,8 +419,9 @@ const Cart = () => {
 
                 {deliveryMethod === "livreur" && (
                   <AvailableDrivers
-                    deliveryAddress={`${deliveryCity}, ${fullAddress}`}
-                    deliveryDistance={deliveryDistanceInfo?.maxDistance || null}
+                    city={deliveryCity}
+                    distanceKm={deliveryDistanceInfo?.maxDistance || null}
+                    cartItems={items.map((item) => ({ id: item.product.id, name: item.product.name, quantity: item.quantity, price: item.product.price }))}
                     onSelectDriver={setSelectedDriver}
                     selectedDriverId={selectedDriver?.id}
                   />
