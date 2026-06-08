@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
     }, { onConflict: "payment_id" }).select("*").single();
     if (error) return json({ error: error.message }, 500);
 
-    if (status === "success") await finalizePayment(admin, tx, payment_id);
+    if (status === "success" && !existing?.completed_at) await finalizePayment(admin, tx, payment_id);
     return json({ success: status === "success", status, transaction: tx });
   } catch (e) {
     console.error("moneroo-verify", e);
