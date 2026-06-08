@@ -43,8 +43,8 @@ const Cart = () => {
   const navigate = useNavigate();
   const { t, formatPrice } = useLanguage();
   const savedCheckoutForm = readSavedCheckoutForm();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { user, profile: contextProfile, isReady: authReady } = useProfile();
+  // profile is now from useProfile
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Billing
