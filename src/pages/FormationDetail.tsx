@@ -1,5 +1,6 @@
 import SEO from "@/components/SEO";
 import { useState, useEffect } from "react";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useParams, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -27,7 +28,8 @@ const FormationDetail = () => {
   const [overallProgress, setOverallProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user, isReady: authReady } = useProfile();
+  const userId = user?.id || null;
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [payInitiating, setPayInitiating] = useState(false);
@@ -57,27 +59,7 @@ const FormationDetail = () => {
       const modRes = await supabase.from("formation_modules" as any).select("*").eq("formation_id", formationId).order("sort_order", { ascending: true });
       setModules((modRes.data as any[]) || []);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUserId(session.user.id);
-        const { data: progData } = await supabase
-          .from("formation_progress" as any)
-          .select("module_id, completed")
-          .eq("user_id", session.user.id)
-          .eq("formation_id", formationId);
-
-        const rows = (progData as any[]) || [];
-        const progMap: Record<string, boolean> = {};
-        rows.forEach((p: any) => {
-          if (p.module_id) progMap[p.module_id] = p.completed;
-        });
-        setProgress(progMap);
-        setIsEnrolled(rows.length > 0);
-
-        const completedCount = Object.values(progMap).filter(Boolean).length;
-        const total = (modRes.data as any[])?.length || 1;
-        setOverallProgress(Math.round((completedCount / total) * 100));
-      }
+      if (userId) {
       setLoading(false);
     };
     load();

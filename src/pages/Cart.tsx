@@ -46,6 +46,8 @@ const Cart = () => {
   const savedCheckoutForm = readSavedCheckoutForm();
   const { user, profile: contextProfile, isReady: authReady } = useProfile();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  // Billing
   const [billing, setBilling] = useState({
     firstName: savedCheckoutForm?.billing?.firstName || "",
     lastName: savedCheckoutForm?.billing?.lastName || "",
@@ -54,6 +56,34 @@ const Cart = () => {
     company: savedCheckoutForm?.billing?.company || "",
     country: savedCheckoutForm?.billing?.country || "Togo",
   });
+
+  const filledRef = useRef(false);
+  const filledForUserIdRef = useRef<string | null>(null);
+  const hasSavedCheckoutFormRef = useRef(!!savedCheckoutForm);
+
+  const fillBillingFromUser = useCallback(async (sessionUser: any, userProfile: any) => {
+    setBilling(prev => ({ ...prev, email: prev.email || sessionUser.email || "" }));
+    if (userProfile) {
+      const nameParts = (userProfile.full_name || "").split(" ");
+      const { data: privateData } = await supabase.from("profile_private").select("phone").eq("user_id", sessionUser.id).maybeSingle();
+      const phone = privateData?.phone || "";
+      setBilling(prev => ({
+        ...prev,
+        firstName: prev.firstName || nameParts[0] || "",
+        lastName: prev.lastName || nameParts.slice(1).join(" ") || "",
+        phone: prev.phone || phone,
+      }));
+      if (userProfile.location && !hasSavedCheckoutFormRef.current) setDeliveryCity(userProfile.location);
+      if (phone && !hasSavedCheckoutFormRef.current) setMobileNumber(phone);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !user || filledRef.current) return;
+    filledRef.current = true;
+    filledForUserIdRef.current = user.id;
+    fillBillingFromUser(user, contextProfile);
+  }, [authReady, user, contextProfile, fillBillingFromUser]);
 
   // Delivery
   const [deliveryMethod, setDeliveryMethod] = useState(savedCheckoutForm?.deliveryMethod || "livreur");
