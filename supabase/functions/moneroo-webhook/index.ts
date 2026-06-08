@@ -75,12 +75,20 @@ async function finalizeCart(admin: any, tx: any, paymentId: string) {
         accepted_at: data.selectedDriverId ? new Date().toISOString() : null,
       }, { onConflict: "order_id" }).select("id").single();
       if (delivery?.id) {
-        await admin.from("delivery_messages").insert({
-          delivery_id: delivery.id,
-          sender_id: tx.user_id,
-          sender_role: "buyer",
-          content: `Commande payée. Adresse: ${dropoff || "à confirmer"}. Référence paiement: ${paymentId}`,
-        });
+        const { data: existingMessage } = await admin
+          .from("delivery_messages")
+          .select("id")
+          .eq("delivery_id", delivery.id)
+          .ilike("content", `%${paymentId}%`)
+          .maybeSingle();
+        if (!existingMessage) {
+          await admin.from("delivery_messages").insert({
+            delivery_id: delivery.id,
+            sender_id: tx.user_id,
+            sender_role: "buyer",
+            content: `Commande payée. Adresse: ${dropoff || "à confirmer"}. Référence paiement: ${paymentId}`,
+          });
+        }
       }
     }
   }
