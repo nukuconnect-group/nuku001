@@ -39,6 +39,13 @@ const cache: {
   hasData: boolean;
 } = { conversations: [], profileId: null, userId: null, hasData: false };
 
+const resetConversationCache = () => {
+  cache.conversations = [];
+  cache.profileId = null;
+  cache.userId = null;
+  cache.hasData = false;
+};
+
 export function useConversations() {
   const [conversations, setConversations] = useState<ConversationItem[]>(cache.conversations);
   const [loading, setLoading] = useState(!cache.hasData);
@@ -47,7 +54,20 @@ export function useConversations() {
 
   const fetchConversations = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setLoading(false); return; }
+    if (!session) {
+      resetConversationCache();
+      setConversations([]);
+      setProfileId(null);
+      setUserId(null);
+      setLoading(false);
+      return;
+    }
+
+    if (cache.userId && cache.userId !== session.user.id) {
+      resetConversationCache();
+      setConversations([]);
+      setProfileId(null);
+    }
 
     setUserId(session.user.id);
     cache.userId = session.user.id;

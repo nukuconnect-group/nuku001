@@ -174,6 +174,17 @@ const ProductDetail = () => {
           return;
         }
         sellerId = sellerProfile.id;
+      } else {
+        const { data: existingSeller } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", sellerId)
+          .maybeSingle();
+        if (!existingSeller) {
+          toast({ title: "Fournisseur introuvable", description: "Ce fournisseur n'est plus disponible pour la messagerie.", variant: "destructive" });
+          setIsSending(false);
+          return;
+        }
       }
 
       // Check if buyer is trying to message themselves
