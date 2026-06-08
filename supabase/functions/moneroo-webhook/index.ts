@@ -52,13 +52,14 @@ async function finalizeCart(admin: any, tx: any, paymentId: string) {
     await admin.from("orders").update({ status: "confirmed", notes: `${order.notes || ""} | Paiement Moneroo confirmé webhook: ${paymentId}` }).eq("id", order.id).in("status", ["pending", "confirmed"]);
     const seller = sellerMap.get(order.seller_id);
     if (seller?.user_id) {
-      await admin.from("wallet_movements").upsert({
+      const { error: walletErr } = await admin.from("wallet_movements").insert({
         user_id: seller.user_id,
         order_id: order.id,
         type: "credit",
         amount: Number(order.total_price || 0),
         description: `Vente confirmée Moneroo — commande ${order.id}`,
-      }, { onConflict: "order_id", ignoreDuplicates: true });
+      });
+      if (walletErr && walletErr.code !== "23505") throw walletErr;
     }
     if (deliveryMethod === "livreur") {
       const { data: delivery } = await admin.from("deliveries").upsert({

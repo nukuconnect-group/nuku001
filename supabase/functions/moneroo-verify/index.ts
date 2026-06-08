@@ -61,13 +61,14 @@ async function finalizeCartPayment(admin: any, tx: any, paymentId: string) {
 
     const seller = sellerMap.get(order.seller_id);
     if (seller?.user_id) {
-      await admin.from("wallet_movements").upsert({
+      const { error: walletErr } = await admin.from("wallet_movements").insert({
         user_id: seller.user_id,
         order_id: order.id,
         type: "credit",
         amount: Number(order.total_price || 0),
         description: `Vente confirmée Moneroo — commande ${order.id}`,
-      }, { onConflict: "order_id", ignoreDuplicates: true });
+      });
+      if (walletErr && walletErr.code !== "23505") throw walletErr;
 
       await admin.from("notifications").insert({
         user_id: seller.user_id,
