@@ -60,6 +60,24 @@ const FormationDetail = () => {
       setModules((modRes.data as any[]) || []);
 
       if (userId) {
+        const { data: progressRows } = await supabase
+          .from("formation_progress" as any)
+          .select("module_id, completed, progress_percent")
+          .eq("user_id", userId)
+          .eq("formation_id", formationId);
+        const moduleProgress: Record<string, boolean> = {};
+        let savedOverall = 0;
+        for (const row of ((progressRows as any[]) || [])) {
+          if (row.module_id) moduleProgress[row.module_id] = !!row.completed;
+          else savedOverall = Number(row.progress_percent || 0);
+        }
+        setIsEnrolled(((progressRows as any[]) || []).length > 0);
+        setProgress(moduleProgress);
+        const computedOverall = modRes.data?.length
+          ? Math.round((Object.values(moduleProgress).filter(Boolean).length / modRes.data.length) * 100)
+          : 0;
+        setOverallProgress(savedOverall || computedOverall);
+      }
       setLoading(false);
     };
     load();
