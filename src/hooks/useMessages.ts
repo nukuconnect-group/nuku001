@@ -5,6 +5,7 @@ import {
   queueOfflineRead,
   replayOfflineReads,
 } from "@/lib/messageReadEvents";
+import { toast } from "sonner";
 
 export interface MessageItem {
   id: string;
@@ -192,9 +193,15 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
   const sendMessage = useCallback(
     async (content: string, replyToId?: string) => {
-      if (!conversationId || !content.trim()) return;
-      if (isDeliveryConversation && !userId) return;
-      if (!isDeliveryConversation && !profileId) return;
+      if (!conversationId || !content.trim()) return false;
+      if (isDeliveryConversation && !userId) {
+        toast.error("Connexion requise", { description: "Votre session n'est pas encore prête. Réessayez dans un instant." });
+        return false;
+      }
+      if (!isDeliveryConversation && !profileId) {
+        toast.error("Profil introuvable", { description: "Rechargez la page ou reconnectez-vous si le problème persiste." });
+        return false;
+      }
 
       const tempId = `temp-${Date.now()}`;
       const optimistic: MessageItem = {
@@ -235,7 +242,8 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
       if (error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
-        return;
+        toast.error("Message non envoyé", { description: error.message || "La discussion n'a pas abouti." });
+        return false;
       }
 
       setMessages((prev) =>
@@ -285,6 +293,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
             } catch {}
           });
       }
+      return true;
     },
     [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
   );

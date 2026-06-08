@@ -40,6 +40,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const PAYGATE_API_KEY = Deno.env.get("PAYGATE_API_KEY") || "";
+    const PAYGATE_WEBHOOK_SECRET = Deno.env.get("PAYGATE_WEBHOOK_SECRET") || "";
 
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -68,7 +69,9 @@ serve(async (req) => {
 
     if (isCard) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const callbackUrl = `${supabaseUrl}/functions/v1/paygate-webhook`;
+      const callbackUrl = PAYGATE_WEBHOOK_SECRET
+        ? `${supabaseUrl}/functions/v1/paygate-webhook?token=${encodeURIComponent(PAYGATE_WEBHOOK_SECRET)}`
+        : `${supabaseUrl}/functions/v1/paygate-webhook`;
 
       const v2Body = new URLSearchParams();
       v2Body.append("auth_token", PAYGATE_API_KEY);
@@ -120,7 +123,9 @@ serve(async (req) => {
 
     // Mobile Money
     const supabaseUrlMm = Deno.env.get("SUPABASE_URL")!;
-    const callbackUrlMm = `${supabaseUrlMm}/functions/v1/paygate-webhook`;
+    const callbackUrlMm = PAYGATE_WEBHOOK_SECRET
+      ? `${supabaseUrlMm}/functions/v1/paygate-webhook?token=${encodeURIComponent(PAYGATE_WEBHOOK_SECRET)}`
+      : `${supabaseUrlMm}/functions/v1/paygate-webhook`;
 
     const body = new URLSearchParams();
     body.append("auth_token", PAYGATE_API_KEY);
@@ -150,6 +155,7 @@ serve(async (req) => {
       v2Body.append("amount", String(amount));
       v2Body.append("description", description);
       v2Body.append("identifier", identifier);
+      v2Body.append("callback_url", callbackUrlMm);
 
       const v2Resp = await fetch("https://paygateglobal.com/api/v2/page", {
         method: "POST",

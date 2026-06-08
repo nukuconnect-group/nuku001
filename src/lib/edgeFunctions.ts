@@ -29,7 +29,7 @@ export async function getFreshAuthSession(forceRefresh = false): Promise<Session
   }
 
   if (!session?.access_token) {
-    throw new Error("Session expirée. Veuillez vous reconnecter pour finaliser votre abonnement.");
+    throw new Error("Session en cours de restauration. Patientez quelques secondes puis réessayez, sans vous déconnecter.");
   }
 
   return session;
@@ -101,7 +101,7 @@ export async function invokeAuthenticatedFunction<T = unknown>(
       try {
         activeSession = await getFreshAuthSession(true);
       } catch (e) {
-        throw new Error("Session expirée. Veuillez vous reconnecter pour finaliser votre abonnement.");
+        throw new Error("Session en cours de restauration. Patientez quelques secondes puis réessayez, sans vous déconnecter.");
       }
     }
 
