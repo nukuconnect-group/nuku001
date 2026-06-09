@@ -12,10 +12,11 @@ const SmartLoader = () => {
   const [phase, setPhase] = useState<"hidden" | "loading" | "slow" | "stuck">("hidden");
 
   useEffect(() => {
-    // Pas d'écran de chargement avant 350ms : navigation instantanée perçue
-    const t0 = setTimeout(() => setPhase("loading"), 350);
-    const t1 = setTimeout(() => setPhase("slow"), 3000);
-    const t2 = setTimeout(() => setPhase("stuck"), 9000);
+    // Pas de loader avant 500ms : navigation instantanée perçue
+    const t0 = setTimeout(() => setPhase("loading"), 500);
+    // Seuils plus tolérants pour éviter les messages "trop long" intempestifs
+    const t1 = setTimeout(() => setPhase("slow"), 6000);
+    const t2 = setTimeout(() => setPhase("stuck"), 18000);
     return () => {
       clearTimeout(t0);
       clearTimeout(t1);
@@ -68,13 +69,17 @@ const SmartLoader = () => {
     );
   }
 
+  // Loader moderne centré au milieu de la page (plus de pastille en haut)
   return (
-    <div className="fixed inset-x-0 top-0 z-[9998] flex items-center justify-center pointer-events-none">
-      <div className="mt-3 px-3 py-1.5 rounded-full bg-card/95 border border-border shadow-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-        <span className="text-xs text-muted-foreground">
-          {phase === "slow" ? "Chargement plus long…" : "Chargement…"}
-        </span>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 animate-in fade-in duration-300">
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+          <Loader2 className="w-12 h-12 absolute inset-0 animate-spin text-primary" strokeWidth={1.5} />
+        </div>
+        {phase === "slow" && (
+          <span className="text-xs text-muted-foreground">Chargement en cours…</span>
+        )}
       </div>
     </div>
   );

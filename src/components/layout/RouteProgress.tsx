@@ -13,15 +13,14 @@ export const RouteProgress = () => {
 
   useEffect(() => {
     let cancelled = false;
+    // N'affiche la barre que si la navigation prend vraiment du temps (>600ms)
     const showTimer = setTimeout(() => {
       if (cancelled) return;
       setVisible(true);
-      setProgress(40);
-    }, 250);
+      setProgress(70);
+    }, 600);
 
-    const t1 = setTimeout(() => !cancelled && setProgress(70), 500);
-    const t2 = setTimeout(() => !cancelled && setProgress(92), 900);
-    const t3 = setTimeout(() => {
+    const t1 = setTimeout(() => {
       if (cancelled) return;
       setProgress(100);
       setTimeout(() => {
@@ -29,15 +28,13 @@ export const RouteProgress = () => {
           setVisible(false);
           setProgress(0);
         }
-      }, 180);
-    }, 1200);
+      }, 200);
+    }, 1100);
 
     return () => {
       cancelled = true;
       clearTimeout(showTimer);
       clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
     };
   }, [location.pathname]);
 
