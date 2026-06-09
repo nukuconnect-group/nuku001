@@ -120,7 +120,7 @@ const HeaderPromoSlider = () => {
   if (location.pathname !== "/") return null;
 
   return (
-    <div className="bg-background pt-2 sm:pt-3 md:pt-0 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
+    <div className="bg-background pt-2 sm:pt-0 pb-3 sm:pb-4 space-y-3 sm:space-y-0">
       {/* === MOBILE === */}
       <div className="sm:hidden px-3">
         <div className="relative overflow-hidden rounded-xl bg-foreground shadow-xl min-h-[260px]">
