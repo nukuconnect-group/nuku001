@@ -62,8 +62,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Moneroo only accepts scalar metadata values (string|number|boolean).
-    // Stringify any object/array values to keep the payload valid.
+    // Moneroo only accepts scalar metadata values (string|number|boolean)
+    // AND limits metadata to 10 items max. We flatten + cap to 9 essential keys.
     const rawMeta = (metadata && typeof metadata === "object") ? metadata : {};
     const flatMetadata: Record<string, string | number | boolean> = {};
     for (const [k, v] of Object.entries(rawMeta)) {
@@ -73,6 +73,21 @@ Deno.serve(async (req) => {
       } else {
         try { flatMetadata[k] = JSON.stringify(v); } catch { /* skip */ }
       }
+    }
+    // Priority keys kept first; everything else is stored only in our DB (context_data).
+    const PRIORITY_KEYS = [
+      "context", "order_id", "user_id", "plan_id", "plan", "formation_id",
+      "tokens", "items_count", "cart_id"
+    ];
+    const cappedMetadata: Record<string, string | number | boolean> = {};
+    for (const k of PRIORITY_KEYS) {
+      if (k in flatMetadata && Object.keys(cappedMetadata).length < 9) {
+        cappedMetadata[k] = flatMetadata[k];
+      }
+    }
+    for (const [k, v] of Object.entries(flatMetadata)) {
+      if (Object.keys(cappedMetadata).length >= 9) break;
+      if (!(k in cappedMetadata)) cappedMetadata[k] = v;
     }
 
     const monerooPayload = {
