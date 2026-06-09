@@ -72,11 +72,6 @@ const slides = [
   },
 ];
 
-const stats = [
-  { value: "10K+", label: "Producteurs", Icon: Users },
-  { value: "25K+", label: "Acheteurs", Icon: ShoppingBasket },
-  { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
-];
 
 const HeaderPromoSlider = () => {
   const [current, setCurrent] = useState(0);
