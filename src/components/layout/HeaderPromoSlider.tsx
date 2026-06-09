@@ -289,7 +289,7 @@ const HeaderPromoSlider = () => {
       </div>
 
       {/* Stats bar — mobile uniquement */}
-      <div className="md:hidden mx-auto px-3 max-w-6xl">
+      <div className="md:hidden mx-auto px-3 max-w-6xl mt-3">
         <div className="grid grid-cols-3 bg-card border border-border rounded-none shadow-sm overflow-hidden">
           {stats.map(({ value, label, Icon }) => (
             <div key={label} className="flex items-center justify-center gap-1.5 px-1.5 py-3 border-r border-border last:border-r-0 min-w-0">
