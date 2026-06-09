@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
           phone: String(customer?.phone || user.user_metadata?.phone || ""),
         };
       })(),
-      metadata: flatMetadata,
+      metadata: cappedMetadata,
     };
 
     const monerooRes = await fetch(
