@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
@@ -71,14 +72,14 @@ const slides = [
   },
 ];
 
-const stats = [
-  { value: "10K+", label: "Producteurs", Icon: Users },
-  { value: "25K+", label: "Acheteurs", Icon: ShoppingBasket },
-  { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
-];
 
 const HeaderPromoSlider = () => {
   const [current, setCurrent] = useState(0);
+  const [stats, setStats] = useState([
+    { value: "—", label: "Producteurs", Icon: Users },
+    { value: "—", label: "Acheteurs", Icon: ShoppingBasket },
+    { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
+  ]);
   const location = useLocation();
 
   const next = useCallback(() => setCurrent(c => (c + 1) % slides.length), []);
@@ -89,10 +90,37 @@ const HeaderPromoSlider = () => {
     return () => clearInterval(timer);
   }, [next]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const formatCount = (n: number) => {
+      if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "")}K+`;
+      if (n >= 100) return `${Math.floor(n / 10) * 10}+`;
+      return `${n}`;
+    };
+    (async () => {
+      try {
+        const [producersRes, buyersRes] = await Promise.all([
+          supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["producteur", "fournisseur", "producer", "supplier"]),
+          supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["acheteur", "buyer"]),
+        ]);
+        if (cancelled) return;
+        const producers = producersRes.count ?? 0;
+        const buyers = buyersRes.count ?? 0;
+        setStats([
+          { value: formatCount(producers), label: "Producteurs", Icon: Users },
+          { value: formatCount(buyers), label: "Acheteurs", Icon: ShoppingBasket },
+          { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
+        ]);
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+
   if (location.pathname !== "/") return null;
 
   return (
-    <div className="bg-background pt-2 sm:pt-3 md:pt-0 pb-3 sm:pb-5 space-y-3 sm:space-y-4">
+    <div className="bg-background pt-2 sm:pt-0 pb-3 sm:pb-4 space-y-3 sm:space-y-0">
       {/* === MOBILE === */}
       <div className="sm:hidden px-3">
         <div className="relative overflow-hidden rounded-xl bg-foreground shadow-xl min-h-[260px]">
@@ -116,29 +144,22 @@ const HeaderPromoSlider = () => {
                 {/* Left accent bar */}
                 <div className="absolute left-0 top-4 bottom-12 w-[3px] bg-accent" />
 
-                <div className="relative z-10 h-full flex flex-col justify-center px-4 py-5 pl-5 pr-14">
-                  <span className="inline-flex self-start items-center gap-1 text-accent text-[10px] font-extrabold uppercase tracking-[0.18em] mb-2">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    {slide.eyebrow}
-                  </span>
+                <div className="relative z-10 h-full flex flex-col justify-center px-4 py-5 pl-5 pr-4">
                   <span className="inline-flex self-start items-center bg-accent text-accent-foreground px-2 py-0.5 rounded-sm text-[10px] font-extrabold uppercase mb-2.5 shadow-sm">
                     {slide.pill}
                   </span>
-                  <h3 className="font-heading font-black leading-[1.05] text-[22px] text-white drop-shadow-lg">
+                  <h3 className="font-heading font-black leading-[1.05] text-[20px] text-white drop-shadow-lg line-clamp-2">
                     {slide.title}
                   </h3>
-                  <p className="text-white/95 text-[12px] mt-2 leading-snug line-clamp-2 max-w-[30ch] drop-shadow-md font-medium">
-                    {slide.subtitle}
-                  </p>
-                  <div className="flex gap-2 mt-3.5">
-                    <Link to={slide.cta.to}>
-                      <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground rounded-full px-3 py-1.5 text-[11px] font-bold shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex flex-wrap gap-2 mt-3.5">
+                    <Link to={slide.cta.to} className="flex-shrink-0">
+                      <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground rounded-full px-3 py-1.5 text-[11px] font-bold shadow-lg whitespace-nowrap">
                         {slide.cta.label}
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     </Link>
-                    <Link to={slide.secondary.to}>
-                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-sm border border-white/40 text-white rounded-full px-3 py-1.5 text-[11px] font-semibold">
+                    <Link to={slide.secondary.to} className="flex-shrink-0">
+                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-sm border border-white/40 text-white rounded-full px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap">
                         {slide.secondary.label}
                       </span>
                     </Link>
@@ -268,7 +289,7 @@ const HeaderPromoSlider = () => {
       </div>
 
       {/* Stats bar — mobile uniquement */}
-      <div className="md:hidden mx-auto px-3 max-w-6xl">
+      <div className="md:hidden mx-auto px-3 max-w-6xl mt-3">
         <div className="grid grid-cols-3 bg-card border border-border rounded-none shadow-sm overflow-hidden">
           {stats.map(({ value, label, Icon }) => (
             <div key={label} className="flex items-center justify-center gap-1.5 px-1.5 py-3 border-r border-border last:border-r-0 min-w-0">
