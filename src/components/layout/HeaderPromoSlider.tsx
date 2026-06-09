@@ -80,6 +80,11 @@ const stats = [
 
 const HeaderPromoSlider = () => {
   const [current, setCurrent] = useState(0);
+  const [stats, setStats] = useState([
+    { value: "—", label: "Producteurs", Icon: Users },
+    { value: "—", label: "Acheteurs", Icon: ShoppingBasket },
+    { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
+  ]);
   const location = useLocation();
 
   const next = useCallback(() => setCurrent(c => (c + 1) % slides.length), []);
@@ -89,6 +94,33 @@ const HeaderPromoSlider = () => {
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
   }, [next]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const formatCount = (n: number) => {
+      if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "")}K+`;
+      if (n >= 100) return `${Math.floor(n / 10) * 10}+`;
+      return `${n}`;
+    };
+    (async () => {
+      try {
+        const [producersRes, buyersRes] = await Promise.all([
+          supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["producteur", "fournisseur", "producer", "supplier"]),
+          supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["acheteur", "buyer"]),
+        ]);
+        if (cancelled) return;
+        const producers = producersRes.count ?? 0;
+        const buyers = buyersRes.count ?? 0;
+        setStats([
+          { value: formatCount(producers), label: "Producteurs", Icon: Users },
+          { value: formatCount(buyers), label: "Acheteurs", Icon: ShoppingBasket },
+          { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
+        ]);
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   if (location.pathname !== "/") return null;
 
