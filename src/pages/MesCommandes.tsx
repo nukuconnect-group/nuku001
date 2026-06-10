@@ -199,6 +199,22 @@ const MesCommandes = () => {
     }
   };
 
+  const handleRetryPayment = async (order: any) => {
+    try {
+      const { openMonerooPay } = await import("@/lib/moneroo");
+      await openMonerooPay({
+        amount: Number(order.total_price || 0),
+        description: `Relance commande #${String(order.id).slice(0, 8)}`,
+        context: "order_retry",
+        contextData: { order_id: order.id, product_id: order.product_id },
+        customer: { email: profile?.email || undefined, first_name: profile?.full_name || undefined },
+        onError: (msg) => toast.error("Impossible de relancer le paiement", { description: msg }),
+      });
+    } catch (e: any) {
+      toast.error("Erreur de relance", { description: e?.message });
+    }
+  };
+
   const handleInvoice = async (order: any) => {
     try {
       await generateInvoicePDF({ order, buyer: profile } as any);
