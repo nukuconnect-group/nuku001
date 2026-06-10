@@ -3230,6 +3230,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_conversation_participant: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
+      is_delivery_participant: {
+        Args: { _delivery_id: string }
+        Returns: boolean
+      }
       log_api_call: {
         Args: {
           p_api_key_id: string
