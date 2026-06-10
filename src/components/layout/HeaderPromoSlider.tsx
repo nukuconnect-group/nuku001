@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot, ArrowRight, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
@@ -8,8 +8,19 @@ import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.j
 import driverLogistics from "@/assets/header-slide-driver-logistics.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 import agriDrone from "@/assets/header-slide-agri-drone.jpg";
+import togoTopImpactAsset from "@/assets/togo-top-impact-2025.png.asset.json";
 
 const slides = [
+  {
+    eyebrow: "🏆 Togo Top Impact 2025",
+    pill: "Prix Innovation",
+    title: "NukuConnect élu Meilleure Innovation de l'année",
+    subtitle: "Récompensé par Togo Top Impact 2025 — 8ᵉ édition. Une reconnaissance qui célèbre l'innovation au service de l'agriculture africaine.",
+    cta: { label: "Lire l'article", to: "/blog/nukuconnect-meilleure-innovation-togo-top-impact-2025" },
+    secondary: { label: "Découvrir NukuConnect", to: "/about" },
+    Icon: Award,
+    image: togoTopImpactAsset.url,
+  },
   {
     eyebrow: "Marketplace agricole",
     pill: "Frais & local",

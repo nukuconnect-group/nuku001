@@ -37,6 +37,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
   paid: { label: "Payée", icon: CheckCircle2, color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   delivered: { label: "Livrée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
   completed: { label: "Terminée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
+  failed: { label: "Échouée", icon: XCircle, color: "bg-red-100 text-red-800 border-red-300" },
   cancelled: { label: "Annulée", icon: XCircle, color: "bg-red-100 text-red-800 border-red-300" },
 };
 
@@ -49,7 +50,7 @@ const DELIVERY_LABEL: Record<string, string> = {
   cancelled: "Annulée",
 };
 
-type FilterTab = "all" | "active" | "completed" | "cancelled";
+type FilterTab = "all" | "active" | "completed" | "failed" | "cancelled";
 type DeliveryFilter = "all" | "pending" | "in_transit" | "delivered";
 
 const matchesDeliveryFilter = (delivery: any, filter: DeliveryFilter) => {
@@ -119,15 +120,14 @@ const MesCommandes = () => {
     };
   }, [isReady, user, profile?.id, navigate]);
 
-  // Hide unpaid/failed orders: only show orders that were paid or whose payment is in progress with seller confirmation
+  // Show all orders (paid lifecycle, failed payments, cancelled). Failed orders need to be visible so user can retry payment.
   const visibleOrders = useMemo(() => {
     const PAID = ["confirmed", "processing", "shipped", "paid", "delivered", "completed"];
     return orders.filter((o) => {
-      // Always show paid lifecycle
       if (PAID.includes(o.status)) return true;
-      // Show cancelled only if it was once paid (seller had confirmed)
-      if (o.status === "cancelled" && o.seller_confirmed_at) return true;
-      // Hide pending/failed/never-paid orders
+      if (o.status === "failed") return true;
+      if (o.status === "cancelled") return true;
+      // Hide raw "pending" orders that never reached payment confirmation
       return false;
     });
   }, [orders]);
@@ -136,6 +136,7 @@ const MesCommandes = () => {
     return visibleOrders.filter((o) => {
       if (tab === "active" && !["pending", "confirmed", "processing", "shipped"].includes(o.status)) return false;
       if (tab === "completed" && !["completed", "delivered", "paid"].includes(o.status)) return false;
+      if (tab === "failed" && o.status !== "failed") return false;
       if (tab === "cancelled" && o.status !== "cancelled") return false;
       if (!matchesDeliveryFilter(o.deliveries?.[0], deliveryFilter)) return false;
       if (search) {
@@ -195,6 +196,22 @@ const MesCommandes = () => {
     } else {
       toast.success("Commande supprimée");
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    }
+  };
+
+  const handleRetryPayment = async (order: any) => {
+    try {
+      const { openMonerooPay } = await import("@/lib/moneroo");
+      await openMonerooPay({
+        amount: Number(order.total_price || 0),
+        description: `Relance commande #${String(order.id).slice(0, 8)}`,
+        context: "order_retry",
+        contextData: { order_id: order.id, product_id: order.product_id },
+        customer: { email: profile?.email || undefined, first_name: profile?.full_name || undefined },
+        onError: (msg) => toast.error("Impossible de relancer le paiement", { description: msg }),
+      });
+    } catch (e: any) {
+      toast.error("Erreur de relance", { description: e?.message });
     }
   };
 
@@ -452,11 +469,12 @@ const MesCommandes = () => {
               </Select>
             </div>
             <Tabs value={tab} onValueChange={(v) => setTab(v as FilterTab)}>
-              <TabsList className="grid grid-cols-4 w-full">
-                <TabsTrigger value="all">Toutes</TabsTrigger>
-                <TabsTrigger value="active">En cours</TabsTrigger>
-                <TabsTrigger value="completed">Terminées</TabsTrigger>
-                <TabsTrigger value="cancelled">Annulées</TabsTrigger>
+              <TabsList className="grid grid-cols-5 w-full">
+                <TabsTrigger value="all" className="text-[10px] sm:text-xs">Toutes</TabsTrigger>
+                <TabsTrigger value="active" className="text-[10px] sm:text-xs">En cours</TabsTrigger>
+                <TabsTrigger value="completed" className="text-[10px] sm:text-xs">Terminées</TabsTrigger>
+                <TabsTrigger value="failed" className="text-[10px] sm:text-xs">Échouées</TabsTrigger>
+                <TabsTrigger value="cancelled" className="text-[10px] sm:text-xs">Annulées</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -557,6 +575,11 @@ const MesCommandes = () => {
                             {delivery && (
                               <Button size="sm" variant="outline" asChild className="h-7 text-[11px]">
                                 <Link to="/suivi-livraison"><MapPin className="w-3 h-3 mr-1" />Suivre</Link>
+                              </Button>
+                            )}
+                            {o.status === "failed" && (
+                              <Button size="sm" variant="hero" onClick={() => handleRetryPayment(o)} className="h-7 text-[11px]">
+                                <Receipt className="w-3 h-3 mr-1" />Relancer le paiement
                               </Button>
                             )}
                             {o.status === "pending" && !o.seller_confirmed_at && (
