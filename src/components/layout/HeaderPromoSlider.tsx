@@ -35,7 +35,7 @@ const slides = [
     pill: "Flotte interne",
     title: "Vos commandes livrées par notre flotte interne",
     subtitle: "Livreurs vérifiés, suivi GPS en temps réel et tarifs transparents.",
-    cta: { label: "Suivre une livraison", to: "/suivi-livraison" },
+    cta: { label: "Suivre mes commandes", to: "/suivi-livraison" },
     secondary: { label: "Devenir livreur", to: "/devenir-vendeur" },
     Icon: Truck,
     image: driverLogistics,
