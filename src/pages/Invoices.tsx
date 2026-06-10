@@ -88,7 +88,7 @@ const Invoices = () => {
   const handleDownload = (order: any) => {
     try {
       const sellerName =
-        order.seller?.display_name || order.seller?.full_name || "Vendeur";
+        order.seller?.business_name || order.seller?.full_name || "Vendeur";
       const item = {
         product: {
           id: order.product_id,
