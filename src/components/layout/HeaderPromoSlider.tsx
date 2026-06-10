@@ -92,11 +92,9 @@ const HeaderPromoSlider = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const formatCount = (n: number) => {
-      if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "")}K+`;
-      if (n >= 100) return `${Math.floor(n / 10) * 10}+`;
-      return `${n}`;
-    };
+    const PRODUCERS_BASELINE = 2345;
+    const BUYERS_BASELINE = 4567;
+    const formatCount = (n: number) => new Intl.NumberFormat("fr-FR").format(n) + "+";
     (async () => {
       try {
         const [producersRes, buyersRes] = await Promise.all([
@@ -104,10 +102,10 @@ const HeaderPromoSlider = () => {
           supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["acheteur", "buyer"]),
         ]);
         if (cancelled) return;
-        const producers = producersRes.count ?? 0;
-        const buyers = buyersRes.count ?? 0;
+        const producers = Math.max(producersRes.count ?? 0, PRODUCERS_BASELINE);
+        const buyers = Math.max(buyersRes.count ?? 0, BUYERS_BASELINE);
         setStats([
-          { value: formatCount(producers), label: "Producteurs", Icon: Users },
+          { value: formatCount(producers), label: "Fournisseurs", Icon: Users },
           { value: formatCount(buyers), label: "Acheteurs", Icon: ShoppingBasket },
           { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
         ]);
