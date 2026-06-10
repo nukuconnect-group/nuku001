@@ -120,15 +120,14 @@ const MesCommandes = () => {
     };
   }, [isReady, user, profile?.id, navigate]);
 
-  // Hide unpaid/failed orders: only show orders that were paid or whose payment is in progress with seller confirmation
+  // Show all orders (paid lifecycle, failed payments, cancelled). Failed orders need to be visible so user can retry payment.
   const visibleOrders = useMemo(() => {
     const PAID = ["confirmed", "processing", "shipped", "paid", "delivered", "completed"];
     return orders.filter((o) => {
-      // Always show paid lifecycle
       if (PAID.includes(o.status)) return true;
-      // Show cancelled only if it was once paid (seller had confirmed)
-      if (o.status === "cancelled" && o.seller_confirmed_at) return true;
-      // Hide pending/failed/never-paid orders
+      if (o.status === "failed") return true;
+      if (o.status === "cancelled") return true;
+      // Hide raw "pending" orders that never reached payment confirmation
       return false;
     });
   }, [orders]);
@@ -137,6 +136,7 @@ const MesCommandes = () => {
     return visibleOrders.filter((o) => {
       if (tab === "active" && !["pending", "confirmed", "processing", "shipped"].includes(o.status)) return false;
       if (tab === "completed" && !["completed", "delivered", "paid"].includes(o.status)) return false;
+      if (tab === "failed" && o.status !== "failed") return false;
       if (tab === "cancelled" && o.status !== "cancelled") return false;
       if (!matchesDeliveryFilter(o.deliveries?.[0], deliveryFilter)) return false;
       if (search) {
