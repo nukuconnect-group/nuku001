@@ -577,6 +577,11 @@ const MesCommandes = () => {
                                 <Link to="/suivi-livraison"><MapPin className="w-3 h-3 mr-1" />Suivre</Link>
                               </Button>
                             )}
+                            {o.status === "failed" && (
+                              <Button size="sm" variant="hero" onClick={() => handleRetryPayment(o)} className="h-7 text-[11px]">
+                                <Receipt className="w-3 h-3 mr-1" />Relancer le paiement
+                              </Button>
+                            )}
                             {o.status === "pending" && !o.seller_confirmed_at && (
                               <Button size="sm" variant="outline" onClick={() => handleCancel(o.id)} className="h-7 text-[11px] text-orange-600 hover:text-orange-700">
                                 <Ban className="w-3 h-3 mr-1" />Annuler
