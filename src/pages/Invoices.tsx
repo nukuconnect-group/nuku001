@@ -51,10 +51,13 @@ const Invoices = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("orders")
-      .select("*, products(name, price, unit), seller:profiles!orders_seller_id_fkey(display_name, full_name)")
+      .select("*, products(name, price, unit), seller:profiles!orders_seller_id_fkey(full_name, business_name)")
       .eq("buyer_id", profile.id)
       .order("created_at", { ascending: false });
-    if (error) toast.error("Impossible de charger vos factures");
+    if (error) {
+      console.error("[invoices] load failed", error);
+      toast.error("Impossible de charger vos factures", { description: error.message });
+    }
     setOrders(data || []);
     setLoading(false);
   };
