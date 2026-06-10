@@ -37,6 +37,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
   paid: { label: "Payée", icon: CheckCircle2, color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   delivered: { label: "Livrée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
   completed: { label: "Terminée", icon: CheckCircle2, color: "bg-green-100 text-green-800 border-green-300" },
+  failed: { label: "Échouée", icon: XCircle, color: "bg-red-100 text-red-800 border-red-300" },
   cancelled: { label: "Annulée", icon: XCircle, color: "bg-red-100 text-red-800 border-red-300" },
 };
 
@@ -49,7 +50,7 @@ const DELIVERY_LABEL: Record<string, string> = {
   cancelled: "Annulée",
 };
 
-type FilterTab = "all" | "active" | "completed" | "cancelled";
+type FilterTab = "all" | "active" | "completed" | "failed" | "cancelled";
 type DeliveryFilter = "all" | "pending" | "in_transit" | "delivered";
 
 const matchesDeliveryFilter = (delivery: any, filter: DeliveryFilter) => {
