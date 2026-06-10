@@ -125,8 +125,36 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBuyNow = () => {
-    if (product) {
+  const handleBuyNow = async () => {
+    if (!product) return;
+    // Direct purchase: skip cart and open Moneroo checkout immediately
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Connexion requise", description: "Connectez-vous pour acheter ce produit", variant: "destructive" });
+      navigate(`/auth?returnTo=${encodeURIComponent(`/produit/${id}`)}`);
+      return;
+    }
+    const amount = Number(product.price) * Number(quantity || 1);
+    try {
+      const { openMonerooPay } = await import("@/lib/moneroo");
+      const ok = await openMonerooPay({
+        amount,
+        description: `Achat: ${product.name} x${quantity}`,
+        context: "direct_buy",
+        contextData: {
+          product_id: product.id,
+          quantity,
+          seller_id: product.producer.id,
+        },
+        customer: { email: session.user.email || undefined },
+        onError: (msg) => toast({ title: "Paiement impossible", description: msg, variant: "destructive" }),
+      });
+      if (!ok) {
+        // Fallback to cart flow if Moneroo init fails
+        addItem(product, quantity);
+        navigate("/panier");
+      }
+    } catch {
       addItem(product, quantity);
       navigate("/panier");
     }
