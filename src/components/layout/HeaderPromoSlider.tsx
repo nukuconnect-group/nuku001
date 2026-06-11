@@ -139,7 +139,7 @@ const HeaderPromoSlider = () => {
     <div className="bg-background pt-2 sm:pt-0 pb-3 sm:pb-4 space-y-3 sm:space-y-0">
       {/* === MOBILE === */}
       <div className="sm:hidden px-3">
-        <div className="relative overflow-hidden rounded-xl bg-foreground shadow-xl min-h-[260px]">
+        <div className="relative overflow-hidden rounded-none bg-foreground shadow-lg min-h-[210px]">
           <div className="absolute inset-0">
             {slides.map((slide, i) => (
               <div
