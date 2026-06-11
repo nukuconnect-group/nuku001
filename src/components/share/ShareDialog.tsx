@@ -20,9 +20,23 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
   const [dataUrl, setDataUrl] = useState<string>("");
 
   useEffect(() => {
-    if (!open || !canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, url, { width: 220, margin: 1 }).catch(() => {});
-    QRCode.toDataURL(url, { width: 512, margin: 2 }).then(setDataUrl).catch(() => {});
+    if (!open) return;
+    // Délai pour s'assurer que le canvas est monté dans le DOM après ouverture du dialog
+    const t = setTimeout(() => {
+      if (!canvasRef.current) return;
+      QRCode.toCanvas(canvasRef.current, url, {
+        width: 220,
+        margin: 2,
+        color: { dark: "#0f172a", light: "#ffffff" },
+        errorCorrectionLevel: "M",
+      }).catch((e) => console.error("QR generation error:", e));
+      QRCode.toDataURL(url, {
+        width: 512,
+        margin: 2,
+        color: { dark: "#0f172a", light: "#ffffff" },
+      }).then(setDataUrl).catch(() => {});
+    }, 50);
+    return () => clearTimeout(t);
   }, [open, url]);
 
   const copy = async () => {
