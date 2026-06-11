@@ -131,16 +131,24 @@ const BecomeSeller = () => {
       <SEO url="/devenir-fournisseur" title="Devenir Fournisseur" description="Rejoignez NUKUCONNECT et vendez vos produits agricoles à des milliers d'acheteurs. Inscription gratuite et rapide." />
       <Header />
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-5xl">
-        <div className="mb-6">
-          <Badge variant="secondary" className="mb-3 gap-1.5">
-            <Store className="w-3.5 h-3.5" /> Parcours fournisseur
-          </Badge>
-          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Devenir fournisseur et choisir votre pack
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            Complétez vos informations, choisissez votre pack d'adhésion puis activez votre compte vendeur.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground p-5 sm:p-8 mb-6 shadow-elevated">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_20%,white,transparent_60%)]" />
+          <div className="relative z-10 max-w-2xl">
+            <Badge variant="secondary" className="mb-3 gap-1.5 bg-primary-foreground/15 text-primary-foreground border-primary-foreground/30 backdrop-blur-sm">
+              <Store className="w-3.5 h-3.5" /> Parcours fournisseur
+            </Badge>
+            <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black mb-2 leading-tight">
+              Vendez vos produits agricoles partout en Afrique
+            </h1>
+            <p className="text-sm sm:text-base text-primary-foreground/90 max-w-xl">
+              Activez votre boutique en quelques minutes : profil, pack d'adhésion, mise en ligne. Paiements sécurisés, livraison interne, badge vérifié.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-4 text-xs sm:text-sm">
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Inscription gratuite</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Badge vérifié (Pro/Business)</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Paiements Moneroo</span>
+            </div>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6">
