@@ -53,7 +53,7 @@ const Index = () => {
       <Header />
       <main className="space-y-0">
         <div className="md:hidden">
-          <HelpAICard />
+          <SellProductsCard />
           <RecentPublications />
         </div>
         <SolutionsSection />
@@ -66,7 +66,7 @@ const Index = () => {
         <VerifiedSuppliersBar />
         <FeaturedProducts />
         <div className="md:hidden">
-          <SellProductsCard />
+          <HelpAICard />
         </div>
         <HomeDemandsSection />
         <FeaturesSection />

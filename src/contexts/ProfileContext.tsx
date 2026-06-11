@@ -124,6 +124,29 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
+  // Retry claim_referral on every successful auth (covers email confirmation, mobile, faible connexion)
+  useEffect(() => {
+    if (!user?.id) return;
+    const savedRef = typeof window !== "undefined" ? localStorage.getItem("nukuconnect-ref") : null;
+    if (!savedRef) return;
+    supabase.rpc("claim_referral", { p_referral_code: savedRef })
+      .then(({ data, error }) => {
+        if (!error) {
+          localStorage.removeItem("nukuconnect-ref");
+          console.log("[Referral] Claimed on login:", savedRef, data);
+        } else if (
+          error.message?.includes("already used") ||
+          error.message?.includes("Cannot claim your own") ||
+          error.message?.includes("not found")
+        ) {
+          // Stable errors: drop the code so we don't retry forever
+          localStorage.removeItem("nukuconnect-ref");
+        } else {
+          console.warn("[Referral] Claim retry failed (will retry next session):", error.message);
+        }
+      });
+  }, [user?.id]);
+
   return (
     <ProfileContext.Provider value={{ user, profile, isLoading, isReady, refreshProfile, updateProfile }}>
       {children}

@@ -230,6 +230,14 @@ const ProducerProfile = () => {
 
   const isLoading = loadingProducer || loadingProducts;
 
+  // CRITICAL: tous les hooks doivent être appelés AVANT les retours conditionnels (Rules of Hooks)
+  const { data: geocoded, isLoading: geocoding } = useGeocodeLocation(producer?.location || "");
+  const profileCoords: [number, number] | null = producer && (producer as any).lat && (producer as any).lng
+    ? [(producer as any).lat, (producer as any).lng]
+    : null;
+  const coords: [number, number] | null = profileCoords || geocoded || null;
+  const rating = avgRating || 0;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -255,14 +263,6 @@ const ProducerProfile = () => {
       </div>
     );
   }
-
-  const rating = avgRating || 0;
-  // Coordonnées réelles : priorité au lat/lng du profil, puis geocoding live, sinon rien (carte masquée)
-  const { data: geocoded, isLoading: geocoding } = useGeocodeLocation(producer.location);
-  const profileCoords: [number, number] | null = (producer as any).lat && (producer as any).lng
-    ? [(producer as any).lat, (producer as any).lng]
-    : null;
-  const coords: [number, number] | null = profileCoords || geocoded || null;
 
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
