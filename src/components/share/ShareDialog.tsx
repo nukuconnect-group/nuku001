@@ -71,7 +71,7 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex flex-col items-center gap-2">
-            <canvas ref={canvasRef} className="rounded-lg border bg-white p-2" />
+            <canvas ref={canvasRef} width={220} height={220} className="rounded-lg border bg-white p-2" style={{ display: "block" }} />
             <Button variant="outline" size="sm" onClick={downloadQR} className="gap-1.5">
               <Download className="w-3.5 h-3.5" /> Télécharger le QR
             </Button>
