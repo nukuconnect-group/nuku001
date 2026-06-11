@@ -473,9 +473,10 @@ const MesCommandes = () => {
               </Select>
             </div>
             <Tabs value={tab} onValueChange={(v) => setTab(v as FilterTab)}>
-              <TabsList className="grid grid-cols-5 w-full">
+              <TabsList className="grid grid-cols-6 w-full">
                 <TabsTrigger value="all" className="text-[10px] sm:text-xs">Toutes</TabsTrigger>
                 <TabsTrigger value="active" className="text-[10px] sm:text-xs">En cours</TabsTrigger>
+                <TabsTrigger value="confirmed" className="text-[10px] sm:text-xs">Confirmées</TabsTrigger>
                 <TabsTrigger value="completed" className="text-[10px] sm:text-xs">Terminées</TabsTrigger>
                 <TabsTrigger value="failed" className="text-[10px] sm:text-xs">Échouées</TabsTrigger>
                 <TabsTrigger value="cancelled" className="text-[10px] sm:text-xs">Annulées</TabsTrigger>
