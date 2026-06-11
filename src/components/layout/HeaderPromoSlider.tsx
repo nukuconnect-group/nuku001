@@ -87,8 +87,8 @@ const slides = [
 const HeaderPromoSlider = () => {
   const [current, setCurrent] = useState(0);
   const [stats, setStats] = useState([
-    { value: "2 345+", label: "Fournisseurs", Icon: Users },
-    { value: "4 567+", label: "Acheteurs", Icon: ShoppingBasket },
+    { value: "2,3 k+", label: "Fournisseurs", Icon: Users },
+    { value: "4,5 k+", label: "Acheteurs", Icon: ShoppingBasket },
     { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
   ]);
   const location = useLocation();
