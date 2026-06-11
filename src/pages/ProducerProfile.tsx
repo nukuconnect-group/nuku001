@@ -231,7 +231,7 @@ const ProducerProfile = () => {
   const isLoading = loadingProducer || loadingProducts;
 
   // CRITICAL: tous les hooks doivent être appelés AVANT les retours conditionnels (Rules of Hooks)
-  const { data: geocoded } = useGeocodeLocation(producer?.location || "");
+  const { data: geocoded, isLoading: geocoding } = useGeocodeLocation(producer?.location || "");
   const profileCoords: [number, number] | null = producer && (producer as any).lat && (producer as any).lng
     ? [(producer as any).lat, (producer as any).lng]
     : null;
