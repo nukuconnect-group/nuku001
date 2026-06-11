@@ -50,7 +50,7 @@ const DELIVERY_LABEL: Record<string, string> = {
   cancelled: "Annulée",
 };
 
-type FilterTab = "all" | "active" | "completed" | "failed" | "cancelled";
+type FilterTab = "all" | "active" | "confirmed" | "completed" | "failed" | "cancelled";
 type DeliveryFilter = "all" | "pending" | "in_transit" | "delivered";
 
 const matchesDeliveryFilter = (delivery: any, filter: DeliveryFilter) => {
