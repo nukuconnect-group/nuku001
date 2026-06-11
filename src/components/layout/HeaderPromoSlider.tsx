@@ -105,7 +105,14 @@ const HeaderPromoSlider = () => {
     let cancelled = false;
     const PRODUCERS_BASELINE = 2345;
     const BUYERS_BASELINE = 4567;
-    const formatCount = (n: number) => new Intl.NumberFormat("fr-FR").format(n) + "+";
+    const formatCount = (n: number) => {
+      if (n >= 1000) {
+        const k = n / 1000;
+        const rounded = k >= 10 ? Math.round(k) : Math.round(k * 10) / 10;
+        return new Intl.NumberFormat("fr-FR").format(rounded) + " k+";
+      }
+      return new Intl.NumberFormat("fr-FR").format(n) + "+";
+    };
     (async () => {
       try {
         const [producersRes, buyersRes] = await Promise.all([
