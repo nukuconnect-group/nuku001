@@ -134,8 +134,12 @@ const MesCommandes = () => {
 
   const filtered = useMemo(() => {
     return visibleOrders.filter((o) => {
-      if (tab === "active" && !["pending", "confirmed", "processing", "shipped"].includes(o.status)) return false;
-      if (tab === "completed" && !["completed", "delivered", "paid"].includes(o.status)) return false;
+      // En cours = paiement en attente / préparation / expédition (avant confirmation finale)
+      if (tab === "active" && !["pending", "processing", "shipped"].includes(o.status)) return false;
+      // Confirmées = paiement validé / vendeur a confirmé (en attente de livraison)
+      if (tab === "confirmed" && !["confirmed", "paid"].includes(o.status)) return false;
+      // Terminées = livrées / complétées
+      if (tab === "completed" && !["completed", "delivered"].includes(o.status)) return false;
       if (tab === "failed" && o.status !== "failed") return false;
       if (tab === "cancelled" && o.status !== "cancelled") return false;
       if (!matchesDeliveryFilter(o.deliveries?.[0], deliveryFilter)) return false;
@@ -153,8 +157,8 @@ const MesCommandes = () => {
     return {
       count: visibleOrders.length,
       total,
-      pending: visibleOrders.filter((o) => ["pending", "confirmed", "processing", "shipped"].includes(o.status)).length,
-      completed: visibleOrders.filter((o) => ["completed", "delivered", "paid"].includes(o.status)).length,
+      pending: visibleOrders.filter((o) => ["pending", "processing", "shipped"].includes(o.status)).length,
+      completed: visibleOrders.filter((o) => ["completed", "delivered", "paid", "confirmed"].includes(o.status)).length,
     };
   }, [visibleOrders]);
 
