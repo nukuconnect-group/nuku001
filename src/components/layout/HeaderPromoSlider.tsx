@@ -87,8 +87,8 @@ const slides = [
 const HeaderPromoSlider = () => {
   const [current, setCurrent] = useState(0);
   const [stats, setStats] = useState([
-    { value: "2 345+", label: "Fournisseurs", Icon: Users },
-    { value: "4 567+", label: "Acheteurs", Icon: ShoppingBasket },
+    { value: "2,3 k+", label: "Fournisseurs", Icon: Users },
+    { value: "4,5 k+", label: "Acheteurs", Icon: ShoppingBasket },
     { value: "100%", label: "Traçabilité", Icon: ShieldCheck },
   ]);
   const location = useLocation();
@@ -105,7 +105,14 @@ const HeaderPromoSlider = () => {
     let cancelled = false;
     const PRODUCERS_BASELINE = 2345;
     const BUYERS_BASELINE = 4567;
-    const formatCount = (n: number) => new Intl.NumberFormat("fr-FR").format(n) + "+";
+    const formatCount = (n: number) => {
+      if (n >= 1000) {
+        const k = n / 1000;
+        const rounded = k >= 10 ? Math.round(k) : Math.round(k * 10) / 10;
+        return new Intl.NumberFormat("fr-FR").format(rounded) + " k+";
+      }
+      return new Intl.NumberFormat("fr-FR").format(n) + "+";
+    };
     (async () => {
       try {
         const [producersRes, buyersRes] = await Promise.all([
@@ -132,7 +139,7 @@ const HeaderPromoSlider = () => {
     <div className="bg-background pt-2 sm:pt-0 pb-3 sm:pb-4 space-y-3 sm:space-y-0">
       {/* === MOBILE === */}
       <div className="sm:hidden px-3">
-        <div className="relative overflow-hidden rounded-xl bg-foreground shadow-xl min-h-[260px]">
+        <div className="relative overflow-hidden rounded-none bg-foreground shadow-lg min-h-[210px]">
           <div className="absolute inset-0">
             {slides.map((slide, i) => (
               <div
