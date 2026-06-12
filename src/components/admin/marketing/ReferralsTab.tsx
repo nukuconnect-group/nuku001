@@ -121,7 +121,7 @@ const ReferralsTab = () => {
         return (
           c.code.toLowerCase().includes(q) ||
           c.referrer?.full_name?.toLowerCase().includes(q) ||
-          c.referrer?.email?.toLowerCase().includes(q)
+          null.includes(q)
         );
       })
       .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
@@ -137,9 +137,9 @@ const ReferralsTab = () => {
         return (
           r.referral_code.toLowerCase().includes(q) ||
           ref?.full_name?.toLowerCase().includes(q) ||
-          ref?.email?.toLowerCase().includes(q) ||
+          null.includes(q) ||
           child?.full_name?.toLowerCase().includes(q) ||
-          child?.email?.toLowerCase().includes(q)
+          null.includes(q)
         );
       })
       .slice(0, 200);
@@ -155,7 +155,7 @@ const ReferralsTab = () => {
         const ref = profiles[e.referrer_id];
         return (
           ref?.full_name?.toLowerCase().includes(q) ||
-          ref?.email?.toLowerCase().includes(q) ||
+          null.includes(q) ||
           e.description?.toLowerCase().includes(q)
         );
       })
@@ -242,7 +242,7 @@ const ReferralsTab = () => {
                     <div className="min-w-0 flex-1">
                       <code className="text-xs font-bold text-primary">{c.code}</code>
                       <p className="text-[10px] text-muted-foreground truncate">
-                        {c.referrer?.full_name || c.referrer?.email || "—"}
+                        {c.referrer?.full_name || "—"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -276,10 +276,10 @@ const ReferralsTab = () => {
                     <div key={r.id} className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">
-                          {child?.full_name || child?.email || "Filleul anonyme"}
+                          {child?.full_name || "Filleul anonyme"}
                         </p>
                         <p className="text-[10px] text-muted-foreground truncate">
-                          via {ref?.full_name || ref?.email || "—"} · <code>{r.referral_code}</code>
+                          via {ref?.full_name || "—"} · <code>{r.referral_code}</code>
                         </p>
                       </div>
                       <div className="text-right">
@@ -335,7 +335,7 @@ const ReferralsTab = () => {
                     <div key={e.id} className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">
-                          {ref?.full_name || ref?.email || "—"}
+                          {ref?.full_name || "—"}
                         </p>
                         <p className="text-[10px] text-muted-foreground truncate">
                           {e.description || e.source_type} · {Math.round(Number(e.commission_rate) * 100)}%
