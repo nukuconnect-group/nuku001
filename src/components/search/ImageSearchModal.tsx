@@ -40,6 +40,16 @@ export default function ImageSearchModal({ open, onClose, onSearch }: Props) {
       setError("Image trop volumineuse (max 10 Mo)");
       return;
     }
+    // iPhone livre parfois des HEIC que Gemini ne sait pas lire : on prévient.
+    const mt = (file.type || "").toLowerCase();
+    if (mt.includes("heic") || mt.includes("heif") || /\.(heic|heif)$/i.test(file.name)) {
+      setError("Format HEIC non supporté. Activez « Plus compatible » dans Réglages > Appareil photo > Formats, puis reprenez la photo.");
+      return;
+    }
+    if (file.type && !file.type.startsWith("image/")) {
+      setError("Fichier non reconnu. Choisissez une image (JPG ou PNG).");
+      return;
+    }
     const url = URL.createObjectURL(file);
     setImageUrl(url);
     setImageFile(file);

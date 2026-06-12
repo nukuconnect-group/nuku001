@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
   Tag, Send, FileText, Plus, Trash2, Loader2, Copy, CheckCircle,
-  Mail, Users, Percent, DollarSign, Calendar, Eye, BarChart3
+  Mail, Users, Percent, DollarSign, Calendar, Eye, BarChart3, Gift
 } from "lucide-react";
+import ReferralsTab from "./marketing/ReferralsTab";
 
 /* ─── PROMO CODES TAB ─── */
 const PromoCodesTab = () => {
@@ -336,12 +337,14 @@ const MarketingManager = () => {
         <h2 className="font-heading text-base font-bold">Marketing</h2>
       </div>
       <Tabs defaultValue="promos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="promos" className="text-xs gap-1"><Percent className="w-3 h-3" />Codes promo</TabsTrigger>
-          <TabsTrigger value="campaigns" className="text-xs gap-1"><Mail className="w-3 h-3" />Campagnes email</TabsTrigger>
+          <TabsTrigger value="campaigns" className="text-xs gap-1"><Mail className="w-3 h-3" />Campagnes</TabsTrigger>
+          <TabsTrigger value="referrals" className="text-xs gap-1"><Gift className="w-3 h-3" />Parrainage</TabsTrigger>
         </TabsList>
         <TabsContent value="promos"><PromoCodesTab /></TabsContent>
         <TabsContent value="campaigns"><CampaignsTab /></TabsContent>
+        <TabsContent value="referrals"><ReferralsTab /></TabsContent>
       </Tabs>
     </div>
   );

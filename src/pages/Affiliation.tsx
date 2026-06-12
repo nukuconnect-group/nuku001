@@ -13,10 +13,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Copy, Users, TrendingUp, Wallet, Share2, Gift, ShieldCheck, ArrowRight, CheckCircle, Loader2, Link as LinkIcon } from "lucide-react";
 
-const COMMISSION_RATES = {
+export const COMMISSION_RATES = {
   subscription: 0.10, // 10% on paid subscriptions
   purchase: 0.02, // 2% on purchases
 };
+
+export function buildReferralLink(origin: string, code: string): string {
+  return `${origin}/auth?ref=${encodeURIComponent(code)}`;
+}
 
 const Affiliation = () => {
   const { profile, user } = useProfile();
@@ -30,7 +34,7 @@ const Affiliation = () => {
 
   const referralLink = useMemo(() => {
     if (!referralCode) return "";
-    return `${window.location.origin}/auth?ref=${referralCode}`;
+    return buildReferralLink(window.location.origin, referralCode);
   }, [referralCode]);
 
   useEffect(() => {

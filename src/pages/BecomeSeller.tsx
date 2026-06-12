@@ -15,7 +15,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { activateMembership, type MembershipPlanId } from "@/lib/subscriptionFlow";
 import { CheckCircle2, Crown, Loader2, ShieldCheck, Store, Truck } from "lucide-react";
 
-const sellerPlans = [
+export const sellerPlans = [
   {
     id: "free" as MembershipPlanId,
     name: "Pack Gratuit",
