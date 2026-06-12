@@ -30,7 +30,6 @@ interface Earning {
 interface ProfileLite {
   id: string;
   full_name: string | null;
-  email: string | null;
 }
 
 const fmtFcfa = (n: number) =>
@@ -69,7 +68,7 @@ const ReferralsTab = () => {
     if (userIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id, full_name, email")
+        .select("id, full_name")
         .in("id", userIds);
       const map: Record<string, ProfileLite> = {};
       (profs as ProfileLite[] | null)?.forEach((p) => (map[p.id] = p));
