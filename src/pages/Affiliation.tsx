@@ -34,7 +34,7 @@ const Affiliation = () => {
 
   const referralLink = useMemo(() => {
     if (!referralCode) return "";
-    return `${window.location.origin}/auth?ref=${referralCode}`;
+    return buildReferralLink(window.location.origin, referralCode);
   }, [referralCode]);
 
   useEffect(() => {
