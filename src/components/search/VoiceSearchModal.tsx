@@ -35,9 +35,30 @@ export default function VoiceSearchModal({ open, onClose, onResult }: Props) {
     setError("");
     setTranscript("");
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    // Contexte non sécurisé (HTTP) : iOS Safari et Chrome bloquent le micro
+    if (typeof window !== "undefined" && window.isSecureContext === false) {
+      setError("Le micro nécessite une connexion sécurisée (HTTPS). Saisissez votre recherche au clavier.");
+      return;
+    }
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    // iOS Safari < 14.5 et la plupart des navigateurs in-app (Instagram, Facebook, TikTok)
+    // n'exposent pas l'API Web Speech : on bascule vers la saisie texte.
     if (!SpeechRecognition) {
-      setError("La recherche vocale n'est pas supportée sur ce navigateur.");
+      const ua = navigator.userAgent || "";
+      const isIosSafari = /iP(hone|ad|od)/.test(ua) && /Safari/.test(ua) && !/CriOS|FxiOS/.test(ua);
+      setError(
+        isIosSafari
+          ? "Safari iOS ne prend pas en charge la recherche vocale. Tapez votre recherche dans la barre."
+          : "Recherche vocale non supportée par ce navigateur. Essayez Chrome ou Edge, ou tapez votre recherche."
+      );
+      return;
+    }
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setError("Le micro n'est pas accessible sur cet appareil. Tapez votre recherche au clavier.");
       return;
     }
 
@@ -45,7 +66,8 @@ export default function VoiceSearchModal({ open, onClose, onResult }: Props) {
       // Get mic stream for volume visualization
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const audioCtx = new AudioContext();
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioCtx();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
@@ -79,9 +101,13 @@ export default function VoiceSearchModal({ open, onClose, onResult }: Props) {
 
       recognition.onerror = (e: any) => {
         if (e.error === "no-speech") {
-          setError("Aucune voix détectée. Réessayez.");
+          setError("Aucune voix détectée. Réessayez en parlant plus fort.");
+        } else if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          setError("Accès au micro refusé. Autorisez le micro dans les réglages du navigateur puis réessayez.");
+        } else if (e.error === "network") {
+          setError("Connexion internet requise pour la reconnaissance vocale.");
         } else {
-          setError("Erreur de reconnaissance vocale.");
+          setError("Erreur de reconnaissance vocale. Tapez votre recherche au clavier.");
         }
         stopListening();
       };
@@ -93,8 +119,17 @@ export default function VoiceSearchModal({ open, onClose, onResult }: Props) {
       recognition.start();
       recognitionRef.current = recognition;
       setIsListening(true);
-    } catch {
-      setError("Impossible d'accéder au microphone. Vérifiez les permissions.");
+    } catch (err: any) {
+      const name = err?.name || "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setError("Accès au micro refusé. Ouvrez les réglages Safari/Chrome et activez « Microphone » pour ce site.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setError("Aucun micro détecté sur cet appareil.");
+      } else if (name === "NotReadableError") {
+        setError("Le micro est utilisé par une autre application. Fermez-la puis réessayez.");
+      } else {
+        setError("Impossible d'accéder au micro. Vérifiez les permissions du navigateur.");
+      }
     }
   }, [stopListening]);
 
