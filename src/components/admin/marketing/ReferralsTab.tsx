@@ -120,8 +120,7 @@ const ReferralsTab = () => {
         if (!q) return true;
         return (
           c.code.toLowerCase().includes(q) ||
-          c.referrer?.full_name?.toLowerCase().includes(q) ||
-          null.includes(q)
+          !!c.referrer?.full_name?.toLowerCase().includes(q)
         );
       })
       .sort((a, b) => b.lastAt.localeCompare(a.lastAt));
@@ -136,10 +135,8 @@ const ReferralsTab = () => {
         const child = r.referred_user_id ? profiles[r.referred_user_id] : undefined;
         return (
           r.referral_code.toLowerCase().includes(q) ||
-          ref?.full_name?.toLowerCase().includes(q) ||
-          null.includes(q) ||
-          child?.full_name?.toLowerCase().includes(q) ||
-          null.includes(q)
+          !!ref?.full_name?.toLowerCase().includes(q) ||
+          !!child?.full_name?.toLowerCase().includes(q)
         );
       })
       .slice(0, 200);
@@ -154,9 +151,8 @@ const ReferralsTab = () => {
         if (!q) return true;
         const ref = profiles[e.referrer_id];
         return (
-          ref?.full_name?.toLowerCase().includes(q) ||
-          null.includes(q) ||
-          e.description?.toLowerCase().includes(q)
+          !!ref?.full_name?.toLowerCase().includes(q) ||
+          !!e.description?.toLowerCase().includes(q)
         );
       })
       .slice(0, 200);

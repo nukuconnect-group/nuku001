@@ -762,7 +762,7 @@ const Header = () => {
               <div className="flex items-center gap-0.5 flex-1 min-w-0">
                 {navLinks.slice(0, 7).map((link) => (
                   <Link key={link.href + link.label} to={link.href}
-                    className={`px-2.5 py-1.5 text-xs font-medium transition-all duration-200 rounded-md whitespace-nowrap flex-shrink-0 ${
+                    className={`px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all duration-200 rounded-md whitespace-nowrap flex-shrink-0 ${
                       isActive(link.href) ? "bg-primary/10 text-primary shadow-sm" : "text-foreground hover:bg-muted hover:text-primary"
                     }`}>
                     {link.label}
@@ -779,7 +779,7 @@ const Header = () => {
                       <div className="grid grid-cols-2 gap-1">
                         {navLinks.slice(7).map((link) => (
                           <DropdownMenuItem key={link.href + link.label} asChild className="cursor-pointer">
-                            <Link to={link.href} className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted text-xs font-medium">
+                            <Link to={link.href} className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted text-xs font-semibold uppercase tracking-wide">
                               <ChevronRight className="w-3 h-3 text-muted-foreground" />
                               {link.label}
                             </Link>
