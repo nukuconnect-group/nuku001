@@ -1,61 +1,67 @@
-# Plan global — corrections NukuConnect (un seul lot)
+# Plan — Passe 6 (multi-chantiers)
 
-Vu l'ampleur (13 chantiers, ~40 fichiers, 2 migrations DB, 1 image AI, 1 edge function), je regroupe par domaine et livre en parallèle. Voici exactement ce qui sera fait — confirme et je lance.
+La demande regroupe ~8 chantiers indépendants. Je propose de les livrer en deux vagues pour éviter les régressions massives (la dernière refonte Réseaux est un gros morceau et doit être validée séparément).
 
-## A. Achat & Paiement (CRITIQUE)
-- **Achat direct sans panier** : `ProductDetail.tsx` — bouton « Acheter » déclenche directement `openMonerooPay()` avec l'item courant, sans passer par le panier. Fallback : ajout au panier puis checkout si l'utilisateur préfère.
-- **Confirmation de commande responsive** : `PaymentCallback.tsx` — refonte mobile, boutons « Facture » / « Refaire la commande » en `flex-wrap`, icônes `shrink-0`, padding adapté.
-- **Factures** : `Invoices.tsx` — corriger requête (joindre `orders` + `profiles` côté authentifié), supprimer message d'erreur générique, fallback skeleton.
+## Vague A — Correctifs critiques (livrés en premier, 1 réponse)
 
-## B. Commandes (Acheteur / Fournisseur / Admin)
-- Onglets Tabs : **Toutes / En cours / Terminées / Échouées / Annulées** dans `MesCommandes.tsx`, `Dashboard.tsx` (vendeur), `AdminDashboard.tsx`.
-- Filtrage automatique par `status` (`pending|processing|shipped|delivered|failed|cancelled`).
-- Bouton **« Relancer le paiement »** sur les commandes `failed` → réutilise `openMonerooPay` avec l'`order_id` existant.
-- **Renommer** « Suivre mes livraisons » → « Suivre mes commandes » partout (sidebar, MobileBottomNav, routes labels).
+1. **Header desktop en MAJUSCULES**
+   - `Header.tsx` : ajouter `uppercase tracking-wide` sur les liens du menu desktop uniquement (mobile inchangé).
 
-## C. Header Slider & stats
-- **Nouvelle slide Togo Top Impact 2025** : image éditée via `imagegen--edit_image` (recadrage 16:9, overlay), CTA → `/blog/nukuconnect-meilleure-innovation-togo-top-impact-2025`.
-- **Nouvelle slide Livraison internationale** : image cargo générée, texte « Livraisons rapides à l'international ».
-- **Slide 3 (conducteur moto)** : régénérer via `imagegen--edit_image` pour retirer le téléphone et placer les deux mains sur le guidon.
-- **Stats mobile** : 2 345 Fournisseurs / 4 567 Acheteurs en **minimum garanti** (`Math.max(real, baseline)`) — appliqué dans `HeaderPromoSlider`, `Producers.tsx` (Réseaux), `TrustNetworkSection` (page accueil).
-- **Blog post Togo Top Impact** : utiliser la nouvelle image comme thumbnail de carte (table `blog_posts` ou data statique selon l'implémentation).
+2. **"Suivre livraison" → "Suivre la commande"**
+   - Renommer le label dans `Header.tsx`, `MobileBottomNav.tsx`, sidebar dashboard et traductions (`LanguageContext`).
 
-## D. Réseaux & profils fournisseurs
-- **Layout cassé profil fournisseur** : auditer `ProducerProfile.tsx` — supprimer composant fautif (probablement un fallback erreur), garantir layout cohérent.
-- **Avatars harmonisés** : même composant `<Avatar>` / mêmes dimensions entre `SellerCard` et `ProducerProfile`.
-- **Partage profil (OG)** : `ProducerProfile.tsx` — `<Helmet>` avec `og:image = shopImage`, `og:title = "Découvrez ma boutique sur NukuConnect"`, `og:description` personnalisé.
-- **QR Code** : composant `ShareDialog` — afficher QR (lib `qrcode.react` déjà ou à ajouter) pointant vers `producerShopUrl()`.
+3. **IA modération produits — accepter tout l'agricole + aquaculture**
+   - `supabase/functions/moderate-content/index.ts` : élargir le prompt Gemini pour accepter :
+     - Agriculture (cultures, élevage, intrants, semences, outils, matériel agricole)
+     - Aquaculture (poissons, aquariums, alevins, équipement piscicole, aliments aquacoles)
+     - Agroalimentaire transformé, apiculture, horticulture, sylviculture
+   - Rejeter explicitement : BTP, formation (gérée ailleurs), électronique grand public, mode, etc.
+   - Tester avec "aquarium" → doit passer.
 
-## E. Marketplace — prix promo
-- `ProductCard.tsx` + `ProductDetail.tsx` : si `promo_price && promo_price < price` → afficher prix barré, prix promo, badge `-XX%`. Vérifier mapping DB (`promo_price` / `discount_price`).
+4. **Email confirmation commande + reçu ne fonctionne pas**
+   - Audit `order-confirmation` edge function + déclencheur dans `moneroo-webhook` / `Cart` checkout.
+   - Vérifier `email_send_log` pour les derniers achats afin de localiser l'échec (template manquant, run_id, suppression).
+   - Corriger le template `order-confirmation.tsx` ou le déclenchement pour qu'il s'enqueue après paiement validé.
 
-## F. Rôles utilisateurs
-- Bug Acheteur ↔ Apprenant : `useResolvedUserType.ts` + redirection post-login — vérifier la priorité (`user_type` de `profiles` doit primer sur l'enrôlement formation).
-- Migration corrective si `profiles.user_type` est NULL pour des acheteurs existants.
+5. **Marketplace — prix barré systématique si promo (2 prix)**
+   - Audit composants d'affichage prix : `ProductCard`, `PriceTiersDisplay`, `EffectivePriceCalculator`, `SimilarProducts`, page `ProductDetail`, `Marketplace`, `Index` (sections featured).
+   - Règle unique : si `original_price > price` OU si le produit a un `price_tiers` avec prix < base → afficher `<span class="line-through text-muted-foreground">{originalPrice}</span> <span class="text-destructive font-bold">{price}</span>` + badge `-XX%`.
+   - Factoriser dans un helper `<PriceDisplay />` réutilisé partout.
 
-## G. Devenir Fournisseur
-- Refonte `BecomeSeller.tsx` inspirée image 2 (hero + texte fort, avantages, commissions, CTA).
-- Processus de migration : update `profiles.user_type = 'fournisseur'` + redirection dashboard vendeur. Vérifier la fonction RPC ou edge function `update-subscription` / direct update.
+6. **Parrainage — compteurs et gains ne remontent pas**
+   - Audit `Affiliation.tsx`, `AffiliationStatus.tsx`, hook de stats, table `referrals` + `referral_earnings`.
+   - Vérifier la jointure (filleuls activés vs en attente) et que le trigger d'activation insère bien dans `referral_earnings`.
+   - Corriger la query côté client pour afficher : nb filleuls, nb activés, gains validés, gains en attente.
 
-## H. Parrainage / Affiliation
-- Vérifier flux `?ref=CODE` : `Auth.tsx` (capture cookie) → `referrals` (insert à l'inscription) → `referral_earnings` (insert à l'achat/abonnement).
-- Page `AffiliationStatus.tsx` : afficher filleuls / inscriptions validées / commissions / gains cumulés (query `referrals` + `referral_earnings`).
-- Audit de la formule 10% sub / 3% achat (déjà en mémoire).
+7. **Stats producteurs/fournisseurs (desktop)**
+   - Aligner les chiffres affichés dans la section "Producteurs/Fournisseurs" du Header desktop avec les stats du slide promo (mêmes valeurs : ex. 3 567 / 3 567 ou valeurs réelles si dispo). Pas de duplication divergente.
 
-## I. Admin — Recherches
-- `AdminDashboard.tsx` section recherche : query `search_queries` du jour, top mots-clés (group by `query`), graphique simple (Recharts).
+## Vague B — Refonte module Réseaux (livrée après validation Vague A)
 
-## J. Migrations DB nécessaires
-1. Backfill `profiles.user_type` pour acheteurs mal classés en apprenants.
-2. Vérifier index sur `search_queries(created_at, query)` pour les stats admin.
+Refonte de `src/pages/Producers.tsx` en conservant l'existant :
 
-## Fichiers touchés (estimation)
-~35 fichiers : ProductDetail, ProductCard, MesCommandes, Dashboard, AdminDashboard, Invoices, PaymentCallback, HeaderPromoSlider, BecomeSeller, ProducerProfile, ShareDialog, AffiliationStatus, Auth, useResolvedUserType, MobileBottomNav, Sidebar/menu, Producers, TrustNetworkSection, BlogPost + 2 migrations + 3 images générées.
+- **Header stats** : "3 567 Fournisseurs · 3 567 Producteurs" (gros chiffres animés).
+- **Carrousels horizontaux** (Embla Carousel déjà installé) :
+  - Profils recommandés (IA matching)
+  - Fournisseurs populaires (tri followers)
+  - Producteurs populaires
+  - Nouveaux membres (created_at desc)
+  - Profils vérifiés (is_verified)
+  - Récemment actifs (user_presence.last_seen)
+- **Card enrichie** : photo, nom, activité, localisation, badge vérifié, "Voir profil", "Contacter", "Suivre", compteur abonnés/produits/ventes.
+- **Filtres avancés** : secteur, pays, région, produits/services (Select multi).
+- **Section Opportunités** : feed des demandes (`demands` table) avec CTA "Publier un besoin".
+- **Carte géographique** : Leaflet (déjà utilisé) avec markers profils géolocalisés.
+- **Badges multi-types** : Producteur/Fournisseur/Consultant/Acheteur vérifié.
+- Animations Framer Motion (fade-in cards, hover scale).
 
-## Limites assumées (pour tenir en un lot)
-- **QR code** : composant standard, pas de personnalisation logo.
-- **Stats admin recherche** : tableau + top 10, sans graphique temporel avancé.
-- **Page BecomeSeller** : refonte inspirée image 2 (composition, ton) mais avec photo agricole africaine pertinente (pas la photo Amazon).
-- **Test e2e du paiement** : je vérifie le code + logs de l'edge function, mais le test live dépend du compte Moneroo.
+> Note : "publications courtes / actualités / notation profils / appels" sont des chantiers profonds (nouvelles tables, RLS, UI) → je propose de les **scoper en passe 7** plutôt que les bâcler ici. À confirmer.
 
-Confirme « Go » et je lance toutes les modifications en parallèle dans la foulée.
+## Ordre d'exécution proposé
+
+1. ✅ Réponse à ce plan
+2. Vague A (1 réponse, ~7 fichiers + 1 edge function + 1 audit DB)
+3. Vous validez → Vague B (refonte Réseaux, ~3-4 nouveaux composants)
+4. Vous validez → Passe 7 (publications/notation/appels si souhaité)
+
+**Confirmez-vous ce découpage ?** Ou voulez-vous tout en une seule réponse (risque élevé de régressions et de réponse trop longue) ?
