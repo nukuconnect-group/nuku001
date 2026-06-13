@@ -103,7 +103,8 @@ const HeaderPromoSlider = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const PRODUCERS_BASELINE = 2345;
+    // Aligné sur VerifiedSuppliersBar : 5 000 mini producteurs + 5 000 mini fournisseurs = 10 000+ acteurs.
+    const PRODUCERS_BASELINE = 10000;
     const BUYERS_BASELINE = 4567;
     const formatCount = (n: number) => {
       if (n >= 1000) {
