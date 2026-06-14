@@ -150,6 +150,8 @@ async function finalizeCart(admin: any, tx: any, paymentId: string) {
     }
   }
   await admin.from("notifications").insert({ user_id: tx.user_id, type: "order", title: "✅ Paiement confirmé", description: "Commande finalisée, vendeur crédité et livraison activée." });
+  // Send confirmation email (fire-and-forget, errors logged but don't break webhook)
+  await sendOrderConfirmationEmail(admin, tx, orders || [], data, paymentId);
 }
 
 Deno.serve(async (req) => {
