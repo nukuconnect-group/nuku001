@@ -1,67 +1,94 @@
-# Plan — Passe 6 (multi-chantiers)
+# Passe 6 — Plan complet
 
-La demande regroupe ~8 chantiers indépendants. Je propose de les livrer en deux vagues pour éviter les régressions massives (la dernière refonte Réseaux est un gros morceau et doit être validée séparément).
+Découpage en deux vagues pour livrer vite et tester progressivement.
 
-## Vague A — Correctifs critiques (livrés en premier, 1 réponse)
+## Vague A — 4 chantiers critiques (priorité absolue)
 
-1. **Header desktop en MAJUSCULES**
-   - `Header.tsx` : ajouter `uppercase tracking-wide` sur les liens du menu desktop uniquement (mobile inchangé).
+### A1. Refonte module Réseaux
+- Conserver structure et fonctionnalités existantes (profils Suppliers, Follow, filtres actuels)
+- Header animé avec compteurs (Fournisseurs / Producteurs / Acheteurs vérifiés)
+- Carrousels horizontaux Embla (Recommandés, Populaires, Nouveaux, Vérifiés, Récemment actifs)
+- Cartes enrichies : photo, nom, activité, localisation, badge vérifié, compteurs (abonnés, produits), boutons Voir / Contacter / Suivre
+- Filtres avancés (secteur, pays, région) — multi-select
+- Section "Opportunités" (feed depuis `demands`)
+- Carte géographique Leaflet des acteurs
+- Animations Framer Motion subtiles
 
-2. **"Suivre livraison" → "Suivre la commande"**
-   - Renommer le label dans `Header.tsx`, `MobileBottomNav.tsx`, sidebar dashboard et traductions (`LanguageContext`).
+### A2. Email de confirmation de commande
+- Auditer `moneroo-webhook` : vérifier l'invocation de `order-confirmation` après `payment.success`
+- Vérifier template `order-confirmation` registré dans `TEMPLATES`
+- Ajouter logs détaillés dans `email_send_log`
+- Déclencher aussi à la création de commande COD si paiement à la livraison
+- Email au vendeur (`new-order-seller`) en parallèle
 
-3. **IA modération produits — accepter tout l'agricole + aquaculture**
-   - `supabase/functions/moderate-content/index.ts` : élargir le prompt Gemini pour accepter :
-     - Agriculture (cultures, élevage, intrants, semences, outils, matériel agricole)
-     - Aquaculture (poissons, aquariums, alevins, équipement piscicole, aliments aquacoles)
-     - Agroalimentaire transformé, apiculture, horticulture, sylviculture
-   - Rejeter explicitement : BTP, formation (gérée ailleurs), électronique grand public, mode, etc.
-   - Tester avec "aquarium" → doit passer.
+### A3. Parrainage — compteurs et gains
+- Auditer le flow `claim_referral` : le `localStorage` est perdu pendant confirmation email
+- Solution : stocker le `ref` dans `user_metadata` au moment du signup (persistant)
+- À la confirmation, trigger DB lit `user_metadata.referral_code` et crée la ligne `referrals`
+- Vérifier jointure `referrals` ↔ `referral_earnings` ↔ `profiles` sur `Affiliation.tsx` et `AffiliationStatus.tsx`
+- Corriger l'agrégation des gains (validés vs en attente)
 
-4. **Email confirmation commande + reçu ne fonctionne pas**
-   - Audit `order-confirmation` edge function + déclencheur dans `moneroo-webhook` / `Cart` checkout.
-   - Vérifier `email_send_log` pour les derniers achats afin de localiser l'échec (template manquant, run_id, suppression).
-   - Corriger le template `order-confirmation.tsx` ou le déclenchement pour qu'il s'enqueue après paiement validé.
+### A4. Prix barré marketplace (promo)
+- Créer composant `<PriceDisplay />` réutilisable
+- Règle unique : si `original_price > price` OU `price_tiers` contient un prix < base → afficher
+  `<span class="line-through text-muted-foreground">original</span> <span class="text-destructive font-bold">price</span>` + badge `-XX%`
+- Appliquer dans : `ProductCard`, `ProductDetail`, `SimilarProducts`, `Marketplace`, `Favorites`, `Cart`
 
-5. **Marketplace — prix barré systématique si promo (2 prix)**
-   - Audit composants d'affichage prix : `ProductCard`, `PriceTiersDisplay`, `EffectivePriceCalculator`, `SimilarProducts`, page `ProductDetail`, `Marketplace`, `Index` (sections featured).
-   - Règle unique : si `original_price > price` OU si le produit a un `price_tiers` avec prix < base → afficher `<span class="line-through text-muted-foreground">{originalPrice}</span> <span class="text-destructive font-bold">{price}</span>` + badge `-XX%`.
-   - Factoriser dans un helper `<PriceDisplay />` réutilisé partout.
+## Vague B — Correctifs dysfonctionnements
 
-6. **Parrainage — compteurs et gains ne remontent pas**
-   - Audit `Affiliation.tsx`, `AffiliationStatus.tsx`, hook de stats, table `referrals` + `referral_earnings`.
-   - Vérifier la jointure (filleuls activés vs en attente) et que le trigger d'activation insère bien dans `referral_earnings`.
-   - Corriger la query côté client pour afficher : nb filleuls, nb activés, gains validés, gains en attente.
+### B1. Messagerie : statut lu + compteur + suppression
+- Auditer `useMessages` et `messageReadEvents` : le mark-as-read ne propage pas
+- Forcer `UPDATE messages SET is_read=true WHERE conversation_id=X AND sender_id<>auth.uid()` à l'ouverture
+- Invalider la query React Query du compteur immédiatement après
+- Vérifier que le realtime listener décrémente bien
+- Corriger la suppression : vérifier RLS DELETE policy sur `messages` et l'appel UI
 
-7. **Stats producteurs/fournisseurs (desktop)**
-   - Aligner les chiffres affichés dans la section "Producteurs/Fournisseurs" du Header desktop avec les stats du slide promo (mêmes valeurs : ex. 3 567 / 3 567 ou valeurs réelles si dispo). Pas de duplication divergente.
+### B2. Notifications : statut lu + compteur
+- Idem : `UPDATE notifications SET is_read=true WHERE id=X AND user_id=auth.uid()` au clic
+- Invalider la query du compteur
+- Vérifier le badge `NotificationBell` en realtime
 
-## Vague B — Refonte module Réseaux (livrée après validation Vague A)
+### B3. Modification produit — données vides
+- Bug : le formulaire d'édition charge seulement l'image
+- Corriger le composant d'édition pour pré-remplir TOUS les champs depuis `products` (titre, description, prix, quantité, catégorie, localisation, unité, price_tiers, etc.)
+- Vérifier que l'UPDATE renvoie bien les données et invalide les caches
 
-Refonte de `src/pages/Producers.tsx` en conservant l'existant :
+### B4. Rôle utilisateur — redirection "Mon Compte"
+- Bug : certains Acheteurs voient un dashboard d'un autre rôle
+- Auditer `ProfileContext` + `useResolvedUserType` + les guards de routes
+- S'assurer que `profile.user_type` prime toujours sur les heuristiques (driver_profiles, etc.)
+- Corriger la redirection dans Header "Mon Compte" pour pointer vers la bonne route selon `user_type`
 
-- **Header stats** : "3 567 Fournisseurs · 3 567 Producteurs" (gros chiffres animés).
-- **Carrousels horizontaux** (Embla Carousel déjà installé) :
-  - Profils recommandés (IA matching)
-  - Fournisseurs populaires (tri followers)
-  - Producteurs populaires
-  - Nouveaux membres (created_at desc)
-  - Profils vérifiés (is_verified)
-  - Récemment actifs (user_presence.last_seen)
-- **Card enrichie** : photo, nom, activité, localisation, badge vérifié, "Voir profil", "Contacter", "Suivre", compteur abonnés/produits/ventes.
-- **Filtres avancés** : secteur, pays, région, produits/services (Select multi).
-- **Section Opportunités** : feed des demandes (`demands` table) avec CTA "Publier un besoin".
-- **Carte géographique** : Leaflet (déjà utilisé) avec markers profils géolocalisés.
-- **Badges multi-types** : Producteur/Fournisseur/Consultant/Acheteur vérifié.
-- Animations Framer Motion (fade-in cards, hover scale).
+### B5. Vérification générale web + mobile
+- Tests manuels sur les 4 modules corrigés
+- Vérifier realtime sur compteurs (messages, notifications)
+- Vérifier RLS sur products UPDATE
+- Pas d'écrans blancs
 
-> Note : "publications courtes / actualités / notation profils / appels" sont des chantiers profonds (nouvelles tables, RLS, UI) → je propose de les **scoper en passe 7** plutôt que les bâcler ici. À confirmer.
+## Ordre d'exécution
+1. **Vague A** (A1 → A4) en une réponse longue
+2. **Vague B** (B1 → B5) en une seconde réponse
 
-## Ordre d'exécution proposé
+## Détails techniques
 
-1. ✅ Réponse à ce plan
-2. Vague A (1 réponse, ~7 fichiers + 1 edge function + 1 audit DB)
-3. Vous validez → Vague B (refonte Réseaux, ~3-4 nouveaux composants)
-4. Vous validez → Passe 7 (publications/notation/appels si souhaité)
+**A2 — webhook flow :**
+```
+moneroo-webhook → on payment.success
+  → UPDATE orders SET status='paid'
+  → supabase.functions.invoke('order-confirmation', { orderId })
+  → supabase.functions.invoke('send-transactional-email', { templateName:'new-order-seller', ... })
+```
 
-**Confirmez-vous ce découpage ?** Ou voulez-vous tout en une seule réponse (risque élevé de régressions et de réponse trop longue) ?
+**A3 — referral via user_metadata :**
+```ts
+// Auth.tsx signUp
+options: { data: { referral_code: localStorage.getItem('nuku_ref') } }
+// trigger handle_new_user lit raw_user_meta_data->>'referral_code'
+```
+
+**B1/B2 — invalidation immédiate :**
+```ts
+queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+```
+
+Confirmez et j'enchaîne Vague A immédiatement.

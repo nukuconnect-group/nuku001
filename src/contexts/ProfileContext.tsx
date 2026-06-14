@@ -125,14 +125,21 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.id]);
 
   // Retry claim_referral on every successful auth (covers email confirmation, mobile, faible connexion)
+  // Reads from BOTH localStorage AND user_metadata.referral_code (survives email confirmation in new tabs)
   useEffect(() => {
     if (!user?.id) return;
-    const savedRef = typeof window !== "undefined" ? localStorage.getItem("nukuconnect-ref") : null;
+    const fromStorage = typeof window !== "undefined" ? localStorage.getItem("nukuconnect-ref") : null;
+    const fromMetadata = user.user_metadata?.referral_code || null;
+    const savedRef = fromStorage || fromMetadata;
     if (!savedRef) return;
     supabase.rpc("claim_referral", { p_referral_code: savedRef })
       .then(({ data, error }) => {
         if (!error) {
-          localStorage.removeItem("nukuconnect-ref");
+          if (fromStorage) localStorage.removeItem("nukuconnect-ref");
+          // Clear metadata flag so we don't retry on every login
+          if (fromMetadata) {
+            supabase.auth.updateUser({ data: { referral_code: null } }).catch(() => {});
+          }
           console.log("[Referral] Claimed on login:", savedRef, data);
         } else if (
           error.message?.includes("already used") ||
@@ -140,12 +147,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           error.message?.includes("not found")
         ) {
           // Stable errors: drop the code so we don't retry forever
-          localStorage.removeItem("nukuconnect-ref");
+          if (fromStorage) localStorage.removeItem("nukuconnect-ref");
+          if (fromMetadata) supabase.auth.updateUser({ data: { referral_code: null } }).catch(() => {});
         } else {
           console.warn("[Referral] Claim retry failed (will retry next session):", error.message);
         }
       });
-  }, [user?.id]);
+  }, [user?.id, user?.user_metadata?.referral_code]);
 
   return (
     <ProfileContext.Provider value={{ user, profile, isLoading, isReady, refreshProfile, updateProfile }}>
