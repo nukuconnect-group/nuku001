@@ -33,6 +33,63 @@ const getOrderIds = (data: Record<string, unknown>): string[] => {
   return [];
 };
 
+async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], data: any, paymentId: string) {
+  try {
+    // Get buyer info
+    const { data: buyer } = await admin.auth.admin.getUserById(tx.user_id);
+    const buyerEmail = buyer?.user?.email;
+    if (!buyerEmail) {
+      console.warn("[email] No buyer email for tx", paymentId);
+      return;
+    }
+    const { data: buyerProfile } = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("user_id", tx.user_id)
+      .maybeSingle();
+
+    // Load order items + product/seller names
+    const orderIds = orders.map((o: any) => o.id);
+    const { data: items } = await admin
+      .from("orders")
+      .select("id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(full_name)")
+      .in("id", orderIds);
+
+    const orderItems = (items || []).map((o: any) => ({
+      name: o.products?.name || "Produit",
+      quantity: Number(o.quantity || 1),
+      unitPrice: Number(o.unit_price || 0),
+      unit: o.products?.unit || "unité",
+      sellerName: o.profiles?.full_name || "Vendeur",
+    }));
+
+    const subtotal = orderItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const total = orders.reduce((s: number, o: any) => s + Number(o.total_price || 0), 0);
+    const deliveryPrice = Number(data.deliveryPrice || 0);
+
+    const { error: emailErr } = await admin.functions.invoke("order-confirmation", {
+      body: {
+        buyerEmail,
+        buyerName: buyerProfile?.full_name || buyerEmail.split("@")[0],
+        orderItems,
+        subtotal,
+        deliveryPrice,
+        total,
+        deliveryMethod: String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place",
+        paymentMethod: "Moneroo",
+        deliveryCity: data.deliveryCity || undefined,
+        deliveryAddress: data.deliveryAddress || undefined,
+        invoiceNumber: `INV-${paymentId.slice(0, 10).toUpperCase()}`,
+        orderDate: new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+      },
+    });
+    if (emailErr) console.error("[email] order-confirmation failed:", emailErr);
+    else console.log("[email] order-confirmation sent to", buyerEmail);
+  } catch (e) {
+    console.error("[email] sendOrderConfirmationEmail error:", e);
+  }
+}
+
 async function finalizeCart(admin: any, tx: any, paymentId: string) {
   const data = tx.context_data || {};
   const orderIds = getOrderIds(data);
