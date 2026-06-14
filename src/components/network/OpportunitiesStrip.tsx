@@ -16,7 +16,7 @@ export default function OpportunitiesStrip() {
     queryFn: async () => {
       const { data } = await supabase
         .from("demands")
-        .select("id, title, category, location, quantity, unit, budget_max, created_at")
+        .select("id, title, category, location, quantity, unit, budget, created_at")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(8);
@@ -68,9 +68,9 @@ export default function OpportunitiesStrip() {
                       <Badge variant="outline" className="text-[9px] text-accent border-accent/40 bg-accent/5">
                         {d.category}
                       </Badge>
-                      {d.budget_max && (
+                      {d.budget && (
                         <span className="text-[10px] font-bold text-primary whitespace-nowrap">
-                          ≤ {formatPrice(Number(d.budget_max))}
+                          ≤ {formatPrice(Number(d.budget))}
                         </span>
                       )}
                     </div>
