@@ -3,27 +3,24 @@ import { useState, useMemo } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, MapPin, ShieldCheck, MessageCircle,
-  Users, Package, Loader2, SlidersHorizontal, UserPlus, UserCheck, TrendingUp, User
+  Search, MapPin, Users, Package, Loader2, SlidersHorizontal,
+  ShieldCheck, Flame, Sparkles, Star,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useFollows } from "@/hooks/useFollows";
-import { useProfile } from "@/contexts/ProfileContext";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
 import networkHeroImg from "@/assets/network-hero.jpg";
-import defaultAvatar from "@/assets/default-producer-avatar.png";
-import LocationBadge from "@/components/profile/LocationBadge";
+import ProducerCard, { type ProducerLite } from "@/components/network/ProducerCard";
+import NetworkCarousel from "@/components/network/NetworkCarousel";
+import NetworkHeroStats from "@/components/network/NetworkHeroStats";
+import OpportunitiesStrip from "@/components/network/OpportunitiesStrip";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -39,16 +36,13 @@ const sortOptions = [
 ];
 
 const Producers = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { t } = useLanguage();
-  const { user, profile: myProfile } = useProfile();
-  const { isFollowing, toggleFollow, isPending } = useFollows();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("Tous les pays");
   const [sortBy, setSortBy] = useState("recent");
 
-  const { data: producers = [], isLoading } = useQuery({
+  // Suppliers/Producers list (existing)
+  const { data: producers = [], isLoading } = useQuery<ProducerLite[]>({
     queryKey: ["network-profiles-suppliers"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
@@ -66,29 +60,26 @@ const Producers = () => {
       ]);
 
       const productCounts: Record<string, number> = {};
-      (productsRes.data || []).forEach((p) => {
+      (productsRes.data || []).forEach((p: any) => {
         productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
       });
-
       const followerCounts: Record<string, number> = {};
-      (followsRes.data || []).forEach((f) => {
+      (followsRes.data || []).forEach((f: any) => {
         followerCounts[f.following_id] = (followerCounts[f.following_id] || 0) + 1;
       });
-
       const salesCounts: Record<string, number> = {};
-      (ordersRes.data || []).forEach((o) => {
+      (ordersRes.data || []).forEach((o: any) => {
         salesCounts[o.seller_id] = (salesCounts[o.seller_id] || 0) + 1;
       });
 
-      return profiles.map((p) => ({
+      return profiles.map((p: any) => ({
         id: p.id,
         user_id: p.user_id,
-        // Affiche en priorité le nom d'entreprise (style Alibaba), sinon nom complet, sinon fallback
         name: p.business_name?.trim() || p.full_name?.trim() || t("net.suppliers"),
         avatar: p.avatar_url,
         cover: p.cover_url || p.cover_images?.[0] || null,
         location: p.location || "",
-        verified: p.is_verified,
+        verified: !!p.is_verified,
         products: productCounts[p.id] || 0,
         sales: salesCounts[p.id] || 0,
         bio: p.bio || "",
@@ -98,6 +89,32 @@ const Producers = () => {
     },
     staleTime: 1000 * 60 * 2,
   });
+
+  // Hero stats — counts across the platform
+  const { data: heroStats } = useQuery({
+    queryKey: ["network-hero-stats"],
+    queryFn: async () => {
+      const [suppliersRes, producersRes, buyersRes, verifiedRes] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "producer"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["producer", "trainer"]),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "buyer"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_verified", true),
+      ]);
+      return {
+        suppliers: suppliersRes.count || 0,
+        producers: producersRes.count || 0,
+        buyers: buyersRes.count || 0,
+        verified: verifiedRes.count || 0,
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Curated buckets for carousels
+  const verifiedSet = useMemo(() => producers.filter((p) => p.verified).slice(0, 12), [producers]);
+  const popularSet = useMemo(() => [...producers].sort((a, b) => b.followers - a.followers).slice(0, 12), [producers]);
+  const recentSet = useMemo(() => [...producers].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 12), [producers]);
+  const activeSet = useMemo(() => [...producers].sort((a, b) => b.products - a.products).slice(0, 12), [producers]);
 
   const filteredProducers = useMemo(() => {
     let result = producers.filter((producer) => {
@@ -109,108 +126,154 @@ const Producers = () => {
         producer.location.toLowerCase().includes(selectedCountry.toLowerCase());
       return matchesSearch && matchesCountry;
     });
-
     switch (sortBy) {
       case "products":
         result = [...result].sort((a, b) => b.products - a.products);
         break;
       case "recent":
-        result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        result = [...result].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         break;
       default:
         result = [...result].sort((a, b) => b.followers - a.followers);
     }
-
     return result;
   }, [producers, searchQuery, selectedCountry, sortBy]);
 
-  const handleFollow = async (e: React.MouseEvent, profileId: string, profileName: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      navigate("/auth?returnTo=/producteurs");
-      return;
-    }
-    if (myProfile?.id === profileId) return;
-    try {
-      await toggleFollow(profileId);
-      const wasFollowing = isFollowing(profileId);
-      toast({
-        title: wasFollowing ? t("net.unsubscribed") : t("net.subscribed"),
-        description: wasFollowing
-          ? `${t("net.unsubscribeNotif")} ${profileName}.`
-          : `${t("net.subscribeNotif")} ${profileName}.`,
-      });
-    } catch {
-      toast({ title: t("common.error"), variant: "destructive" });
-    }
-  };
+  const showCarousels = !searchQuery && selectedCountry === "Tous les pays" && producers.length > 0;
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO
         url="/producteurs"
-        title="Producteurs et Fournisseurs Vérifiés"
-        description="Découvrez les producteurs et fournisseurs agricoles vérifiés d'Afrique. Suivez-les et achetez directement auprès d'eux."
+        title="Réseau Nukuconnect — Producteurs et Fournisseurs Vérifiés"
+        description="Découvrez et suivez les producteurs et fournisseurs agricoles vérifiés d'Afrique. Achetez en direct, contactez et collaborez."
       />
       <Header />
 
-      {/* Hero with background image */}
-      <section className="pt-24 pb-8 sm:pb-12 relative overflow-hidden">
+      {/* HERO with animated stats */}
+      <section className="pt-24 pb-8 sm:pb-10 relative overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src={networkHeroImg} 
-            alt="Réseau NukuConnect" width={1600} height={640} 
-            className="w-full h-full object-cover" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
+          <img src={networkHeroImg} alt="Réseau NukuConnect" width={1600} height={640} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-background" />
         </div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4 bg-white/20 text-white border-white/30">
-              <Users className="w-3 h-3 mr-1" />
-              {t("net.badge")}
+        <div className="container mx-auto px-4 relative z-10 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <Badge variant="secondary" className="mb-3 bg-white/20 text-white border-white/30 backdrop-blur-sm">
+              <Users className="w-3 h-3 mr-1" />{t("net.badge")}
             </Badge>
             <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
               {t("net.title")}
             </h1>
-            <p className="text-sm sm:text-base text-white/80 mb-6">
+            <p className="text-sm sm:text-base text-white/85 mb-5">
               {t("net.subtitle")}
             </p>
-
             <div className="relative max-w-xl mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder={t("net.searchSupplier")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-11 text-sm"
+                className="pl-12 h-11 text-sm shadow-lg"
               />
             </div>
-          </div>
+          </motion.div>
+
+          {heroStats && (
+            <NetworkHeroStats
+              suppliers={heroStats.suppliers}
+              producers={heroStats.producers}
+              buyers={heroStats.buyers}
+              verified={heroStats.verified}
+            />
+          )}
         </div>
       </section>
 
-      {/* Content header */}
-      <section className="border-b border-border bg-card">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-2.5">
-            <Package className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">{t("net.suppliers")}</span>
-          </div>
-        </div>
-      </section>
+      {/* CAROUSELS — hidden when user is actively filtering */}
+      {showCarousels && (
+        <>
+          {verifiedSet.length > 0 && (
+            <NetworkCarousel
+              title="Fournisseurs vérifiés"
+              subtitle="Acteurs certifiés par Nukuconnect"
+              icon={<ShieldCheck className="w-4 h-4 text-emerald-500" />}
+              accentClass="text-emerald-600 dark:text-emerald-400"
+            >
+              {verifiedSet.map((p, i) => (
+                <div key={p.id} className="snap-start flex-shrink-0 w-[160px] sm:w-[200px] md:w-[220px]">
+                  <ProducerCard producer={p} compact index={i} />
+                </div>
+              ))}
+            </NetworkCarousel>
+          )}
 
-      {/* Filters */}
-      <section className="py-3 border-b border-border bg-card/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProducers.length}</span> {t("net.suppliers").toLowerCase()}
-            </p>
+          {popularSet.length > 0 && (
+            <NetworkCarousel
+              title="Populaires"
+              subtitle="Les plus suivis du réseau"
+              icon={<Flame className="w-4 h-4 text-accent" />}
+              accentClass="text-accent"
+            >
+              {popularSet.map((p, i) => (
+                <div key={p.id} className="snap-start flex-shrink-0 w-[160px] sm:w-[200px] md:w-[220px]">
+                  <ProducerCard producer={p} compact index={i} />
+                </div>
+              ))}
+            </NetworkCarousel>
+          )}
+
+          <OpportunitiesStrip />
+
+          {recentSet.length > 0 && (
+            <NetworkCarousel
+              title="Nouveaux arrivants"
+              subtitle="Récemment inscrits sur Nukuconnect"
+              icon={<Sparkles className="w-4 h-4 text-primary" />}
+            >
+              {recentSet.map((p, i) => (
+                <div key={p.id} className="snap-start flex-shrink-0 w-[160px] sm:w-[200px] md:w-[220px]">
+                  <ProducerCard producer={p} compact index={i} />
+                </div>
+              ))}
+            </NetworkCarousel>
+          )}
+
+          {activeSet.length > 0 && (
+            <NetworkCarousel
+              title="Les plus actifs"
+              subtitle="Avec le catalogue le plus riche"
+              icon={<Star className="w-4 h-4 text-yellow-500" />}
+              accentClass="text-yellow-600 dark:text-yellow-400"
+            >
+              {activeSet.map((p, i) => (
+                <div key={p.id} className="snap-start flex-shrink-0 w-[160px] sm:w-[200px] md:w-[220px]">
+                  <ProducerCard producer={p} compact index={i} />
+                </div>
+              ))}
+            </NetworkCarousel>
+          )}
+        </>
+      )}
+
+      {/* SECTION TITLE + filters */}
+      <section className="border-y border-border bg-card/60 backdrop-blur-sm sticky top-16 z-20">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between gap-3 py-2 sm:py-2.5 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Tout l'annuaire</span>
+              <span className="text-xs text-muted-foreground">
+                · <span className="font-semibold text-foreground">{filteredProducers.length}</span> {t("net.suppliers").toLowerCase()}
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-32 sm:w-36 h-8 sm:h-9 text-xs">
                   <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
                   <SelectValue />
                 </SelectTrigger>
@@ -221,13 +284,15 @@ const Producers = () => {
                 </SelectContent>
               </Select>
               <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                <SelectTrigger className="w-36 h-9 text-xs">
+                <SelectTrigger className="w-32 sm:w-36 h-8 sm:h-9 text-xs">
                   <MapPin className="w-3.5 h-3.5 mr-1.5" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map((country) => (
-                    <SelectItem key={country} value={country}>{country === "Tous les pays" ? t("net.allCountries") : country}</SelectItem>
+                    <SelectItem key={country} value={country}>
+                      {country === "Tous les pays" ? t("net.allCountries") : country}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -236,9 +301,9 @@ const Producers = () => {
         </div>
       </section>
 
-      {/* Grid - Pro card design inspired by uploaded reference */}
+      {/* GRID */}
       <section className="py-6 sm:py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -246,134 +311,14 @@ const Producers = () => {
           ) : filteredProducers.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-foreground mb-2">
-                {t("net.noSupplier")}
-              </h3>
+              <h3 className="font-heading font-semibold text-foreground mb-2">{t("net.noSupplier")}</h3>
               <p className="text-sm text-muted-foreground">{t("net.modifyFilters")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-              {filteredProducers.map((producer) => {
-                const following = isFollowing(producer.id);
-                const isSelf = myProfile?.id === producer.id;
-
-                return (
-                  <Link key={producer.id} to={`/producteurs/${producer.id}`} className="block group">
-                    <Card className="overflow-hidden h-full border-border/40 hover:border-primary/30 hover:shadow-elevated transition-all duration-300">
-                      {/* Cover / background */}
-                      <div className="relative h-20 sm:h-24 overflow-hidden bg-muted">
-                        {producer.cover ? (
-                          <img src={producer.cover} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-
-                        {/* Verified / Non verified badge top-right */}
-                        <div className="absolute top-2 right-2">
-                          {producer.verified ? (
-                            <Badge className="bg-secondary text-secondary-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm">
-                              <ShieldCheck className="w-2.5 h-2.5" /> Vérifié
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-card/80 text-muted-foreground text-[8px] px-1.5 py-0.5 gap-0.5 shadow-sm border-border">
-                              Non vérifié
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Avatar overlapping cover - real avatar or outlined fallback icon (consistent across app) */}
-                      <div className="flex justify-center -mt-8 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-[3px] border-card shadow-lg bg-card flex items-center justify-center">
-                          {producer.avatar ? (
-                            <img
-                              src={producer.avatar}
-                              alt={producer.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                            />
-                          ) : (
-                            <div className="w-full h-full rounded-full border-2 border-muted-foreground/40 flex items-center justify-center bg-transparent">
-                              <User className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground/60" strokeWidth={1.5} />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <CardContent className="p-2.5 sm:p-3 pt-1.5 text-center space-y-1.5">
-                        <h3 className="font-heading font-bold text-foreground text-xs sm:text-sm truncate">
-                          {producer.name}
-                        </h3>
-                        <div className="flex justify-center">
-                          <LocationBadge location={producer.location} size="sm" />
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="flex items-center justify-center gap-3 py-1.5">
-                          <div className="text-center">
-                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.products}</p>
-                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Produits</p>
-                          </div>
-                          <div className="w-px h-6 bg-border" />
-                          <div className="text-center">
-                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.sales}</p>
-                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Ventes</p>
-                          </div>
-                          <div className="w-px h-6 bg-border" />
-                          <div className="text-center">
-                            <p className="text-xs sm:text-sm font-bold text-primary">{producer.followers}</p>
-                            <p className="text-[8px] sm:text-[9px] text-muted-foreground">Abonnés</p>
-                          </div>
-                        </div>
-
-                        {producer.bio && (
-                          <p className="text-[9px] sm:text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                            {producer.bio}
-                          </p>
-                        )}
-
-                        {/* Action buttons */}
-                        <div className="flex gap-1.5 pt-1">
-                          {!isSelf && (
-                            <Button
-                              variant={following ? "secondary" : "hero"}
-                              size="sm"
-                              className="flex-1 text-[9px] sm:text-[10px] h-7 gap-1"
-                              onClick={(e) => handleFollow(e, producer.id, producer.name)}
-                              disabled={isPending}
-                            >
-                              {following ? (
-                                <>
-                                  <UserCheck className="w-3 h-3" />
-                                  <span>{t("net.following")}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus className="w-3 h-3" />
-                                  {t("net.follow")}
-                                </>
-                              )}
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline" size="sm" className="h-7 px-2 text-[9px] sm:text-[10px] gap-1"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (!user) { navigate("/auth?returnTo=/producteurs"); return; }
-                              const greeting = encodeURIComponent(`Bonjour ${producer.name}, je vous contacte via NukuConnect pour discuter de vos produits.`);
-                              navigate(`/messages?contact=${producer.id}&prefill=${greeting}`);
-                            }}
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
+              {filteredProducers.map((producer, i) => (
+                <ProducerCard key={producer.id} producer={producer} index={i} />
+              ))}
             </div>
           )}
         </div>
