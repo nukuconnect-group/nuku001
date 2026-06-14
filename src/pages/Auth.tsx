@@ -333,9 +333,10 @@ const Auth = () => {
       const businessName = isCompany
         ? producerCompany.trim()
         : ((userType === "buyer" || userType === "learner") && buyerCompany.trim() ? buyerCompany.trim() : null);
+      const savedRefForSignup = localStorage.getItem("nukuconnect-ref") || null;
       const { data: authData, error } = await supabase.auth.signUp({
         email: signupEmail, password: signupPassword,
-        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: businessName, sector: userType === "producer" ? producerSector : null } },
+        options: { emailRedirectTo: `${window.location.origin}/auth`, data: { full_name: fullName, user_type: userType, phone, location, business_name: businessName, sector: userType === "producer" ? producerSector : null, referral_code: savedRefForSignup } },
       });
       if (error) { toast({ title: error.message.includes("already") ? "Email déjà utilisé" : "Erreur", description: error.message.includes("already") ? "Un compte existe déjà. Essayez de vous connecter." : error.message, variant: "destructive" }); return; }
       if (authData.user) {
