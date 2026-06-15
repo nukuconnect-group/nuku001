@@ -233,47 +233,63 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     })();
   }, [editProduct?.id]);
 
-  // Populate form when editing
+  // Populate form when editing. Re-run on every modal open so reopening
+  // an item always restores its latest DB values (and never shows a blank
+  // form because of a stale parent reference).
   useEffect(() => {
+    if (!open) return;
     if (editProduct) {
-      setNewProduct({
-        name: editProduct.name || "",
-        description: editProduct.description || "",
-        price: String(editProduct.price || ""),
-        originalPrice: editProduct.original_price ? String(editProduct.original_price) : "",
-        discount: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price))
-          ? String(Math.round(((Number(editProduct.original_price) - Number(editProduct.price)) / Number(editProduct.original_price)) * 100))
-          : "",
-        promoType: (editProduct.original_price && Number(editProduct.original_price) > Number(editProduct.price)) ? "promo" : "none",
-
-        category: editProduct.category || "",
-        unit: editProduct.unit || "kg",
-        quantity_available: String(editProduct.quantity_available || ""),
-        location: editProduct.location || "",
-        is_organic: editProduct.is_organic || false,
-        min_order: String(editProduct.min_order || "1"),
-        shipping_delay_days: String((editProduct as any).shipping_delay_days ?? "1"),
-        deliveryDelay: "immediate",
-        saleMode: "retail",
-        negotiable: editProduct.is_negotiable || false,
-        deliveryAvailable: true,
-        stockStatus: editProduct.stock_status || "in_stock",
-        lat: (editProduct as any).lat ?? null,
-        lng: (editProduct as any).lng ?? null,
-        country: (editProduct as any).country || "",
-        city: (editProduct as any).city || "",
-        quarter: (editProduct as any).quarter || "",
-      });
-      if (editProduct.images?.length) {
-        setImagePreviews(editProduct.images);
-        setImageFiles([]);
+      const hydrate = (src: any) => {
+        setNewProduct({
+          name: src.name || "",
+          description: src.description || "",
+          price: src.price != null ? String(src.price) : "",
+          originalPrice: src.original_price != null ? String(src.original_price) : "",
+          discount: (src.original_price && Number(src.original_price) > Number(src.price))
+            ? String(Math.round(((Number(src.original_price) - Number(src.price)) / Number(src.original_price)) * 100))
+            : "",
+          promoType: (src.original_price && Number(src.original_price) > Number(src.price)) ? "promo" : "none",
+          category: src.category || "",
+          unit: src.unit || "kg",
+          quantity_available: src.quantity_available != null ? String(src.quantity_available) : "",
+          location: src.location || "",
+          is_organic: !!src.is_organic,
+          min_order: src.min_order != null ? String(src.min_order) : "1",
+          shipping_delay_days: String(src.shipping_delay_days ?? "1"),
+          deliveryDelay: "immediate",
+          saleMode: "retail",
+          negotiable: !!src.is_negotiable,
+          deliveryAvailable: true,
+          stockStatus: src.stock_status || "in_stock",
+          lat: src.lat ?? null,
+          lng: src.lng ?? null,
+          country: src.country || "",
+          city: src.city || "",
+          quarter: src.quarter || "",
+        });
+        if (src.images?.length) {
+          setImagePreviews(src.images);
+          setImageFiles([]);
+        }
+      };
+      hydrate(editProduct);
+      // Refetch authoritative values from DB to guarantee no field
+      // is missing if the parent reference was partial/stale.
+      if (editProduct.id) {
+        supabase
+          .from("products")
+          .select("*")
+          .eq("id", editProduct.id)
+          .maybeSingle()
+          .then(({ data }) => { if (data) hydrate(data); });
       }
     } else {
       setNewProduct(defaultProduct);
       setImagePreviews([]);
       setImageFiles([]);
     }
-  }, [editProduct]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editProduct?.id, open]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

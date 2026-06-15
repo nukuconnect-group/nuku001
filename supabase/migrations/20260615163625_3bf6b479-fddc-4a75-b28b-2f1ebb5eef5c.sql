@@ -1,0 +1,3 @@
+ALTER TABLE public.messages REPLICA IDENTITY FULL;
+ALTER TABLE public.delivery_messages REPLICA IDENTITY FULL;
+ALTER TABLE public.notifications REPLICA IDENTITY FULL;
