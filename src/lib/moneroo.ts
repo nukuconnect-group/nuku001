@@ -40,9 +40,24 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
     onError,
   } = config;
 
-  // Build return URL pointing to our callback page
-  const baseUrl = window.location.origin;
-  const returnUrl = `${baseUrl}/payment-callback`;
+  // Build return URL pointing to our callback page.
+  // On mobile (Capacitor) or preview/sandbox hosts, force the production domain
+  // so the Moneroo redirect lands on a real, routable page (otherwise the
+  // browser opens capacitor://localhost or a stale sandbox URL → 404).
+  const PROD_URL = "https://nukuconnect.com/payment-callback";
+  let returnUrl = PROD_URL;
+  try {
+    const host = window.location.hostname;
+    const isProd =
+      host === "nukuconnect.com" ||
+      host === "www.nukuconnect.com" ||
+      host.endsWith(".nukuconnect.com");
+    if (isProd) {
+      returnUrl = `${window.location.origin}/payment-callback`;
+    }
+  } catch {
+    returnUrl = PROD_URL;
+  }
 
   try {
     const data = await invokeAuthenticatedFunction<{ checkout_url?: string; payment_id?: string; error?: string }>("moneroo-init", {
