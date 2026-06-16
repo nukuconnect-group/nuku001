@@ -35,7 +35,6 @@ const getOrderIds = (data: Record<string, unknown>): string[] => {
 
 async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], data: any, paymentId: string) {
   try {
-    // Get buyer info
     const { data: buyer } = await admin.auth.admin.getUserById(tx.user_id);
     const buyerEmail = buyer?.user?.email;
     if (!buyerEmail) {
@@ -44,34 +43,42 @@ async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], da
     }
     const { data: buyerProfile } = await admin
       .from("profiles")
-      .select("full_name")
+      .select("id, full_name, phone")
       .eq("user_id", tx.user_id)
       .maybeSingle();
 
-    // Load order items + product/seller names
     const orderIds = orders.map((o: any) => o.id);
     const { data: items } = await admin
       .from("orders")
-      .select("id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(full_name)")
+      .select("id, seller_id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(id, full_name, user_id)")
       .in("id", orderIds);
 
-    const orderItems = (items || []).map((o: any) => ({
+    const allItems = (items || []).map((o: any) => ({
+      orderId: o.id,
+      sellerProfileId: o.profiles?.id || o.seller_id,
+      sellerUserId: o.profiles?.user_id || null,
+      sellerName: o.profiles?.full_name || "Vendeur",
       name: o.products?.name || "Produit",
       quantity: Number(o.quantity || 1),
       unitPrice: Number(o.unit_price || 0),
       unit: o.products?.unit || "unité",
-      sellerName: o.profiles?.full_name || "Vendeur",
+      total: Number(o.total_price || 0),
     }));
 
-    const subtotal = orderItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const subtotal = allItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
     const total = orders.reduce((s: number, o: any) => s + Number(o.total_price || 0), 0);
     const deliveryPrice = Number(data.deliveryPrice || 0);
+    const invoiceNumber = `INV-${paymentId.slice(0, 10).toUpperCase()}`;
+    const orderDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    const siteOrigin = Deno.env.get("PUBLIC_SITE_URL") || "https://nukuconnect.com";
+    const invoiceUrl = `${siteOrigin}/factures?invoice=${encodeURIComponent(invoiceNumber)}`;
 
+    // 1) Buyer confirmation
     const { error: emailErr } = await admin.functions.invoke("order-confirmation", {
       body: {
         buyerEmail,
         buyerName: buyerProfile?.full_name || buyerEmail.split("@")[0],
-        orderItems,
+        orderItems: allItems.map(({ name, quantity, unitPrice, unit, sellerName }) => ({ name, quantity, unitPrice, unit, sellerName })),
         subtotal,
         deliveryPrice,
         total,
@@ -79,12 +86,58 @@ async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], da
         paymentMethod: "Moneroo",
         deliveryCity: data.deliveryCity || undefined,
         deliveryAddress: data.deliveryAddress || undefined,
-        invoiceNumber: `INV-${paymentId.slice(0, 10).toUpperCase()}`,
-        orderDate: new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+        invoiceNumber,
+        orderDate,
+        invoiceUrl,
       },
     });
-    if (emailErr) console.error("[email] order-confirmation failed:", emailErr);
-    else console.log("[email] order-confirmation sent to", buyerEmail);
+    if (emailErr) console.error("[email] buyer order-confirmation failed:", emailErr);
+    else console.log("[email] buyer order-confirmation sent to", buyerEmail);
+
+    // 2) Per-seller new-order email
+    const sellersMap = new Map<string, typeof allItems>();
+    for (const it of allItems) {
+      const key = it.sellerProfileId;
+      if (!key) continue;
+      if (!sellersMap.has(key)) sellersMap.set(key, []);
+      sellersMap.get(key)!.push(it);
+    }
+    for (const [sellerProfileId, sellerItems] of sellersMap.entries()) {
+      const sellerUserId = sellerItems[0].sellerUserId;
+      if (!sellerUserId) continue;
+      const { data: sellerAuth } = await admin.auth.admin.getUserById(sellerUserId);
+      const sellerEmail = sellerAuth?.user?.email;
+      if (!sellerEmail) { console.warn("[email] no email for seller", sellerProfileId); continue; }
+      const sellerTotal = sellerItems.reduce((s, i) => s + i.total, 0);
+      const { error: sellerErr } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "new-order-seller",
+          recipientEmail: sellerEmail,
+          idempotencyKey: `new-order-seller-${paymentId}-${sellerProfileId}`,
+          templateData: {
+            sellerName: sellerItems[0].sellerName,
+            buyerName: buyerProfile?.full_name || buyerEmail.split("@")[0],
+            invoiceNumber,
+            orderDate,
+            orderItems: sellerItems.map(({ name, quantity, unitPrice, unit }) => ({ name, quantity, unitPrice, unit })),
+            total: sellerTotal,
+            deliveryMethod: String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place",
+            deliveryCity: data.deliveryCity || "",
+            buyerPhone: buyerProfile?.phone || "",
+            invoiceUrl,
+          },
+        },
+      });
+      if (sellerErr) console.error("[email] new-order-seller failed for", sellerEmail, sellerErr);
+      else console.log("[email] new-order-seller sent to", sellerEmail);
+
+      await admin.from("notifications").insert({
+        user_id: sellerUserId,
+        type: "order",
+        title: "🛒 Nouvelle commande reçue",
+        description: `Commande ${invoiceNumber} de ${buyerProfile?.full_name || "un acheteur"} — ${sellerTotal.toLocaleString("fr-FR")} FCFA`,
+      });
+    }
   } catch (e) {
     console.error("[email] sendOrderConfirmationEmail error:", e);
   }

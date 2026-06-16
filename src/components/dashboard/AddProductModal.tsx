@@ -233,26 +233,29 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     })();
   }, [editProduct?.id]);
 
-  // Populate form when editing. Re-run on every modal open so reopening
-  // an item always restores its latest DB values (and never shows a blank
-  // form because of a stale parent reference).
+  // Track whether the user has started editing — guards the async DB
+  // refetch from stomping in-progress edits.
+  const userEditedRef = useRef(false);
+
   useEffect(() => {
     if (!open) return;
     if (editProduct) {
-      const hydrate = (src: any) => {
+      userEditedRef.current = false;
+      const hydrate = (src: any, fromDb = false) => {
+        if (fromDb && userEditedRef.current) return;
         setNewProduct({
-          name: src.name || "",
-          description: src.description || "",
+          name: src.name ?? "",
+          description: src.description ?? "",
           price: src.price != null ? String(src.price) : "",
           originalPrice: src.original_price != null ? String(src.original_price) : "",
           discount: (src.original_price && Number(src.original_price) > Number(src.price))
             ? String(Math.round(((Number(src.original_price) - Number(src.price)) / Number(src.original_price)) * 100))
             : "",
           promoType: (src.original_price && Number(src.original_price) > Number(src.price)) ? "promo" : "none",
-          category: src.category || "",
-          unit: src.unit || "kg",
+          category: src.category ?? "",
+          unit: src.unit ?? "kg",
           quantity_available: src.quantity_available != null ? String(src.quantity_available) : "",
-          location: src.location || "",
+          location: src.location ?? "",
           is_organic: !!src.is_organic,
           min_order: src.min_order != null ? String(src.min_order) : "1",
           shipping_delay_days: String(src.shipping_delay_days ?? "1"),
@@ -260,12 +263,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
           saleMode: "retail",
           negotiable: !!src.is_negotiable,
           deliveryAvailable: true,
-          stockStatus: src.stock_status || "in_stock",
+          stockStatus: src.stock_status ?? "in_stock",
           lat: src.lat ?? null,
           lng: src.lng ?? null,
-          country: src.country || "",
-          city: src.city || "",
-          quarter: src.quarter || "",
+          country: src.country ?? "",
+          city: src.city ?? "",
+          quarter: src.quarter ?? "",
         });
         if (src.images?.length) {
           setImagePreviews(src.images);
@@ -273,17 +276,26 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         }
       };
       hydrate(editProduct);
-      // Refetch authoritative values from DB to guarantee no field
-      // is missing if the parent reference was partial/stale.
-      if (editProduct.id) {
+      // Only do an authoritative DB refetch if the parent reference is
+      // partial (missing one of the snake_case-only fields). When the
+      // parent already provided full data, skip it to avoid races that
+      // wipe in-progress user edits.
+      const needsRefetch =
+        editProduct.id && (
+          editProduct.description === undefined ||
+          editProduct.quantity_available === undefined ||
+          editProduct.stock_status === undefined
+        );
+      if (needsRefetch) {
         supabase
           .from("products")
           .select("*")
           .eq("id", editProduct.id)
           .maybeSingle()
-          .then(({ data }) => { if (data) hydrate(data); });
+          .then(({ data }) => { if (data) hydrate(data, true); });
       }
     } else {
+      userEditedRef.current = false;
       setNewProduct(defaultProduct);
       setImagePreviews([]);
       setImageFiles([]);
