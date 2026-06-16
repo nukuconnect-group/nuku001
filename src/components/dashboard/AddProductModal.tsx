@@ -276,7 +276,17 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         }
       };
       hydrate(editProduct);
-      if (editProduct.id) {
+      // Only do an authoritative DB refetch if the parent reference is
+      // partial (missing one of the snake_case-only fields). When the
+      // parent already provided full data, skip it to avoid races that
+      // wipe in-progress user edits.
+      const needsRefetch =
+        editProduct.id && (
+          editProduct.description === undefined ||
+          editProduct.quantity_available === undefined ||
+          editProduct.stock_status === undefined
+        );
+      if (needsRefetch) {
         supabase
           .from("products")
           .select("*")
