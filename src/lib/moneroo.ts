@@ -41,18 +41,23 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
   } = config;
 
   // Build return URL pointing to our callback page.
-  // On mobile (Capacitor) or preview/sandbox hosts, force the production domain
-  // so the Moneroo redirect lands on a real, routable page (otherwise the
-  // browser opens capacitor://localhost or a stale sandbox URL → 404).
+  // Use the CURRENT origin whenever it is a real http(s) host (preview, lovable.app,
+  // custom domain). Only fall back to the published production URL for native shells
+  // (Capacitor: "capacitor://localhost", "file://...") which Moneroo cannot redirect to.
   const PROD_URL = "https://nukuconnect.com/payment-callback";
   let returnUrl = PROD_URL;
   try {
+    const proto = window.location.protocol;
     const host = window.location.hostname;
-    const isProd =
-      host === "nukuconnect.com" ||
-      host === "www.nukuconnect.com" ||
-      host.endsWith(".nukuconnect.com");
-    if (isProd) {
+    const isHttp = proto === "https:" || proto === "http:";
+    const isRoutableHost =
+      isHttp &&
+      !!host &&
+      host !== "localhost" &&
+      host !== "127.0.0.1" &&
+      !host.startsWith("192.168.") &&
+      !host.startsWith("10.");
+    if (isRoutableHost) {
       returnUrl = `${window.location.origin}/payment-callback`;
     }
   } catch {
