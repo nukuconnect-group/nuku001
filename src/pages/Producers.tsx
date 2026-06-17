@@ -95,8 +95,8 @@ const Producers = () => {
     queryKey: ["network-hero-stats"],
     queryFn: async () => {
       const [suppliersRes, producersRes, buyersRes, verifiedRes] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "supplier"),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "producer"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).in("user_type", ["producer", "trainer"]),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("user_type", "buyer"),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("is_verified", true),
       ]);
