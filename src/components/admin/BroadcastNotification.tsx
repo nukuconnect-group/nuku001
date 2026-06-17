@@ -17,8 +17,26 @@ const BroadcastNotification = ({ users }: BroadcastNotificationProps) => {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [target, setTarget] = useState<"all" | "producers" | "buyers">("all");
+  const [target, setTarget] = useState<
+    "all" | "producers" | "suppliers" | "buyers" | "drivers" | "trainers" | "learners"
+  >("all");
   const [sending, setSending] = useState(false);
+
+  const targetTypeMap: Record<string, string | null> = {
+    all: null,
+    producers: "producer",
+    suppliers: "supplier",
+    buyers: "buyer",
+    drivers: "driver",
+    trainers: "trainer",
+    learners: "learner",
+  };
+
+  const filterUsers = (t: string) => {
+    const type = targetTypeMap[t];
+    if (!type) return users;
+    return users.filter((u: any) => u.user_type === type);
+  };
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
@@ -28,13 +46,7 @@ const BroadcastNotification = ({ users }: BroadcastNotificationProps) => {
 
     setSending(true);
     try {
-      // Filter users by target
-      let targetUsers = users;
-      if (target === "producers") {
-        targetUsers = users.filter((u: any) => u.user_type === "producer");
-      } else if (target === "buyers") {
-        targetUsers = users.filter((u: any) => u.user_type === "buyer");
-      }
+      const targetUsers = filterUsers(target);
 
       if (targetUsers.length === 0) {
         toast({ title: "Aucun destinataire", description: "Aucun utilisateur trouvé pour cette cible", variant: "destructive" });
@@ -42,23 +54,26 @@ const BroadcastNotification = ({ users }: BroadcastNotificationProps) => {
         return;
       }
 
-      // Insert notifications for all targeted users
+      // Always brand admin broadcasts with NUKUCONNECT prefix unless already present
+      const brandedTitle = /nukuconnect/i.test(title.trim())
+        ? title.trim()
+        : `NUKUCONNECT — ${title.trim()}`;
+
       const notifications = targetUsers.map((u: any) => ({
         user_id: u.user_id,
         type: "admin",
-        title: title.trim(),
+        title: brandedTitle,
         description: message.trim(),
       }));
 
-      // Batch insert (Supabase handles arrays)
       const { error } = await supabase.from("notifications").insert(notifications);
 
       if (error) {
         toast({ title: "Erreur", description: error.message, variant: "destructive" });
       } else {
-        toast({ 
-          title: "Message envoyé !", 
-          description: `Notification envoyée à ${targetUsers.length} utilisateur(s)` 
+        toast({
+          title: "Message envoyé !",
+          description: `Notification envoyée à ${targetUsers.length} utilisateur(s)`,
         });
         setTitle("");
         setMessage("");
@@ -70,12 +85,17 @@ const BroadcastNotification = ({ users }: BroadcastNotificationProps) => {
     }
   };
 
-  const targetLabel = target === "all" ? "tous les utilisateurs" : target === "producers" ? "les fournisseurs" : "les acheteurs";
-  const targetCount = target === "all" 
-    ? users.length 
-    : target === "producers" 
-      ? users.filter((u: any) => u.user_type === "producer").length 
-      : users.filter((u: any) => u.user_type === "buyer").length;
+  const targetLabelMap: Record<string, string> = {
+    all: "tous les utilisateurs",
+    producers: "les producteurs",
+    suppliers: "les fournisseurs",
+    buyers: "les acheteurs",
+    drivers: "les livreurs",
+    trainers: "les formateurs",
+    learners: "les apprenants",
+  };
+  const targetLabel = targetLabelMap[target];
+  const targetCount = filterUsers(target).length;
 
   return (
     <Card>
@@ -100,14 +120,28 @@ const BroadcastNotification = ({ users }: BroadcastNotificationProps) => {
                 <span className="flex items-center gap-2"><Users className="w-3.5 h-3.5" />Tous les utilisateurs</span>
               </SelectItem>
               <SelectItem value="producers">
-                <span className="flex items-center gap-2"><Store className="w-3.5 h-3.5" />Fournisseurs uniquement</span>
+                <span className="flex items-center gap-2"><Store className="w-3.5 h-3.5" />Producteurs</span>
+              </SelectItem>
+              <SelectItem value="suppliers">
+                <span className="flex items-center gap-2"><Store className="w-3.5 h-3.5" />Fournisseurs</span>
               </SelectItem>
               <SelectItem value="buyers">
-                <span className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5" />Acheteurs uniquement</span>
+                <span className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5" />Acheteurs</span>
+              </SelectItem>
+              <SelectItem value="drivers">
+                <span className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5" />Livreurs</span>
+              </SelectItem>
+              <SelectItem value="trainers">
+                <span className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5" />Formateurs</span>
+              </SelectItem>
+              <SelectItem value="learners">
+                <span className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5" />Apprenants</span>
               </SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-[10px] text-muted-foreground">{targetCount} destinataire(s) ciblé(s)</p>
+          <p className="text-[10px] text-muted-foreground">
+            {targetCount} destinataire(s) ciblé(s) — préfixe « NUKUCONNECT » ajouté automatiquement
+          </p>
         </div>
 
         <div className="space-y-2">

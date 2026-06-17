@@ -204,17 +204,27 @@ const CampaignsTab = () => {
     setSending(true);
     try {
       const campaign = campaignId ? campaigns.find(c => c.id === campaignId) : form;
-      // Get target users
-      let query = supabase.from("profiles").select("id, email, user_type, full_name");
+      // Count target users — profiles table has NO `email` column, requesting
+      // it returned an error silently and made the count appear as 0.
+      let query = supabase.from("profiles").select("user_id", { count: "exact", head: true });
       if (campaign.target_segment && campaign.target_segment !== "all") {
-        const typeMap: Record<string, string> = { buyers: "buyer", producers: "producer", drivers: "driver", trainers: "trainer", learners: "learner" };
-        query = query.eq("user_type", typeMap[campaign.target_segment] || campaign.target_segment);
+        const typeMap: Record<string, string> = {
+          buyers: "buyer",
+          producers: "producer",
+          suppliers: "supplier",
+          drivers: "driver",
+          trainers: "trainer",
+          learners: "learner",
+        };
+        const mapped = typeMap[campaign.target_segment] || campaign.target_segment;
+        query = query.eq("user_type", mapped);
       }
-      const { data: users } = await query;
-      const count = users?.length || 0;
+      const { count, error: countErr } = await query;
+      if (countErr) throw countErr;
+      const recipients = count || 0;
 
       if (campaignId) {
-        await supabase.from("marketing_campaigns").update({ status: "sent", sent_at: new Date().toISOString(), recipients_count: count } as any).eq("id", campaignId);
+        await supabase.from("marketing_campaigns").update({ status: "sent", sent_at: new Date().toISOString(), recipients_count: recipients } as any).eq("id", campaignId);
       } else {
         await supabase.from("marketing_campaigns").insert({
           subject: form.subject,
@@ -222,21 +232,21 @@ const CampaignsTab = () => {
           target_segment: form.target_segment,
           status: "sent",
           sent_at: new Date().toISOString(),
-          recipients_count: count,
+          recipients_count: recipients,
         } as any);
       }
 
-      toast({ title: `📧 Campagne envoyée`, description: `${count} destinataires ciblés` });
+      toast({ title: `📧 Campagne enregistrée`, description: `${recipients} destinataire(s) ciblé(s)` });
       setForm({ subject: "", html_content: "", target_segment: "all" });
       fetchAll();
-    } catch (err) {
-      toast({ title: "Erreur", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Erreur", description: err?.message || "Une erreur est survenue", variant: "destructive" });
     }
     setSending(false);
   };
 
   const segmentLabels: Record<string, string> = {
-    all: "Tous", buyers: "Acheteurs", producers: "Producteurs", drivers: "Livreurs", trainers: "Formateurs", learners: "Apprenants"
+    all: "Tous", buyers: "Acheteurs", producers: "Producteurs", suppliers: "Fournisseurs", drivers: "Livreurs", trainers: "Formateurs", learners: "Apprenants"
   };
 
   const statusLabels: Record<string, { label: string; color: string }> = {
@@ -273,6 +283,7 @@ const CampaignsTab = () => {
               <SelectItem value="all">Tous les utilisateurs</SelectItem>
               <SelectItem value="buyers">Acheteurs</SelectItem>
               <SelectItem value="producers">Producteurs</SelectItem>
+              <SelectItem value="suppliers">Fournisseurs</SelectItem>
               <SelectItem value="drivers">Livreurs</SelectItem>
               <SelectItem value="trainers">Formateurs</SelectItem>
               <SelectItem value="learners">Apprenants</SelectItem>
