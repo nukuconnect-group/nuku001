@@ -224,7 +224,7 @@ serve(async (req) => {
           .maybeSingle();
         const recipientName =
           profile?.business_name?.trim() || profile?.full_name?.trim() || undefined;
-        const idempotencyKey = `subscription-${userId}-${plan}-${expiresAt.toISOString().slice(0, 10)}`;
+        const idempotencyKey = `subscription-${userId}-${plan}-${(expiresAt ?? now).toISOString().slice(0, 10)}`;
         adminClient.functions.invoke("send-transactional-email", {
           body: {
             templateName: "subscription",
