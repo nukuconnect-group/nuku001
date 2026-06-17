@@ -234,7 +234,7 @@ serve(async (req) => {
               recipientName,
               plan,
               billingPeriod: billing_period,
-              expiresAt: expiresAt.toISOString(),
+              expiresAt: expiresAt ? expiresAt.toISOString() : null,
               event: "activated",
             },
           },
