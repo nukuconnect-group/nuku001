@@ -200,7 +200,7 @@ serve(async (req) => {
           max_products: planConfig.maxProducts,
           status: "active",
           started_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
+          expires_at: expiresAt ? expiresAt.toISOString() : null,
         },
         { onConflict: "user_id" }
       );
