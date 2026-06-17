@@ -249,7 +249,7 @@ serve(async (req) => {
         success: true,
         plan,
         max_products: planConfig.maxProducts,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expiresAt ? expiresAt.toISOString() : null,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
