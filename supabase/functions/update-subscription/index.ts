@@ -91,14 +91,14 @@ serve(async (req) => {
     const expectedAmount = billing_period === "monthly" ? planConfig.monthlyPrice : planConfig.annualPrice;
     const now = new Date();
 
-    // Free plan = 1 month, paid plans = based on billing period
-    let expiresAt: Date;
+    // New rules:
+    // - Free plan: NO expiration. Anyone can switch to/keep free; becoming supplier is unconditional.
+    // - Paid plans: valid 12 months from activation, regardless of billing_period.
+    let expiresAt: Date | null;
     if (plan === "free") {
-      expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 1 month
+      expiresAt = null;
     } else {
-      expiresAt = billing_period === "monthly"
-        ? new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-        : new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+      expiresAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
@@ -109,39 +109,8 @@ serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
 
-    // Block re-subscribing to free plan if user already had one
-    if (plan === "free" && existingSubscription) {
-      const hadFreePlan = existingSubscription.plan === "free";
-      const isExpired = existingSubscription.expires_at && new Date(existingSubscription.expires_at).getTime() <= now.getTime();
-      
-      if (hadFreePlan && isExpired) {
-        return new Response(JSON.stringify({ 
-          error: "Votre période gratuite a expiré. Veuillez passer au pack Pro ou supérieur pour continuer." 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // If already on active free plan
-      if (hadFreePlan && existingSubscription.status === "active" && existingSubscription.expires_at && new Date(existingSubscription.expires_at).getTime() > now.getTime()) {
-        return new Response(JSON.stringify({ error: "Vous avez déjà un plan gratuit actif." }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // If user previously had a paid plan (or expired free), block free re-subscription
-      if (!hadFreePlan) {
-        return new Response(JSON.stringify({ 
-          error: "Le plan gratuit n'est disponible que pour les nouveaux comptes. Veuillez choisir un plan Pro ou supérieur." 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
+    // No blocking on "free plan already consumed" — buyers can always become suppliers on free.
+    // Only prevent paying twice for the same active paid plan.
     if (
       plan !== "free" &&
       existingSubscription?.plan === plan &&
@@ -231,7 +200,7 @@ serve(async (req) => {
           max_products: planConfig.maxProducts,
           status: "active",
           started_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
+          expires_at: expiresAt ? expiresAt.toISOString() : null,
         },
         { onConflict: "user_id" }
       );
@@ -255,7 +224,7 @@ serve(async (req) => {
           .maybeSingle();
         const recipientName =
           profile?.business_name?.trim() || profile?.full_name?.trim() || undefined;
-        const idempotencyKey = `subscription-${userId}-${plan}-${expiresAt.toISOString().slice(0, 10)}`;
+        const idempotencyKey = `subscription-${userId}-${plan}-${(expiresAt ?? now).toISOString().slice(0, 10)}`;
         adminClient.functions.invoke("send-transactional-email", {
           body: {
             templateName: "subscription",
@@ -265,7 +234,7 @@ serve(async (req) => {
               recipientName,
               plan,
               billingPeriod: billing_period,
-              expiresAt: expiresAt.toISOString(),
+              expiresAt: expiresAt ? expiresAt.toISOString() : null,
               event: "activated",
             },
           },
@@ -280,7 +249,7 @@ serve(async (req) => {
         success: true,
         plan,
         max_products: planConfig.maxProducts,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expiresAt ? expiresAt.toISOString() : null,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
