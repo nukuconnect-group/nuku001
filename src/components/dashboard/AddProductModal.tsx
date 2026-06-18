@@ -625,19 +625,58 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Select
-                    value={newProduct.category}
-                    onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productCategories.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Searchable category combobox — type to filter, click to pick */}
+                  <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={categoryOpen}
+                        className="flex-1 justify-between font-normal"
+                      >
+                        <span className={newProduct.category ? "text-foreground" : "text-muted-foreground"}>
+                          {newProduct.category || "Rechercher ou sélectionner…"}
+                        </span>
+                        <ChevronsUpDown className="w-4 h-4 opacity-50 ml-2 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width] max-h-[300px] overflow-hidden" align="start">
+                      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                        <Search className="w-4 h-4 text-muted-foreground" />
+                        <input
+                          autoFocus
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          placeholder="Rechercher une catégorie…"
+                          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                      <div className="max-h-[240px] overflow-y-auto py-1">
+                        {filteredCategories.length === 0 ? (
+                          <div className="px-3 py-6 text-center text-xs text-muted-foreground space-y-2">
+                            <p>Aucune catégorie trouvée</p>
+                            <Button type="button" size="sm" variant="outline" className="text-xs h-7"
+                              onClick={() => { setCustomCategory(categorySearch); setCategoryOpen(false); setShowNewCategory(true); }}>
+                              <Plus className="w-3 h-3 mr-1" /> Créer « {categorySearch || "nouvelle"} »
+                            </Button>
+                          </div>
+                        ) : (
+                          filteredCategories.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => { setNewProduct({ ...newProduct, category: c }); setCategoryOpen(false); setCategorySearch(""); }}
+                              className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted text-left"
+                            >
+                              <span>{c}</span>
+                              {newProduct.category === c && <Check className="w-4 h-4 text-primary" />}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Button type="button" size="sm" variant="outline" onClick={() => setShowNewCategory(true)} title="Créer une catégorie">
                     <Plus className="w-4 h-4" />
                   </Button>
