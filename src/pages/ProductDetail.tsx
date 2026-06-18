@@ -923,9 +923,9 @@ const ProductDetail = () => {
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        url={typeof window !== "undefined" ? window.location.href : ""}
+        url={productShareUrl(product?.slug || id || "")}
         title={product?.name || "Produit"}
-        description={`${product?.name || ""} sur NukuConnect`}
+        description={product?.description || `${product?.name || ""} sur NukuConnect`}
       />
     </div>
   );

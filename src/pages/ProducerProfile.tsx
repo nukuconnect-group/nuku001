@@ -534,9 +534,9 @@ const ProducerProfile = () => {
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        url={typeof window !== "undefined" ? window.location.href : ""}
+        url={shopShareUrl((producer as any)?.business_name || producer?.full_name || "")}
         title={(producer as any)?.business_name || producer?.full_name || "Boutique"}
-        description="Découvrez cette boutique sur NukuConnect"
+        description={producer?.bio || "Découvrez cette boutique sur NukuConnect"}
       />
       {producer?.user_id && <UserPixels ownerUserId={producer.user_id} />}
     </div>
