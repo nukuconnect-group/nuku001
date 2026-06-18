@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
+import { shopShareUrl } from "@/lib/shareOg";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import { useGeocodeLocation } from "@/hooks/useGeocodeLocation";
@@ -534,9 +535,9 @@ const ProducerProfile = () => {
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        url={typeof window !== "undefined" ? window.location.href : ""}
+        url={shopShareUrl((producer as any)?.business_name || producer?.full_name || "")}
         title={(producer as any)?.business_name || producer?.full_name || "Boutique"}
-        description="Découvrez cette boutique sur NukuConnect"
+        description={producer?.bio || "Découvrez cette boutique sur NukuConnect"}
       />
       {producer?.user_id && <UserPixels ownerUserId={producer.user_id} />}
     </div>
