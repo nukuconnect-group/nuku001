@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
+import { shopShareUrl } from "@/lib/shareOg";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import { useGeocodeLocation } from "@/hooks/useGeocodeLocation";

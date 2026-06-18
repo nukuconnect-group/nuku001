@@ -58,6 +58,7 @@ import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 import ShareDialog from "@/components/share/ShareDialog";
 import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
+import { productShareUrl } from "@/lib/shareOg";
 
 const ProductDetail = () => {
   const { id } = useParams();
