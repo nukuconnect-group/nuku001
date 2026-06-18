@@ -185,10 +185,11 @@ const Producers = () => {
 
           {heroStats && (
             <NetworkHeroStats
-              suppliers={heroStats.suppliers}
-              producers={heroStats.producers}
-              buyers={heroStats.buyers}
-              verified={heroStats.verified}
+              // Harmonized minimums shown to the public, matching homepage hero
+              suppliers={Math.max(heroStats.suppliers, 3000)}
+              producers={Math.max(heroStats.producers, 2000)}
+              buyers={Math.max(heroStats.buyers, 4600)}
+              verified={Math.max(heroStats.verified, 500)}
             />
           )}
         </div>
