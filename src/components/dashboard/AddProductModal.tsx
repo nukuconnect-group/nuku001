@@ -18,6 +18,9 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin, CheckCircle2, Sparkles, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
+import { useQueryClient } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
 import PriceTiersEditor, { type TierDraft, validateTiers } from "@/components/dashboard/PriceTiersEditor";
 
@@ -445,24 +448,38 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   // Fetch categories from DB
   const { data: dbCategoriesList = [] } = useCategories();
+  const queryClient = useQueryClient();
   const [customCategory, setCustomCategory] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   const productCategories = useMemo(() => {
     return dbCategoriesList.map(c => c.name);
   }, [dbCategoriesList]);
 
+  const filteredCategories = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    if (!q) return productCategories;
+    return productCategories.filter((c) => c.toLowerCase().includes(q));
+  }, [productCategories, categorySearch]);
+
   const handleCreateCategory = async () => {
     if (!customCategory.trim()) return;
+    const name = customCategory.trim();
     const { error } = await supabase.from("categories").insert({
-      name: customCategory.trim(),
+      name,
       sort_order: dbCategoriesList.length + 1,
     } as any);
     if (!error) {
-      setNewProduct({ ...newProduct, category: customCategory.trim() });
+      // Refresh the category list immediately so it shows up in this modal
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setNewProduct({ ...newProduct, category: name });
       setCustomCategory("");
       setShowNewCategory(false);
-      toast({ title: "Catégorie créée !" });
+      toast({ title: "Catégorie créée !", description: `« ${name} » est disponible.` });
+    } else {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   };
 
