@@ -31,3 +31,5 @@ project_id = "fpnhdihvnfsiymopbjgt"
     verify_jwt = false
   [functions.reverse-geocode]
     verify_jwt = false
+  [functions.share-og]
+    verify_jwt = false
