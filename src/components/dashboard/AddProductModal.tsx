@@ -18,6 +18,9 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Plus, Loader2, Upload, X, Tag, Zap, Edit, Crown, Eye, Package, MapPin, CheckCircle2, Sparkles, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCategories } from "@/hooks/useCategories";
+import { useQueryClient } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
 import PriceTiersEditor, { type TierDraft, validateTiers } from "@/components/dashboard/PriceTiersEditor";
 
@@ -445,24 +448,38 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
 
   // Fetch categories from DB
   const { data: dbCategoriesList = [] } = useCategories();
+  const queryClient = useQueryClient();
   const [customCategory, setCustomCategory] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   const productCategories = useMemo(() => {
     return dbCategoriesList.map(c => c.name);
   }, [dbCategoriesList]);
 
+  const filteredCategories = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    if (!q) return productCategories;
+    return productCategories.filter((c) => c.toLowerCase().includes(q));
+  }, [productCategories, categorySearch]);
+
   const handleCreateCategory = async () => {
     if (!customCategory.trim()) return;
+    const name = customCategory.trim();
     const { error } = await supabase.from("categories").insert({
-      name: customCategory.trim(),
+      name,
       sort_order: dbCategoriesList.length + 1,
     } as any);
     if (!error) {
-      setNewProduct({ ...newProduct, category: customCategory.trim() });
+      // Refresh the category list immediately so it shows up in this modal
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setNewProduct({ ...newProduct, category: name });
       setCustomCategory("");
       setShowNewCategory(false);
-      toast({ title: "Catégorie créée !" });
+      toast({ title: "Catégorie créée !", description: `« ${name} » est disponible.` });
+    } else {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
   };
 
@@ -608,19 +625,58 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Select
-                    value={newProduct.category}
-                    onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productCategories.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Searchable category combobox — type to filter, click to pick */}
+                  <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={categoryOpen}
+                        className="flex-1 justify-between font-normal"
+                      >
+                        <span className={newProduct.category ? "text-foreground" : "text-muted-foreground"}>
+                          {newProduct.category || "Rechercher ou sélectionner…"}
+                        </span>
+                        <ChevronsUpDown className="w-4 h-4 opacity-50 ml-2 shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width] max-h-[300px] overflow-hidden" align="start">
+                      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                        <Search className="w-4 h-4 text-muted-foreground" />
+                        <input
+                          autoFocus
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          placeholder="Rechercher une catégorie…"
+                          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                      <div className="max-h-[240px] overflow-y-auto py-1">
+                        {filteredCategories.length === 0 ? (
+                          <div className="px-3 py-6 text-center text-xs text-muted-foreground space-y-2">
+                            <p>Aucune catégorie trouvée</p>
+                            <Button type="button" size="sm" variant="outline" className="text-xs h-7"
+                              onClick={() => { setCustomCategory(categorySearch); setCategoryOpen(false); setShowNewCategory(true); }}>
+                              <Plus className="w-3 h-3 mr-1" /> Créer « {categorySearch || "nouvelle"} »
+                            </Button>
+                          </div>
+                        ) : (
+                          filteredCategories.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => { setNewProduct({ ...newProduct, category: c }); setCategoryOpen(false); setCategorySearch(""); }}
+                              className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted text-left"
+                            >
+                              <span>{c}</span>
+                              {newProduct.category === c && <Check className="w-4 h-4 text-primary" />}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Button type="button" size="sm" variant="outline" onClick={() => setShowNewCategory(true)} title="Créer une catégorie">
                     <Plus className="w-4 h-4" />
                   </Button>

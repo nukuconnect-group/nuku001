@@ -25,6 +25,7 @@ import {
   ArrowLeft, Search, ShoppingBag, FileDown, MapPin, FileText, Download, Loader2, Ban, Trash2,
 } from "lucide-react";
 const DeliveryLiveMap = lazy(() => import("@/components/delivery/DeliveryLiveMap"));
+import TrackOrderHero from "@/components/orders/TrackOrderHero";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 import { generateOrdersRecapPDF } from "@/utils/generateOrdersRecapPDF";
 import { toast } from "sonner";
@@ -438,6 +439,9 @@ const MesCommandes = () => {
               <span className="sm:hidden">PDF</span>
             </Button>
           </div>
+
+          {/* Amazon-style hero: look up any order by ID + email and see the journey */}
+          <TrackOrderHero />
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">

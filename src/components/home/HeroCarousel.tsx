@@ -9,6 +9,8 @@ import heroOrganic from "@/assets/hero-organic-farm.jpg";
 import heroAI from "@/assets/hero-ai-agriculture.jpg";
 import heroDrone from "@/assets/hero-drone-agriculture.png";
 import heroShopping from "@/assets/hero-online-shopping-woman.jpg";
+import heroInternationalLogistics from "@/assets/hero-international-logistics.jpg";
+import heroDeliveryModern from "@/assets/hero-delivery-modern.jpg";
 
 const slides = [
   {
@@ -17,6 +19,18 @@ const slides = [
     subtitle: "Achat en Ligne",
     description: "Commandez directement auprès des producteurs vérifiés et recevez vos produits frais à domicile.",
     brandOverlay: true,
+  },
+  {
+    image: heroInternationalLogistics,
+    title: "Logistique internationale : exportez vos produits agricoles",
+    subtitle: "Export & Fret Aérien",
+    description: "NUKUCONNECT connecte vos produits agricoles au monde entier grâce à un réseau logistique international fiable et rapide.",
+  },
+  {
+    image: heroDeliveryModern,
+    title: "Livraison rapide et professionnelle à votre porte",
+    subtitle: "Livreurs Vérifiés",
+    description: "Notre flotte interne de livreurs vérifiés assure une livraison rapide, suivie en temps réel et sécurisée.",
   },
   {
     image: heroDrone,
@@ -51,9 +65,9 @@ const slides = [
 ];
 
 const stats = [
-  { value: "10K+", label: "Producteurs" },
-  { value: "25K+", label: "Acheteurs" },
-  { value: "50K+", label: "Transactions" },
+  { value: "3K+", label: "Fournisseurs" },
+  { value: "2K+", label: "Producteurs" },
+  { value: "4,6K+", label: "Acheteurs" },
 ];
 
 const HeroCarousel = () => {
