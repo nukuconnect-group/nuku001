@@ -118,21 +118,27 @@ const TrackOrderHero = () => {
     : -1;
 
   return (
-    <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <CardContent className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <Package className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h2 className="font-heading text-lg sm:text-xl font-bold leading-tight">
-              Suivre une commande
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Entrez votre numéro de commande et votre email pour afficher le parcours du produit.
-            </p>
-          </div>
+    <Card className="overflow-hidden border-primary/20">
+      {/* Amazon-style banner */}
+      <div className="relative h-28 sm:h-36 w-full overflow-hidden">
+        <img
+          src={nukuDeliveryRider}
+          alt="Suivez vos commandes NukuConnect"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/55 to-transparent" />
+        <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6">
+          <h2 className="font-heading text-white text-lg sm:text-2xl font-extrabold leading-tight drop-shadow">
+            Suivre votre commande
+          </h2>
+          <p className="text-white/95 text-[11px] sm:text-sm mt-1 max-w-[36ch]">
+            Entrez votre numéro de commande et votre email pour afficher le parcours en temps réel.
+          </p>
         </div>
+      </div>
+      <CardContent className="p-4 sm:p-6 space-y-4">
+
 
         <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-2">
           <Input
