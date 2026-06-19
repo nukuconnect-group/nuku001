@@ -30,7 +30,7 @@ describe("ProducerProfile — non-regression Passe 3", () => {
 
   it("absoluteUrl préserve les URL absolues et préfixe les chemins relatifs", () => {
     expect(absoluteUrl("https://x.test/a")).toBe("https://x.test/a");
-    expect(absoluteUrl("/produit/42")).toBe("https://www.nukuconnect.com/produit/42");
-    expect(absoluteUrl("produit/42")).toBe("https://www.nukuconnect.com/produit/42");
+    expect(absoluteUrl("/produit/42")).toBe("https://nukuconnect.com/produit/42");
+    expect(absoluteUrl("produit/42")).toBe("https://nukuconnect.com/produit/42");
   });
 });

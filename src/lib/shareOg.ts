@@ -2,12 +2,11 @@
  * Build a clean, SEO-friendly share URL on the canonical site domain.
  *
  * We intentionally NO LONGER point share buttons at the supabase functions
- * domain — production share links must show `https://www.nukuconnect.com/...`.
+ * domain — production share links must show `https://nukuconnect.com/...`.
  *
  * The per-route SEO component (`src/components/SEO.tsx`) injects the
  * appropriate <title>, <meta name="description">, og:* and twitter:*
- * tags via react-helmet-async, so JS-aware crawlers + Google see the full
- * product/shop preview when scraping these URLs.
+ * tags for route-level SEO and any crawler/browser that evaluates the app.
  */
 export const SITE_URL = "https://nukuconnect.com";
 export const DEFAULT_SOCIAL_IMAGE =

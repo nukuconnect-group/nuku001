@@ -11,7 +11,7 @@
 //   /functions/v1/share-og?type=shop&name=<business-name>
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const SITE = "https://www.nukuconnect.com";
+const SITE = "https://nukuconnect.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEFAULT_IMAGE =
@@ -72,13 +72,12 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
   const col = isUUID(id) ? "id" : "slug";
   const { data: product } = await admin
     .from("products")
-    .select("id, slug, name, description, price, unit, images, image, location")
+    .select("id, slug, name, description, price, unit, images, location")
     .eq(col, id)
     .maybeSingle();
   if (!product) return null;
   const img =
-    (Array.isArray(product.images) && product.images[0]) ||
-    product.image ||
+    (Array.isArray(product.images) && product.images.find((value: unknown) => typeof value === "string" && value.trim())) ||
     DEFAULT_IMAGE;
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;

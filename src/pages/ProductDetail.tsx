@@ -58,7 +58,8 @@ import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 import ShareDialog from "@/components/share/ShareDialog";
 import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
-import { DEFAULT_SOCIAL_IMAGE, productShareUrl } from "@/lib/shareOg";
+import { productShareUrl } from "@/lib/shareOg";
+import { buildProductSeoMeta } from "@/lib/socialMeta";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -83,9 +84,20 @@ const ProductDetail = () => {
   const product = dbProductById || dbProductBySlug || null;
   const isLoading = isUUID ? loadingById : loadingBySlug;
 
-  const images = product?.images?.filter(Boolean)?.length ? product.images.filter(Boolean) : (product?.image ? [product.image] : []);
-  const primaryShareImage = images[0] || DEFAULT_SOCIAL_IMAGE;
-  const canonicalProductUrl = product ? `/produit/${product.slug || product.id || id}` : `/produit/${id || ""}`;
+  const actualProductImages = product?.images?.filter(Boolean) || [];
+  const images = actualProductImages.length ? actualProductImages : (product?.image ? [product.image] : []);
+  const seoMeta = product ? buildProductSeoMeta({
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    unit: product.unit,
+    location: product.location,
+    quantity: product.quantity,
+    images: actualProductImages,
+    producerName: product.producer?.name,
+  }) : null;
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
 
@@ -269,28 +281,12 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
       <SEO
-        url={canonicalProductUrl}
-        title={product.name}
-        description={product.description || `${product.name} - ${product.price} FCFA/${product.unit}. Disponible à ${product.location}.`}
-        image={primaryShareImage}
+        url={seoMeta?.path}
+        title={seoMeta?.title}
+        description={seoMeta?.description}
+        image={seoMeta?.image}
         type="product"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          "name": product.name,
-          "description": product.description || product.name,
-          "image": primaryShareImage,
-          "offers": {
-            "@type": "Offer",
-            "price": product.price,
-            "priceCurrency": "XOF",
-            "availability": product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-            "seller": {
-              "@type": "Organization",
-              "name": product.producer?.name || "NUKUCONNECT"
-            }
-          }
-        }}
+        jsonLd={seoMeta?.jsonLd}
       />
       <Header />
       <main>

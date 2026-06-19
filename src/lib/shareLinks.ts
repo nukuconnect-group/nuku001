@@ -1,4 +1,4 @@
-const BASE = "https://www.nukuconnect.com";
+const BASE = "https://nukuconnect.com";
 
 export const absoluteUrl = (path: string) => {
   if (/^https?:\/\//.test(path)) return path;

@@ -14,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
-import { DEFAULT_SOCIAL_IMAGE, shopShareUrl } from "@/lib/shareOg";
+import { shopShareUrl } from "@/lib/shareOg";
+import { buildShopSeoMeta } from "@/lib/socialMeta";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import { useGeocodeLocation } from "@/hooks/useGeocodeLocation";
@@ -247,8 +248,13 @@ const ProducerProfile = () => {
   const coords: [number, number] | null = profileCoords || geocoded || null;
   const rating = avgRating || 0;
   const shopName = ((producer as any)?.business_name || producer?.full_name || "Boutique").trim();
-  const shopImage = producer?.cover_url || producer?.avatar_url || DEFAULT_SOCIAL_IMAGE;
-  const shopCanonicalPath = `/producteurs/${encodeURIComponent(shopName)}`;
+  const shopSeoMeta = buildShopSeoMeta({
+    name: shopName,
+    bio: producer?.bio,
+    avatarUrl: producer?.avatar_url,
+    coverUrl: producer?.cover_url,
+    location: producer?.location,
+  });
 
   if (isLoading) {
     return (
@@ -279,11 +285,12 @@ const ProducerProfile = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <SEO
-        url={shopCanonicalPath}
-        title={shopName || "Profil Fournisseur"}
-        description={producer.bio || `Découvrez le profil de ${producer.full_name || "ce fournisseur"} sur NUKUCONNECT.`}
-        image={shopImage}
+        url={shopSeoMeta.path}
+        title={shopSeoMeta.title || "Profil Fournisseur"}
+        description={shopSeoMeta.description}
+        image={shopSeoMeta.image}
         type="profile"
+        jsonLd={shopSeoMeta.jsonLd}
       />
       <Header />
       <main>
