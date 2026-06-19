@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import nukuDeliveryRider from "@/assets/header-slide-nuku-delivery-rider.jpg";
 
 /**
  * Amazon-style "Suivre une commande" hero panel.
@@ -97,6 +98,11 @@ const TrackOrderHero = () => {
       }
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) { setError("Commande introuvable ou email incorrect."); return; }
+      // Hide pending / unpaid orders from the tracking module
+      if (row.status === "pending" || row.status === "cancelled") {
+        setError("Cette commande n'est pas encore confirmée. Le suivi sera disponible dès le paiement validé.");
+        return;
+      }
       setOrder(row as any);
     } catch (e: any) {
       console.error("[track-order] lookup failed", e);
