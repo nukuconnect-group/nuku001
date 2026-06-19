@@ -4,7 +4,7 @@
 // This function:
 //  - looks up the product / supplier from the DB
 //  - returns a tiny HTML page with the right <meta property="og:*"> values
-//  - redirects real browsers via JS + meta refresh to the canonical SPA URL
+//  - offers a delayed browser refresh to the canonical SPA URL after crawlers read the tags
 //
 // Usage:
 //   /functions/v1/share-og?type=product&id=<id-or-slug>
@@ -57,8 +57,7 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:description" content="${esc(p.description)}" />
 <meta name="twitter:image" content="${esc(p.image)}" />
 ${p.jsonLd ? `<script type="application/ld+json">${JSON.stringify(p.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
-<meta http-equiv="refresh" content="0; url=${esc(p.url)}" />
-<script>window.location.replace(${JSON.stringify(p.url)});</script>
+<meta http-equiv="refresh" content="3; url=${esc(p.url)}" />
 </head>
 <body>
 <p>Redirection vers <a href="${esc(p.url)}">${esc(p.title)}</a>…</p>
