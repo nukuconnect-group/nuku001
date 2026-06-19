@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot, ArrowRight, Award } from "lucide-react";
+import { ChevronLeft, ChevronRight, Leaf, Truck, Sparkles, Users, ShieldCheck, ShoppingBasket, Bot, ArrowRight, Award, Plane } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
-import driverLogistics from "@/assets/header-slide-driver-logistics.jpg";
+import nukuDeliveryRider from "@/assets/header-slide-nuku-delivery-rider.jpg";
+import internationalCargo from "@/assets/header-slide-international-cargo.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 import agriDrone from "@/assets/header-slide-agri-drone.jpg";
 import togoTopImpactAsset from "@/assets/togo-top-impact-2025.png.asset.json";
@@ -45,11 +46,21 @@ const slides = [
     eyebrow: "Livraison NukuConnect",
     pill: "Flotte interne",
     title: "Vos commandes livrées par notre flotte interne",
-    subtitle: "Livreurs vérifiés, suivi GPS en temps réel et tarifs transparents.",
+    subtitle: "Livreurs vérifiés en gilet NukuConnect, suivi GPS en temps réel et tarifs transparents.",
     cta: { label: "Suivre mes commandes", to: "/suivi-livraison" },
     secondary: { label: "Devenir livreur", to: "/devenir-vendeur" },
     Icon: Truck,
-    image: driverLogistics,
+    image: nukuDeliveryRider,
+  },
+  {
+    eyebrow: "Transport international",
+    pill: "Export Afrique",
+    title: "Exportez vos produits agricoles à l'international",
+    subtitle: "Logistique aérienne et maritime sécurisée pour vos exportations vers l'Europe, l'Asie et au-delà.",
+    cta: { label: "Découvrir l'export", to: "/marketplace" },
+    secondary: { label: "Nous contacter", to: "/contact" },
+    Icon: Plane,
+    image: internationalCargo,
   },
   {
     eyebrow: "Assistant IA agricole",
