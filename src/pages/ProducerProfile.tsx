@@ -15,6 +15,7 @@ import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
 import { shopShareUrl } from "@/lib/shareOg";
+import { buildShopSeoMeta } from "@/lib/socialMeta";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
 import { useGeocodeLocation } from "@/hooks/useGeocodeLocation";
@@ -112,16 +113,24 @@ const ProducerProfile = () => {
           .maybeSingle();
         if (data) return data;
       }
-      // Fallback: search by name
+      // Fallback: canonical public route uses the business name first, then full name.
       const decodedName = decodeURIComponent(profileId);
-      const { data, error } = await supabase
+      const { data: byBusiness, error: businessError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("full_name", decodedName)
+        .ilike("business_name", decodedName)
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (businessError) throw businessError;
+      if (byBusiness) return byBusiness;
+      const { data: byFullName, error: fullNameError } = await supabase
+        .from("profiles")
+        .select("*")
+        .ilike("full_name", decodedName)
+        .limit(1)
+        .maybeSingle();
+      if (fullNameError) throw fullNameError;
+      return byFullName;
     },
     enabled: !!profileId,
   });
@@ -238,6 +247,14 @@ const ProducerProfile = () => {
     : null;
   const coords: [number, number] | null = profileCoords || geocoded || null;
   const rating = avgRating || 0;
+  const shopName = ((producer as any)?.business_name || producer?.full_name || "Boutique").trim();
+  const shopSeoMeta = buildShopSeoMeta({
+    name: shopName,
+    bio: producer?.bio,
+    avatarUrl: producer?.avatar_url,
+    coverUrl: producer?.cover_url,
+    location: producer?.location,
+  });
 
   if (isLoading) {
     return (
@@ -268,11 +285,12 @@ const ProducerProfile = () => {
   return (
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <SEO
-        url={`/producteurs/${profileId}`}
-        title={producer.full_name || "Profil Fournisseur"}
-        description={producer.bio || `Découvrez le profil de ${producer.full_name || "ce fournisseur"} sur NUKUCONNECT.`}
-        image={producer.avatar_url || undefined}
+        url={shopSeoMeta.path}
+        title={shopSeoMeta.title || "Profil Fournisseur"}
+        description={shopSeoMeta.description}
+        image={shopSeoMeta.image}
         type="profile"
+        jsonLd={shopSeoMeta.jsonLd}
       />
       <Header />
       <main>
@@ -535,8 +553,8 @@ const ProducerProfile = () => {
       <ShareDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        url={shopShareUrl((producer as any)?.business_name || producer?.full_name || "")}
-        title={(producer as any)?.business_name || producer?.full_name || "Boutique"}
+        url={shopShareUrl(shopName)}
+        title={shopName || "Boutique"}
         description={producer?.bio || "Découvrez cette boutique sur NukuConnect"}
       />
       {producer?.user_id && <UserPixels ownerUserId={producer.user_id} />}

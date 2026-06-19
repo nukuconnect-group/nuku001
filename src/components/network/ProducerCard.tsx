@@ -42,6 +42,7 @@ export default function ProducerCard({ producer, compact = false, index = 0 }: P
 
   const following = isFollowing(producer.id);
   const isSelf = myProfile?.id === producer.id;
+  const profileHref = `/producteurs/${encodeURIComponent(producer.name || producer.id)}`;
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,7 +78,7 @@ export default function ProducerCard({ producer, compact = false, index = 0 }: P
       transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.4), ease: "easeOut" }}
       className="h-full"
     >
-      <Link to={`/producteurs/${producer.id}`} className="block group h-full">
+      <Link to={profileHref} className="block group h-full">
         <Card className="overflow-hidden h-full border-border/40 hover:border-primary/30 hover:shadow-elevated transition-all duration-300">
           <div className="relative h-20 sm:h-24 overflow-hidden bg-muted">
             {producer.cover ? (

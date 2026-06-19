@@ -1,8 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { useSeoSettings } from "@/hooks/useSeoSettings";
+import { DEFAULT_SOCIAL_IMAGE, SITE_URL } from "@/lib/shareOg";
 
-const BASE_URL = "https://www.nukuconnect.com";
+const BASE_URL = SITE_URL;
 
 /** Build a canonical URL stripped of tracking params (srsltid, gclid, fbclid, utm_*, ...). */
 const buildCanonical = (path: string): string => {
@@ -11,7 +12,7 @@ const buildCanonical = (path: string): string => {
   const cleanPath = path.split("?")[0].split("#")[0] || "/";
   return `${BASE_URL}${cleanPath}`;
 };
-const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
+const DEFAULT_IMAGE = DEFAULT_SOCIAL_IMAGE;
 const SITE_NAME = "NUKUCONNECT";
 
 interface SEOProps {

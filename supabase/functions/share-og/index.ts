@@ -4,14 +4,14 @@
 // This function:
 //  - looks up the product / supplier from the DB
 //  - returns a tiny HTML page with the right <meta property="og:*"> values
-//  - redirects real browsers via JS + meta refresh to the canonical SPA URL
+//  - offers a delayed browser refresh to the canonical SPA URL after crawlers read the tags
 //
 // Usage:
 //   /functions/v1/share-og?type=product&id=<id-or-slug>
 //   /functions/v1/share-og?type=shop&name=<business-name>
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const SITE = "https://www.nukuconnect.com";
+const SITE = "https://nukuconnect.com";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEFAULT_IMAGE =
@@ -57,8 +57,7 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:description" content="${esc(p.description)}" />
 <meta name="twitter:image" content="${esc(p.image)}" />
 ${p.jsonLd ? `<script type="application/ld+json">${JSON.stringify(p.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
-<meta http-equiv="refresh" content="0; url=${esc(p.url)}" />
-<script>window.location.replace(${JSON.stringify(p.url)});</script>
+<meta http-equiv="refresh" content="3; url=${esc(p.url)}" />
 </head>
 <body>
 <p>Redirection vers <a href="${esc(p.url)}">${esc(p.title)}</a>…</p>
@@ -72,13 +71,12 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
   const col = isUUID(id) ? "id" : "slug";
   const { data: product } = await admin
     .from("products")
-    .select("id, slug, name, description, price, unit, images, image, location")
+    .select("id, slug, name, description, price, unit, images, location")
     .eq(col, id)
     .maybeSingle();
   if (!product) return null;
   const img =
-    (Array.isArray(product.images) && product.images[0]) ||
-    product.image ||
+    (Array.isArray(product.images) && product.images.find((value: unknown) => typeof value === "string" && value.trim())) ||
     DEFAULT_IMAGE;
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;

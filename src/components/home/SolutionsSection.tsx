@@ -34,7 +34,7 @@ const SolutionsSection = () => {
       title: t("sol.connect"),
       description: t("sol.connectDesc"),
       cta: t("sol.connectCta"),
-      link: "/devenir-vendeur",
+      link: "/devenir-fournisseur",
       gradient: "from-primary/10 to-primary/5",
       iconBg: "bg-primary/15",
       iconColor: "text-primary",
