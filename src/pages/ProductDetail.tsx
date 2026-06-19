@@ -58,7 +58,7 @@ import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 import ShareDialog from "@/components/share/ShareDialog";
 import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
-import { productShareUrl } from "@/lib/shareOg";
+import { DEFAULT_SOCIAL_IMAGE, productShareUrl } from "@/lib/shareOg";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -83,7 +83,9 @@ const ProductDetail = () => {
   const product = dbProductById || dbProductBySlug || null;
   const isLoading = isUUID ? loadingById : loadingBySlug;
 
-  const images = product?.images?.length ? product.images : (product ? [product.image] : []);
+  const images = product?.images?.filter(Boolean)?.length ? product.images.filter(Boolean) : (product?.image ? [product.image] : []);
+  const primaryShareImage = images[0] || DEFAULT_SOCIAL_IMAGE;
+  const canonicalProductUrl = product ? `/produit/${product.slug || product.id || id}` : `/produit/${id || ""}`;
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
 
@@ -267,17 +269,17 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0 overflow-x-hidden">
       <SEO
-        url={`/produit/${product.slug || id}`}
+        url={canonicalProductUrl}
         title={product.name}
         description={product.description || `${product.name} - ${product.price} FCFA/${product.unit}. Disponible à ${product.location}.`}
-        image={images[0] || undefined}
+        image={primaryShareImage}
         type="product"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Product",
           "name": product.name,
           "description": product.description || product.name,
-          "image": images[0] || "",
+          "image": primaryShareImage,
           "offers": {
             "@type": "Offer",
             "price": product.price,

@@ -9,14 +9,20 @@
  * tags via react-helmet-async, so JS-aware crawlers + Google see the full
  * product/shop preview when scraping these URLs.
  */
-const SITE = "https://www.nukuconnect.com";
+export const SITE_URL = "https://nukuconnect.com";
+export const DEFAULT_SOCIAL_IMAGE =
+  "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
+
+const cleanSegment = (value: string) => encodeURIComponent(value.trim());
 
 /** Build product share URL using its slug or id. */
 export function productShareUrl(idOrSlug: string): string {
-  return `${SITE}/produit/${encodeURIComponent(idOrSlug)}`;
+  const safe = idOrSlug.trim();
+  return safe ? `${SITE_URL}/produit/${cleanSegment(safe)}` : SITE_URL;
 }
 
 /** Build shop share URL using business name (or full name fallback). */
 export function shopShareUrl(businessNameOrFull: string): string {
-  return `${SITE}/producteurs/${encodeURIComponent(businessNameOrFull)}`;
+  const safe = businessNameOrFull.trim();
+  return safe ? `${SITE_URL}/producteurs/${cleanSegment(safe)}` : `${SITE_URL}/producteurs`;
 }

@@ -173,6 +173,18 @@ const Auth = () => {
 
   const returnTo = new URLSearchParams(window.location.search).get("returnTo");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    const type = params.get("type");
+    const allowedTypes = ["producer", "buyer", "driver", "learner", "trainer"] as const;
+    if (mode === "signup") setAuthMode("signup");
+    if (allowedTypes.includes(type as any)) {
+      setUserType(type as typeof allowedTypes[number]);
+      setSignupStep("form");
+    }
+  }, []);
+
   // Capture referral code from URL and persist it — switch to signup tab
   const [activeRefCode, setActiveRefCode] = useState<string | null>(
     typeof window !== "undefined" ? localStorage.getItem("nukuconnect-ref") : null

@@ -6,7 +6,7 @@ import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
 import nukuDeliveryRider from "@/assets/header-slide-nuku-delivery-rider.jpg";
-import internationalCargo from "@/assets/header-slide-international-cargo.jpg";
+import airplaneTakeoff from "@/assets/header-slide-airplane-takeoff.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 import agriDrone from "@/assets/header-slide-agri-drone.jpg";
 import togoTopImpactAsset from "@/assets/togo-top-impact-2025.png.asset.json";
@@ -18,7 +18,7 @@ const slides = [
     title: "NukuConnect élu Meilleure Innovation de l'année",
     subtitle: "Récompensé par Togo Top Impact 2025 — 8ᵉ édition. Une reconnaissance qui célèbre l'innovation au service de l'agriculture africaine.",
     cta: { label: "Lire l'article", to: "/blog/nukuconnect-meilleure-innovation-togo-top-impact-2025" },
-    secondary: { label: "Découvrir NukuConnect", to: "/about" },
+    secondary: { label: "Découvrir NukuConnect", to: "/a-propos" },
     Icon: Award,
     image: togoTopImpactAsset.url,
   },
@@ -47,8 +47,8 @@ const slides = [
     pill: "Flotte interne",
     title: "Vos commandes livrées par notre flotte interne",
     subtitle: "Livreurs vérifiés en gilet NukuConnect, suivi GPS en temps réel et tarifs transparents.",
-    cta: { label: "Suivre mes commandes", to: "/suivi-livraison" },
-    secondary: { label: "Devenir livreur", to: "/devenir-vendeur" },
+    cta: { label: "Suivre mes commandes", to: "/mes-commandes" },
+    secondary: { label: "Devenir livreur", to: "/auth?mode=signup&type=driver" },
     Icon: Truck,
     image: nukuDeliveryRider,
   },
@@ -60,7 +60,7 @@ const slides = [
     cta: { label: "Découvrir l'export", to: "/marketplace" },
     secondary: { label: "Nous contacter", to: "/contact" },
     Icon: Plane,
-    image: internationalCargo,
+    image: airplaneTakeoff,
   },
   {
     eyebrow: "Assistant IA agricole",
@@ -87,8 +87,8 @@ const slides = [
     pill: "100% sécurisé",
     title: "Vendez, payez et livrez en toute confiance",
     subtitle: "Des échanges agricoles transparents, de la boutique jusqu'à la livraison.",
-    cta: { label: "Vendre mes produits", to: "/devenir-vendeur" },
-    secondary: { label: "En savoir plus", to: "/about" },
+    cta: { label: "Vendre mes produits", to: "/devenir-fournisseur" },
+    secondary: { label: "En savoir plus", to: "/a-propos" },
     Icon: ShieldCheck,
     image: agriTransactionDelivery,
   },
