@@ -91,14 +91,26 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
   const searchProducts = async (code: string) => {
     setIsSearching(true);
     setSearchDone(false);
-    setScannedCode(code);
+    const normalizedCode = (() => {
+      try {
+        const parsed = new URL(code);
+        const productParam = parsed.searchParams.get("product");
+        if (productParam) return productParam;
+        const productMatch = parsed.pathname.match(/\/produit\/([^/]+)/);
+        if (productMatch?.[1]) return decodeURIComponent(productMatch[1]);
+      } catch {
+        // Plain product ID/name/batch code: keep as-is.
+      }
+      return code;
+    })();
+    setScannedCode(normalizedCode);
 
     try {
       // Try exact ID match
       const { data: byId } = await supabase
         .from("products")
         .select("*, profiles!products_producer_id_fkey(id, full_name, is_verified, avatar_url)")
-        .eq("id", code)
+        .eq("id", normalizedCode)
         .limit(1);
 
       if (byId && byId.length > 0) {
@@ -109,7 +121,7 @@ const QRScanner = ({ onScan, isOpen, onClose }: QRScannerProps) => {
       }
 
       // Search by name / category
-      const q = code.toLowerCase();
+      const q = normalizedCode.toLowerCase();
       const { data: byName } = await supabase
         .from("products")
         .select("*, profiles!products_producer_id_fkey(id, full_name, is_verified, avatar_url)")

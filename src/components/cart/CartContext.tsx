@@ -73,7 +73,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setActiveStorageKey(cartStorageKey);
   }, [isReady, cartStorageKey, user?.id]);
 
-  // Auto-remove items already paid/confirmed by the user; remind for pending unpaid items
+  // Auto-remove items only after a finalized paid order. Pending/processing orders
+  // must never remove products from the buyer cart while checkout is still running.
   // after a 5-minute delay so we don't spam the buyer the moment they add a product.
   const reminderShownRef = useRef(false);
   const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,7 +97,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         .select("product_id,status")
         .eq("buyer_id", prof.id)
         .in("product_id", ids)
-        .in("status", ["paid", "confirmed", "completed", "delivered", "shipped", "processing"]);
+        .in("status", ["paid", "confirmed", "completed", "delivered", "shipped"]);
       if (cancelled) return;
       const paidIds = new Set((paidOrders || []).map((o: any) => o.product_id));
       if (paidIds.size > 0) {
