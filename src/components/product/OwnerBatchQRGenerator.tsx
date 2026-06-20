@@ -147,7 +147,9 @@ export default function OwnerBatchQRGenerator({ productId, producerId, productNa
                 size="sm"
                 className="gap-1.5 h-7 text-[10px]"
                 onClick={() => {
-                  import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(qrValue, { width: 600, margin: 2, errorCorrectionLevel: "H" })).then((dataUrl) => {
+                  const value = qrValue;
+                  if (!value) return;
+                  import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(value, { width: 600, margin: 2, errorCorrectionLevel: "H" })).then((dataUrl) => {
                     const link = document.createElement("a");
                     link.href = dataUrl;
                     link.download = `qr-lot-${batchNumber}.png`;
