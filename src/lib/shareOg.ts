@@ -1,12 +1,9 @@
 /**
- * Build a clean, SEO-friendly share URL on the canonical site domain.
+ * Build crawler-friendly share URLs.
  *
- * We intentionally NO LONGER point share buttons at the supabase functions
- * domain — production share links must show `https://nukuconnect.com/...`.
- *
- * The per-route SEO component (`src/components/SEO.tsx`) injects the
- * appropriate <title>, <meta name="description">, og:* and twitter:*
- * tags for route-level SEO and any crawler/browser that evaluates the app.
+ * Social crawlers do not execute the React app, so shared product/shop links
+ * use the dedicated share-og HTML endpoint, then redirect users to the
+ * canonical `https://nukuconnect.com/...` route.
  */
 export const SITE_URL = "https://nukuconnect.com";
 export const DEFAULT_SOCIAL_IMAGE =
