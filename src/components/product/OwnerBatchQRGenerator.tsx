@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { QrCode, Loader2, Download, RefreshCw, CheckCircle2 } from "lucide-react";
+import QRCodeImage from "@/components/share/QRCodeImage";
 
 interface Props {
   productId: string;
@@ -95,10 +96,8 @@ export default function OwnerBatchQRGenerator({ productId, producerId, productNa
 
   if (loading || !isOwner) return null;
 
-  const qrUrl = batchNumber
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-        `${window.location.origin}/tracabilite?product=${productId}&batch=${batchNumber}&name=${encodeURIComponent(productName)}`
-      )}`
+  const qrValue = batchNumber
+    ? `${window.location.origin}/tracabilite?product=${productId}&batch=${encodeURIComponent(batchNumber)}&name=${encodeURIComponent(productName)}`
     : null;
 
   return (
@@ -136,10 +135,10 @@ export default function OwnerBatchQRGenerator({ productId, producerId, productNa
           </Button>
         </div>
 
-        {qrUrl && (
+        {qrValue && (
           <div className="flex items-start gap-3 pt-2 border-t border-border/40">
             <div className="bg-card p-2 rounded-lg border border-border flex-shrink-0">
-              <img src={qrUrl} alt={`QR Lot ${batchNumber}`} className="w-24 h-24 sm:w-28 sm:h-28" />
+              <QRCodeImage value={qrValue} alt={`QR Lot ${batchNumber}`} size={128} className="w-24 h-24 sm:w-28 sm:h-28" />
             </div>
             <div className="flex-1 space-y-1.5">
               <p className="text-[10px] text-muted-foreground">QR pour le lot <strong>{batchNumber}</strong></p>
@@ -148,10 +147,14 @@ export default function OwnerBatchQRGenerator({ productId, producerId, productNa
                 size="sm"
                 className="gap-1.5 h-7 text-[10px]"
                 onClick={() => {
-                  const link = document.createElement("a");
-                  link.href = qrUrl.replace("size=220x220", "size=600x600");
-                  link.download = `qr-lot-${batchNumber}.png`;
-                  link.click();
+                  const value = qrValue;
+                  if (!value) return;
+                  import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(value, { width: 600, margin: 2, errorCorrectionLevel: "H" })).then((dataUrl) => {
+                    const link = document.createElement("a");
+                    link.href = dataUrl;
+                    link.download = `qr-lot-${batchNumber}.png`;
+                    link.click();
+                  }).catch(() => toast({ title: "QR indisponible", description: "Impossible de générer le QR HD.", variant: "destructive" }));
                 }}
               >
                 <Download className="w-3 h-3" /> Télécharger HD

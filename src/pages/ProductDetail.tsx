@@ -58,6 +58,7 @@ import SimilarProducts from "@/components/product/SimilarProducts";
 import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 import ShareDialog from "@/components/share/ShareDialog";
 import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
+import QRCodeImage from "@/components/share/QRCodeImage";
 import { productShareUrl } from "@/lib/shareOg";
 import { buildProductSeoMeta } from "@/lib/socialMeta";
 
@@ -98,6 +99,9 @@ const ProductDetail = () => {
     images: actualProductImages,
     producerName: product.producer?.name,
   }) : null;
+  const traceabilityUrl = product
+    ? `/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`
+    : "/tracabilite";
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
 
@@ -455,13 +459,7 @@ const ProductDetail = () => {
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="bg-white p-1.5 rounded-lg border border-border flex-shrink-0">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-                          `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}`
-                        )}`}
-                        alt="QR Code traçabilité"
-                        className="w-20 h-20"
-                      />
+                      <QRCodeImage value={`${window.location.origin}${traceabilityUrl}`} alt="QR Code traçabilité" size={96} className="w-20 h-20" />
                     </div>
                     <div className="flex-1 space-y-2 min-w-0">
                       <p className="text-[11px] text-muted-foreground leading-snug">
@@ -784,13 +782,7 @@ const ProductDetail = () => {
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="bg-white p-2 rounded-lg border border-border flex-shrink-0">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                          `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`
-                        )}`}
-                        alt="QR Code traçabilité"
-                        className="w-24 h-24 sm:w-28 sm:h-28"
-                      />
+                      <QRCodeImage value={`${window.location.origin}${traceabilityUrl}`} alt="QR Code traçabilité" size={128} className="w-24 h-24 sm:w-28 sm:h-28" />
                     </div>
                     <div className="flex-1 space-y-2">
                       <p className="text-[10px] sm:text-xs text-muted-foreground">
@@ -810,12 +802,12 @@ const ProductDetail = () => {
                           size="sm"
                           className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8"
                           onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
-                              `${window.location.origin}/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}`
-                            )}`;
-                            link.download = `qr-tracabilite-${product.name.replace(/\s+/g, "-")}.png`;
-                            link.click();
+                            import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(`${window.location.origin}${traceabilityUrl}`, { width: 600, margin: 2, errorCorrectionLevel: "H" })).then((dataUrl) => {
+                              const link = document.createElement("a");
+                              link.href = dataUrl;
+                              link.download = `qr-tracabilite-${product.name.replace(/\s+/g, "-")}.png`;
+                              link.click();
+                            }).catch(() => toast({ title: "QR indisponible", description: "Impossible de générer le QR pour le moment.", variant: "destructive" }));
                           }}
                         >
                           <Download className="w-3 h-3" />QR

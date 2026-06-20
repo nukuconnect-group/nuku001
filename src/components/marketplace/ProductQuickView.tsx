@@ -147,7 +147,7 @@ export default function ProductQuickView({ product, open, onOpenChange }: Props)
               <Button
                 onClick={() => {
                   onOpenChange(false);
-                  navigate(`/product/${product.id}`);
+                  navigate(`/produit/${product.slug || product.id}`);
                 }}
                 size="sm"
                 variant="outline"

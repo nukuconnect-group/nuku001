@@ -80,6 +80,9 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
             <Input readOnly value={url} className="text-xs" />
             <Button variant="outline" size="icon" onClick={copy}><Copy className="w-4 h-4" /></Button>
           </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Ce lien passe par une page d’aperçu contrôlée, puis redirige vers la fiche officielle.
+          </p>
           <div className="grid grid-cols-3 gap-2">
             <a href={t.whatsapp} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="w-full gap-1"><MessageCircle className="w-3.5 h-3.5" />WhatsApp</Button></a>
             <a href={t.facebook} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="w-full gap-1"><Facebook className="w-3.5 h-3.5" />Facebook</Button></a>

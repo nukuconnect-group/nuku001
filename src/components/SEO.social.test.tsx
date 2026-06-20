@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import SEO from "./SEO";
 import { buildProductSeoMeta, buildShopSeoMeta } from "@/lib/socialMeta";
-import { DEFAULT_SOCIAL_IMAGE, productShareUrl, shopShareUrl } from "@/lib/shareOg";
+import { DEFAULT_SOCIAL_IMAGE, productCanonicalUrl, shopCanonicalUrl } from "@/lib/shareOg";
 
 vi.mock("@/hooks/useSeoSettings", () => ({
   useSeoSettings: () => null,
@@ -48,7 +48,7 @@ describe("social SEO rendering", () => {
     expect(getMeta('meta[property="og:title"]')).toContain("Maïs Jaune Premium");
     expect(getMeta('meta[property="og:description"]')).toBe(meta.description);
     expect(getMeta('meta[property="og:image"]')).toBe("https://cdn.nukuconnect.com/products/mais.jpg");
-    expect(getMeta('meta[property="og:url"]')).toBe(productShareUrl("mais-jaune-premium"));
+    expect(getMeta('meta[property="og:url"]')).toBe(productCanonicalUrl("mais-jaune-premium"));
     expect(getMeta('meta[name="twitter:title"]')).toContain("Maïs Jaune Premium");
     expect(getMeta('meta[name="twitter:image"]')).toBe("https://cdn.nukuconnect.com/products/mais.jpg");
     expect(getJsonLd()).toMatchObject({
@@ -76,7 +76,7 @@ describe("social SEO rendering", () => {
     expect(getMeta('meta[property="og:title"]')).toContain("Jeunagriculteur");
     expect(getMeta('meta[property="og:description"]')).toBe(meta.description);
     expect(getMeta('meta[property="og:image"]')).toBe(DEFAULT_SOCIAL_IMAGE);
-    expect(getMeta('meta[property="og:url"]')).toBe(shopShareUrl("Jeunagriculteur"));
+    expect(getMeta('meta[property="og:url"]')).toBe(shopCanonicalUrl("Jeunagriculteur"));
     expect(getMeta('meta[name="twitter:image"]')).toBe(DEFAULT_SOCIAL_IMAGE);
     expect(getJsonLd()).toMatchObject({
       "@type": "Organization",

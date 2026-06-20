@@ -263,6 +263,18 @@ const Cart = () => {
         },
       });
 
+      const pendingPayment = (() => {
+        try {
+          const raw = sessionStorage.getItem("nuku:pendingPayment") || localStorage.getItem("nuku:pendingPayment");
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      })();
+      if (pendingPayment?.paymentId) {
+        pendingCheckoutRef.current = { ...pendingCheckoutRef.current, paymentId: pendingPayment.paymentId };
+      }
+
       if (!opened) {
         await markOrdersFailed(orderIds, `Initialisation Moneroo échouée | tx_ref: ${identifier}`);
         setIsCheckingOut(false);

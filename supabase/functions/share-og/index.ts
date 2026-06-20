@@ -16,6 +16,11 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEFAULT_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+};
 
 const esc = (s: unknown) =>
   String(s ?? "")
@@ -33,6 +38,11 @@ interface OgPayload {
   price?: number;
   jsonLd?: Record<string, unknown>;
 }
+
+const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.stringify(body), {
+  status,
+  headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+});
 
 const renderHtml = (p: OgPayload) => `<!doctype html>
 <html lang="fr">
@@ -110,11 +120,12 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
 
 async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
   const clean = decodeURIComponent(name).trim();
+  const isProfileId = isUUID(clean);
   // Try exact business_name first, then full_name fallback
   let { data: profile } = await admin
     .from("profiles")
     .select("user_id, full_name, business_name, bio, avatar_url, cover_url, location")
-    .ilike("business_name", clean)
+    [isProfileId ? "eq" : "ilike"](isProfileId ? "id" : "business_name", clean)
     .maybeSingle();
   if (!profile) {
     const { data: byFull } = await admin
@@ -147,19 +158,43 @@ async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
   };
 }
 
+async function alertAdmins(admin: any, title: string, description: string, details: Record<string, unknown>) {
+  try {
+    const { data: admins } = await admin.from("user_roles").select("user_id").eq("role", "admin");
+    if (admins?.length) {
+      await admin.from("notifications").insert(admins.map((a: any) => ({
+        user_id: a.user_id,
+        type: "seo",
+        title,
+        description,
+      })));
+    }
+    console.warn("[share-og:alert]", JSON.stringify({ title, description, details }));
+  } catch (error) {
+    console.error("[share-og:alert-failed]", error);
+  }
+}
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const startedAt = Date.now();
   try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type") || "";
+    const format = url.searchParams.get("format") || "html";
+    const cacheBust = url.searchParams.get("v") || "";
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     let payload: OgPayload | null = null;
+    let resolved = false;
 
     if (type === "product") {
       const id = url.searchParams.get("id") || url.searchParams.get("slug") || "";
       if (id) payload = await buildProduct(admin, id);
+      resolved = Boolean(payload);
     } else if (type === "shop" || type === "profile" || type === "producer") {
       const name = url.searchParams.get("name") || url.searchParams.get("id") || "";
       if (name) payload = await buildShop(admin, name);
+      resolved = Boolean(payload);
     }
 
     if (!payload) {
@@ -173,13 +208,53 @@ Deno.serve(async (req) => {
       };
     }
 
+    const diagnostics = {
+      ok: resolved,
+      resolved,
+      type: payload.type,
+      requestedType: type,
+      cacheBust,
+      durationMs: Date.now() - startedAt,
+      meta: {
+        title: payload.title,
+        description: payload.description,
+        image: payload.image,
+        url: payload.url,
+        hasTitle: Boolean(payload.title),
+        hasDescription: Boolean(payload.description),
+        hasImage: Boolean(payload.image && payload.image !== DEFAULT_IMAGE),
+        hasCanonicalUrl: Boolean(payload.url && payload.url !== SITE),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: payload.title,
+        description: payload.description,
+        image: payload.image,
+      },
+      jsonLd: payload.jsonLd || null,
+    };
+
+    console.log("[share-og]", JSON.stringify({ ...diagnostics, userAgent: req.headers.get("user-agent") || "" }));
+    if (!resolved || !diagnostics.meta.hasTitle || !diagnostics.meta.hasDescription || !payload.image) {
+      await alertAdmins(
+        admin,
+        "⚠️ Aperçu partage incomplet",
+        `share-og n'a pas résolu les métadonnées ${type || "inconnues"}.`,
+        { requestedType: type, search: url.search, diagnostics },
+      );
+    }
+
+    if (format === "json" || url.searchParams.get("diagnostic") === "1") return json(diagnostics);
+
     return new Response(renderHtml(payload), {
       headers: {
+        ...corsHeaders,
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=300, s-maxage=600",
+        "Cache-Control": cacheBust ? "no-store" : "public, max-age=300, s-maxage=600",
       },
     });
   } catch (e) {
-    return new Response(`Erreur: ${(e as Error).message}`, { status: 500 });
+    console.error("[share-og:error]", e);
+    return json({ ok: false, error: (e as Error).message, durationMs: Date.now() - startedAt }, 500);
   }
 });
