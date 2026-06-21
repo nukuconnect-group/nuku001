@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Review {
   id: string;
   product_id: string;
-  user_id: string;
   rating: number;
   comment: string | null;
   created_at: string;
+  is_mine?: boolean;
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -21,23 +21,18 @@ export function useReviews(productId: string) {
     queryKey: ["reviews", productId],
     queryFn: async () => {
       if (!isUUID(productId)) return [];
-      const { data, error } = await supabase
-        .from("reviews" as any)
-        .select("*")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("get_product_reviews" as any, {
+        _product_id: productId,
+      });
       if (error) throw error;
-      const reviews = (data || []) as any[];
-      if (reviews.length === 0) return [];
-      const userIds = Array.from(new Set(reviews.map((r) => r.user_id)));
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-      return reviews.map((r) => ({
-        ...r,
-        profiles: profileMap.get(r.user_id) || null,
+      return ((data || []) as any[]).map((r) => ({
+        id: r.id,
+        product_id: r.product_id,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at,
+        is_mine: r.is_mine,
+        profiles: { full_name: r.author_name, avatar_url: r.author_avatar_url },
       })) as Review[];
     },
     enabled: !!productId,
