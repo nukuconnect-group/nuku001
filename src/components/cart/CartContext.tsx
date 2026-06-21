@@ -1,10 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Product } from "@/data/marketplace";
 import { useProfile } from "@/contexts/ProfileContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-const PENDING_REMINDER_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 
 
 export interface CartItem {
@@ -72,61 +68,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems(storedItems);
     setActiveStorageKey(cartStorageKey);
   }, [isReady, cartStorageKey, user?.id]);
-
-  // Auto-remove items only after a finalized paid order. Pending/processing orders
-  // must never remove products from the buyer cart while checkout is still running.
-  // after a 5-minute delay so we don't spam the buyer the moment they add a product.
-  const reminderShownRef = useRef(false);
-  const reminderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!isReady || !user?.id || items.length === 0) {
-      if (reminderTimerRef.current) {
-        clearTimeout(reminderTimerRef.current);
-        reminderTimerRef.current = null;
-      }
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const ids = items.map((i) => i.product.id);
-      const { data: prof } = await supabase
-        .from("profiles").select("id").eq("user_id", user.id).maybeSingle();
-      if (!prof?.id || cancelled) return;
-      const { data: paidOrders } = await supabase
-        .from("orders")
-        .select("product_id,status")
-        .eq("buyer_id", prof.id)
-        .in("product_id", ids)
-        .in("status", ["paid", "confirmed", "completed", "delivered", "shipped"]);
-      if (cancelled) return;
-      const paidIds = new Set((paidOrders || []).map((o: any) => o.product_id));
-      if (paidIds.size > 0) {
-        setItems((prev) => prev.filter((i) => !paidIds.has(i.product.id)));
-        toast.success("Panier mis à jour", { description: "Les produits déjà payés ont été retirés." });
-      }
-      // Schedule a single delayed reminder (5 min) for items still in cart and never ordered.
-      if (!reminderShownRef.current && !reminderTimerRef.current) {
-        reminderTimerRef.current = setTimeout(() => {
-          reminderTimerRef.current = null;
-          if (cancelled) return;
-          const pending = items.filter((i) => !paidIds.has(i.product.id));
-          if (pending.length === 0) return;
-          reminderShownRef.current = true;
-          toast(`🛒 ${pending.length} produit${pending.length > 1 ? "s" : ""} en attente d'achat`, {
-            description: "Finalisez votre commande avant rupture de stock.",
-            duration: 10000,
-            action: {
-              label: "Voir le panier",
-              onClick: () => { window.location.href = "/panier"; },
-            },
-          });
-        }, PENDING_REMINDER_DELAY_MS);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isReady, user?.id, items.length]);
 
   useEffect(() => {
     if (!isReady || !activeStorageKey) return;

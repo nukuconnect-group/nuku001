@@ -139,7 +139,6 @@ export default function ProductQuickView({ product, open, onOpenChange }: Props)
                 onClick={handleAdd}
                 size="sm"
                 className="flex-1 gap-1.5 text-xs"
-                disabled={product.quantity === 0}
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 Ajouter
