@@ -155,12 +155,12 @@ const ProducerProfile = () => {
     queryFn: async () => {
       const productIds = products.map(p => p.id);
       if (!productIds.length) return 0;
-      const { data } = await supabase
-        .from("reviews")
-        .select("rating")
-        .in("product_id", productIds);
-      if (!data?.length) return 0;
-      return data.reduce((s, r) => s + r.rating, 0) / data.length;
+      const { data } = await supabase.rpc("get_product_avg_rating" as any, { _product_ids: productIds });
+      const rows = (data || []) as any[];
+      if (!rows.length) return 0;
+      let total = 0, count = 0;
+      for (const r of rows) { total += Number(r.avg_rating) * Number(r.review_count); count += Number(r.review_count); }
+      return count ? total / count : 0;
     },
     enabled: products.length > 0,
   });
@@ -195,21 +195,11 @@ const ProducerProfile = () => {
   const { data: driverRatings = [] } = useQuery({
     queryKey: ["driver-ratings", driverProfile?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("driver_ratings")
-        .select("*")
-        .eq("driver_id", driverProfile!.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (!data) return [];
-      // Fetch reviewer names
-      const userIds = [...new Set(data.map(r => r.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
-      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
-      return data.map(r => ({ ...r, reviewer: profileMap[r.user_id] || null }));
+      const { data } = await supabase.rpc("get_driver_ratings" as any, { _driver_id: driverProfile!.id });
+      return ((data || []) as any[]).map((r) => ({
+        ...r,
+        reviewer: { full_name: r.author_name, avatar_url: r.author_avatar_url },
+      }));
     },
     enabled: !!driverProfile?.id,
   });

@@ -3131,6 +3131,18 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_subscriptions: { Args: never; Returns: Json[] }
       get_admin_users: { Args: never; Returns: Json[] }
+      get_blog_comments: {
+        Args: { _slug: string }
+        Returns: {
+          author_avatar_url: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          is_mine: boolean
+          likes_count: number
+        }[]
+      }
       get_boosted_product_ids: {
         Args: never
         Returns: {
@@ -3141,10 +3153,49 @@ export type Database = {
         Args: { p_delivery_id: string }
         Returns: Json
       }
+      get_driver_ratings: {
+        Args: { _driver_id: string }
+        Returns: {
+          author_avatar_url: string
+          author_name: string
+          comment: string
+          created_at: string
+          id: string
+          rating: number
+        }[]
+      }
+      get_follower_counts: {
+        Args: { _profile_ids: string[] }
+        Returns: {
+          follower_count: number
+          profile_id: string
+        }[]
+      }
       get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
       get_my_delivery_otp: { Args: { p_delivery_id: string }; Returns: string }
       get_my_orders_with_tracking: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
+      get_product_avg_rating: {
+        Args: { _product_ids: string[] }
+        Returns: {
+          avg_rating: number
+          product_id: string
+          review_count: number
+        }[]
+      }
+      get_product_reviews: {
+        Args: { _product_id: string }
+        Returns: {
+          author_avatar_url: string
+          author_name: string
+          comment: string
+          created_at: string
+          id: string
+          is_mine: boolean
+          product_id: string
+          rating: number
+        }[]
+      }
       get_products_due_for_moderation: {
         Args: { p_limit?: number }
         Returns: {

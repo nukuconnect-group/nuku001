@@ -96,12 +96,10 @@ export const useProfileFollowerCount = (profileId: string | undefined) => {
     queryKey: ["follower-count", profileId],
     queryFn: async () => {
       if (!profileId) return 0;
-      const { data, error } = await supabase
-        .from("follows")
-        .select("id", { count: "exact", head: true })
-        .eq("following_id", profileId);
+      const { data, error } = await supabase.rpc("get_follower_counts" as any, { _profile_ids: [profileId] });
       if (error) return 0;
-      return (data as any)?.length ?? 0;
+      const row = ((data || []) as any[])[0];
+      return row ? Number(row.follower_count) || 0 : 0;
     },
     enabled: !!profileId,
   });

@@ -55,7 +55,7 @@ const Producers = () => {
       const profileIds = profiles.map((p) => p.id);
       const [productsRes, followsRes, ordersRes] = await Promise.all([
         supabase.from("products").select("producer_id").in("producer_id", profileIds),
-        supabase.from("follows").select("following_id").in("following_id", profileIds),
+        supabase.rpc("get_follower_counts" as any, { _profile_ids: profileIds }),
         supabase.from("orders").select("seller_id").in("seller_id", profileIds),
       ]);
 
@@ -64,8 +64,8 @@ const Producers = () => {
         productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
       });
       const followerCounts: Record<string, number> = {};
-      (followsRes.data || []).forEach((f: any) => {
-        followerCounts[f.following_id] = (followerCounts[f.following_id] || 0) + 1;
+      ((followsRes.data || []) as any[]).forEach((f: any) => {
+        followerCounts[f.profile_id] = Number(f.follower_count) || 0;
       });
       const salesCounts: Record<string, number> = {};
       (ordersRes.data || []).forEach((o: any) => {
