@@ -59,7 +59,8 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
     a.click();
   };
 
-  const t = shareTargets(url, title);
+  const shareText = [title, description].filter(Boolean).join(" — ");
+  const t = shareTargets(url, shareText);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
