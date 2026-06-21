@@ -79,7 +79,6 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:title" content="${esc(p.title)}" />
 <meta name="twitter:description" content="${esc(p.description)}" />
 <meta name="twitter:image" content="${esc(p.image)}" />
-${p.jsonLd ? `<script type="application/ld+json">${JSON.stringify(p.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
 </head>
 <body>
 <p>Redirection vers <a href="${esc(p.url)}">${esc(p.title)}</a>…</p>
@@ -288,7 +287,7 @@ Deno.serve(async (req) => {
     return new Response(renderHtml(payload), {
       headers: {
         ...corsHeaders,
-        "Content-Type": "text/html; charset=utf-8",
+        "Content-Type": "application/xhtml+xml; charset=utf-8",
         "Cache-Control": cacheBust ? "no-store" : "public, max-age=300, s-maxage=600",
       },
     });
