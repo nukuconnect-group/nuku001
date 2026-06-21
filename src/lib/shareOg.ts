@@ -29,8 +29,15 @@ export function productShareUrl(idOrSlug: string): string {
   return safe ? `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${SHARE_CACHE_VERSION}` : SITE_URL;
 }
 
-/** Build shop share URL using business name (or full name fallback). */
-export function shopShareUrl(businessNameOrFull: string): string {
+const isUuid = (value?: string | null) =>
+  !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+/** Build shop share URL using profile id first, with business name as fallback. */
+export function shopShareUrl(businessNameOrFull: string, profileId?: string | null): string {
   const safe = businessNameOrFull.trim();
+  if (isUuid(profileId)) {
+    const nameParam = safe ? `&name=${cleanSegment(safe)}` : "";
+    return `${SHARE_OG_BASE}?type=shop&id=${cleanSegment(profileId!)}${nameParam}&v=${SHARE_CACHE_VERSION}`;
+  }
   return safe ? `${SHARE_OG_BASE}?type=shop&name=${cleanSegment(safe)}&v=${SHARE_CACHE_VERSION}` : `${SITE_URL}/producteurs`;
 }

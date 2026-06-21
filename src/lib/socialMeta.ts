@@ -66,7 +66,7 @@ export const buildShopSeoMeta = (shop: ShopSeoInput) => {
   const path = `/producteurs/${encodeURIComponent(title)}`;
   const absolutePath = `${SITE_URL}${path}`;
   const image = firstRealImage([shop.coverUrl, shop.avatarUrl]) || DEFAULT_SOCIAL_IMAGE;
-  const description = shop.bio?.trim() || `Découvrez la boutique ${title}${shop.location ? ` (${shop.location})` : ""} sur NukuConnect.`;
+  const description = shop.bio?.trim() || `Voici la boutique ${title}${shop.location ? ` (${shop.location})` : ""} sur NukuConnect.`;
 
   return {
     path,
