@@ -9,12 +9,12 @@ import { Link } from "react-router-dom";
 
 interface Comment {
   id: string;
-  slug: string;
-  user_id: string;
   content: string;
   likes_count: number;
   created_at: string;
-  profile?: { full_name: string | null; avatar_url: string | null };
+  author_name: string | null;
+  author_avatar_url: string | null;
+  is_mine: boolean;
   liked_by_me?: boolean;
 }
 
@@ -27,34 +27,20 @@ const BlogComments = ({ slug }: { slug: string }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchComments = async () => {
-    const { data } = await supabase
-      .from("blog_comments")
-      .select("*")
-      .eq("slug", slug)
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.rpc("get_blog_comments" as any, { _slug: slug });
+    const rows = ((data || []) as any[]) as Comment[];
 
-    if (!data) { setLoading(false); return; }
-
-    // Fetch profiles and likes
-    const userIds = [...new Set(data.map(c => c.user_id))];
-    const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
-    
     let myLikes: string[] = [];
-    if (user) {
+    if (user && rows.length) {
       const { data: likes } = await supabase
         .from("blog_comment_likes")
         .select("comment_id")
         .eq("user_id", user.id)
-        .in("comment_id", data.map(c => c.id));
+        .in("comment_id", rows.map(c => c.id));
       myLikes = (likes || []).map(l => l.comment_id);
     }
 
-    const enriched = data.map(c => ({
-      ...c,
-      profile: profiles?.find(p => p.user_id === c.user_id),
-      liked_by_me: myLikes.includes(c.id),
-    }));
-    setComments(enriched);
+    setComments(rows.map(c => ({ ...c, liked_by_me: myLikes.includes(c.id) })));
     setLoading(false);
   };
 
@@ -126,17 +112,17 @@ const BlogComments = ({ slug }: { slug: string }) => {
           {comments.map((c) => (
             <div key={c.id} className="flex gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {c.profile?.avatar_url ? (
-                  <img src={c.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                {c.author_avatar_url ? (
+                  <img src={c.author_avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs font-bold text-primary">
-                    {(c.profile?.full_name || "U").charAt(0).toUpperCase()}
+                    {(c.author_name || "U").charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-semibold text-foreground">{c.profile?.full_name || "Utilisateur"}</span>
+                  <span className="text-xs font-semibold text-foreground">{c.author_name || "Utilisateur"}</span>
                   <span className="text-[10px] text-muted-foreground">
                     {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                   </span>
@@ -151,7 +137,7 @@ const BlogComments = ({ slug }: { slug: string }) => {
                     <Heart className={`w-3.5 h-3.5 ${c.liked_by_me ? "fill-current" : ""}`} />
                     {c.likes_count > 0 && <span>{c.likes_count}</span>}
                   </button>
-                  {user && c.user_id === user.id && (
+                  {user && c.is_mine && (
                     <button onClick={() => deleteComment(c.id)} className="text-xs text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
