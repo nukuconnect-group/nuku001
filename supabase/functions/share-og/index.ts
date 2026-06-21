@@ -29,6 +29,19 @@ const esc = (s: unknown) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const normalizeText = (value: unknown) => String(value ?? "").trim().replace(/\s+/g, " ");
+
+const firstRealImage = (...values: unknown[]) => {
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      const found = value.find((item) => typeof item === "string" && item.trim().length > 0);
+      if (found) return String(found).trim();
+    }
+    if (typeof value === "string" && value.trim().length > 0) return value.trim();
+  }
+  return DEFAULT_IMAGE;
+};
+
 interface OgPayload {
   title: string;
   description: string;
@@ -78,26 +91,33 @@ const isUUID = (v: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
 async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
-  const col = isUUID(id) ? "id" : "slug";
-  const { data: product } = await admin
+  const clean = decodeURIComponent(id).trim();
+  const col = isUUID(clean) ? "id" : "slug";
+  let { data: product } = await admin
     .from("products")
     .select("id, slug, name, description, price, unit, images, location")
-    .eq(col, id)
+    .eq(col, clean)
     .maybeSingle();
+  if (!product && !isUUID(clean)) {
+    const { data: byName } = await admin
+      .from("products")
+      .select("id, slug, name, description, price, unit, images, location")
+      .ilike("name", clean)
+      .maybeSingle();
+    product = byName;
+  }
   if (!product) return null;
-  const img =
-    (Array.isArray(product.images) && product.images.find((value: unknown) => typeof value === "string" && value.trim())) ||
-    DEFAULT_IMAGE;
+  const img = firstRealImage(product.images);
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;
   const priceStr = product.price
     ? ` — ${Number(product.price).toLocaleString("fr-FR")} FCFA/${product.unit || "unité"}`
     : "";
+  const productName = normalizeText(product.name || "Produit NukuConnect");
+  const description = normalizeText(product.description) || `${productName} disponible sur NukuConnect${product.location ? ` à ${normalizeText(product.location)}` : ""}.`;
   return {
-    title: `${product.name}${priceStr}`,
-    description:
-      product.description ||
-      `${product.name} disponible sur NukuConnect${product.location ? ` à ${product.location}` : ""}.`,
+    title: `${productName}${priceStr}`,
+    description,
     image: img,
     url,
     type: "product",
@@ -121,29 +141,49 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
 async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
   const clean = decodeURIComponent(name).trim();
   const isProfileId = isUUID(clean);
-  // Try exact business_name first, then full_name fallback
-  let { data: profile } = await admin
-    .from("profiles")
-    .select("user_id, full_name, business_name, bio, avatar_url, cover_url, location")
-    [isProfileId ? "eq" : "ilike"](isProfileId ? "id" : "business_name", clean)
-    .maybeSingle();
+  let profile: any = null;
+  if (isProfileId) {
+    const { data: byId } = await admin
+      .from("profiles")
+      .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images")
+      .eq("id", clean)
+      .maybeSingle();
+    profile = byId;
+  }
+  if (!profile) {
+    const { data: byBusiness } = await admin
+      .from("profiles")
+      .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images")
+      .ilike("business_name", clean)
+      .maybeSingle();
+    profile = byBusiness;
+  }
   if (!profile) {
     const { data: byFull } = await admin
       .from("profiles")
-      .select("user_id, full_name, business_name, bio, avatar_url, cover_url, location")
+      .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images")
       .ilike("full_name", clean)
       .maybeSingle();
     profile = byFull;
   }
+  if (!profile && clean) {
+    const pattern = `%${clean.replace(/[%_]/g, "")}%`;
+    const { data: fuzzy } = await admin
+    .from("profiles")
+      .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images")
+      .or(`business_name.ilike.${pattern},full_name.ilike.${pattern}`)
+      .limit(1)
+      .maybeSingle();
+    profile = fuzzy;
+  }
   if (!profile) return null;
-  const title = profile.business_name || profile.full_name || "Boutique";
-  const image = profile.cover_url || profile.avatar_url || DEFAULT_IMAGE;
+  const title = normalizeText(profile.business_name || profile.full_name || "Boutique NukuConnect");
+  const image = firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url);
   const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
+  const description = normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`;
   return {
     title,
-    description:
-      profile.bio ||
-      `Découvrez la boutique ${title}${profile.location ? ` (${profile.location})` : ""} sur NukuConnect.`,
+    description,
     image,
     url,
     type: "profile",
