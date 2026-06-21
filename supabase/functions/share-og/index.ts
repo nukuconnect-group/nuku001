@@ -80,7 +80,6 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:description" content="${esc(p.description)}" />
 <meta name="twitter:image" content="${esc(p.image)}" />
 ${p.jsonLd ? `<script type="application/ld+json">${JSON.stringify(p.jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
-<script>setTimeout(function(){window.location.replace(${JSON.stringify(p.url)});},800);</script>
 </head>
 <body>
 <p>Redirection vers <a href="${esc(p.url)}">${esc(p.title)}</a>…</p>
