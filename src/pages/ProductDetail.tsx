@@ -99,6 +99,7 @@ const ProductDetail = () => {
     images: actualProductImages,
     producerName: product.producer?.name,
   }) : null;
+  const maxOrderQuantity = product?.quantity && product.quantity > 0 ? product.quantity : 999;
   const traceabilityUrl = product
     ? `/tracabilite?product=${product.id}&name=${encodeURIComponent(product.name)}&producer=${encodeURIComponent(product.producer.name)}&origin=${encodeURIComponent(product.location || '')}&organic=${product.isOrganic}&verified=${product.producer.verified}`
     : "/tracabilite";
@@ -618,8 +619,8 @@ const ProductDetail = () => {
                   <label className="text-xs sm:text-sm font-medium text-foreground">{t("product.quantity")}</label>
                   <div className="flex items-center">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-l-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center text-sm">-</button>
-                    <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-14 sm:w-20 h-8 sm:h-10 text-center rounded-none border-x-0 text-sm" min={1} max={product.quantity} />
-                    <button onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-r-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center text-sm">+</button>
+                    <Input type="number" value={quantity} onChange={(e) => setQuantity(Math.min(maxOrderQuantity, Math.max(1, parseInt(e.target.value) || 1)))} className="w-14 sm:w-20 h-8 sm:h-10 text-center rounded-none border-x-0 text-sm" min={1} max={maxOrderQuantity} />
+                    <button onClick={() => setQuantity(Math.min(maxOrderQuantity, quantity + 1))} className="w-8 h-8 sm:w-10 sm:h-10 rounded-r-lg border border-border bg-muted hover:bg-muted/80 flex items-center justify-center text-sm">+</button>
                   </div>
                 </div>
 
