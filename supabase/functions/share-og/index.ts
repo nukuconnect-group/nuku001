@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
       if (id) payload = await buildProduct(admin, id);
       resolved = Boolean(payload);
     } else if (type === "shop" || type === "profile" || type === "producer") {
-      const name = url.searchParams.get("name") || url.searchParams.get("id") || "";
+      const name = url.searchParams.get("id") || url.searchParams.get("name") || "";
       if (name) payload = await buildShop(admin, name);
       resolved = Boolean(payload);
     }
