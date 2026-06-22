@@ -164,6 +164,8 @@ const Cart = () => {
       details: { invoiceNumber: paymentId, amount: finalTotal, method: "Moneroo", orderIds },
     });
     toast({ title: "✅ Paiement confirmé", description: "Commande finalisée et traçabilité créée." });
+    // Règle panier: on ne vide le panier qu'après confirmation explicite du paiement.
+    // Aucun échec, annulation, navigation ou rafraîchissement ne doit retirer les articles.
     clearCart();
     navigate(orderIds.length === 1 ? `/commande/${orderIds[0]}` : "/suivi-livraison");
   }, [billing.phone, buyerFullName, clearCart, deliveryCity, deliveryPrice, finalTotal, fullAddress, items, mobileNumber, navigate, selectedDelivery?.name, toast, total]);
