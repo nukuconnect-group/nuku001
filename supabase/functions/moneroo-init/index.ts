@@ -68,7 +68,9 @@ Deno.serve(async (req) => {
     const flatMetadata: Record<string, string | number | boolean> = {};
     for (const [k, v] of Object.entries(rawMeta)) {
       if (v === null || v === undefined) continue;
-      if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      if (typeof v === "number") {
+        flatMetadata[k] = Number.isInteger(v) ? v : String(v);
+      } else if (typeof v === "string" || typeof v === "boolean") {
         flatMetadata[k] = v;
       } else {
         try { flatMetadata[k] = JSON.stringify(v); } catch { /* skip */ }

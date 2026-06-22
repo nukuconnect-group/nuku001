@@ -1,17 +1,15 @@
 /**
- * Build crawler-friendly share URLs.
+ * Build public, user-facing share URLs.
  *
- * Social crawlers do not execute the React app, so shared product/shop links
- * use the dedicated share-og HTML endpoint, then redirect users to the
- * canonical `https://nukuconnect.com/...` route.
+ * Shared links must always show the NukuConnect domain to buyers and suppliers.
+ * The `share-og` Edge Function remains available for diagnostics/crawlers, but
+ * links copied or sent by users should be canonical `https://nukuconnect.com/...` URLs.
  */
 export const SITE_URL = "https://nukuconnect.com";
 export const DEFAULT_SOCIAL_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 
 const cleanSegment = (value: string) => encodeURIComponent(value.trim());
-const SHARE_OG_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-og`;
-const SHARE_CACHE_VERSION = Date.now().toString(36);
 
 export function productCanonicalUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
@@ -25,8 +23,7 @@ export function shopCanonicalUrl(businessNameOrFull: string): string {
 
 /** Build product share URL using its slug or id. */
 export function productShareUrl(idOrSlug: string): string {
-  const safe = idOrSlug.trim();
-  return safe ? `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${SHARE_CACHE_VERSION}` : SITE_URL;
+  return productCanonicalUrl(idOrSlug);
 }
 
 const isUuid = (value?: string | null) =>
@@ -35,9 +32,6 @@ const isUuid = (value?: string | null) =>
 /** Build shop share URL using profile id first, with business name as fallback. */
 export function shopShareUrl(businessNameOrFull: string, profileId?: string | null): string {
   const safe = businessNameOrFull.trim();
-  if (isUuid(profileId)) {
-    const nameParam = safe ? `&name=${cleanSegment(safe)}` : "";
-    return `${SHARE_OG_BASE}?type=shop&id=${cleanSegment(profileId!)}${nameParam}&v=${SHARE_CACHE_VERSION}`;
-  }
-  return safe ? `${SHARE_OG_BASE}?type=shop&name=${cleanSegment(safe)}&v=${SHARE_CACHE_VERSION}` : `${SITE_URL}/producteurs`;
+  if (safe) return shopCanonicalUrl(safe);
+  return isUuid(profileId) ? shopCanonicalUrl(profileId!) : `${SITE_URL}/producteurs`;
 }

@@ -15,6 +15,15 @@ interface Props {
   description?: string;
 }
 
+const SHARE_TEXT_LIMIT = 140;
+
+const summarizeShareText = (text: string) => {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= SHARE_TEXT_LIMIT) return clean;
+  const cut = clean.slice(0, SHARE_TEXT_LIMIT - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trim()}…`;
+};
+
 const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description = "" }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
@@ -46,7 +55,7 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
 
   const nativeShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title, text: description, url }); }
+      try { await navigator.share({ title, text: summarizeShareText(description), url }); }
       catch {}
     } else { copy(); }
   };
@@ -59,7 +68,7 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
     a.click();
   };
 
-  const shareText = [title, description].filter(Boolean).join(" — ");
+  const shareText = [title, summarizeShareText(description)].filter(Boolean).join(" — ");
   const t = shareTargets(url, shareText);
 
   return (
@@ -82,7 +91,7 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
             <Button variant="outline" size="icon" onClick={copy}><Copy className="w-4 h-4" /></Button>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Ce lien passe par une page d’aperçu contrôlée, puis redirige vers la fiche officielle.
+            Le lien partagé affiche l’adresse officielle NukuConnect.
           </p>
           <div className="grid grid-cols-3 gap-2">
             <a href={t.whatsapp} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="w-full gap-1"><MessageCircle className="w-3.5 h-3.5" />WhatsApp</Button></a>
