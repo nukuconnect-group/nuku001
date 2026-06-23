@@ -101,7 +101,7 @@ const OrderManager = ({ orders, stats, onRefresh }: Props) => {
   return (
     <div className="space-y-4">
       {/* Status summary cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
         {Object.entries(statusCounts).map(([key, count]) => {
           const cfg = key === "all" ? { label: "Toutes", color: "text-foreground", icon: ShoppingCart } : STATUS_CONFIG[key];
           const Icon = cfg?.icon || ShoppingCart;
