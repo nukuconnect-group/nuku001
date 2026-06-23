@@ -59,7 +59,7 @@ import BuyerDeliveryZone from "@/components/marketplace/BuyerDeliveryZone";
 import ShareDialog from "@/components/share/ShareDialog";
 import AffiliateLinkButton from "@/components/share/AffiliateLinkButton";
 import QRCodeImage from "@/components/share/QRCodeImage";
-import { productShareUrl } from "@/lib/shareOg";
+import { productShareUrl, productCrawlerUrl } from "@/lib/shareOg";
 import { buildProductSeoMeta } from "@/lib/socialMeta";
 
 const ProductDetail = () => {
@@ -916,6 +916,7 @@ const ProductDetail = () => {
         open={shareOpen}
         onOpenChange={setShareOpen}
         url={productShareUrl(product?.slug || id || "")}
+        previewUrl={productCrawlerUrl(product?.slug || product?.id || id || "")}
         title={product?.name || "Produit"}
         description={product?.description || `${product?.name || ""} sur NukuConnect`}
       />
