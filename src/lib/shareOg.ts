@@ -1,15 +1,33 @@
 /**
- * Build public, user-facing share URLs.
+ * Build share URLs for NukuConnect.
  *
- * Shared links must always show the NukuConnect domain to buyers and suppliers.
- * The `share-og` Edge Function remains available for diagnostics/crawlers, but
- * links copied or sent by users should be canonical `https://nukuconnect.com/...` URLs.
+ * Two flavours, both needed:
+ *
+ *  - `productCanonicalUrl` / `shopCanonicalUrl` → clean
+ *    `https://nukuconnect.com/...` links. Used everywhere a HUMAN sees
+ *    the URL (copy button, QR code, address bar of the dialog).
+ *
+ *  - `productCrawlerUrl` / `shopCrawlerUrl` → the `share-og` Edge
+ *    Function URL. It returns proper Open Graph / Twitter Card HTML
+ *    (title + description + cover image) so WhatsApp, Facebook,
+ *    LinkedIn and Telegram render a rich preview. The og:url and
+ *    canonical it serves point back at nukuconnect.com, and a tiny
+ *    visible <a> redirects humans to the clean URL.
+ *
+ * The SPA hosted on nukuconnect.com cannot serve per-product OG tags
+ * because social crawlers don't execute JS, so the crawler URL is the
+ * only reliable way to restore link previews on chat / social apps.
  */
+
 export const SITE_URL = "https://nukuconnect.com";
 export const DEFAULT_SOCIAL_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
 
+const SHARE_OG_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://fpnhdihvnfsiymopbjgt.supabase.co"}/functions/v1/share-og`;
+
 const cleanSegment = (value: string) => encodeURIComponent(value.trim());
+
+/* --------------------- Canonical (human-facing) URLs --------------------- */
 
 export function productCanonicalUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
@@ -21,7 +39,7 @@ export function shopCanonicalUrl(businessNameOrFull: string): string {
   return safe ? `${SITE_URL}/producteurs/${cleanSegment(safe)}` : `${SITE_URL}/producteurs`;
 }
 
-/** Build product share URL using its slug or id. */
+/** Clean URL shown to users (copy / QR / address bar). */
 export function productShareUrl(idOrSlug: string): string {
   return productCanonicalUrl(idOrSlug);
 }
@@ -29,9 +47,36 @@ export function productShareUrl(idOrSlug: string): string {
 const isUuid = (value?: string | null) =>
   !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
-/** Build shop share URL using profile id first, with business name as fallback. */
+/** Clean shop URL shown to users (copy / QR / address bar). */
 export function shopShareUrl(businessNameOrFull: string, profileId?: string | null): string {
   const safe = businessNameOrFull.trim();
   if (safe) return shopCanonicalUrl(safe);
   return isUuid(profileId) ? shopCanonicalUrl(profileId!) : `${SITE_URL}/producteurs`;
+}
+
+/* --------------------- Crawler URLs (rich previews) --------------------- */
+
+const cacheBust = () => Math.random().toString(36).slice(2, 10);
+
+/**
+ * URL fed to WhatsApp / Facebook / LinkedIn / Telegram link unfurlers.
+ * Returns OG/Twitter HTML with the product's image, title, description.
+ */
+export function productCrawlerUrl(idOrSlug: string): string {
+  const safe = idOrSlug.trim();
+  if (!safe) return SITE_URL;
+  return `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${cacheBust()}`;
+}
+
+/**
+ * URL fed to crawlers for a supplier / shop profile.
+ * Prefers profile UUID to avoid name-collision lookups.
+ */
+export function shopCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
+  const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
+  if (!id) return SITE_URL;
+  const nameParam = businessNameOrFull.trim() && businessNameOrFull.trim() !== id
+    ? `&name=${cleanSegment(businessNameOrFull)}`
+    : "";
+  return `${SHARE_OG_BASE}?type=shop&id=${cleanSegment(id)}${nameParam}&v=${cacheBust()}`;
 }
