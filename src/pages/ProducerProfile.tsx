@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
-import { shopShareUrl } from "@/lib/shareOg";
+import { shopShareUrl, shopCrawlerUrl } from "@/lib/shareOg";
 import { buildShopSeoMeta } from "@/lib/socialMeta";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
@@ -544,6 +544,7 @@ const ProducerProfile = () => {
         open={shareOpen}
         onOpenChange={setShareOpen}
         url={shopShareUrl(shopName, producer?.id)}
+        previewUrl={shopCrawlerUrl(shopName, producer?.id)}
         title={shopName || "Boutique"}
         description={producer?.bio || `Voici la boutique ${shopName || "fournisseur"} sur NukuConnect.`}
       />

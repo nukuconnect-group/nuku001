@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,15 @@ import { shareTargets } from "@/lib/shareLinks";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Clean canonical URL (shown to the user, copied, encoded in the QR). */
   url: string;
+  /**
+   * Optional preview URL handed to social-network crawlers (WhatsApp, FB,
+   * LinkedIn, Telegram). When provided, the social buttons share THIS
+   * URL — it should be the `share-og` Edge Function URL that returns
+   * proper Open Graph HTML for rich previews. Falls back to `url`.
+   */
+  previewUrl?: string;
   title?: string;
   description?: string;
 }
@@ -24,13 +32,15 @@ const summarizeShareText = (text: string) => {
   return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trim()}…`;
 };
 
-const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description = "" }: Props) => {
+const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", description = "" }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
 
+  // URL handed to social-network unfurlers — must serve OG meta.
+  const socialUrl = previewUrl || url;
+
   useEffect(() => {
     if (!open) return;
-    // Délai pour s'assurer que le canvas est monté dans le DOM après ouverture du dialog
     const t = setTimeout(() => {
       if (!canvasRef.current) return;
       QRCode.toCanvas(canvasRef.current, url, {
@@ -55,7 +65,8 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
 
   const nativeShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title, text: summarizeShareText(description), url }); }
+      // Share the preview URL so the recipient's app can unfurl a rich card.
+      try { await navigator.share({ title, text: summarizeShareText(description), url: socialUrl }); }
       catch {}
     } else { copy(); }
   };
@@ -69,7 +80,8 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
   };
 
   const shareText = [title, summarizeShareText(description)].filter(Boolean).join(" — ");
-  const t = shareTargets(url, shareText);
+  // Social buttons unfurl the preview URL → rich card with image + title.
+  const t = useMemo(() => shareTargets(socialUrl, shareText), [socialUrl, shareText]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,7 +103,7 @@ const ShareDialog = ({ open, onOpenChange, url, title = "Partager", description 
             <Button variant="outline" size="icon" onClick={copy}><Copy className="w-4 h-4" /></Button>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Le lien partagé affiche l’adresse officielle NukuConnect.
+            L’adresse copiée est l’URL officielle <strong>nukuconnect.com</strong>. L’aperçu (image, titre, description) est généré automatiquement lors du partage.
           </p>
           <div className="grid grid-cols-3 gap-2">
             <a href={t.whatsapp} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="w-full gap-1"><MessageCircle className="w-3.5 h-3.5" />WhatsApp</Button></a>
