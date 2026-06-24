@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/share/product/:id",
-      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og?type=product&id=:id"
+      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og"
     },
     {
       "source": "/share/shop/:id",
-      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og?type=shop&id=:id"
+      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og"
     },
     {
       "source": "/(.*)",
