@@ -27,6 +27,23 @@ const SHARE_OG_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://fpnhdihvn
 
 const cleanSegment = (value: string) => encodeURIComponent(value.trim());
 
+const normalizeSlug = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
+
+const publicOgPath = (type: "product" | "shop", id: string, name?: string | null) => {
+  const slug = normalizeSlug(name || id) || type;
+  const params = new URLSearchParams({ type, id });
+  if (name?.trim() && name.trim() !== id) params.set("name", name.trim());
+  return `${SITE_URL}/share/${type}/${slug}?${params.toString()}`;
+};
+
 /* --------------------- Canonical (human-facing) URLs --------------------- */
 
 export function productCanonicalUrl(idOrSlug: string): string {
@@ -65,7 +82,7 @@ const cacheBust = () => Math.random().toString(36).slice(2, 10);
 export function productCrawlerUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
   if (!safe) return SITE_URL;
-  return `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${cacheBust()}`;
+  return `${publicOgPath("product", safe)}&v=${cacheBust()}`;
 }
 
 /**
@@ -73,6 +90,20 @@ export function productCrawlerUrl(idOrSlug: string): string {
  * Prefers profile UUID to avoid name-collision lookups.
  */
 export function shopCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
+  const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
+  if (!id) return SITE_URL;
+  return `${publicOgPath("shop", id, businessNameOrFull)}&v=${cacheBust()}`;
+}
+
+/** Direct backend endpoint kept only for diagnostics/admin tools. */
+export function productEdgeCrawlerUrl(idOrSlug: string): string {
+  const safe = idOrSlug.trim();
+  if (!safe) return SITE_URL;
+  return `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${cacheBust()}`;
+}
+
+/** Direct backend endpoint kept only for diagnostics/admin tools. */
+export function shopEdgeCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
   const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
   if (!id) return SITE_URL;
   const nameParam = businessNameOrFull.trim() && businessNameOrFull.trim() !== id
