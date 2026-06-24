@@ -7,12 +7,12 @@
  *    `https://nukuconnect.com/...` links. Used everywhere a HUMAN sees
  *    the URL (copy button, QR code, address bar of the dialog).
  *
- *  - `productCrawlerUrl` / `shopCrawlerUrl` → the `share-og` Edge
- *    Function URL. It returns proper Open Graph / Twitter Card HTML
+ *  - `productCrawlerUrl` / `shopCrawlerUrl` → public `/share/...`
+ *    URLs on nukuconnect.com, reverse-proxied to the `share-og`
+ *    renderer. They return proper Open Graph / Twitter Card HTML
  *    (title + description + cover image) so WhatsApp, Facebook,
- *    LinkedIn and Telegram render a rich preview. The og:url and
- *    canonical it serves point back at nukuconnect.com, and a tiny
- *    visible <a> redirects humans to the clean URL.
+ *    LinkedIn and Telegram render a rich preview without exposing a
+ *    backend URL to users.
  *
  * The SPA hosted on nukuconnect.com cannot serve per-product OG tags
  * because social crawlers don't execute JS, so the crawler URL is the
