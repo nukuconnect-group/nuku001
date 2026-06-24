@@ -15,7 +15,7 @@ interface Props {
   /**
    * Optional preview URL handed to social-network crawlers (WhatsApp, FB,
    * LinkedIn, Telegram). When provided, the social buttons share THIS
-   * URL — it should be the `share-og` Edge Function URL that returns
+   * URL — it should be the public `/share/...` crawler URL that returns
    * proper Open Graph HTML for rich previews. Falls back to `url`.
    */
   previewUrl?: string;
