@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Bell, ShoppingCart, MessageCircle, Package, Check, Trash2,
-  Loader2, ArrowRight, Star, Truck, CreditCard, Heart, ChevronRight
+  Star, Truck, CreditCard, Heart, ChevronRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ListSkeleton } from "@/components/layout/SectionSkeletons";
+import { cacheGet, cacheSet } from "@/lib/localCache";
 
 interface Notification {
   id: string;
@@ -31,41 +34,66 @@ const CATEGORIES = [
   { key: "demand", label: "Demandes", icon: Heart },
 ];
 
+const NOTIFICATIONS_LIMIT = 80;
+const notificationsCacheKey = (userId: string) => `notifications:${userId}:v2`;
+
 const Notifications = () => {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const queryKey = useMemo(() => ["notifications", userId] as const, [userId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
+      setAuthReady(true);
     });
   }, []);
 
-  useEffect(() => {
-    if (!userId) { setIsLoading(false); return; }
-    const fetchNotifs = async () => {
-      const { data } = await supabase
+  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
+    queryKey,
+    enabled: Boolean(userId),
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
         .from("notifications")
-        .select("*")
+        .select("id, type, title, description, product_id, is_read, created_at")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-      setNotifications((data || []) as unknown as Notification[]);
-      setIsLoading(false);
-    };
-    fetchNotifs();
+        .order("created_at", { ascending: false })
+        .limit(NOTIFICATIONS_LIMIT);
+      if (error) throw error;
+      const rows = (data || []) as unknown as Notification[];
+      cacheSet(notificationsCacheKey(userId), rows, 1000 * 60 * 10);
+      return rows;
+    },
+    initialData: () => userId ? cacheGet<Notification[]>(notificationsCacheKey(userId))?.data : undefined,
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 10,
+  });
+
+  const updateNotifications = useCallback((updater: (current: Notification[]) => Notification[]) => {
+    if (!userId) return;
+    queryClient.setQueryData<Notification[]>(queryKey, (current = []) => {
+      const next = updater(current);
+      cacheSet(notificationsCacheKey(userId), next, 1000 * 60 * 10);
+      return next;
+    });
+  }, [queryClient, queryKey, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
 
     const channel = supabase
       .channel("notifications-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` }, (payload) => {
-        setNotifications((prev) => [payload.new as Notification, ...prev]);
+        updateNotifications((prev) => [payload.new as Notification, ...prev].slice(0, NOTIFICATIONS_LIMIT));
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [userId]);
+  }, [userId, updateNotifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === "all") return notifications;
@@ -131,7 +159,7 @@ const Notifications = () => {
   const handleNotifClick = async (notif: Notification) => {
     if (!notif.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
-      setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
+      updateNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
       window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
     }
     const link = getNotifLink(notif);
@@ -151,14 +179,14 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     if (!userId) return;
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    updateNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
     window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
   const deleteNotification = async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    updateNotifications((prev) => prev.filter((n) => n.id !== id));
     window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
 
@@ -166,12 +194,12 @@ const Notifications = () => {
     if (!userId) return;
     const ids = filteredNotifications.map(n => n.id);
     if (ids.length === 0) return;
-    for (const id of ids) {
-      await supabase.from("notifications").delete().eq("id", id);
-    }
-    setNotifications(prev => prev.filter(n => !ids.includes(n.id)));
+    await supabase.from("notifications").delete().in("id", ids);
+    updateNotifications(prev => prev.filter(n => !ids.includes(n.id)));
     window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
   };
+
+  const showLoading = !authReady || (!!userId && isLoading && notifications.length === 0);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -242,10 +270,8 @@ const Notifications = () => {
 
             {/* Notifications list */}
             <div className="space-y-1">
-              {isLoading ? (
-                <div className="flex justify-center py-16">
-                  <Loader2 className="w-7 h-7 animate-spin text-primary" />
-                </div>
+              {showLoading ? (
+                <ListSkeleton count={7} />
               ) : filteredNotifications.length === 0 ? (
                 <div className="py-12 text-center">
                   <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">

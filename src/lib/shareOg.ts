@@ -7,12 +7,12 @@
  *    `https://nukuconnect.com/...` links. Used everywhere a HUMAN sees
  *    the URL (copy button, QR code, address bar of the dialog).
  *
- *  - `productCrawlerUrl` / `shopCrawlerUrl` → the `share-og` Edge
- *    Function URL. It returns proper Open Graph / Twitter Card HTML
+ *  - `productCrawlerUrl` / `shopCrawlerUrl` → public `/share/...`
+ *    URLs on nukuconnect.com, reverse-proxied to the `share-og`
+ *    renderer. They return proper Open Graph / Twitter Card HTML
  *    (title + description + cover image) so WhatsApp, Facebook,
- *    LinkedIn and Telegram render a rich preview. The og:url and
- *    canonical it serves point back at nukuconnect.com, and a tiny
- *    visible <a> redirects humans to the clean URL.
+ *    LinkedIn and Telegram render a rich preview without exposing a
+ *    backend URL to users.
  *
  * The SPA hosted on nukuconnect.com cannot serve per-product OG tags
  * because social crawlers don't execute JS, so the crawler URL is the
@@ -26,6 +26,23 @@ export const DEFAULT_SOCIAL_IMAGE =
 const SHARE_OG_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://fpnhdihvnfsiymopbjgt.supabase.co"}/functions/v1/share-og`;
 
 const cleanSegment = (value: string) => encodeURIComponent(value.trim());
+
+const normalizeSlug = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 90);
+
+const publicOgPath = (type: "product" | "shop", id: string, name?: string | null) => {
+  const slug = normalizeSlug(name || id) || type;
+  const params = new URLSearchParams({ type, id });
+  if (name?.trim() && name.trim() !== id) params.set("name", name.trim());
+  return `${SITE_URL}/share/${type}/${slug}?${params.toString()}`;
+};
 
 /* --------------------- Canonical (human-facing) URLs --------------------- */
 
@@ -65,7 +82,7 @@ const cacheBust = () => Math.random().toString(36).slice(2, 10);
 export function productCrawlerUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
   if (!safe) return SITE_URL;
-  return `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${cacheBust()}`;
+  return `${publicOgPath("product", safe)}&v=${cacheBust()}`;
 }
 
 /**
@@ -73,6 +90,20 @@ export function productCrawlerUrl(idOrSlug: string): string {
  * Prefers profile UUID to avoid name-collision lookups.
  */
 export function shopCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
+  const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
+  if (!id) return SITE_URL;
+  return `${publicOgPath("shop", id, businessNameOrFull)}&v=${cacheBust()}`;
+}
+
+/** Direct backend endpoint kept only for diagnostics/admin tools. */
+export function productEdgeCrawlerUrl(idOrSlug: string): string {
+  const safe = idOrSlug.trim();
+  if (!safe) return SITE_URL;
+  return `${SHARE_OG_BASE}?type=product&id=${cleanSegment(safe)}&v=${cacheBust()}`;
+}
+
+/** Direct backend endpoint kept only for diagnostics/admin tools. */
+export function shopEdgeCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
   const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
   if (!id) return SITE_URL;
   const nameParam = businessNameOrFull.trim() && businessNameOrFull.trim() !== id

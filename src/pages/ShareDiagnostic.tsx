@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, CheckCircle2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { productCrawlerUrl, shopCrawlerUrl } from "@/lib/shareOg";
 
 type ShareType = "product" | "shop";
 
@@ -33,7 +34,6 @@ interface DiagnosticResponse {
   error?: string;
 }
 
-const functionBase = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-og`;
 const platforms = ["WhatsApp", "Facebook", "LinkedIn", "Telegram"];
 
 const ShareDiagnostic = () => {
@@ -45,8 +45,7 @@ const ShareDiagnostic = () => {
 
   const shareUrl = useMemo(() => {
     const clean = identifier.trim();
-    const param = type === "product" ? `id=${encodeURIComponent(clean)}` : `name=${encodeURIComponent(clean)}`;
-    return clean ? `${functionBase}?type=${type}&${param}&v=${Date.now().toString(36)}` : "";
+    return clean ? (type === "product" ? productCrawlerUrl(clean) : shopCrawlerUrl(clean)) : "";
   }, [identifier, type]);
 
   const runDiagnostic = async () => {

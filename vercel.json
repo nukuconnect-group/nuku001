@@ -1,0 +1,25 @@
+{
+  "headers": [
+    {
+      "source": "/share/(.*)",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/share/product/:id",
+      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og"
+    },
+    {
+      "source": "/share/shop/:id",
+      "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

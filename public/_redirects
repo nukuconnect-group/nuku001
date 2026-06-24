@@ -1,0 +1,2 @@
+/share/product/:slug https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og 200
+/share/shop/:slug https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og 200

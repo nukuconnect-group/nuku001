@@ -41,6 +41,7 @@ export const PerformanceTracker = () => {
       }
 
       const isSlow = loadMs > 3000;
+      const shouldPersist = isSlow || Math.random() < 0.1;
 
       // Logging local console (visible en dev)
       if (isSlow) {
@@ -48,7 +49,7 @@ export const PerformanceTracker = () => {
       }
 
       // Envoi async, ne bloque pas la nav. Skip si data saver.
-      if (!conn?.saveData) {
+      if (!conn?.saveData && shouldPersist) {
         supabase
           .from("page_performance_logs")
           .insert({

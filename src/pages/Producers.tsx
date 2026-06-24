@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, MapPin, Users, Package, Loader2, SlidersHorizontal,
+  Search, MapPin, Users, Package, SlidersHorizontal,
   ShieldCheck, Flame, Sparkles, Star,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,8 @@ import ProducerCard, { type ProducerLite } from "@/components/network/ProducerCa
 import NetworkCarousel from "@/components/network/NetworkCarousel";
 import NetworkHeroStats from "@/components/network/NetworkHeroStats";
 import OpportunitiesStrip from "@/components/network/OpportunitiesStrip";
+import { ProductGridSkeleton } from "@/components/layout/SectionSkeletons";
+import { cacheGet, cacheSet } from "@/lib/localCache";
 
 const countries = [
   "Tous les pays", "Togo", "Ghana", "Bénin", "Côte d'Ivoire",
@@ -35,6 +37,9 @@ const sortOptions = [
   { value: "products", labelKey: "net.mostProducts" },
 ];
 
+const NETWORK_CACHE_KEY = "network:profiles:v2";
+const NETWORK_CACHE_TTL = 1000 * 60 * 10;
+
 const Producers = () => {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,8 +52,10 @@ const Producers = () => {
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("user_type", "producer");
+        .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images, is_verified, created_at, user_type")
+        .in("user_type", ["producer", "supplier", "producteur", "fournisseur"])
+        .order("created_at", { ascending: false })
+        .limit(120);
 
       if (error || !profiles || profiles.length === 0) return [];
 
@@ -72,7 +79,7 @@ const Producers = () => {
         salesCounts[o.seller_id] = (salesCounts[o.seller_id] || 0) + 1;
       });
 
-      return profiles.map((p: any) => ({
+      const mapped = profiles.map((p: any) => ({
         id: p.id,
         user_id: p.user_id,
         name: p.business_name?.trim() || p.full_name?.trim() || t("net.suppliers"),
@@ -86,8 +93,13 @@ const Producers = () => {
         followers: followerCounts[p.id] || 0,
         createdAt: p.created_at,
       }));
+
+      cacheSet(NETWORK_CACHE_KEY, mapped, NETWORK_CACHE_TTL);
+      return mapped;
     },
-    staleTime: 1000 * 60 * 2,
+    staleTime: NETWORK_CACHE_TTL,
+    gcTime: 1000 * 60 * 30,
+    initialData: () => cacheGet<ProducerLite[]>(NETWORK_CACHE_KEY)?.data,
   });
 
   // Hero stats — counts across the platform
@@ -107,7 +119,8 @@ const Producers = () => {
         verified: verifiedRes.count || 0,
       };
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 30,
   });
 
   // Curated buckets for carousels
@@ -306,9 +319,7 @@ const Producers = () => {
       <section className="py-6 sm:py-8">
         <div className="container mx-auto px-3 sm:px-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
+            <ProductGridSkeleton count={10} />
           ) : filteredProducers.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
