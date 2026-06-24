@@ -31,6 +31,14 @@ const esc = (s: unknown) =>
 
 const normalizeText = (value: unknown) => String(value ?? "").trim().replace(/\s+/g, " ");
 
+const summarize = (value: unknown, max = 220) => {
+  const text = normalizeText(value);
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 120 ? lastSpace : max - 1).trim()}…`;
+};
+
 const firstRealImage = (...values: unknown[]) => {
   for (const value of values) {
     if (Array.isArray(value)) {
@@ -57,21 +65,31 @@ const json = (body: Record<string, unknown>, status = 200) => new Response(JSON.
   headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
 });
 
-const renderHtml = (p: OgPayload) => `<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr">
+const renderJsonLd = (p: OgPayload) => {
+  if (!p.jsonLd) return "";
+  return `<script type="application/ld+json">${JSON.stringify(p.jsonLd).replace(/<\//g, "<\\/")}</script>`;
+};
+
+const renderHtml = (p: OgPayload) => `<!doctype html>
+<html lang="fr">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.description)}" />
+<meta itemprop="name" content="${esc(p.title)}" />
+<meta itemprop="description" content="${esc(p.description)}" />
+<meta itemprop="image" content="${esc(p.image)}" />
 <link rel="canonical" href="${esc(p.url)}" />
 <meta property="og:type" content="${esc(p.type)}" />
 <meta property="og:site_name" content="NUKUCONNECT" />
 <meta property="og:title" content="${esc(p.title)}" />
 <meta property="og:description" content="${esc(p.description)}" />
 <meta property="og:image" content="${esc(p.image)}" />
+<meta property="og:image:secure_url" content="${esc(p.image)}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${esc(p.title)}" />
 <meta property="og:url" content="${esc(p.url)}" />
 <meta property="og:locale" content="fr_FR" />
 ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" /><meta property="product:price:currency" content="XOF" />` : ""}
@@ -79,6 +97,8 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:title" content="${esc(p.title)}" />
 <meta name="twitter:description" content="${esc(p.description)}" />
 <meta name="twitter:image" content="${esc(p.image)}" />
+<meta name="twitter:image:alt" content="${esc(p.title)}" />
+${renderJsonLd(p)}
 </head>
 <body>
 <p>Redirection vers <a href="${esc(p.url)}">${esc(p.title)}</a>…</p>
@@ -109,12 +129,13 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;
   const priceStr = product.price
-    ? ` — ${Number(product.price).toLocaleString("fr-FR")} FCFA/${product.unit || "unité"}`
+    ? `${Number(product.price).toLocaleString("fr-FR")} FCFA/${product.unit || "unité"}`
     : "";
   const productName = normalizeText(product.name || "Produit NukuConnect");
-  const description = normalizeText(product.description) || `${productName} disponible sur NukuConnect${product.location ? ` à ${normalizeText(product.location)}` : ""}.`;
+  const baseDescription = normalizeText(product.description) || `${productName} disponible sur NukuConnect${product.location ? ` à ${normalizeText(product.location)}` : ""}.`;
+  const description = summarize(`${baseDescription}${priceStr ? ` Prix: ${priceStr}.` : ""}`, 220);
   return {
-    title: `${productName}${priceStr}`,
+    title: productName,
     description,
     image: img,
     url,
@@ -124,7 +145,7 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
       "@context": "https://schema.org",
       "@type": "Product",
       name: product.name,
-      description: product.description || product.name,
+      description,
       image: img,
       offers: {
         "@type": "Offer",
@@ -178,7 +199,7 @@ async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
   const title = normalizeText(profile.business_name || profile.full_name || "Boutique NukuConnect");
   const image = firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url);
   const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
-  const description = normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`;
+  const description = summarize(normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`, 200);
   return {
     title,
     description,
@@ -260,7 +281,8 @@ Deno.serve(async (req) => {
         url: payload.url,
         hasTitle: Boolean(payload.title),
         hasDescription: Boolean(payload.description),
-        hasImage: Boolean(payload.image && payload.image !== DEFAULT_IMAGE),
+        hasImage: Boolean(payload.image),
+        imageIsDefault: payload.image === DEFAULT_IMAGE,
         hasCanonicalUrl: Boolean(payload.url && payload.url !== SITE),
       },
       twitter: {
@@ -287,8 +309,9 @@ Deno.serve(async (req) => {
     return new Response(renderHtml(payload), {
       headers: {
         ...corsHeaders,
-        "Content-Type": "application/xhtml+xml; charset=utf-8",
+        "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": cacheBust ? "no-store" : "public, max-age=300, s-maxage=600",
+        "Vary": "User-Agent, Accept-Encoding",
       },
     });
   } catch (e) {
