@@ -1,0 +1,2 @@
+/share/product/:id https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og?type=product&id=:id 200
+/share/shop/:id https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og?type=shop&id=:id 200

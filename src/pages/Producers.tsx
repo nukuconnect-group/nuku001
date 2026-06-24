@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, MapPin, Users, Package, Loader2, SlidersHorizontal,
+  Search, MapPin, Users, Package, SlidersHorizontal,
   ShieldCheck, Flame, Sparkles, Star,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
