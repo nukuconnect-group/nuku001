@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -73,14 +73,14 @@ const Notifications = () => {
     gcTime: 1000 * 60 * 10,
   });
 
-  const updateNotifications = (updater: (current: Notification[]) => Notification[]) => {
+  const updateNotifications = useCallback((updater: (current: Notification[]) => Notification[]) => {
     if (!userId) return;
     queryClient.setQueryData<Notification[]>(queryKey, (current = []) => {
       const next = updater(current);
       cacheSet(notificationsCacheKey(userId), next, 1000 * 60 * 10);
       return next;
     });
-  };
+  }, [queryClient, queryKey, userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -93,7 +93,7 @@ const Notifications = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [userId, queryClient]);
+  }, [userId, updateNotifications]);
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === "all") return notifications;
