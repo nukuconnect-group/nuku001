@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
       jsonLd: payload.jsonLd || null,
     };
     await recordShareLog(admin, {
-      endpoint: url.pathname.includes("share-og") ? "/share-og" : "/share",
+      endpoint: url.searchParams.get("source") === "share" ? "/share" : "/share-og",
       requested_type: type || null,
       requested_id: requestedId || null,
       status_code: statusCode,

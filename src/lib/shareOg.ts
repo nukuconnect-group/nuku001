@@ -39,7 +39,7 @@ const normalizeSlug = (value: string) =>
 
 const publicOgPath = (type: "product" | "shop", id: string, name?: string | null) => {
   const slug = normalizeSlug(name || id) || type;
-  const params = new URLSearchParams({ type, id });
+  const params = new URLSearchParams({ type, id, source: "share" });
   if (name?.trim() && name.trim() !== id) params.set("name", name.trim());
   return `${SITE_URL}/share/${type}/${slug}?${params.toString()}`;
 };
