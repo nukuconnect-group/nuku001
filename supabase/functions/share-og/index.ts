@@ -343,8 +343,10 @@ Deno.serve(async (req) => {
       };
     }
 
+    const statusCode = 200;
+    const requiredMetaOk = Boolean(payload.title && payload.description && payload.image);
     const diagnostics = {
-      ok: resolved,
+      ok: requiredMetaOk,
       resolved,
       type: payload.type,
       requestedType: type,
@@ -369,9 +371,6 @@ Deno.serve(async (req) => {
       },
       jsonLd: payload.jsonLd || null,
     };
-
-    const statusCode = 200;
-    const requiredMetaOk = Boolean(diagnostics.meta.hasTitle && diagnostics.meta.hasDescription && diagnostics.meta.hasImage);
     await recordShareLog(admin, {
       endpoint: url.pathname.includes("share-og") ? "/share-og" : "/share",
       requested_type: type || null,
