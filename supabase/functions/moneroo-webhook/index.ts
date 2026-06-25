@@ -73,22 +73,27 @@ async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], da
     const siteOrigin = Deno.env.get("PUBLIC_SITE_URL") || "https://nukuconnect.com";
     const invoiceUrl = `${siteOrigin}/factures?invoice=${encodeURIComponent(invoiceNumber)}`;
 
-    // 1) Buyer confirmation
-    const { error: emailErr } = await admin.functions.invoke("order-confirmation", {
+    // 1) Buyer confirmation — route through the standard app email queue
+    // (domain verified, retries, logs, suppression handling). The old direct
+    // provider function was brittle and caused confirmed purchases without email.
+    const { error: emailErr } = await admin.functions.invoke("send-transactional-email", {
       body: {
-        buyerEmail,
-        buyerName: buyerProfile?.full_name || buyerEmail.split("@")[0],
-        orderItems: allItems.map(({ name, quantity, unitPrice, unit, sellerName }) => ({ name, quantity, unitPrice, unit, sellerName })),
-        subtotal,
-        deliveryPrice,
-        total,
-        deliveryMethod: String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place",
-        paymentMethod: "Moneroo",
-        deliveryCity: data.deliveryCity || undefined,
-        deliveryAddress: data.deliveryAddress || undefined,
-        invoiceNumber,
-        orderDate,
-        invoiceUrl,
+        templateName: "order-confirmation",
+        recipientEmail: buyerEmail,
+        idempotencyKey: `order-confirmation-${paymentId}-${tx.user_id}`,
+        templateData: {
+          buyerName: buyerProfile?.full_name || buyerEmail.split("@")[0],
+          orderItems: allItems.map(({ name, quantity, unitPrice, unit, sellerName }) => ({ name, quantity, unitPrice, unit, sellerName })),
+          subtotal,
+          deliveryPrice,
+          total,
+          deliveryMethod: String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place",
+          paymentMethod: "Moneroo",
+          deliveryCity: data.deliveryCity || "",
+          invoiceNumber,
+          orderDate,
+          invoiceUrl,
+        },
       },
     });
     if (emailErr) console.error("[email] buyer order-confirmation failed:", emailErr);

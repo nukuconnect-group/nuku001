@@ -22,6 +22,116 @@ const getOrderIds = (data: Record<string, unknown>): string[] => {
   return [];
 };
 
+async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: any, paymentId: string) {
+  try {
+    const { data: buyerAuth } = await admin.auth.admin.getUserById(tx.user_id);
+    const buyerEmail = buyerAuth?.user?.email || tx.customer_email;
+    if (!buyerEmail) {
+      console.warn("[email] no buyer email for verified tx", paymentId);
+      return;
+    }
+
+    const { data: buyerProfile } = await admin
+      .from("profiles")
+      .select("id, full_name, phone")
+      .eq("user_id", tx.user_id)
+      .maybeSingle();
+
+    const orderIds = (orders || []).map((o: any) => o.id).filter(Boolean);
+    if (!orderIds.length) return;
+
+    const { data: items } = await admin
+      .from("orders")
+      .select("id, seller_id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(id, full_name, business_name, user_id)")
+      .in("id", orderIds);
+
+    const allItems = (items || []).map((o: any) => ({
+      orderId: o.id,
+      sellerProfileId: o.profiles?.id || o.seller_id,
+      sellerUserId: o.profiles?.user_id || null,
+      sellerName: o.profiles?.business_name || o.profiles?.full_name || "Boutique NukuConnect",
+      name: o.products?.name || "Produit NukuConnect",
+      quantity: Number(o.quantity || 1),
+      unitPrice: Number(o.unit_price || 0),
+      unit: o.products?.unit || "unité",
+      total: Number(o.total_price || 0),
+    }));
+
+    const subtotal = allItems.reduce((s: number, i: any) => s + i.unitPrice * i.quantity, 0);
+    const total = orders.reduce((s: number, o: any) => s + Number(o.total_price || 0), 0);
+    const deliveryPrice = Number(data.deliveryPrice || 0);
+    const invoiceNumber = `INV-${paymentId.slice(0, 10).toUpperCase()}`;
+    const orderDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    const siteOrigin = Deno.env.get("PUBLIC_SITE_URL") || "https://nukuconnect.com";
+    const invoiceUrl = `${siteOrigin}/factures?invoice=${encodeURIComponent(invoiceNumber)}`;
+    const buyerName = buyerProfile?.full_name || String(data.buyerFullName || buyerEmail.split("@")[0]);
+    const deliveryMethod = String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place";
+
+    const { error: buyerEmailErr } = await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "order-confirmation",
+        recipientEmail: buyerEmail,
+        idempotencyKey: `order-confirmation-${paymentId}-${tx.user_id}`,
+        templateData: {
+          buyerName,
+          invoiceNumber,
+          orderDate,
+          orderItems: allItems.map(({ name, quantity, unitPrice, unit, sellerName }: any) => ({ name, quantity, unitPrice, unit, sellerName })),
+          subtotal,
+          deliveryPrice,
+          total,
+          deliveryMethod,
+          paymentMethod: "Moneroo",
+          deliveryCity: data.deliveryCity || "",
+          invoiceUrl,
+        },
+      },
+    });
+    if (buyerEmailErr) console.error("[email] buyer order-confirmation failed:", buyerEmailErr);
+
+    const sellersMap = new Map<string, typeof allItems>();
+    for (const item of allItems) {
+      if (!item.sellerProfileId) continue;
+      if (!sellersMap.has(item.sellerProfileId)) sellersMap.set(item.sellerProfileId, []);
+      sellersMap.get(item.sellerProfileId)!.push(item);
+    }
+
+    for (const [sellerProfileId, sellerItems] of sellersMap.entries()) {
+      const sellerUserId = sellerItems[0].sellerUserId;
+      if (!sellerUserId) continue;
+      const { data: sellerAuth } = await admin.auth.admin.getUserById(sellerUserId);
+      const sellerEmail = sellerAuth?.user?.email;
+      if (!sellerEmail) {
+        console.warn("[email] no seller email", sellerProfileId);
+        continue;
+      }
+      const sellerTotal = sellerItems.reduce((s: number, i: any) => s + i.total, 0);
+      const { error: sellerEmailErr } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "new-order-seller",
+          recipientEmail: sellerEmail,
+          idempotencyKey: `new-order-seller-${paymentId}-${sellerProfileId}`,
+          templateData: {
+            sellerName: sellerItems[0].sellerName,
+            buyerName,
+            invoiceNumber,
+            orderDate,
+            orderItems: sellerItems.map(({ name, quantity, unitPrice, unit }: any) => ({ name, quantity, unitPrice, unit })),
+            total: sellerTotal,
+            deliveryMethod,
+            deliveryCity: data.deliveryCity || "",
+            buyerPhone: buyerProfile?.phone || "",
+            invoiceUrl,
+          },
+        },
+      });
+      if (sellerEmailErr) console.error("[email] seller new-order failed:", sellerEmailErr);
+    }
+  } catch (error) {
+    console.error("[email] sendCartPurchaseEmails error:", error);
+  }
+}
+
 async function finalizeCartPayment(admin: any, tx: any, paymentId: string) {
   const data = tx.context_data || {};
   const orderIds = getOrderIds(data);
@@ -117,6 +227,8 @@ async function finalizeCartPayment(admin: any, tx: any, paymentId: string) {
     title: "✅ Commande confirmée !",
     description: "Paiement confirmé, vendeur crédité et suivi de livraison activé.",
   });
+
+  await sendCartPurchaseEmails(admin, tx, orders || [], data, paymentId);
 }
 
 async function finalizePayment(admin: any, tx: any, paymentId: string) {

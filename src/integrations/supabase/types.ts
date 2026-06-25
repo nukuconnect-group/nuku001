@@ -2419,6 +2419,63 @@ export type Database = {
           },
         ]
       }
+      share_endpoint_logs: {
+        Row: {
+          canonical_url: string | null
+          created_at: string
+          description: string | null
+          duration_ms: number
+          endpoint: string
+          error_message: string | null
+          id: string
+          image_url: string | null
+          metadata: Json
+          ok: boolean
+          requested_id: string | null
+          requested_type: string | null
+          resolved: boolean
+          status_code: number
+          title: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_ms?: number
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json
+          ok?: boolean
+          requested_id?: string | null
+          requested_type?: string | null
+          resolved?: boolean
+          status_code?: number
+          title?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_ms?: number
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          image_url?: string | null
+          metadata?: Json
+          ok?: boolean
+          requested_id?: string | null
+          requested_type?: string | null
+          resolved?: boolean
+          status_code?: number
+          title?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           billing_period: string
@@ -3174,6 +3231,26 @@ export type Database = {
       get_free_plan_status: { Args: { p_user_id: string }; Returns: Json }
       get_my_delivery_otp: { Args: { p_delivery_id: string }; Returns: string }
       get_my_orders_with_tracking: { Args: never; Returns: Json }
+      get_network_profiles_optimized: {
+        Args: { _limit?: number }
+        Returns: {
+          avatar_url: string
+          bio: string
+          business_name: string
+          cover_images: string[]
+          cover_url: string
+          created_at: string
+          followers_count: number
+          full_name: string
+          id: string
+          is_verified: boolean
+          location: string
+          products_count: number
+          sales_count: number
+          user_id: string
+          user_type: string
+        }[]
+      }
       get_platform_stats: { Args: never; Returns: Json }
       get_product_avg_rating: {
         Args: { _product_ids: string[] }

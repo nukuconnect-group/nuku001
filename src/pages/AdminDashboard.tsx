@@ -16,7 +16,7 @@ import {
   Store, Eye, Loader2, Shield, BarChart3, MessageCircle, Star,
   Search, HandCoins, CheckCircle, Clock, XCircle, Monitor, Smartphone,
   Tablet, Globe, MapPin, Download, Activity, Send, ChevronRight, LayoutGrid, Megaphone, Wallet,
-  Truck, ShoppingBag, Leaf, Trash2, UserX, Cookie
+  Truck, ShoppingBag, Leaf, Trash2, UserX, Cookie, Share2
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -46,6 +46,7 @@ import AdminRecentActions from "@/components/admin/AdminRecentActions";
 import SeoManager from "@/components/admin/SeoManager";
 import RefundsManager from "@/components/admin/RefundsManager";
 import MarketingManager from "@/components/admin/MarketingManager";
+import ShareEndpointMonitor from "@/components/admin/ShareEndpointMonitor";
 import { Sparkles as SparklesIcon, Bot as BotIcon, FileText, Coins, Search as SearchIcon, RotateCcw, Tag } from "lucide-react";
 
 const COLORS = [
@@ -330,6 +331,7 @@ const AdminDashboard = () => {
     { id: "broadcast", label: "Notifications", icon: Megaphone },
     { id: "emails", label: "Emails", icon: Send },
     { id: "email-logs", label: "Logs Emails", icon: FileText },
+    { id: "share-monitor", label: "Partage social", icon: Share2 },
     { id: "ai-history", label: "IA & Notifs", icon: SparklesIcon },
     { id: "nuku-ai", label: "Nuku AI", icon: BotIcon },
     { id: "audit", label: "Journal admin", icon: FileText },
@@ -1208,6 +1210,10 @@ const AdminDashboard = () => {
             {/* Email Logs Tab */}
             {activeTab === "email-logs" && (
               <EmailLogsManager />
+            )}
+
+            {activeTab === "share-monitor" && (
+              <ShareEndpointMonitor />
             )}
 
             {/* KYC Tab */}

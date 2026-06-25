@@ -50,34 +50,10 @@ const Producers = () => {
   const { data: producers = [], isLoading } = useQuery<ProducerLite[]>({
     queryKey: ["network-profiles-suppliers"],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("id, user_id, full_name, business_name, bio, avatar_url, cover_url, location, cover_images, is_verified, created_at, user_type")
-        .in("user_type", ["producer", "supplier", "producteur", "fournisseur"])
-        .order("created_at", { ascending: false })
-        .limit(120);
+      const { data: profiles, error } = await (supabase as any)
+        .rpc("get_network_profiles_optimized", { _limit: 120 });
 
       if (error || !profiles || profiles.length === 0) return [];
-
-      const profileIds = profiles.map((p) => p.id);
-      const [productsRes, followsRes, ordersRes] = await Promise.all([
-        supabase.from("products").select("producer_id").in("producer_id", profileIds),
-        supabase.rpc("get_follower_counts" as any, { _profile_ids: profileIds }),
-        supabase.from("orders").select("seller_id").in("seller_id", profileIds),
-      ]);
-
-      const productCounts: Record<string, number> = {};
-      (productsRes.data || []).forEach((p: any) => {
-        productCounts[p.producer_id] = (productCounts[p.producer_id] || 0) + 1;
-      });
-      const followerCounts: Record<string, number> = {};
-      ((followsRes.data || []) as any[]).forEach((f: any) => {
-        followerCounts[f.profile_id] = Number(f.follower_count) || 0;
-      });
-      const salesCounts: Record<string, number> = {};
-      (ordersRes.data || []).forEach((o: any) => {
-        salesCounts[o.seller_id] = (salesCounts[o.seller_id] || 0) + 1;
-      });
 
       const mapped = profiles.map((p: any) => ({
         id: p.id,
@@ -87,10 +63,10 @@ const Producers = () => {
         cover: p.cover_url || p.cover_images?.[0] || null,
         location: p.location || "",
         verified: !!p.is_verified,
-        products: productCounts[p.id] || 0,
-        sales: salesCounts[p.id] || 0,
+        products: Number(p.products_count || 0),
+        sales: Number(p.sales_count || 0),
         bio: p.bio || "",
-        followers: followerCounts[p.id] || 0,
+        followers: Number(p.followers_count || 0),
         createdAt: p.created_at,
       }));
 
