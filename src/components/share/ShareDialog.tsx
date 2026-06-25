@@ -37,29 +37,31 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
   const [dataUrl, setDataUrl] = useState<string>("");
 
   // URL handed to social-network unfurlers — must serve OG meta.
+  // This stays on nukuconnect.com (/share/...), never on a backend URL.
   const socialUrl = previewUrl || url;
+  const shareableUrl = socialUrl;
 
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(() => {
       if (!canvasRef.current) return;
-      QRCode.toCanvas(canvasRef.current, url, {
+      QRCode.toCanvas(canvasRef.current, shareableUrl, {
         width: 220,
         margin: 2,
         color: { dark: "#0f172a", light: "#ffffff" },
         errorCorrectionLevel: "M",
       }).catch((e) => console.error("QR generation error:", e));
-      QRCode.toDataURL(url, {
+      QRCode.toDataURL(shareableUrl, {
         width: 512,
         margin: 2,
         color: { dark: "#0f172a", light: "#ffffff" },
       }).then(setDataUrl).catch(() => {});
     }, 50);
     return () => clearTimeout(t);
-  }, [open, url]);
+  }, [open, shareableUrl]);
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(url); toast.success("Lien copié"); }
+    try { await navigator.clipboard.writeText(shareableUrl); toast.success("Lien copié"); }
     catch { toast.error("Impossible de copier"); }
   };
 
@@ -99,11 +101,11 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
             </Button>
           </div>
           <div className="flex gap-2">
-            <Input readOnly value={url} className="text-xs" />
+            <Input readOnly value={shareableUrl} className="text-xs" />
             <Button variant="outline" size="icon" onClick={copy}><Copy className="w-4 h-4" /></Button>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            L’adresse copiée est l’URL officielle <strong>nukuconnect.com</strong>. L’aperçu (image, titre, description) est généré automatiquement lors du partage.
+            L’adresse copiée reste sur <strong>nukuconnect.com</strong> et génère automatiquement l’aperçu image, titre et description.
           </p>
           <div className="grid grid-cols-3 gap-2">
             <a href={t.whatsapp} target="_blank" rel="noopener noreferrer"><Button variant="outline" size="sm" className="w-full gap-1"><MessageCircle className="w-3.5 h-3.5" />WhatsApp</Button></a>

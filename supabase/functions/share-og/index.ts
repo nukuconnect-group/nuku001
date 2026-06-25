@@ -81,6 +81,7 @@ const renderHtml = (p: OgPayload) => `<!doctype html>
 <meta itemprop="description" content="${esc(p.description)}" />
 <meta itemprop="image" content="${esc(p.image)}" />
 <link rel="canonical" href="${esc(p.url)}" />
+<meta http-equiv="refresh" content="1;url=${esc(p.url)}" />
 <meta property="og:type" content="${esc(p.type)}" />
 <meta property="og:site_name" content="NUKUCONNECT" />
 <meta property="og:title" content="${esc(p.title)}" />
