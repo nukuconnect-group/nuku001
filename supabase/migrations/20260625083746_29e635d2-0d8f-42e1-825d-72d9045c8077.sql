@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_network_profiles_optimized(integer) SECURITY INVOKER;
