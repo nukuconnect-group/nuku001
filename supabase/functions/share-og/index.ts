@@ -108,8 +108,16 @@ ${renderJsonLd(p)}
 const isUUID = (v: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
-async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
+const productTitleFromId = (value: string) => {
+  const cleaned = normalizeText(value)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+  return cleaned || "Produit NukuConnect";
+};
+
+async function buildProduct(admin: any, id: string): Promise<{ payload: OgPayload; resolved: boolean } | null> {
   const clean = decodeURIComponent(id).trim();
+  if (!clean) return null;
   const col = isUUID(clean) ? "id" : "slug";
   let { data: product } = await admin
     .from("products")
@@ -124,7 +132,28 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
       .maybeSingle();
     product = byName;
   }
-  if (!product) return null;
+  if (!product) {
+    const fallbackTitle = productTitleFromId(clean);
+    const fallbackUrl = `${SITE}/produit/${encodeURIComponent(clean)}`;
+    return {
+      resolved: false,
+      payload: {
+        title: fallbackTitle,
+        description: summarize(`${fallbackTitle} est partagé sur NukuConnect, la marketplace agricole intelligente d'Afrique.`, 220),
+        image: DEFAULT_IMAGE,
+        url: fallbackUrl,
+        type: "product",
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: fallbackTitle,
+          description: `${fallbackTitle} sur NukuConnect`,
+          image: DEFAULT_IMAGE,
+          offers: { "@type": "Offer", priceCurrency: "XOF", url: fallbackUrl },
+        },
+      },
+    };
+  }
   const img = firstRealImage(product.images);
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;
@@ -135,30 +164,35 @@ async function buildProduct(admin: any, id: string): Promise<OgPayload | null> {
   const baseDescription = normalizeText(product.description) || `${productName} disponible sur NukuConnect${product.location ? ` à ${normalizeText(product.location)}` : ""}.`;
   const description = summarize(`${baseDescription}${priceStr ? ` Prix: ${priceStr}.` : ""}`, 220);
   return {
-    title: productName,
-    description,
-    image: img,
-    url,
-    type: "product",
-    price: product.price ? Number(product.price) : undefined,
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      name: product.name,
+    resolved: true,
+    payload: {
+      title: productName,
       description,
       image: img,
-      offers: {
-        "@type": "Offer",
-        price: product.price || 0,
-        priceCurrency: "XOF",
-        url,
+      url,
+      type: "product",
+      price: product.price ? Number(product.price) : undefined,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        description,
+        image: img,
+        offers: {
+          "@type": "Offer",
+          price: product.price || 0,
+          priceCurrency: "XOF",
+          url,
+        },
       },
     },
   };
 }
 
-async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
-  const clean = decodeURIComponent(name).trim();
+async function buildShop(admin: any, idOrName: string, fallbackName?: string | null): Promise<{ payload: OgPayload; resolved: boolean } | null> {
+  const clean = decodeURIComponent(idOrName).trim();
+  const fallbackTitle = normalizeText(fallbackName) || (!isUUID(clean) ? normalizeText(clean) : "Boutique NukuConnect");
+  if (!clean && !fallbackTitle) return null;
   const isProfileId = isUUID(clean);
   let profile: any = null;
   if (isProfileId) {
@@ -195,26 +229,59 @@ async function buildShop(admin: any, name: string): Promise<OgPayload | null> {
       .maybeSingle();
     profile = fuzzy;
   }
-  if (!profile) return null;
-  const title = normalizeText(profile.business_name || profile.full_name || "Boutique NukuConnect");
+  if (!profile) {
+    const title = fallbackTitle || "Boutique NukuConnect";
+    const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
+    return {
+      resolved: false,
+      payload: {
+        title,
+        description: summarize(`Voici la boutique ${title} sur NukuConnect, le réseau agricole intelligent d'Afrique.`, 200),
+        image: DEFAULT_IMAGE,
+        url,
+        type: "profile",
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: title,
+          url,
+          logo: DEFAULT_IMAGE,
+          image: DEFAULT_IMAGE,
+        },
+      },
+    };
+  }
+  const title = normalizeText(profile.business_name || profile.full_name || fallbackTitle || "Boutique NukuConnect");
   const image = firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url);
   const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
   const description = summarize(normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`, 200);
   return {
-    title,
-    description,
-    image,
-    url,
-    type: "profile",
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: title,
-      url,
-      logo: profile.avatar_url || image,
+    resolved: true,
+    payload: {
+      title,
+      description,
       image,
+      url,
+      type: "profile",
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: title,
+        url,
+        logo: profile.avatar_url || image || DEFAULT_IMAGE,
+        image: image || DEFAULT_IMAGE,
+      },
     },
   };
+}
+
+async function recordShareLog(admin: any, row: Record<string, unknown>) {
+  try {
+    const { error } = await admin.from("share_endpoint_logs").insert(row);
+    if (error) console.warn("[share-og:log-failed]", error.message);
+  } catch (error) {
+    console.warn("[share-og:log-exception]", error);
+  }
 }
 
 async function alertAdmins(admin: any, title: string, description: string, details: Record<string, unknown>) {
@@ -246,14 +313,23 @@ Deno.serve(async (req) => {
     let payload: OgPayload | null = null;
     let resolved = false;
 
+    const requestedId = url.searchParams.get("id") || url.searchParams.get("slug") || url.searchParams.get("name") || "";
+
     if (type === "product") {
       const id = url.searchParams.get("id") || url.searchParams.get("slug") || "";
-      if (id) payload = await buildProduct(admin, id);
-      resolved = Boolean(payload);
+      if (id) {
+        const built = await buildProduct(admin, id);
+        payload = built?.payload || null;
+        resolved = Boolean(built?.resolved);
+      }
     } else if (type === "shop" || type === "profile" || type === "producer") {
-      const name = url.searchParams.get("id") || url.searchParams.get("name") || "";
-      if (name) payload = await buildShop(admin, name);
-      resolved = Boolean(payload);
+      const id = url.searchParams.get("id") || url.searchParams.get("name") || "";
+      const fallbackName = url.searchParams.get("name") || "";
+      if (id || fallbackName) {
+        const built = await buildShop(admin, id || fallbackName, fallbackName);
+        payload = built?.payload || null;
+        resolved = Boolean(built?.resolved);
+      }
     }
 
     if (!payload) {
@@ -294,8 +370,26 @@ Deno.serve(async (req) => {
       jsonLd: payload.jsonLd || null,
     };
 
+    const statusCode = 200;
+    const requiredMetaOk = Boolean(diagnostics.meta.hasTitle && diagnostics.meta.hasDescription && diagnostics.meta.hasImage);
+    await recordShareLog(admin, {
+      endpoint: url.pathname.includes("share-og") ? "/share-og" : "/share",
+      requested_type: type || null,
+      requested_id: requestedId || null,
+      status_code: statusCode,
+      ok: requiredMetaOk,
+      resolved,
+      duration_ms: diagnostics.durationMs,
+      title: payload.title,
+      description: payload.description,
+      image_url: payload.image,
+      canonical_url: payload.url,
+      user_agent: req.headers.get("user-agent") || "",
+      metadata: diagnostics,
+    });
+
     console.log("[share-og]", JSON.stringify({ ...diagnostics, userAgent: req.headers.get("user-agent") || "" }));
-    if (!resolved || !diagnostics.meta.hasTitle || !diagnostics.meta.hasDescription || !payload.image) {
+    if (!requiredMetaOk) {
       await alertAdmins(
         admin,
         "⚠️ Aperçu partage incomplet",
@@ -316,6 +410,18 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("[share-og:error]", e);
+    try {
+      const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+      await recordShareLog(admin, {
+        endpoint: "/share-og",
+        status_code: 500,
+        ok: false,
+        resolved: false,
+        duration_ms: Date.now() - startedAt,
+        error_message: (e as Error).message,
+        user_agent: req.headers.get("user-agent") || "",
+      });
+    } catch {}
     return json({ ok: false, error: (e as Error).message, durationMs: Date.now() - startedAt }, 500);
   }
 });

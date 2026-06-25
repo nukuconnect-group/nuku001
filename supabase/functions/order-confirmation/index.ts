@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,11 +123,6 @@ serve(async (req) => {
   }
 
   try {
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    if (!RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured');
-    }
-
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
     if (!parsed.success) {
@@ -136,34 +132,24 @@ serve(async (req) => {
       });
     }
     const data = parsed.data;
-    const emailHTML = generateEmailHTML(data);
-
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
+    // Backward-compatible wrapper: keep the legacy endpoint alive, but route
+    // through NukuConnect app emails so purchases use the verified sender,
+    // retry queue and email logs instead of a third-party direct API.
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { error } = await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "order-confirmation",
+        recipientEmail: data.buyerEmail,
+        idempotencyKey: `order-confirmation-${data.invoiceNumber}-${data.buyerEmail}`,
+        templateData: data,
       },
-      body: JSON.stringify({
-        from: 'NukuConnect <no-reply@nukuconnect.com>',
-        to: [data.buyerEmail],
-        subject: `Confirmation de commande ${data.invoiceNumber} — NukuConnect`,
-        html: emailHTML,
-      }),
     });
-
-    const resendData = await resendResponse.json();
-
-    if (!resendResponse.ok) {
-      console.error('Resend API error:', JSON.stringify(resendData));
-      throw new Error(`Email sending failed`);
-    }
+    if (error) throw error;
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Email de confirmation envoyé",
-        emailId: resendData.id,
+        message: "Email de confirmation ajouté à la file d'envoi",
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
