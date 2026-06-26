@@ -167,7 +167,7 @@ async function buildProduct(admin: any, id: string): Promise<{ payload: OgPayloa
       },
     };
   }
-  const img = firstRealImage(product.images);
+  const img = absoluteImageUrl(firstRealImage(product.images));
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;
   const priceStr = product.price
@@ -250,7 +250,7 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
       payload: {
         title,
         description: summarize(`Voici la boutique ${title} sur NukuConnect, le réseau agricole intelligent d'Afrique.`, 200),
-        image: DEFAULT_IMAGE,
+        image: DEFAULT_PROFILE_IMAGE,
         url,
         type: "profile",
         jsonLd: {
@@ -258,14 +258,14 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
           "@type": "Organization",
           name: title,
           url,
-          logo: DEFAULT_IMAGE,
-          image: DEFAULT_IMAGE,
+          logo: DEFAULT_PROFILE_IMAGE,
+          image: DEFAULT_PROFILE_IMAGE,
         },
       },
     };
   }
   const title = normalizeText(profile.business_name || profile.full_name || fallbackTitle || "Boutique NukuConnect");
-  const image = firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url);
+  const image = absoluteImageUrl(firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url));
   const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
   const description = summarize(normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`, 200);
   return {
@@ -281,8 +281,8 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
         "@type": "Organization",
         name: title,
         url,
-        logo: profile.avatar_url || image || DEFAULT_IMAGE,
-        image: image || DEFAULT_IMAGE,
+        logo: absoluteImageUrl(profile.avatar_url || image || DEFAULT_PROFILE_IMAGE),
+        image: image || DEFAULT_PROFILE_IMAGE,
       },
     },
   };
