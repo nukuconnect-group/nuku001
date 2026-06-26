@@ -119,7 +119,7 @@ export async function activateMembership({
   if (promoteToProducer) profileUpdates.user_type = "producer";
 
   if (Object.keys(profileUpdates).length > 0) {
-    const { error } = await supabase.from("profiles").update(profileUpdates).eq("id", profileId);
+    const { error } = await supabase.from("profiles").update(profileUpdates as never).eq("id", profileId);
     if (error) throw error;
   }
 

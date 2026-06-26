@@ -3120,6 +3120,7 @@ export type Database = {
         Args: { p_formation_id: string }
         Returns: boolean
       }
+      can_signal_call: { Args: { target_uid: string }; Returns: boolean }
       claim_referral: { Args: { p_referral_code: string }; Returns: string }
       clear_conversation_messages: {
         Args: { p_conversation_id: string }
