@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useProducts } from "@/hooks/useProducts";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useMemo, useRef } from "react";
 import imgAgriculture from "@/assets/category-agriculture-modern.jpg";
 import imgCereals from "@/assets/category-cereals-modern.jpg";
@@ -59,6 +60,7 @@ const getCategoryImage = (name: string) => {
 const CategoriesSection = () => {
   const { data: categories = [], isLoading } = useCategories();
   const { data: products = [] } = useProducts();
+  const { t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const productCounts = useMemo(() => {
@@ -110,7 +112,7 @@ const CategoriesSection = () => {
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
           <div>
             <h2 className="font-heading text-lg sm:text-xl lg:text-2xl font-extrabold text-accent uppercase tracking-wide">
-              Top Catégories
+              {t("home.topCategories")}
             </h2>
             <div className="w-20 h-[3px] bg-primary mt-1.5 rounded-full" />
           </div>
@@ -118,7 +120,7 @@ const CategoriesSection = () => {
             to="/categories"
             className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold hover:bg-primary/90 transition-colors"
           >
-            Voir tout
+            {t("common.seeAll")}
             <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </Link>
         </div>
@@ -154,7 +156,7 @@ const CategoriesSection = () => {
                 </div>
                 <div className="px-2 py-1.5 text-center">
                   <p className="text-[9px] text-muted-foreground">
-                    {productCounts[cat.id] || 0} produit{(productCounts[cat.id] || 0) > 1 ? "s" : ""}
+                    {productCounts[cat.id] || 0} {(productCounts[cat.id] || 0) > 1 ? t("home.productPlural") : t("home.productSingular")}
                   </p>
                 </div>
               </div>

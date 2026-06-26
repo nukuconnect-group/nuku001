@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import partnerEG from "@/assets/partner-energy-generation.png";
 import partnerRT from "@/assets/partner-republique-togolaise.png";
 import partnerTTI from "@/assets/partner-togo-top-impact.png";
@@ -17,6 +18,7 @@ const partners = [
 ];
 
 const CTASection = () => {
+  const { t } = useLanguage();
   return (
     <section className="py-6 sm:py-10 lg:py-14 relative overflow-hidden">
       <img
@@ -38,32 +40,30 @@ const CTASection = () => {
           </div>
 
           <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 px-2 drop-shadow-[0_2px_8px_hsl(var(--background)/0.8)]">
-            Prêt à transformer votre{" "}
-            <span className="text-primary drop-shadow-[0_2px_8px_hsl(var(--background)/0.6)]">activité agricole</span> ?
+            {t("home.ctaTitleBefore")} <span className="text-primary drop-shadow-[0_2px_8px_hsl(var(--background)/0.6)]">{t("home.ctaTitleHighlight")}</span> ?
           </h2>
 
           <p className="text-sm sm:text-lg text-foreground/90 font-medium mb-6 sm:mb-10 max-w-2xl mx-auto px-4 drop-shadow-[0_1px_4px_hsl(var(--background)/0.7)]">
-            Rejoignez des milliers de producteurs et acheteurs qui font confiance 
-            à NUKUCONNECT pour développer leur activité.
+            {t("home.ctaDesc")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link to="/auth">
               <Button variant="hero" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
-                Créer mon compte gratuit
+                {t("home.ctaCreate")}
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
             <Link to="/nuku-ai">
               <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
-                Contacter notre équipe
+                {t("home.ctaContact")}
               </Button>
             </Link>
           </div>
 
           {/* Partners marquee */}
           <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-border">
-            <p className="text-xs sm:text-sm text-muted-foreground mb-6">Ils nous font confiance</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-6">{t("home.partnersTrust")}</p>
             <div
               className="relative overflow-hidden w-full"
               style={{

@@ -3,20 +3,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bot, Send, Sparkles, MessageCircle, Zap, Globe, Leaf } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 // Logo removed from this section per user request
 
 const NukuAISection = () => {
+  const { t } = useLanguage();
   const [messages] = useState([
-    { role: "assistant", content: "Bonjour ! Je suis NUKUCONNECT IA, votre assistant agricole. Comment puis-je vous aider aujourd'hui ?" },
-    { role: "user", content: "Comment améliorer le rendement de mes tomates ?" },
-    { role: "assistant", content: "Pour améliorer vos tomates :\n\n🌱 Sol riche en compost\n💧 Arrosage régulier le matin\n☀️ 6-8h de soleil direct\n\nVoulez-vous plus de détails ?" },
+    { role: "assistant", content: t("home.aiMsgAssistant1") },
+    { role: "user", content: t("home.aiMsgUser") },
+    { role: "assistant", content: t("home.aiMsgAssistant2") },
   ]);
 
   const features = [
-    { icon: MessageCircle, text: "Conseils personnalisés 24/7" },
-    { icon: Leaf, text: "Diagnostic des maladies" },
-    { icon: Zap, text: "Réponses instantanées" },
-    { icon: Globe, text: "Français & langues locales" },
+    { icon: MessageCircle, text: t("home.aiFeatureAdvice") },
+    { icon: Leaf, text: t("home.aiFeatureDisease") },
+    { icon: Zap, text: t("home.aiFeatureInstant") },
+    { icon: Globe, text: t("home.aiFeatureLang") },
   ];
 
   return (
@@ -31,17 +33,15 @@ const NukuAISection = () => {
           <div className="order-2 lg:order-1">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/20 backdrop-blur-sm mb-4 sm:mb-6">
               <Sparkles className="w-4 h-4 text-primary-foreground" />
-              <span className="text-xs sm:text-sm font-medium">Par NukuConnect IA</span>
+              <span className="text-xs sm:text-sm font-medium">{t("ai.poweredBy")}</span>
             </div>
             
             <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Rencontrez <span className="text-secondary-foreground font-extrabold">Nukuconnect IA</span>
+              {t("home.aiMeet")} <span className="text-secondary-foreground font-extrabold">Nukuconnect IA</span>
             </h2>
             
             <p className="text-sm sm:text-base lg:text-lg text-primary-foreground/90 mb-6 sm:mb-8 leading-relaxed">
-              Votre assistant agricole intelligent disponible 24/7. Posez vos questions 
-              sur les cultures, l'élevage, les maladies des plantes et recevez des 
-              conseils personnalisés instantanément.
+              {t("home.aiDesc")}
             </p>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -57,7 +57,7 @@ const NukuAISection = () => {
 
             <Link to="/nuku-ai">
               <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold gap-2 text-sm sm:text-base">
-                Essayer NUKUCONNECT IA <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
+                {t("home.aiTry")} <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
           </div>
@@ -74,7 +74,7 @@ const NukuAISection = () => {
                   <p className="font-semibold text-primary-foreground text-sm sm:text-base">Nukuconnect IA</p>
                   <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                    <p className="text-xs text-primary-foreground/80">En ligne</p>
+                    <p className="text-xs text-primary-foreground/80">{t("home.aiOnline")}</p>
                   </div>
                 </div>
               </div>
@@ -89,7 +89,7 @@ const NukuAISection = () => {
               </CardContent>
               <div className="p-3 sm:p-4 border-t border-border bg-card">
                 <div className="flex items-center gap-2 bg-muted rounded-xl px-3 sm:px-4 py-2 sm:py-3">
-                  <input type="text" placeholder="Posez votre question..." className="flex-1 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" disabled />
+                  <input type="text" placeholder={t("home.aiPlaceholder")} className="flex-1 bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none" disabled />
                   <button className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
                     <Send className="w-4 h-4 text-primary-foreground" />
                   </button>

@@ -2,29 +2,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
   ShoppingCart, MessageSquare, Brain, GraduationCap, QrCode, Users, TrendingUp, Shield
 } from "lucide-react";
-
-const features = [
-  { icon: ShoppingCart, title: "Marketplace Agricole", description: "Publiez et achetez des produits agricoles avec facilité.", color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: MessageSquare, title: "NUKUCONNECT IA - Assistant 24/7", description: "Chatbot IA qui répond à vos questions agricoles.", color: "text-accent", bgColor: "bg-accent/10" },
-  { icon: Brain, title: "Recommandations IA", description: "Suggestions basées sur votre localisation et préférences.", color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: GraduationCap, title: "Formations Agricoles", description: "Cours en ligne et certifications pour vos techniques.", color: "text-accent", bgColor: "bg-accent/10" },
-  { icon: QrCode, title: "Traçabilité Complète", description: "Suivez vos produits avec QR codes et historique.", color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: Users, title: "Réseau de Confiance", description: "Notation et avis pour des transactions sécurisées.", color: "text-accent", bgColor: "bg-accent/10" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FeaturesSection = () => {
+  const { t } = useLanguage();
+  const features = [
+    { icon: ShoppingCart, title: t("home.featureMarketplace"), description: t("home.featureMarketplaceDesc"), color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: MessageSquare, title: t("home.featureAssistant"), description: t("home.featureAssistantDesc"), color: "text-accent", bgColor: "bg-accent/10" },
+    { icon: Brain, title: t("home.featureRecommendations"), description: t("home.featureRecommendationsDesc"), color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: GraduationCap, title: t("home.featureTraining"), description: t("home.featureTrainingDesc"), color: "text-accent", bgColor: "bg-accent/10" },
+    { icon: QrCode, title: t("home.featureTraceability"), description: t("home.featureTraceabilityDesc"), color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: Users, title: t("home.featureNetwork"), description: t("home.featureNetworkDesc"), color: "text-accent", bgColor: "bg-accent/10" },
+  ];
+
   return (
     <section className="py-6 sm:py-10 lg:py-14 bg-gradient-earth">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-16">
           <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-            Fonctionnalités
+            {t("home.featuresBadge")}
           </span>
           <h2 className="font-heading text-lg sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 sm:mb-4">
-            Tout pour <span className="text-primary">réussir</span>
+            {t("home.featuresTitleBefore")} <span className="text-primary">{t("home.featuresTitleHighlight")}</span>
           </h2>
           <p className="text-xs sm:text-base lg:text-lg text-muted-foreground px-2">
-            Technologie et agriculture pour transformer votre activité.
+            {t("home.featuresDesc")}
           </p>
         </div>
 
@@ -48,10 +50,10 @@ const FeaturesSection = () => {
 
         <div className="mt-10 sm:mt-20 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           {[
-            { icon: Users, value: "15K+", label: "Utilisateurs" },
-            { icon: ShoppingCart, value: "100K+", label: "Produits" },
+            { icon: Users, value: "15K+", label: t("home.users") },
+            { icon: ShoppingCart, value: "100K+", label: t("mp.products") },
             { icon: TrendingUp, value: "98%", label: "Satisfaction" },
-            { icon: Shield, value: "100%", label: "Sécurisé" },
+            { icon: Shield, value: "100%", label: t("home.secure") },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2 sm:mb-4">

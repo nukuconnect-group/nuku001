@@ -16,6 +16,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DEFAULT_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/C3YioAkra3hJ4npw1XZX0HbG8E32/social-images/social-1769858107990-NUKUCONNECT-LOGO5-2.png";
+const DEFAULT_PROFILE_IMAGE = DEFAULT_IMAGE;
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -48,6 +49,16 @@ const firstRealImage = (...values: unknown[]) => {
     if (typeof value === "string" && value.trim().length > 0) return value.trim();
   }
   return DEFAULT_IMAGE;
+};
+
+const absoluteImageUrl = (value: string) => {
+  const clean = value.trim();
+  if (!clean) return DEFAULT_IMAGE;
+  if (/^https:\/\//i.test(clean)) return clean;
+  if (/^http:\/\//i.test(clean)) return clean.replace(/^http:\/\//i, "https://");
+  if (clean.startsWith("//")) return `https:${clean}`;
+  if (clean.startsWith("/")) return `${SITE}${clean}`;
+  return clean;
 };
 
 interface OgPayload {
@@ -86,8 +97,9 @@ const renderHtml = (p: OgPayload) => `<!doctype html>
 <meta property="og:site_name" content="NUKUCONNECT" />
 <meta property="og:title" content="${esc(p.title)}" />
 <meta property="og:description" content="${esc(p.description)}" />
-<meta property="og:image" content="${esc(p.image)}" />
-<meta property="og:image:secure_url" content="${esc(p.image)}" />
+<meta property="og:image" content="${esc(absoluteImageUrl(p.image))}" />
+<meta property="og:image:secure_url" content="${esc(absoluteImageUrl(p.image))}" />
+<meta property="og:image:type" content="image/jpeg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="${esc(p.title)}" />
@@ -97,7 +109,7 @@ ${p.price != null ? `<meta property="product:price:amount" content="${p.price}" 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(p.title)}" />
 <meta name="twitter:description" content="${esc(p.description)}" />
-<meta name="twitter:image" content="${esc(p.image)}" />
+<meta name="twitter:image" content="${esc(absoluteImageUrl(p.image))}" />
 <meta name="twitter:image:alt" content="${esc(p.title)}" />
 ${renderJsonLd(p)}
 </head>
@@ -155,7 +167,7 @@ async function buildProduct(admin: any, id: string): Promise<{ payload: OgPayloa
       },
     };
   }
-  const img = firstRealImage(product.images);
+  const img = absoluteImageUrl(firstRealImage(product.images));
   const slug = product.slug || product.id;
   const url = `${SITE}/produit/${encodeURIComponent(slug)}`;
   const priceStr = product.price
@@ -238,7 +250,7 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
       payload: {
         title,
         description: summarize(`Voici la boutique ${title} sur NukuConnect, le réseau agricole intelligent d'Afrique.`, 200),
-        image: DEFAULT_IMAGE,
+        image: DEFAULT_PROFILE_IMAGE,
         url,
         type: "profile",
         jsonLd: {
@@ -246,14 +258,14 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
           "@type": "Organization",
           name: title,
           url,
-          logo: DEFAULT_IMAGE,
-          image: DEFAULT_IMAGE,
+          logo: DEFAULT_PROFILE_IMAGE,
+          image: DEFAULT_PROFILE_IMAGE,
         },
       },
     };
   }
   const title = normalizeText(profile.business_name || profile.full_name || fallbackTitle || "Boutique NukuConnect");
-  const image = firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url);
+  const image = absoluteImageUrl(firstRealImage(profile.cover_url, profile.cover_images, profile.avatar_url));
   const url = `${SITE}/producteurs/${encodeURIComponent(title)}`;
   const description = summarize(normalizeText(profile.bio) || `Voici la boutique ${title}${profile.location ? ` (${normalizeText(profile.location)})` : ""} sur NukuConnect.`, 200);
   return {
@@ -269,8 +281,8 @@ async function buildShop(admin: any, idOrName: string, fallbackName?: string | n
         "@type": "Organization",
         name: title,
         url,
-        logo: profile.avatar_url || image || DEFAULT_IMAGE,
-        image: image || DEFAULT_IMAGE,
+        logo: absoluteImageUrl(profile.avatar_url || image || DEFAULT_PROFILE_IMAGE),
+        image: image || DEFAULT_PROFILE_IMAGE,
       },
     },
   };

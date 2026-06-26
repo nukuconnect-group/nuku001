@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HelpAICard = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -26,10 +28,10 @@ const HelpAICard = () => {
         <div className="relative overflow-hidden bg-card border border-border shadow-sm flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
           <div className="flex-1 min-w-0">
             <h3 className="font-heading text-foreground font-bold text-base sm:text-lg leading-tight">
-              Besoin d'aide ?
+              {t("home.helpTitle")}
             </h3>
             <p className="text-muted-foreground text-xs sm:text-sm mt-1 leading-snug">
-              Discutez avec notre Assistant IA pour trouver ce qu'il vous faut.
+              {t("home.helpDesc")}
             </p>
             <Button
               variant="hero"
@@ -38,7 +40,7 @@ const HelpAICard = () => {
               onClick={() => setOpen(true)}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              Discuter maintenant
+              {t("home.chatNow")}
             </Button>
           </div>
           <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-muted/50 flex items-center justify-center overflow-hidden">
@@ -55,9 +57,9 @@ const HelpAICard = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Que recherchez-vous ?</DialogTitle>
+            <DialogTitle>{t("home.whatSearch")}</DialogTitle>
             <DialogDescription>
-              Décrivez votre question ou ce que vous recherchez. Notre IA NukuConnect vous répondra immédiatement.
+              {t("home.whatSearchDesc")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="flex flex-col gap-3 mt-2">
@@ -65,12 +67,12 @@ const HelpAICard = () => {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ex: Quel engrais pour le maïs ?"
+              placeholder={t("home.helpPlaceholder")}
               className="h-11"
             />
             <Button type="submit" variant="hero" disabled={!query.trim()} className="gap-2">
               <Send className="w-4 h-4" />
-              Envoyer à l'IA
+              {t("home.sendToAI")}
             </Button>
           </form>
         </DialogContent>

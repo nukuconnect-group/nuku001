@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NukuAIFloating = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40">
@@ -17,7 +19,7 @@ const NukuAIFloating = () => {
               </div>
               <div>
                 <h4 className="font-heading font-semibold text-foreground">NukuConnect IA</h4>
-                <p className="text-xs text-muted-foreground">Assistant Agricole</p>
+                <p className="text-xs text-muted-foreground">{t("home.aiAssistant")}</p>
               </div>
             </div>
             <button
@@ -28,12 +30,12 @@ const NukuAIFloating = () => {
             </button>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Posez vos questions sur l'agriculture, les cultures, l'élevage ou les maladies des plantes.
+            {t("home.aiFloatingText")}
           </p>
           <Link to="/nuku-ai">
             <Button variant="hero" className="w-full gap-2">
               <Sparkles className="w-4 h-4" />
-              Démarrer une conversation
+              {t("home.startConversation")}
             </Button>
           </Link>
         </div>

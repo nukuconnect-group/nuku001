@@ -40,6 +40,7 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
   // This stays on nukuconnect.com (/share/...), never on a backend URL.
   const socialUrl = previewUrl || url;
   const shareableUrl = socialUrl;
+  const displayUrl = url;
 
   useEffect(() => {
     if (!open) return;
@@ -101,7 +102,7 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
             </Button>
           </div>
           <div className="flex gap-2">
-            <Input readOnly value={shareableUrl} className="text-xs" />
+            <Input readOnly value={displayUrl} className="text-xs" />
             <Button variant="outline" size="icon" onClick={copy}><Copy className="w-4 h-4" /></Button>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
