@@ -2,9 +2,11 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
 import ProductCard from "@/components/marketplace/ProductCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const RecentPublications = () => {
   const { data: products } = useProducts();
+  const { t } = useLanguage();
 
   const recentProducts = useMemo(() => (products || []).slice(0, 8), [products]);
 
@@ -15,10 +17,10 @@ const RecentPublications = () => {
       <div className="sm:container sm:mx-auto sm:px-4">
         <div className="flex items-center justify-between mb-2 sm:mb-4">
           <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">
-            Publications récentes
+            {t("home.recentPublications")}
           </h2>
           <Link to="/marketplace" className="text-[10px] sm:text-xs text-primary font-medium">
-            Tout voir →
+            {t("mp.seeAll")}
           </Link>
         </div>
 
