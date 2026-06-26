@@ -64,6 +64,7 @@ async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: 
     const orderDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
     const siteOrigin = Deno.env.get("PUBLIC_SITE_URL") || "https://nukuconnect.com";
     const invoiceUrl = `${siteOrigin}/factures?invoice=${encodeURIComponent(invoiceNumber)}`;
+    const sellerActionUrl = `${siteOrigin}/tableau-de-bord?tab=orders&invoice=${encodeURIComponent(invoiceNumber)}`;
     const buyerName = buyerProfile?.full_name || String(data.buyerFullName || buyerEmail.split("@")[0]);
     const deliveryMethod = String(data.deliveryMethod || "pickup") === "livreur" ? "Livraison à domicile" : "Retrait sur place";
 
@@ -122,6 +123,7 @@ async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: 
             deliveryCity: data.deliveryCity || "",
             buyerPhone: buyerProfile?.phone || "",
             invoiceUrl,
+            sellerActionUrl,
           },
         },
       });

@@ -72,6 +72,7 @@ async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], da
     const orderDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
     const siteOrigin = Deno.env.get("PUBLIC_SITE_URL") || "https://nukuconnect.com";
     const invoiceUrl = `${siteOrigin}/factures?invoice=${encodeURIComponent(invoiceNumber)}`;
+    const sellerActionUrl = `${siteOrigin}/tableau-de-bord?tab=orders&invoice=${encodeURIComponent(invoiceNumber)}`;
 
     // 1) Buyer confirmation — route through the standard app email queue
     // (domain verified, retries, logs, suppression handling). The old direct
@@ -130,6 +131,7 @@ async function sendOrderConfirmationEmail(admin: any, tx: any, orders: any[], da
             deliveryCity: data.deliveryCity || "",
             buyerPhone: buyerProfile?.phone || "",
             invoiceUrl,
+            sellerActionUrl,
           },
         },
       });
