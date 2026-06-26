@@ -1,55 +1,33 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import step1Image from "@/assets/step-1-create-account.jpg";
 import step2Image from "@/assets/step-2-find-products.jpg";
 import step3Image from "@/assets/step-3-order.jpg";
 import step4Image from "@/assets/step-4-delivery.jpg";
 
-const steps = [
-  {
-    title: "Créez votre compte",
-    description: "Choisissez votre type de compte : Producteur, Acheteur, Fournisseur, Livreur ou Apprenant. Inscription rapide et gratuite.",
-    image: step1Image,
-    link: "/auth",
-    linkText: "S'inscrire"
-  },
-  {
-    title: "Trouvez vos produits & offres",
-    description: "Parcourez le marketplace, découvrez les produits agricoles locaux et consultez les offres d'achat des acheteurs.",
-    image: step2Image,
-    link: "/marketplace",
-    linkText: "Explorer"
-  },
-  {
-    title: "Passez commande",
-    description: "Contactez le producteur, négociez et achetez en toute sécurité.",
-    image: step3Image,
-    link: "/marketplace",
-    linkText: "Acheter"
-  },
-  {
-    title: "Livraison à domicile",
-    description: "Sélectionnez un livreur disponible près de vous, suivez votre commande en temps réel et recevez vos produits frais.",
-    image: step4Image,
-    link: "/suivi-livraison",
-    linkText: "Suivre commande"
-  }
-];
-
 const HowItWorksSection = () => {
+  const { t } = useLanguage();
+  const steps = [
+    { title: t("home.step1Title"), description: t("home.step1Desc"), image: step1Image, link: "/auth", linkText: t("home.step1Link") },
+    { title: t("home.step2Title"), description: t("home.step2Desc"), image: step2Image, link: "/marketplace", linkText: t("home.step2Link") },
+    { title: t("home.step3Title"), description: t("home.step3Desc"), image: step3Image, link: "/marketplace", linkText: t("home.step3Link") },
+    { title: t("home.step4Title"), description: t("home.step4Desc"), image: step4Image, link: "/suivi-livraison", linkText: t("home.step4Link") }
+  ];
+
   return (
     <section id="vendre" className="py-6 sm:py-8 lg:py-12 bg-muted/30 scroll-mt-24">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
           <span className="inline-block px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3">
-            Comment ça marche ?
+            {t("home.hiwBadge")}
           </span>
           <h2 className="font-heading text-lg sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            Achetez en <span className="text-primary">4 étapes simples</span>
+            {t("home.hiwTitleBefore")} <span className="text-primary">{t("home.hiwTitleHighlight")}</span>
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground px-2">
-            De la création de compte à la livraison, découvrez comment NUKUCONNECT simplifie vos achats agricoles.
+            {t("home.hiwDesc")}
           </p>
         </div>
 
@@ -100,7 +78,7 @@ const HowItWorksSection = () => {
         <div className="text-center mt-6 sm:mt-8">
           <Link to="/auth">
             <Button variant="hero" size="lg" className="gap-2 text-xs sm:text-sm">
-              Commencer maintenant
+              {t("hero.cta")}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
