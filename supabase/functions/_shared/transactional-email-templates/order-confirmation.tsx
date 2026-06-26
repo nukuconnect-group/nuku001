@@ -12,6 +12,7 @@ import {
   Section,
   Text,
   Hr,
+  Link,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
@@ -37,6 +38,7 @@ interface OrderConfirmationProps {
   deliveryMethod?: string
   paymentMethod?: string
   deliveryCity?: string
+  invoiceUrl?: string
 }
 
 const formatCFA = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`
@@ -52,6 +54,7 @@ const OrderConfirmationEmail = ({
   deliveryMethod = '',
   paymentMethod = '',
   deliveryCity = '',
+  invoiceUrl = '',
 }: OrderConfirmationProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
@@ -127,8 +130,13 @@ const OrderConfirmationEmail = ({
         </Section>
 
         <Text style={footer}>
-          Une facture PDF a été générée automatiquement. Vous pouvez la re-télécharger depuis votre tableau de bord.
+          Votre facture est disponible depuis votre tableau de bord.
         </Text>
+        {invoiceUrl && (
+          <Link href={invoiceUrl} style={buttonLink}>
+            Voir ou télécharger la facture
+          </Link>
+        )}
         <Text style={footer}>
           {SITE_NAME} — Marketplace Agricole du Togo
         </Text>
@@ -156,6 +164,7 @@ export const template = {
     deliveryMethod: 'Livraison express',
     paymentMethod: 'Mobile Money',
     deliveryCity: 'Lomé',
+    invoiceUrl: 'https://nukuconnect.com/factures?invoice=NC-240701-001',
   },
 } satisfies TemplateEntry
 
@@ -179,3 +188,4 @@ const totalValue = { padding: '4px 0', fontSize: '18px', fontWeight: 'bold' as c
 const infoBox = { backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '16px', margin: '0 0 24px' }
 const infoText = { margin: '0 0 8px', fontSize: '13px', color: '#18181b' }
 const footer = { fontSize: '12px', color: '#999999', margin: '8px 0 0', lineHeight: '1.5' }
+const buttonLink = { display: 'block', backgroundColor: '#008000', color: '#ffffff', textDecoration: 'none', textAlign: 'center' as const, padding: '12px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' as const, margin: '16px 0' }

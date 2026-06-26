@@ -2,7 +2,7 @@
 
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Html, Img, Preview, Section, Text, Hr,
+  Body, Container, Head, Heading, Html, Img, Preview, Section, Text, Hr, Link,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
@@ -26,6 +26,8 @@ interface NewOrderSellerProps {
   deliveryMethod?: string
   deliveryCity?: string
   buyerPhone?: string
+  invoiceUrl?: string
+  sellerActionUrl?: string
 }
 
 const formatCFA = (n: number) => `${n.toLocaleString('fr-FR')} FCFA`
@@ -40,6 +42,8 @@ const NewOrderSellerEmail = ({
   deliveryMethod = '',
   deliveryCity = '',
   buyerPhone = '',
+  invoiceUrl = '',
+  sellerActionUrl = '',
 }: NewOrderSellerProps) => (
   <Html lang="fr" dir="ltr">
     <Head />
@@ -90,8 +94,18 @@ const NewOrderSellerEmail = ({
         </Section>
 
         <Text style={text}>
-          Préparez la commande et confirmez sa réception depuis votre tableau de bord {SITE_NAME}.
+          Ce produit a été payé sur votre compte. Vérifiez la commande, confirmez sa réception et lancez la livraison depuis votre tableau de bord {SITE_NAME}.
         </Text>
+        {sellerActionUrl && (
+          <Link href={sellerActionUrl} style={buttonLink}>
+            Confirmer la commande et organiser la livraison
+          </Link>
+        )}
+        {invoiceUrl && (
+          <Link href={invoiceUrl} style={secondaryLink}>
+            Voir la facture de la commande
+          </Link>
+        )}
         <Text style={footer}>
           {SITE_NAME} — Marketplace Agricole intelligente
         </Text>
@@ -117,6 +131,8 @@ export const template = {
     deliveryMethod: 'Livreur NukuConnect',
     deliveryCity: 'Lomé',
     buyerPhone: '+228 90 00 00 00',
+    invoiceUrl: 'https://nukuconnect.com/factures?invoice=NK-20260601-093015',
+    sellerActionUrl: 'https://nukuconnect.com/tableau-de-bord?tab=orders&invoice=NK-20260601-093015',
   },
 } satisfies TemplateEntry
 
@@ -135,3 +151,5 @@ const totalLine = { fontSize: '16px', color: '#008000', margin: '0 0 16px', text
 const infoBox = { backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '16px', margin: '0 0 16px' }
 const infoText = { margin: '0 0 6px', fontSize: '13px', color: '#18181b' }
 const footer = { fontSize: '12px', color: '#999999', margin: '16px 0 0', lineHeight: '1.5' }
+const buttonLink = { display: 'block', backgroundColor: '#008000', color: '#ffffff', textDecoration: 'none', textAlign: 'center' as const, padding: '12px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' as const, margin: '16px 0 8px' }
+const secondaryLink = { display: 'block', color: '#008000', textDecoration: 'underline', textAlign: 'center' as const, fontSize: '13px', fontWeight: 'bold' as const, margin: '8px 0 16px' }
