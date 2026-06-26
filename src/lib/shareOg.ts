@@ -88,7 +88,7 @@ const cacheBust = () => Math.random().toString(36).slice(2, 10);
 export function productCrawlerUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
   if (!safe) return SITE_URL;
-  return `${publicOgPath("product", safe)}&v=${cacheBust()}`;
+  return `${edgeOgUrl("product", safe)}&v=${cacheBust()}`;
 }
 
 /**
@@ -98,7 +98,7 @@ export function productCrawlerUrl(idOrSlug: string): string {
 export function shopCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
   const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
   if (!id) return SITE_URL;
-  return `${publicOgPath("shop", id, businessNameOrFull)}&v=${cacheBust()}`;
+  return `${edgeOgUrl("shop", id, businessNameOrFull)}&v=${cacheBust()}`;
 }
 
 /** Direct backend endpoint kept only for diagnostics/admin tools. */

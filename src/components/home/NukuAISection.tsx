@@ -9,9 +9,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const NukuAISection = () => {
   const { t } = useLanguage();
   const [messages] = useState([
-    { role: "assistant", content: "Bonjour ! Je suis NUKUCONNECT IA, votre assistant agricole. Comment puis-je vous aider aujourd'hui ?" },
-    { role: "user", content: "Comment améliorer le rendement de mes tomates ?" },
-    { role: "assistant", content: "Pour améliorer vos tomates :\n\n🌱 Sol riche en compost\n💧 Arrosage régulier le matin\n☀️ 6-8h de soleil direct\n\nVoulez-vous plus de détails ?" },
+    { role: "assistant", content: t("home.aiMsgAssistant1") },
+    { role: "user", content: t("home.aiMsgUser") },
+    { role: "assistant", content: t("home.aiMsgAssistant2") },
   ]);
 
   const features = [
