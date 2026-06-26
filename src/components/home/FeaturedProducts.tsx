@@ -58,7 +58,7 @@ const FeaturedProducts = () => {
             {heroProduct && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
                 {/* HERO card */}
-                <FeaturedHeroCard product={heroProduct} formatPrice={formatPrice} />
+                <FeaturedHeroCard product={heroProduct} formatPrice={formatPrice} newLabel={t("home.new")} />
 
                 {/* Side grid — 2 colonnes (mobile inclus) */}
                 <div className="lg:col-span-2 grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
@@ -95,9 +95,10 @@ const FeaturedProducts = () => {
 interface CardProps {
   product: Product;
   formatPrice: (n: number) => string;
+  newLabel?: string;
 }
 
-const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
+const FeaturedHeroCard = ({ product, formatPrice, newLabel = "NEW" }: CardProps) => {
   const [imgError, setImgError] = useState(false);
   const src = imgError || !product.image
     ? getCategoryFallbackImage(product.category, product.name)
@@ -122,7 +123,7 @@ const FeaturedHeroCard = ({ product, formatPrice }: CardProps) => {
       <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
         <Badge className="bg-primary text-primary-foreground font-bold text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shadow gap-1">
           <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-          {t("home.new")}
+          {newLabel}
         </Badge>
       </div>
 
