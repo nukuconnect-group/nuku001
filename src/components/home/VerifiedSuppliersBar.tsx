@@ -5,6 +5,7 @@ import { ShieldCheck, ArrowRight, Sprout, Store, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VerifiedSupplier {
   id: string;
@@ -24,6 +25,7 @@ const QUERY_KEY = ["verified-suppliers-bar"] as const;
  */
 const VerifiedSuppliersBar = () => {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const { data, isLoading } = useQuery({
     queryKey: QUERY_KEY,
@@ -104,24 +106,24 @@ const VerifiedSuppliersBar = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-0.5">
-                Réseau de confiance · temps réel
+                {t("home.trustNetworkRealtime")}
               </p>
               <h3 className="font-heading text-sm sm:text-base lg:text-xl font-bold text-foreground leading-tight">
-                Producteurs &amp; Fournisseurs Nukuconnect
+                {t("home.networkTitle")}
               </h3>
 
               {/* Two separate counters — toujours sur la même ligne (mobile inclus) */}
               <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 flex-nowrap overflow-x-auto no-scrollbar">
                 <CounterPill
                   icon={<Sprout className="w-3 h-3" />}
-                  label="Producteurs"
+                  label={t("hero.stat1")}
                   value={producers}
                   isLoading={isLoading}
                   tone="primary"
                 />
                 <CounterPill
                   icon={<Store className="w-3 h-3" />}
-                  label="Fournisseurs"
+                  label={t("net.suppliers")}
                   value={suppliers}
                   isLoading={isLoading}
                   tone="accent"
@@ -157,13 +159,13 @@ const VerifiedSuppliersBar = () => {
                   ).map((s) => (
                     <div
                       key={s.id}
-                      title={s.business_name || s.full_name || "Membre vérifié"}
+                      title={s.business_name || s.full_name || t("home.verifiedMember")}
                       className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full border-2 border-card overflow-hidden hover:scale-110 hover:z-10 transition-transform shadow-sm"
                     >
                       {s.avatar_url ? (
                         <img
                           src={s.avatar_url}
-                          alt={s.business_name || s.full_name || "Membre"}
+                          alt={s.business_name || s.full_name || t("home.member")}
                           className="w-full h-full object-cover"
                           loading="lazy"
                           onError={(e) => {
@@ -194,7 +196,7 @@ const VerifiedSuppliersBar = () => {
             {/* CTA */}
             <Link to="/producteurs" className="flex-shrink-0">
               <Button variant="outline" size="sm" className="gap-1.5 text-[11px] sm:text-sm h-8 sm:h-9">
-                Voir le réseau
+                {t("home.viewNetwork")}
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
