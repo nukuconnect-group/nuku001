@@ -27,7 +27,7 @@ const DemandImage = ({ src, category, title }: { src?: string; category: string;
 
 const HomeDemandsSection = () => {
   const { data: demands = [], isLoading } = useDemands();
-  const { formatPrice } = useLanguage();
+  const { formatPrice, t } = useLanguage();
   const PAGE_SIZE = 4;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -60,16 +60,16 @@ const HomeDemandsSection = () => {
             </div>
             <div className="min-w-0">
               <h2 className="font-heading text-sm sm:text-xl font-bold text-foreground truncate">
-                Demandes d'achat
+                {t("home.demandsTitle")}
               </h2>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Les acheteurs cherchent — répondez directement
+                {t("home.demandsSubtitle")}
               </p>
             </div>
           </div>
           <Link to="/marketplace?tab=demands" className="flex-shrink-0">
             <Button variant="outline" size="sm" className="gap-1 text-[10px] sm:text-xs h-8">
-              Voir tout <ArrowRight className="w-3 h-3" />
+              {t("common.seeAll")} <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
@@ -93,7 +93,7 @@ const HomeDemandsSection = () => {
                       title={d.title}
                     />
                     <span className="absolute top-1.5 left-1.5 bg-accent text-accent-foreground text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">
-                      ACHAT
+                      {t("home.purchaseBadge")}
                     </span>
                   </div>
 
@@ -110,11 +110,11 @@ const HomeDemandsSection = () => {
                         )}
                       </div>
                       <span className="text-[9px] text-muted-foreground truncate min-w-0 flex-1">
-                        {d.profile?.full_name || "Acheteur"}
+                        {d.profile?.full_name || t("home.buyer")}
                       </span>
                     </div>
                     <h3 className="font-semibold text-[11px] sm:text-xs text-foreground line-clamp-2 mb-1 leading-snug break-words">
-                      Besoin d'achat de {d.title.replace(/^(Recherche|Besoin d'achat de)\s+/i, "")}
+                      {t("home.demandNeed")} {d.title.replace(/^(Recherche|Besoin d'achat de)\s+/i, "")}
                     </h3>
                     <div className="mt-auto space-y-0.5 min-w-0">
                       {d.quantity && (
@@ -151,7 +151,7 @@ const HomeDemandsSection = () => {
               className="gap-1.5 text-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              Voir plus de demandes
+               {t("home.moreDemands")}
             </Button>
           </Link>
         </div>
