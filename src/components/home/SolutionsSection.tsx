@@ -67,19 +67,13 @@ const SolutionsSection = () => {
         <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-12">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide uppercase mb-4">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Solutions NUKUCONNECT
+            {t("home.solutionsBadge")}
           </span>
           <h2 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-3">
-            {t("sol.delivery").includes("rapide") ? (
-              <>Des solutions innovantes au service de{" "}<span className="text-primary">votre croissance</span></>
-            ) : (
-              <>Innovative solutions for{" "}<span className="text-primary">your growth</span></>
-            )}
+            {t("home.solutionsTitleBefore")} <span className="text-primary">{t("home.solutionsTitleHighlight")}</span>
           </h2>
           <p className="text-sm lg:text-base text-muted-foreground max-w-2xl mx-auto">
-            {t("sol.delivery").includes("rapide")
-              ? "Une plateforme complète qui connecte, forme et dynamise l'agriculture et l'aquaculture en Afrique de l'Ouest et au-delà."
-              : "A complete platform that connects, trains and boosts agriculture and aquaculture in West Africa and beyond."}
+            {t("home.solutionsDesc")}
           </p>
         </div>
 
