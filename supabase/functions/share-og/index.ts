@@ -415,7 +415,7 @@ Deno.serve(async (req) => {
     return new Response(renderHtml(payload), {
       headers: {
         ...corsHeaders,
-        "Content-Type": "application/xhtml+xml; charset=utf-8",
+        "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": cacheBust ? "no-store" : "public, max-age=300, s-maxage=600",
         "Vary": "User-Agent, Accept-Encoding",
       },
