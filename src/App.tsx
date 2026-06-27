@@ -67,6 +67,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminWatermarkErrors = lazy(() => import("./pages/AdminWatermarkErrors"));
 const SeoPreview = lazy(() => import("./pages/admin/SeoPreview"));
 const SeoCanonical = lazy(() => import("./pages/admin/SeoCanonical"));
+const RealtimeDiagnostics = lazy(() => import("./pages/admin/RealtimeDiagnostics"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DeliveryAddress = lazy(() => import("./pages/DeliveryAddress"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
@@ -235,6 +236,7 @@ const App = () => {
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
                   <Route path="/admin/watermark-errors" element={<AdminWatermarkErrors />} />
+                  <Route path="/admin/realtime-diagnostics" element={<RealtimeDiagnostics />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/remboursements" element={<Refunds />} />
                   <Route path="/factures" element={<Invoices />} />

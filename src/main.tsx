@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { initSecurity } from "./utils/security";
+import { logClientDiag } from "./lib/clientDiagnostics";
+
 
 type IdleCallback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void;
 
@@ -94,9 +96,17 @@ const handleChunkFailure = (err: unknown) => {
     msg.includes("Loading chunk");
   if (!isChunk) return;
   try {
+    logClientDiag("chunk", msg || "ChunkLoadError", { level: "error" });
+  } catch { /* noop */ }
+  try {
+    const attemptsRaw = sessionStorage.getItem(CHUNK_RELOAD_KEY + "_n") || "0";
+    const attempts = Number(attemptsRaw) || 0;
     const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0");
+    // Retry borné : max 3 reloads par session, cooldown 30 s.
+    if (attempts >= 3) return;
     if (Date.now() - last < 30_000) return;
     sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    sessionStorage.setItem(CHUNK_RELOAD_KEY + "_n", String(attempts + 1));
     window.location.reload();
   } catch { /* noop */ }
 };
