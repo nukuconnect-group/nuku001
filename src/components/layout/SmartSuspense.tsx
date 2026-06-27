@@ -85,13 +85,35 @@ const SmartLoader = () => {
   );
 };
 
-/**
- * Error boundary qui capture les échecs de chargement de chunk lazy.
- * Au retry, on remonte une `key` pour forcer React à re-monter l'arbre
- * et réessayer l'import dynamique SANS full reload de la page.
- * Si l'échec est un "Failed to fetch dynamically imported module" persistant
- * (déploiement avec hash de chunk obsolète), on tente alors un soft reload.
- */
+const RELOAD_GUARD_KEY = "nk_chunk_reload_at";
+const RELOAD_COOLDOWN_MS = 30_000;
+
+function isChunkLoadError(error?: Error | null) {
+  if (!error) return false;
+  const msg = error.message || "";
+  return (
+    msg.includes("dynamically imported module") ||
+    msg.includes("Failed to fetch dynamically imported") ||
+    msg.includes("Loading chunk") ||
+    msg.includes("Importing a module script failed") ||
+    msg.includes("error loading dynamically imported module") ||
+    error.name === "ChunkLoadError"
+  );
+}
+
+function tryAutoReloadOnce(): boolean {
+  try {
+    const last = Number(sessionStorage.getItem(RELOAD_GUARD_KEY) || "0");
+    if (Date.now() - last < RELOAD_COOLDOWN_MS) return false;
+    sessionStorage.setItem(RELOAD_GUARD_KEY, String(Date.now()));
+    // Hard reload bypassing the bf-cache & stale chunk URLs.
+    window.location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 class ChunkErrorBoundary extends Component<
   { children: ReactNode; resetKey: number; onReset: () => void },
   { hasError: boolean; error?: Error; retryCount: number }
@@ -107,23 +129,23 @@ class ChunkErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[SmartSuspense] Chunk load error:", error, info);
+    // Stale chunk hashes after a deploy = auto-reload immediately (once per 30s).
+    if (isChunkLoadError(error)) {
+      if (tryAutoReloadOnce()) return;
+    }
   }
 
   handleRetry = () => {
-    const isChunkError =
-      this.state.error?.message?.includes("dynamically imported module") ||
-      this.state.error?.message?.includes("Loading chunk") ||
-      this.state.error?.name === "ChunkLoadError";
-
-    // Après 2 échecs sur un chunk, on force un reload (déploiement obsolète)
-    if (isChunkError && this.state.retryCount >= 1) {
+    if (isChunkLoadError(this.state.error)) {
+      // Forcer un rechargement complet pour récupérer les nouveaux chunks.
+      try { sessionStorage.removeItem(RELOAD_GUARD_KEY); } catch { /* noop */ }
       window.location.reload();
       return;
     }
-
     this.setState((s) => ({ hasError: false, error: undefined, retryCount: s.retryCount + 1 }));
     this.props.onReset();
   };
+
 
   render() {
     if (this.state.hasError) {
