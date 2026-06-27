@@ -11,26 +11,41 @@ export interface PriceTier {
   sort_order: number;
 }
 
-export const useProductPriceTiers = (productId?: string) => {
-  const queryClient = useQueryClient();
+interface UseProductPriceTiersOptions {
+  realtime?: boolean;
+}
 
-  // Realtime: invalidate cache on any change to this product's tiers
+export const useProductPriceTiers = (productId?: string, options: UseProductPriceTiersOptions = {}) => {
+  const queryClient = useQueryClient();
+  const realtimeEnabled = options.realtime === true;
+
+  // Realtime désactivé par défaut : sur les listes mobiles, des dizaines de cartes
+  // créaient des channels identiques et pouvaient bloquer tout l'accueil après subscribe().
   useEffect(() => {
-    if (!productId) return;
-    const channel = supabase
-      .channel(`price-tiers-${productId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "product_price_tiers", filter: `product_id=eq.${productId}` },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["price-tiers", productId] });
-        }
-      )
-      .subscribe();
+    if (!productId || !realtimeEnabled) return;
+
+    const channel = supabase.channel(`price-tiers-${productId}-${crypto.randomUUID()}`);
+
+    try {
+      channel
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "product_price_tiers", filter: `product_id=eq.${productId}` },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["price-tiers", productId] });
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.warn("[useProductPriceTiers] Realtime price tiers disabled for this render", error);
+      void supabase.removeChannel(channel);
+      return;
+    }
+
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
-  }, [productId, queryClient]);
+  }, [productId, queryClient, realtimeEnabled]);
 
   return useQuery({
     queryKey: ["price-tiers", productId],
