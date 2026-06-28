@@ -9,7 +9,7 @@ import { useCreateDemand } from "@/hooks/useDemands";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
-import { HandCoins, Loader2, MapPin, Camera, X } from "lucide-react";
+import { HandCoins, Loader2, MapPin, Camera, X, Sparkles, Wand2 } from "lucide-react";
 
 interface CreateDemandModalProps {
   trigger?: React.ReactNode;
