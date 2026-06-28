@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
@@ -479,9 +480,27 @@ const ProductDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Avis — directement sous Traçabilité (desktop) */}
+              {/* Onglets Description / Avis — desktop, sous Traçabilité */}
               <div className="hidden lg:block">
-                <ReviewSection productId={product.id} />
+                <Tabs defaultValue="description" className="w-full">
+                  <TabsList className="grid grid-cols-2 w-full">
+                    <TabsTrigger value="description" className="text-xs">Description produit</TabsTrigger>
+                    <TabsTrigger value="reviews" className="text-xs">Avis</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="description" className="mt-3">
+                    <Card>
+                      <CardContent className="p-4 space-y-2">
+                        <h3 className="font-semibold text-sm text-foreground">Description produit</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                          {product.description || "Aucune description disponible."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="reviews" className="mt-3">
+                    <ReviewSection productId={product.id} />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
 
@@ -542,8 +561,11 @@ const ProductDetail = () => {
                 shippingDays={product.shippingDelayDays}
               />
 
-              {/* Description */}
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+              {/* Description (avec titre) */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-sm text-foreground">Description produit</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
+              </div>
 
               {/* Stock + delivery */}
               <div className="flex items-center gap-4 sm:gap-6 py-3 border-y border-border">

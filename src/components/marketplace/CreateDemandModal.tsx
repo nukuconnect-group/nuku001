@@ -9,7 +9,7 @@ import { useCreateDemand } from "@/hooks/useDemands";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
-import { HandCoins, Loader2, MapPin, Camera, X } from "lucide-react";
+import { HandCoins, Loader2, MapPin, Camera, X, Sparkles, Wand2 } from "lucide-react";
 
 interface CreateDemandModalProps {
   trigger?: React.ReactNode;
@@ -36,6 +36,8 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [generatingText, setGeneratingText] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const { mutate: createDemand, isPending } = useCreateDemand();
   const { toast } = useToast();
 
@@ -100,6 +102,59 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
       setUploadingImage(false);
     }
   };
+  const generateText = async () => {
+    if (!title.trim()) {
+      toast({ title: "Titre requis", description: "Saisissez d'abord un titre pour générer la description.", variant: "destructive" });
+      return;
+    }
+    setGeneratingText(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-description", {
+        body: { name: title, category, unit, location, hints: description },
+      });
+      if (error) throw error;
+      if (data?.description) {
+        setDescription(data.description);
+        toast({ title: "Description générée ✨" });
+      } else if (data?.error) {
+        toast({ title: "Erreur IA", description: data.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingText(false);
+    }
+  };
+
+  const generateImage = async () => {
+    if (!title.trim()) {
+      toast({ title: "Titre requis", description: "Saisissez d'abord un titre pour générer l'image.", variant: "destructive" });
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-demand-image", {
+        body: { title, category, description },
+      });
+      if (error) throw error;
+      if (data?.image) {
+        // Convert data URL to File so the existing upload flow handles it
+        const res = await fetch(data.image);
+        const blob = await res.blob();
+        const file = new File([blob], `demand-ai-${Date.now()}.png`, { type: "image/png" });
+        setImageFile(file);
+        setImagePreview(data.image);
+        toast({ title: "Image générée ✨" });
+      } else if (data?.error) {
+        toast({ title: "Erreur IA", description: data.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
 
   const handleSubmit = async () => {
     if (!title || !category) {
@@ -163,7 +218,20 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
 
           {/* Image upload */}
           <div>
-            <Label className="text-xs">Photo du produit recherché</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Photo du produit recherché</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-[10px] text-primary hover:text-primary"
+                onClick={generateImage}
+                disabled={generatingImage || !title.trim()}
+              >
+                {generatingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />}
+                Générer par IA
+              </Button>
+            </div>
             <div className="mt-1">
               {imagePreview ? (
                 <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
@@ -178,7 +246,7 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                   <Camera className="w-5 h-5 text-muted-foreground mb-1" />
-                  <span className="text-[10px] text-muted-foreground">Ajouter une photo</span>
+                  <span className="text-[10px] text-muted-foreground">Ajouter une photo ou générer par IA</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                 </label>
               )}
@@ -186,7 +254,20 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
           </div>
 
           <div>
-            <Label className="text-xs">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Description</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-[10px] text-primary hover:text-primary"
+                onClick={generateText}
+                disabled={generatingText || !title.trim()}
+              >
+                {generatingText ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Générer par IA
+              </Button>
+            </div>
             <Textarea placeholder="Décrivez votre besoin en détail..." value={description} onChange={(e) => setDescription(e.target.value)} className="text-xs mt-1 min-h-[60px]" />
           </div>
           <div>
