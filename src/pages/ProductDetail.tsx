@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCart } from "@/components/cart/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProduct, useProductBySlug } from "@/hooks/useProducts";
