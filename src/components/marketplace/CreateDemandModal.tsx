@@ -102,6 +102,59 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
       setUploadingImage(false);
     }
   };
+  const generateText = async () => {
+    if (!title.trim()) {
+      toast({ title: "Titre requis", description: "Saisissez d'abord un titre pour générer la description.", variant: "destructive" });
+      return;
+    }
+    setGeneratingText(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-product-description", {
+        body: { name: title, category, unit, location, hints: description },
+      });
+      if (error) throw error;
+      if (data?.description) {
+        setDescription(data.description);
+        toast({ title: "Description générée ✨" });
+      } else if (data?.error) {
+        toast({ title: "Erreur IA", description: data.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingText(false);
+    }
+  };
+
+  const generateImage = async () => {
+    if (!title.trim()) {
+      toast({ title: "Titre requis", description: "Saisissez d'abord un titre pour générer l'image.", variant: "destructive" });
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-demand-image", {
+        body: { title, category, description },
+      });
+      if (error) throw error;
+      if (data?.image) {
+        // Convert data URL to File so the existing upload flow handles it
+        const res = await fetch(data.image);
+        const blob = await res.blob();
+        const file = new File([blob], `demand-ai-${Date.now()}.png`, { type: "image/png" });
+        setImageFile(file);
+        setImagePreview(data.image);
+        toast({ title: "Image générée ✨" });
+      } else if (data?.error) {
+        toast({ title: "Erreur IA", description: data.error, variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err.message || "Génération impossible", variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
 
   const handleSubmit = async () => {
     if (!title || !category) {
