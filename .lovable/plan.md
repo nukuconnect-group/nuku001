@@ -1,94 +1,89 @@
-# Passe 6 — Plan complet
 
-Découpage en deux vagues pour livrer vite et tester progressivement.
+# Plan d'action — 4 chantiers
 
-## Vague A — 4 chantiers critiques (priorité absolue)
+Travail découpé en 4 lots indépendants. J'attaque dans l'ordre ci-dessous (bugs critiques d'abord, refonte UI ensuite).
 
-### A1. Refonte module Réseaux
-- Conserver structure et fonctionnalités existantes (profils Suppliers, Follow, filtres actuels)
-- Header animé avec compteurs (Fournisseurs / Producteurs / Acheteurs vérifiés)
-- Carrousels horizontaux Embla (Recommandés, Populaires, Nouveaux, Vérifiés, Récemment actifs)
-- Cartes enrichies : photo, nom, activité, localisation, badge vérifié, compteurs (abonnés, produits), boutons Voir / Contacter / Suivre
-- Filtres avancés (secteur, pays, région) — multi-select
-- Section "Opportunités" (feed depuis `demands`)
-- Carte géographique Leaflet des acteurs
-- Animations Framer Motion subtiles
+---
 
-### A2. Email de confirmation de commande
-- Auditer `moneroo-webhook` : vérifier l'invocation de `order-confirmation` après `payment.success`
-- Vérifier template `order-confirmation` registré dans `TEMPLATES`
-- Ajouter logs détaillés dans `email_send_log`
-- Déclencher aussi à la création de commande COD si paiement à la livraison
-- Email au vendeur (`new-order-seller`) en parallèle
+## Lot 1 — Bug critique : redirection Acheteur (au lieu de Apprenant)
 
-### A3. Parrainage — compteurs et gains
-- Auditer le flow `claim_referral` : le `localStorage` est perdu pendant confirmation email
-- Solution : stocker le `ref` dans `user_metadata` au moment du signup (persistant)
-- À la confirmation, trigger DB lit `user_metadata.referral_code` et crée la ligne `referrals`
-- Vérifier jointure `referrals` ↔ `referral_earnings` ↔ `profiles` sur `Affiliation.tsx` et `AffiliationStatus.tsx`
-- Corriger l'agrégation des gains (validés vs en attente)
+**Symptôme** : un compte Acheteur se connecte → arrive sur `LearnerDashboard` (apprenant). Doit cliquer sur Profil pour revenir au bon dashboard.
 
-### A4. Prix barré marketplace (promo)
-- Créer composant `<PriceDisplay />` réutilisable
-- Règle unique : si `original_price > price` OU `price_tiers` contient un prix < base → afficher
-  `<span class="line-through text-muted-foreground">original</span> <span class="text-destructive font-bold">price</span>` + badge `-XX%`
-- Appliquer dans : `ProductCard`, `ProductDetail`, `SimilarProducts`, `Marketplace`, `Favorites`, `Cart`
+**Cause probable** : la logique de redirection post-login (dans `Auth.tsx` / `useResolvedUserType` / `App.tsx` `/dashboard`) choisit l'apprenant par défaut quand le rôle n'est pas encore hydraté, ou priorise un rôle apprenant inscrit accessoirement.
 
-## Vague B — Correctifs dysfonctionnements
+**Correctifs** :
+- Auditer `src/hooks/useResolvedUserType.ts` et l'ordre de priorité des rôles (buyer > learner si les deux existent).
+- Forcer dans `Auth.tsx` (callback de connexion) une redirection basée sur le **rôle principal** stocké en DB (`profiles.user_type` ou `user_roles`) au lieu d'un fallback apprenant.
+- Ajouter un guard dans `LearnerDashboard` : si `user_type === 'buyer'`, rediriger automatiquement vers `/buyer-dashboard`.
 
-### B1. Messagerie : statut lu + compteur + suppression
-- Auditer `useMessages` et `messageReadEvents` : le mark-as-read ne propage pas
-- Forcer `UPDATE messages SET is_read=true WHERE conversation_id=X AND sender_id<>auth.uid()` à l'ouverture
-- Invalider la query React Query du compteur immédiatement après
-- Vérifier que le realtime listener décrémente bien
-- Corriger la suppression : vérifier RLS DELETE policy sur `messages` et l'appel UI
+---
 
-### B2. Notifications : statut lu + compteur
-- Idem : `UPDATE notifications SET is_read=true WHERE id=X AND user_id=auth.uid()` au clic
-- Invalider la query du compteur
-- Vérifier le badge `NotificationBell` en realtime
+## Lot 2 — Bug critique : Exprimer un besoin + génération IA
 
-### B3. Modification produit — données vides
-- Bug : le formulaire d'édition charge seulement l'image
-- Corriger le composant d'édition pour pré-remplir TOUS les champs depuis `products` (titre, description, prix, quantité, catégorie, localisation, unité, price_tiers, etc.)
-- Vérifier que l'UPDATE renvoie bien les données et invalide les caches
+**Symptôme** : depuis BuyerDashboard, clic sur "Exprimer un besoin" → erreur. Et il faut pouvoir générer image + texte du besoin via IA.
 
-### B4. Rôle utilisateur — redirection "Mon Compte"
-- Bug : certains Acheteurs voient un dashboard d'un autre rôle
-- Auditer `ProfileContext` + `useResolvedUserType` + les guards de routes
-- S'assurer que `profile.user_type` prime toujours sur les heuristiques (driver_profiles, etc.)
-- Corriger la redirection dans Header "Mon Compte" pour pointer vers la bonne route selon `user_type`
+**Correctifs** :
+- Reproduire l'erreur (console + network) sur le bouton.
+- Corriger l'insertion dans `demands` (vérifier colonnes obligatoires, RLS, payload).
+- Garantir l'unicité de l'ID (UUID `gen_random_uuid()` côté DB déjà OK, mais ajouter un index UNIQUE explicite si manquant pour éviter les doublons de soumission par double-clic — debouncer le bouton + `idempotency_key`).
+- Ajouter dans le formulaire de création :
+  - Bouton "Générer le texte par IA" → appelle edge function `generate-product-description` (réutilisable) avec un prompt "besoin".
+  - Bouton "Générer une image par IA" → nouvelle edge function `generate-demand-image` utilisant Lovable AI (`google/gemini-2.5-flash-image-preview`), upload vers storage, retourne URL.
 
-### B5. Vérification générale web + mobile
-- Tests manuels sur les 4 modules corrigés
-- Vérifier realtime sur compteurs (messages, notifications)
-- Vérifier RLS sur products UPDATE
-- Pas d'écrans blancs
+---
 
-## Ordre d'exécution
-1. **Vague A** (A1 → A4) en une réponse longue
-2. **Vague B** (B1 → B5) en une seconde réponse
+## Lot 3 — Lien de partage sans URL Supabase
+
+**Symptôme** : les liens partagés contiennent encore `fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og`. Doit rester en `nukuconnect.com/share/...` tout en gardant l'aperçu OG correct.
+
+**Correctifs** :
+- Dans `src/lib/shareOg.ts`, `productCrawlerUrl` / `shopCrawlerUrl` retournent actuellement `SHARE_OG_BASE` (supabase). Les remplacer par l'URL publique `${SITE_URL}/share/{type}/{slug}?…` (déjà couverte par `public/_redirects` qui proxy vers la function).
+- Vérifier que le rewrite côté hébergeur fonctionne (sinon ajouter `vercel.json` / `public/_headers` adapté). Note : Lovable hosting fait du SPA fallback, donc `/share/*` doit être réécrit côté infra ou servi par une route catch-all qui re-fetch depuis l'edge.
+- Solution robuste : remplacer `/share/...` par une mini-page qui rend les meta OG côté SPA + redirige humains — OU mieux, configurer Cloudflare/Lovable rewrites. Comme `public/_redirects` n'est pas pris en compte par Lovable hosting, je vais :
+  1. Garder `shopCanonicalUrl` / `productCanonicalUrl` pour l'utilisateur (`nukuconnect.com/produit/...`).
+  2. Pour les crawlers : utiliser un domaine personnalisé `share.nukuconnect.com` pointant sur l'edge function (nécessite config DNS user) **OU** masquer en gardant la version actuelle.
+  - **Décision** : implémenter un proxy via `vercel.json` rewrites SI déployé Vercel ; sinon, créer une edge function `share` montée sur `nukuconnect.com` via le système de routing Lovable. À défaut, garder canonical Supabase mais raccourcir via redirect SPA `/s/:type/:id` qui sert directement des meta côté serveur. (Je vais d'abord investiguer la config d'hébergement réelle.)
+
+---
+
+## Lot 4 — Refonte Formation (style LinkedIn Learning) + onglets produit + historique commandes échouées + suivi commande
+
+### 4a. Refonte module Formation
+- Nouveau layout `Formations.tsx` + `FormationDetail.tsx` :
+  - Sidebar gauche fixe : Home, My Library, Content, Hands-On, Certifications, Trending topics.
+  - Hero personnalisé "Bonjour {prénom}, développez vos compétences avec NukuConnect Learning".
+  - Carrousel "Top picks for {prénom}" (cartes formation pro avec badge Popular/Updated/durée).
+- Utiliser composant `Sidebar` shadcn (déjà disponible).
+
+### 4b. Onglets Description / Avis sur fiche produit
+- Dans `ProductDetail.tsx`, transformer la section description + reviews en `Tabs` shadcn :
+  - Onglet 1 : "Description produit" (titre H3 ajouté avant le texte).
+  - Onglet 2 : "Avis" (`ReviewSection`).
+- Alignement horizontal en haut, switch entre les deux.
+
+### 4c. Historique commandes échouées / en cours dans l'icône Commandes
+- Sur les dashboards (`BuyerDashboard`, `Dashboard`, etc.), l'icône Commandes affiche déjà les commandes. Étendre le query pour inclure les statuts `failed`, `pending`, `cancelled`, `processing` — avec badge couleur par statut.
+- Ajouter filtre tabs : Toutes / En cours / Échouées / Livrées.
+
+### 4d. Module "Suivre ma commande"
+- Refonte du menu `TrackOrderHero` / `PublicDeliveryTracking` avec images pro, formulaire ID unique avec validation, message d'erreur clair si doublon ou introuvable.
+
+---
 
 ## Détails techniques
 
-**A2 — webhook flow :**
-```
-moneroo-webhook → on payment.success
-  → UPDATE orders SET status='paid'
-  → supabase.functions.invoke('order-confirmation', { orderId })
-  → supabase.functions.invoke('send-transactional-email', { templateName:'new-order-seller', ... })
-```
+- Stack : React 18 + Vite + Tailwind + shadcn + Supabase (Lovable Cloud).
+- Edge functions : réutiliser `generate-product-description` ; créer `generate-demand-image` (Lovable AI image gen).
+- Migrations DB : index UNIQUE sur `demands.idempotency_key` si manquant.
+- Pas de modification de tables sensibles (orders, user_roles).
 
-**A3 — referral via user_metadata :**
-```ts
-// Auth.tsx signUp
-options: { data: { referral_code: localStorage.getItem('nuku_ref') } }
-// trigger handle_new_user lit raw_user_meta_data->>'referral_code'
-```
+---
 
-**B1/B2 — invalidation immédiate :**
-```ts
-queryClient.invalidateQueries({ queryKey: ['unread-count'] });
-```
+## Ordre d'exécution
 
-Confirmez et j'enchaîne Vague A immédiatement.
+1. **Lot 1** (redirection) — petit fix, impact immédiat.
+2. **Lot 2** (Exprimer un besoin) — debug + IA.
+3. **Lot 3** (partage sans supabase) — investigation hosting d'abord.
+4. **Lot 4** (refonte UI Formation + onglets produit + commandes + suivi) — le plus gros, en dernier.
+
+Confirme-moi si je peux démarrer dans cet ordre, ou si tu veux réordonner / retirer un lot.
