@@ -36,6 +36,8 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [generatingText, setGeneratingText] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const { mutate: createDemand, isPending } = useCreateDemand();
   const { toast } = useToast();
 
