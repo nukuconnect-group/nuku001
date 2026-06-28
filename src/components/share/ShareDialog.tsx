@@ -36,11 +36,13 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
 
-  // URL handed to social-network unfurlers — must serve OG meta.
-  // This stays on nukuconnect.com (/share/...), never on a backend URL.
-  const socialUrl = previewUrl || url;
-  const shareableUrl = socialUrl;
+  // Clean canonical URL shown to the user, copied, encoded in the QR,
+  // and used by native share. NEVER expose the backend (supabase) URL here.
+  const shareableUrl = url;
   const displayUrl = url;
+  // Crawler URL kept for social-network buttons so WhatsApp / Facebook /
+  // LinkedIn / Telegram can still unfurl a rich preview behind the scenes.
+  const socialUrl = previewUrl || url;
 
   useEffect(() => {
     if (!open) return;
