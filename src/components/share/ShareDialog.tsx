@@ -70,8 +70,8 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
 
   const nativeShare = async () => {
     if (navigator.share) {
-      // Share the preview URL so the recipient's app can unfurl a rich card.
-      try { await navigator.share({ title, text: summarizeShareText(description), url: socialUrl }); }
+      // Native share uses the clean canonical URL — recipient sees nukuconnect.com.
+      try { await navigator.share({ title, text: summarizeShareText(description), url: shareableUrl }); }
       catch {}
     } else { copy(); }
   };
