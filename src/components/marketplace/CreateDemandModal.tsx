@@ -218,7 +218,20 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
 
           {/* Image upload */}
           <div>
-            <Label className="text-xs">Photo du produit recherché</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Photo du produit recherché</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-[10px] text-primary hover:text-primary"
+                onClick={generateImage}
+                disabled={generatingImage || !title.trim()}
+              >
+                {generatingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />}
+                Générer par IA
+              </Button>
+            </div>
             <div className="mt-1">
               {imagePreview ? (
                 <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
@@ -233,7 +246,7 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                   <Camera className="w-5 h-5 text-muted-foreground mb-1" />
-                  <span className="text-[10px] text-muted-foreground">Ajouter une photo</span>
+                  <span className="text-[10px] text-muted-foreground">Ajouter une photo ou générer par IA</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                 </label>
               )}
@@ -241,7 +254,20 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
           </div>
 
           <div>
-            <Label className="text-xs">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Description</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 gap-1 text-[10px] text-primary hover:text-primary"
+                onClick={generateText}
+                disabled={generatingText || !title.trim()}
+              >
+                {generatingText ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Générer par IA
+              </Button>
+            </div>
             <Textarea placeholder="Décrivez votre besoin en détail..." value={description} onChange={(e) => setDescription(e.target.value)} className="text-xs mt-1 min-h-[60px]" />
           </div>
           <div>
