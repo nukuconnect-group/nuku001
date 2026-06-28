@@ -561,8 +561,11 @@ const ProductDetail = () => {
                 shippingDays={product.shippingDelayDays}
               />
 
-              {/* Description */}
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+              {/* Description (avec titre) */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-sm text-foreground">Description produit</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
+              </div>
 
               {/* Stock + delivery */}
               <div className="flex items-center gap-4 sm:gap-6 py-3 border-y border-border">
