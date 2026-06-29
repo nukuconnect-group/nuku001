@@ -83,12 +83,37 @@ export function logClientDiag(
   // Sentry (optionnel, si déjà chargé par ailleurs).
   try {
     const w = window as unknown as {
-      Sentry?: { captureMessage?: (m: string, lvl?: string) => void };
+      Sentry?: {
+        captureMessage?: (m: string, ctx?: unknown) => void;
+        captureException?: (e: unknown, ctx?: unknown) => void;
+        withScope?: (cb: (s: any) => void) => void;
+      };
     };
-    w.Sentry?.captureMessage?.(`[${source}] ${entry.message}`, entry.level);
+    const tags = {
+      source,
+      mobile: entry.isMobile ? "1" : "0",
+      page: typeof location !== "undefined" ? location.pathname : "",
+      ...(opts.meta && typeof opts.meta === "object"
+        ? Object.fromEntries(
+            Object.entries(opts.meta)
+              .filter(([k]) => ["productId", "cardType", "channel"].includes(k))
+              .map(([k, v]) => [k, String(v).slice(0, 64)]),
+          )
+        : {}),
+    };
+    if (w.Sentry?.withScope) {
+      w.Sentry.withScope((scope: any) => {
+        Object.entries(tags).forEach(([k, v]) => scope.setTag?.(k, v));
+        scope.setLevel?.(entry.level);
+        w.Sentry?.captureMessage?.(`[${source}] ${entry.message}`, { level: entry.level, tags });
+      });
+    } else {
+      w.Sentry?.captureMessage?.(`[${source}] ${entry.message}`, { level: entry.level, tags });
+    }
   } catch {
     /* noop */
   }
+
 
   if (typeof console !== "undefined") {
     const fn = entry.level === "error" ? console.error : entry.level === "warn" ? console.warn : console.info;

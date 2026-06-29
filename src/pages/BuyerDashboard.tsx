@@ -581,7 +581,49 @@ const BuyerDashboard = () => {
                         </TabsList>
                         <TabsContent value="in-progress">{renderList(inProgress)}</TabsContent>
                         <TabsContent value="done">{renderList(done)}</TabsContent>
-                        <TabsContent value="failed">{renderList(failed)}</TabsContent>
+                        <TabsContent value="failed">
+                          {failed.length === 0 ? (
+                            <p className="text-center text-[11px] sm:text-xs text-muted-foreground py-6">Aucune commande échouée — tout est ok ✅</p>
+                          ) : (
+                            <div className="space-y-2.5 sm:space-y-3">
+                              {failed.map((order) => {
+                                const reason = (order.notes && String(order.notes).trim())
+                                  || (String(order.status).toLowerCase() === "expired" ? "Délai de paiement dépassé." : "")
+                                  || (String(order.status).toLowerCase() === "rejected" ? "Paiement refusé par l'opérateur." : "")
+                                  || "Échec du paiement ou erreur réseau. Vous pouvez réessayer.";
+                                return (
+                                  <div key={order.id} className="p-2.5 sm:p-3 border border-destructive/30 bg-destructive/5 rounded-xl">
+                                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-medium text-xs sm:text-sm truncate">{order.products?.name || "Produit"}</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground">
+                                          {order.quantity} × {formatPrice(Number(order.products?.price || 0))} — {new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                                        </p>
+                                      </div>
+                                      {getStatusBadge(order.status)}
+                                    </div>
+                                    <p className="text-[11px] sm:text-xs text-destructive/90 mb-2 line-clamp-2"><span className="font-semibold">Motif :</span> {reason}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      <Link to={`/commande/${order.id}`}>
+                                        <Button size="sm" variant="outline" className="h-7 text-[10px] sm:text-xs">Voir détails</Button>
+                                      </Link>
+                                      {order.product_id && (
+                                        <Link to={`/produit/${order.product_id}?retryOrder=${order.id}`}>
+                                          <Button size="sm" variant="hero" className="h-7 text-[10px] sm:text-xs gap-1">
+                                            <ShoppingBag className="w-3 h-3" /> Réessayer la commande
+                                          </Button>
+                                        </Link>
+                                      )}
+                                      <Link to="/help">
+                                        <Button size="sm" variant="ghost" className="h-7 text-[10px] sm:text-xs">Contacter le support</Button>
+                                      </Link>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </TabsContent>
                         <TabsContent value="cancelled">{renderList(cancelled)}</TabsContent>
                         <TabsContent value="others">{renderList(others)}</TabsContent>
                       </Tabs>
