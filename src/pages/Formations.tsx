@@ -292,7 +292,7 @@ const Formations = () => {
           </div>
         </div>
       </section>
-
+      </DashboardLayout>
       <Footer />
       <MobileBottomNav />
     </div>
