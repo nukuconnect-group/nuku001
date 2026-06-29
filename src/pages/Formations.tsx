@@ -12,8 +12,10 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import heroFormations from "@/assets/hero-formations.jpg";
 import { 
-  Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2
+  Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2,
+  Home, Library, Layers, Hammer, TrendingUp
 } from "lucide-react";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 const levelLabels: Record<string, string> = {
   beginner: "Débutant",
