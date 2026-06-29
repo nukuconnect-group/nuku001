@@ -520,8 +520,9 @@ const BuyerDashboard = () => {
                     const norm = (s: any) => String(s || "").toLowerCase();
                     const inProgress = orders.filter(o => ["pending", "confirmed", "processing", "shipped", "in-transit"].includes(norm(o.status)));
                     const done = orders.filter(o => ["completed", "delivered", "paid"].includes(norm(o.status)));
+                    const failed = orders.filter(o => ["failed", "payment_failed", "error", "expired", "rejected"].includes(norm(o.status)));
                     const cancelled = orders.filter(o => ["cancelled", "canceled", "refunded"].includes(norm(o.status)));
-                    const known = new Set([...inProgress, ...done, ...cancelled].map(o => o.id));
+                    const known = new Set([...inProgress, ...done, ...failed, ...cancelled].map(o => o.id));
                     const others = orders.filter(o => !known.has(o.id));
 
                     const renderList = (list: any[]) => (
@@ -561,12 +562,15 @@ const BuyerDashboard = () => {
 
                     return (
                       <Tabs defaultValue="in-progress" className="w-full">
-                        <TabsList className="w-full grid grid-cols-4 h-auto p-1 bg-muted/60 mb-3">
+                        <TabsList className="w-full grid grid-cols-5 h-auto p-1 bg-muted/60 mb-3">
                           <TabsTrigger value="in-progress" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
                             En cours <span className="ml-1 opacity-70">({inProgress.length})</span>
                           </TabsTrigger>
                           <TabsTrigger value="done" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
                             Terminé <span className="ml-1 opacity-70">({done.length})</span>
+                          </TabsTrigger>
+                          <TabsTrigger value="failed" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5 data-[state=active]:text-destructive">
+                            Échouées <span className="ml-1 opacity-70">({failed.length})</span>
                           </TabsTrigger>
                           <TabsTrigger value="cancelled" className="text-[10px] sm:text-xs px-1 sm:px-2 py-1.5">
                             Annulé <span className="ml-1 opacity-70">({cancelled.length})</span>
@@ -577,6 +581,7 @@ const BuyerDashboard = () => {
                         </TabsList>
                         <TabsContent value="in-progress">{renderList(inProgress)}</TabsContent>
                         <TabsContent value="done">{renderList(done)}</TabsContent>
+                        <TabsContent value="failed">{renderList(failed)}</TabsContent>
                         <TabsContent value="cancelled">{renderList(cancelled)}</TabsContent>
                         <TabsContent value="others">{renderList(others)}</TabsContent>
                       </Tabs>

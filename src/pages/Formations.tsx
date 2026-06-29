@@ -12,8 +12,10 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import heroFormations from "@/assets/hero-formations.jpg";
 import { 
-  Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2
+  Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2,
+  Home, Library, Layers, Hammer, TrendingUp
 } from "lucide-react";
+import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
 const levelLabels: Record<string, string> = {
   beginner: "Débutant",
@@ -82,6 +84,16 @@ const Formations = () => {
     return h > 0 ? `${h}h ${m > 0 ? `${m}min` : ''}` : `${m}min`;
   };
 
+  const learningSidebar: DashboardSidebarItem[] = [
+    { label: "Accueil", icon: Home, href: "/formations" },
+    { label: "Ma bibliothèque", icon: Library, onClick: () => { setShowFreeOnly(false); setSelectedCategory("Tous"); window.scrollTo({ top: 600, behavior: "smooth" }); } },
+    { label: "Contenus", icon: Layers, onClick: () => { setSelectedCategory("Tous"); window.scrollTo({ top: 400, behavior: "smooth" }); } },
+    { label: "Pratique", icon: Hammer, onClick: () => window.scrollTo({ top: 600, behavior: "smooth" }) },
+    { label: "Certifications", icon: Award, badge: certificates.length || undefined, onClick: () => window.scrollTo({ top: 2000, behavior: "smooth" }) },
+    { label: "Tendances", icon: TrendingUp, onClick: () => { setSelectedCategory("Tous"); window.scrollTo({ top: 400, behavior: "smooth" }); } },
+    { label: "Gratuit uniquement", icon: Star, onClick: () => setShowFreeOnly(v => !v) },
+  ];
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <SEO
@@ -98,6 +110,11 @@ const Formations = () => {
         }}
       />
       <Header />
+      <DashboardLayout
+        sidebarTitle="NukuConnect Learning"
+        sidebarSubtitle="Développez vos compétences"
+        items={learningSidebar}
+      >
 
       {/* Hero */}
       <section className="relative pt-24 pb-16 overflow-hidden">
@@ -275,7 +292,7 @@ const Formations = () => {
           </div>
         </div>
       </section>
-
+      </DashboardLayout>
       <Footer />
       <MobileBottomNav />
     </div>
