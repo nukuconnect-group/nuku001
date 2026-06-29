@@ -33,12 +33,17 @@ const LearnerDashboard = () => {
   useEffect(() => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
-    // Role guard
-    if (profile && profile.user_type !== "learner") {
-      if (profile.user_type === "producer" || profile.user_type === "trainer") { navigate("/dashboard", { replace: true }); return; }
-      if (profile.user_type === "driver") { navigate("/driver-dashboard", { replace: true }); return; }
-      navigate("/buyer-dashboard", { replace: true }); return;
-    }
+    // Role guard — re-check DB directly to defeat any stale ProfileContext value
+    (async () => {
+      const { data: fresh } = await supabase.from("profiles").select("user_type").eq("user_id", user.id).maybeSingle();
+      const effectiveType = (fresh?.user_type as string | undefined) || profile?.user_type;
+      if (effectiveType && effectiveType !== "learner") {
+        if (effectiveType === "producer" || effectiveType === "trainer") { navigate("/dashboard", { replace: true }); return; }
+        if (effectiveType === "driver") { navigate("/driver-dashboard", { replace: true }); return; }
+        navigate("/buyer-dashboard", { replace: true }); return;
+      }
+    })();
+
 
     const load = async () => {
       const { data } = await supabase
