@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState, ReactNode, Component, ErrorInfo } from "react";
 import { Loader2, AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logClientDiag } from "@/lib/clientDiagnostics";
 
 /**
  * Loader avec détection de lenteur :
@@ -129,6 +130,15 @@ class ChunkErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[SmartSuspense] Chunk load error:", error, info);
+    try {
+      logClientDiag(isChunkLoadError(error) ? "chunk" : "generic", error?.message || "Route render error", {
+        level: "error",
+        meta: {
+          page: typeof location !== "undefined" ? location.pathname : "",
+          componentStack: info.componentStack?.slice(0, 500),
+        },
+      });
+    } catch { /* noop */ }
     // Stale chunk hashes after a deploy = auto-reload immediately (once per 30s).
     if (isChunkLoadError(error)) {
       if (tryAutoReloadOnce()) return;
@@ -160,13 +170,13 @@ class ChunkErrorBoundary extends Component<
                 Échec du chargement
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Une erreur s'est produite pendant le chargement du composant.
+                Une erreur s'est produite pendant le chargement du compte.
                 {this.state.retryCount > 0 && " Tentative précédente échouée."}
               </p>
             </div>
             <Button onClick={this.handleRetry} className="w-full gap-2">
               <RefreshCw className="w-4 h-4" />
-              Réessayer sans recharger
+              Réessayer
             </Button>
           </div>
         </div>

@@ -12,8 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import heroFormations from "@/assets/hero-formations.jpg";
 import { 
-  Search, GraduationCap, Clock, Users, Play, Star, BookOpen, Award, Filter, Lock, Loader2,
-  Home, Library, Layers, Hammer, TrendingUp
+  Search, GraduationCap, Clock, Play, Star, BookOpen, Award, Filter, Loader2,
+  Home, Library, Layers, Hammer, TrendingUp, ChevronRight, PlayCircle, CheckCircle2
 } from "lucide-react";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
@@ -84,6 +84,10 @@ const Formations = () => {
     return h > 0 ? `${h}h ${m > 0 ? `${m}min` : ''}` : `${m}min`;
   };
 
+  const featuredCourse = filteredCourses[0] || formations[0];
+  const continueCourses = filteredCourses.filter((course) => progress[course.id] > 0).slice(0, 4);
+  const learningPaths = categories.filter((cat) => cat !== "Tous").slice(0, 5);
+
   const learningSidebar: DashboardSidebarItem[] = [
     { label: "Accueil", icon: Home, href: "/formations" },
     { label: "Ma bibliothèque", icon: Library, onClick: () => { setShowFreeOnly(false); setSelectedCategory("Tous"); window.scrollTo({ top: 600, behavior: "smooth" }); } },
@@ -116,66 +120,86 @@ const Formations = () => {
         items={learningSidebar}
       >
 
-      {/* Hero */}
-      <section className="relative pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={heroFormations}
-            alt="Apprenants africains suivant une formation agricole digitale"
-            className="w-full h-full object-cover"
-            width={1536}
-            height={768}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
-        </div>
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4">
-              <GraduationCap className="w-3 h-3 mr-1" />
-              Formations agricoles
-            </Badge>
-            <h1 className="font-heading text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Apprenez à votre rythme
-            </h1>
-            <p className="text-muted-foreground mb-8">
-              Des formations gratuites et payantes pour améliorer vos compétences agricoles.
-            </p>
-            <div className="relative max-w-xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input placeholder="Rechercher une formation..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 text-base bg-background/95 backdrop-blur" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-8 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="text-center p-4">
-              <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">{formations.length}+</div>
-              <div className="text-sm text-muted-foreground">Formations disponibles</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">
-                {formations.reduce((s, f) => s + (f.students_count || 0), 0).toLocaleString("en-US")}+
+      <main className="bg-background">
+      {/* LinkedIn Learning style hero */}
+      <section className="border-b border-border bg-card">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-5 sm:py-7">
+          <div className="grid lg:grid-cols-[1.35fr_.65fr] gap-4 lg:gap-6 items-stretch">
+            <div className="relative overflow-hidden rounded-xl min-h-[280px] lg:min-h-[360px] bg-muted">
+              <img
+                src={featuredCourse?.image_url || heroFormations}
+                alt={featuredCourse?.title || "Formation agricole digitale NukuConnect"}
+                className="absolute inset-0 w-full h-full object-cover"
+                width={1536}
+                height={768}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-background/20" />
+              <div className="relative h-full p-5 sm:p-7 lg:p-9 flex flex-col justify-end max-w-2xl">
+                <Badge variant="secondary" className="w-fit mb-3 gap-1.5">
+                  <PlayCircle className="w-3.5 h-3.5" /> Recommandé pour vous
+                </Badge>
+                <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+                  {featuredCourse?.title || "Développez vos compétences agricoles"}
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground line-clamp-2 mb-4">
+                  {featuredCourse?.description || "Formations pratiques, contenus courts et certifications pour producteurs, fournisseurs et acheteurs."}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mb-5 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{formatDuration(featuredCourse?.duration_minutes || 90)}</span>
+                  <span className="inline-flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{featuredCourse?.modules_count || 4} modules</span>
+                  <span className="inline-flex items-center gap-1"><Star className="w-3.5 h-3.5 text-accent fill-accent" />{featuredCourse?.rating || 4.8}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Link to={featuredCourse ? `/formations/${featuredCourse.slug || featuredCourse.id}` : "#"}>
+                    <Button variant="hero" className="gap-2 w-full sm:w-auto">
+                      <Play className="w-4 h-4" /> Commencer le cours
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={() => document.getElementById("formation-catalogue")?.scrollIntoView({ behavior: "smooth" })}>
+                    Explorer le catalogue <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Étudiants inscrits</div>
             </div>
-            <div className="text-center p-4">
-              <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">{certificates.length}</div>
-              <div className="text-sm text-muted-foreground">Mes certificats</div>
-            </div>
-            <div className="text-center p-4">
-              <div className="font-heading text-2xl lg:text-3xl font-bold text-primary">95%</div>
-              <div className="text-sm text-muted-foreground">Taux de satisfaction</div>
-            </div>
+
+            <aside className="rounded-xl border border-border bg-background p-4 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Rechercher une compétence..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-10 text-sm" />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-lg bg-primary/10 p-2 text-center">
+                  <p className="text-lg font-bold text-primary">{formations.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Cours</p>
+                </div>
+                <div className="rounded-lg bg-accent/10 p-2 text-center">
+                  <p className="text-lg font-bold text-accent-foreground">{certificates.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Certifs</p>
+                </div>
+                <div className="rounded-lg bg-secondary/10 p-2 text-center">
+                  <p className="text-lg font-bold text-secondary-foreground">95%</p>
+                  <p className="text-[10px] text-muted-foreground">Avis</p>
+                </div>
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground mb-2">Parcours populaires</h2>
+                <div className="space-y-2">
+                  {(learningPaths.length ? learningPaths : ["Agriculture", "Aquaculture", "Vente agricole"]).map((path) => (
+                    <button key={path} type="button" onClick={() => setSelectedCategory(path)} className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-muted text-left">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium flex-1 truncate">{path}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
 
       {/* Filters */}
-      <section className="py-6 border-b border-border">
+      <section className="py-4 border-b border-border bg-background sticky top-16 z-20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex items-center gap-2">
@@ -209,7 +233,24 @@ const Formations = () => {
       </section>
 
       {/* Courses Grid */}
-      <section className="py-12">
+      {continueCourses.length > 0 && (
+        <section className="py-6 border-b border-border">
+          <div className="container mx-auto px-4">
+            <h2 className="font-heading text-lg font-bold mb-3">Reprendre là où vous étiez</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {continueCourses.map((course) => (
+                <Link key={course.id} to={`/formations/${course.slug || course.id}`} className="rounded-xl border border-border bg-card p-3 hover:shadow-elevated transition-all">
+                  <p className="text-sm font-semibold line-clamp-1 mb-2">{course.title}</p>
+                  <Progress value={progress[course.id] || 0} className="h-1.5 mb-2" />
+                  <p className="text-[10px] text-muted-foreground">{progress[course.id]}% terminé</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="formation-catalogue" className="py-8">
         <div className="container mx-auto px-4">
           <p className="text-muted-foreground mb-6">
             <span className="font-semibold text-foreground">{filteredCourses.length}</span> formations trouvées
@@ -225,7 +266,7 @@ const Formations = () => {
                   <Card key={course.id} className="group overflow-hidden hover:shadow-elevated transition-all duration-300 flex flex-col">
                     {/* Image always on top */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden flex-shrink-0">
-                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={course.image_url || heroFormations} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                       <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="w-10 h-10 rounded-full bg-foreground/60 flex items-center justify-center">
                           <Play className="w-5 h-5 text-primary-foreground" />
@@ -278,7 +319,7 @@ const Formations = () => {
       </section>
 
       {/* Certification Banner */}
-      <section className="py-12 bg-gradient-hero">
+      <section className="py-10 bg-gradient-hero">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 text-primary-foreground">
             <div className="flex items-center gap-4">
@@ -292,6 +333,7 @@ const Formations = () => {
           </div>
         </div>
       </section>
+      </main>
       </DashboardLayout>
       <Footer />
       <MobileBottomNav />
