@@ -357,7 +357,7 @@ const Dashboard = () => {
               { icon: MessageCircle, label: "Messages", color: "bg-green-500/10 text-green-600", href: "/messages" },
               { icon: Rocket, label: "Mes boosts", color: "bg-primary/10 text-primary", onClick: () => setShowBoostsDialog(true) },
               { icon: Gift, label: "Parrainage", color: "bg-pink-500/10 text-pink-600", onClick: () => setShowAffiliationDialog(true) },
-              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/learner-dashboard" },
+              { icon: Calendar, label: "Formations", color: "bg-amber-500/10 text-amber-600", href: "/formations" },
               { icon: Wallet, label: "Retraits & paiements", color: "bg-orange-500/10 text-orange-600", onClick: () => setShowWithdrawalsDialog(true) },
               { icon: Settings, label: "Paramètres du compte", color: "bg-muted text-muted-foreground", onClick: () => setShowSettingsDialog(true) },
             ].map((action: any, i) => {
