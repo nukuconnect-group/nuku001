@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import heroDelivery from "@/assets/hero-delivery-modern.jpg";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import DriverRatingModal from "@/components/delivery/DriverRatingModal";
 import { 
   Truck, Package, Clock, CheckCircle2, MessageCircle, Star,
-  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash, Mail
+  AlertCircle, ShoppingCart, Loader2, LogIn, RefreshCw, FileDown, Search, X, Hash, Mail, MapPin, ShieldCheck
 } from "lucide-react";
 
 const DeliveryTracking = () => {
@@ -358,18 +359,40 @@ const DeliveryTracking = () => {
     <div className="min-h-screen bg-background pb-14 lg:pb-0">
       <Header />
 
-      {/* Hero */}
-      <section className="py-6 sm:py-8 bg-muted/30 border-b border-border">
-        <div className="container mx-auto px-3 sm:px-4 text-center">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <Package className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-1">Suivre mes commandes</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Suivi en temps réel de vos achats</p>
+      {/* Hero image */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="absolute inset-0">
+          <img src={heroDelivery} alt="Livreur NukuConnect suivant une commande agricole" className="w-full h-full object-cover" width={1536} height={768} />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/78 to-background/35" />
+        </div>
+        <div className="container mx-auto px-3 sm:px-4 relative py-7 sm:py-10 lg:py-12">
+          <div className="grid lg:grid-cols-[1fr_420px] gap-5 lg:gap-8 items-end">
+            <div className="max-w-2xl">
+              <Badge variant="secondary" className="mb-3 gap-1.5">
+                <Truck className="w-3.5 h-3.5" /> Livraison interne NukuConnect
+              </Badge>
+              <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-3">Suivre mes commandes</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mb-5">Visualisez le statut, le produit, le vendeur, la livraison et les preuves de suivi depuis le menu principal.</p>
+              <div className="grid grid-cols-3 gap-2 max-w-lg">
+                <div className="rounded-lg bg-card/90 border border-border p-2">
+                  <Package className="w-4 h-4 text-primary mb-1" />
+                  <p className="text-[10px] font-medium">Commande</p>
+                </div>
+                <div className="rounded-lg bg-card/90 border border-border p-2">
+                  <MapPin className="w-4 h-4 text-primary mb-1" />
+                  <p className="text-[10px] font-medium">Position</p>
+                </div>
+                <div className="rounded-lg bg-card/90 border border-border p-2">
+                  <ShieldCheck className="w-4 h-4 text-primary mb-1" />
+                  <p className="text-[10px] font-medium">Preuve</p>
+                </div>
+              </div>
+            </div>
 
           {/* Search bar */}
           {user && (
-            <div className="max-w-lg mx-auto">
+            <div className="rounded-xl border border-border bg-card/95 backdrop-blur p-3 sm:p-4">
+              <p className="text-xs font-semibold mb-2">Rechercher dans mes commandes</p>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -398,9 +421,10 @@ const DeliveryTracking = () => {
               )}
             </div>
           )}
+          </div>
 
           {/* Public tracking — no login required */}
-          <div className="max-w-lg mx-auto mt-4 p-3 sm:p-4 bg-card border border-border rounded-xl text-left">
+          <div className="max-w-2xl mt-5 p-3 sm:p-4 bg-card/95 backdrop-blur border border-border rounded-xl text-left">
             <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
               <Search className="w-3.5 h-3.5 text-primary" />
               Suivre une commande sans se connecter

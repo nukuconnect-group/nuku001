@@ -33,9 +33,11 @@ const LearnerDashboard = () => {
   useEffect(() => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
+    let cancelled = false;
     // Role guard — re-check DB directly to defeat any stale ProfileContext value
     (async () => {
       const { data: fresh } = await supabase.from("profiles").select("user_type").eq("user_id", user.id).maybeSingle();
+      if (cancelled) return;
       const effectiveType = (fresh?.user_type as string | undefined) || profile?.user_type;
       if (effectiveType && effectiveType !== "learner") {
         if (effectiveType === "producer" || effectiveType === "trainer") { navigate("/dashboard", { replace: true }); return; }
@@ -53,6 +55,7 @@ const LearnerDashboard = () => {
         .order("created_at", { ascending: false });
 
       const formationsData = (data as any[]) || [];
+      if (cancelled) return;
       setFormations(formationsData);
 
       const [progressRes, certsRes] = await Promise.all([
@@ -64,12 +67,15 @@ const LearnerDashboard = () => {
       ((progressRes.data as any[]) || []).forEach(p => {
         progressMap[p.formation_id] = p.progress_percent;
       });
-      setProgress(progressMap);
-      setCertificates((certsRes.data as any[]) || []);
-      setLoading(false);
+      if (!cancelled) {
+        setProgress(progressMap);
+        setCertificates((certsRes.data as any[]) || []);
+        setLoading(false);
+      }
     };
     load();
-  }, [profileLoading, user, navigate]);
+    return () => { cancelled = true; };
+  }, [isReady, profileLoading, user?.id, profile?.user_type, navigate]);
 
   const inProgressFormations = formations.filter(f => progress[f.id] && progress[f.id] > 0 && progress[f.id] < 100);
   const completedFormations = formations.filter(f => progress[f.id] >= 100);

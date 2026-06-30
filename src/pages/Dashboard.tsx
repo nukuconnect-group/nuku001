@@ -86,7 +86,20 @@ const Dashboard = () => {
   useEffect(() => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
-    if (!profile) { setIsLoading(false); return; }
+    if (!profile) {
+      // Fallback direct : évite un blocage de tableau de bord si le contexte profil
+      // arrive en retard après connexion mobile ou restauration de session.
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!data) setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+      return;
+    }
     // Role guard: only producers and trainers should see this dashboard
     if (profile.user_type !== "producer" && profile.user_type !== "trainer") {
       if (profile.user_type === "driver") navigate("/driver-dashboard", { replace: true });
