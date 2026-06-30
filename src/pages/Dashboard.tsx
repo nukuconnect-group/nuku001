@@ -87,17 +87,7 @@ const Dashboard = () => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
     if (!profile) {
-      // Fallback direct : évite un blocage de tableau de bord si le contexte profil
-      // arrive en retard après connexion mobile ou restauration de session.
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (!data) setIsLoading(false);
-        })
-        .catch(() => setIsLoading(false));
+      setIsLoading(false);
       return;
     }
     // Role guard: only producers and trainers should see this dashboard
