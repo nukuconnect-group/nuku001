@@ -25,7 +25,7 @@ export const useSubscription = () => {
         .from("subscriptions" as any)
         .select("plan, max_products, status")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (data && !error) {
         setSubscription(data as any as Subscription);
@@ -83,7 +83,7 @@ export const useSubscription = () => {
       .from("subscriptions" as any)
       .select("plan, max_products, status")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
     if (data) setSubscription(data as any as Subscription);
   };
 

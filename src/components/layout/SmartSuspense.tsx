@@ -167,10 +167,10 @@ class ChunkErrorBoundary extends Component<
             </div>
             <div className="space-y-1">
               <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                Échec du chargement
+                Chargement interrompu
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Une erreur s'est produite pendant le chargement du compte.
+                Réessayez pour reprendre l'ouverture de cette page.
                 {this.state.retryCount > 0 && " Tentative précédente échouée."}
               </p>
             </div>

@@ -1,6 +1,6 @@
 import SupportWidget from "@/components/SupportWidget";
 import SEO from "@/components/SEO";
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -32,13 +32,12 @@ import AffiliationCard from "@/components/dashboard/AffiliationCard";
 import DemandBoostModal from "@/components/dashboard/DemandBoostModal";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
 
-// Lazy load heavy components
-const SubscriptionCard = lazy(() => import("@/components/dashboard/SubscriptionCard"));
-const TokenWalletCard = lazy(() => import("@/components/dashboard/TokenWalletCard"));
-const ProfileSettingsPanel = lazy(() => import("@/components/dashboard/ProfileSettingsPanel"));
-const FormationsSection = lazy(() => import("@/components/dashboard/FormationsSection"));
-const DeliveryTrackingWidget = lazy(() => import("@/components/dashboard/DeliveryTrackingWidget"));
-const BuyerAIRecommendations = lazy(() => import("@/components/dashboard/BuyerAIRecommendations"));
+import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import TokenWalletCard from "@/components/dashboard/TokenWalletCard";
+import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
+import FormationsSection from "@/components/dashboard/FormationsSection";
+import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
+import BuyerAIRecommendations from "@/components/dashboard/BuyerAIRecommendations";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -84,16 +83,25 @@ const BuyerDashboard = () => {
 
     let isMounted = true;
     const loadData = async () => {
-      const [ordersRes, convsRes, notifsRes] = await Promise.all([
-        supabase.from("orders").select("*, products(*)").eq("buyer_id", profile.id).order("created_at", { ascending: false }),
-        supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profile.id).order("updated_at", { ascending: false }).limit(10),
-        supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
-      ]);
-      if (!isMounted) return;
-      setOrders(ordersRes.data || []);
-      setConversations(convsRes.data || []);
-      setNotifications(notifsRes.data || []);
-      setIsLoading(false);
+      try {
+        const [ordersRes, convsRes, notifsRes] = await Promise.all([
+          supabase.from("orders").select("*, products(*)").eq("buyer_id", profile.id).order("created_at", { ascending: false }),
+          supabase.from("conversations").select("*, profiles!conversations_seller_id_fkey(full_name, avatar_url)").eq("buyer_id", profile.id).order("updated_at", { ascending: false }).limit(10),
+          supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+        ]);
+        if (!isMounted) return;
+        setOrders(ordersRes.data || []);
+        setConversations(convsRes.data || []);
+        setNotifications(notifsRes.data || []);
+      } catch (error) {
+        console.error("Buyer dashboard load error:", error);
+        if (!isMounted) return;
+        setOrders([]);
+        setConversations([]);
+        setNotifications([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
     loadData();
     return () => { isMounted = false; };
@@ -238,10 +246,10 @@ const BuyerDashboard = () => {
                 <h1 className="font-heading text-sm sm:text-xl lg:text-2xl font-bold text-foreground truncate">
                   {new Date().getHours() < 12 ? "Bonjour" : new Date().getHours() < 18 ? "Bon après-midi" : "Bonsoir"}, {profile?.full_name?.split(' ')[0] || "Acheteur"} 👋
                 </h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
+                <div className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
                   <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/40 text-primary">Acheteur</Badge>
                   Bienvenue dans votre espace acheteur
-                </p>
+                </div>
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
@@ -419,29 +427,23 @@ const BuyerDashboard = () => {
           </Card>
 
           {/* AI Recommendations */}
-          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
-            {user && profile && (
-              <div className="mb-5 sm:mb-8">
-                <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
-              </div>
-            )}
-          </Suspense>
+          {user && profile && (
+            <div className="mb-5 sm:mb-8">
+              <BuyerAIRecommendations userId={user.id} profileId={profile.id} location={profile.location || undefined} />
+            </div>
+          )}
 
           {/* Delivery Tracking Widget */}
-          <Suspense fallback={<div className="mb-5 sm:mb-8 h-32 bg-muted animate-pulse rounded-xl" />}>
-            {profile && (
-              <div className="mb-5 sm:mb-8">
-                <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
-              </div>
-            )}
-          </Suspense>
+          {profile && (
+            <div className="mb-5 sm:mb-8">
+              <DeliveryTrackingWidget profileId={profile.id} role="buyer" />
+            </div>
+          )}
 
           {/* Formations Section */}
-          <Suspense fallback={<div className="mb-5 sm:mb-8 h-24 bg-muted animate-pulse rounded-xl" />}>
-            <div className="mb-5 sm:mb-8">
-              <FormationsSection />
-            </div>
-          </Suspense>
+          <div className="mb-5 sm:mb-8">
+            <FormationsSection />
+          </div>
 
           {/* Tabs - responsive with horizontal scroll on mobile */}
           <div id="buyer-tabs" className="scroll-mt-20" />
@@ -890,9 +892,7 @@ const BuyerDashboard = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <Suspense fallback={<div className="h-48 bg-muted animate-pulse rounded-xl" />}>
-                <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
-              </Suspense>
+              <ProfileSettingsPanel profile={profile} user={user} onProfileUpdate={(updated) => updateProfile(updated)} />
             </TabsContent>
 
           </Tabs>
