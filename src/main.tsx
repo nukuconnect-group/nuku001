@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import App from "./App";
 import { initSecurity } from "./utils/security";
 import { logClientDiag } from "./lib/clientDiagnostics";
 
@@ -113,17 +114,11 @@ const handleChunkFailure = (err: unknown) => {
 window.addEventListener("error", (e) => handleChunkFailure(e.error || e.message));
 window.addEventListener("unhandledrejection", (e) => handleChunkFailure(e.reason));
 
-const bootstrap = async () => {
+const bootstrap = () => {
   patchNavigatorLocks();
-  try {
-    const { default: App } = await import("./App.tsx");
-    createRoot(rootElement).render(<App />);
-    scheduleSecurityInit();
-  } catch (err) {
-    handleChunkFailure(err);
-    throw err;
-  }
+  createRoot(rootElement).render(<App />);
+  scheduleSecurityInit();
 };
 
-void bootstrap();
+bootstrap();
 

@@ -100,14 +100,22 @@ const Dashboard = () => {
 
     let isMounted = true;
     const loadData = async () => {
-      const [prodRes, ordersRes] = await Promise.all([
-        supabase.from("products").select("*").eq("producer_id", profile.id).order("created_at", { ascending: false }),
-        supabase.from("orders").select("*, products(*)").eq("seller_id", profile.id).order("created_at", { ascending: false }),
-      ]);
-      if (!isMounted) return;
-      setProducts(prodRes.data || []);
-      setOrders(ordersRes.data || []);
-      setIsLoading(false);
+      try {
+        const [prodRes, ordersRes] = await Promise.all([
+          supabase.from("products").select("*").eq("producer_id", profile.id).order("created_at", { ascending: false }),
+          supabase.from("orders").select("*, products(*)").eq("seller_id", profile.id).order("created_at", { ascending: false }),
+        ]);
+        if (!isMounted) return;
+        setProducts(prodRes.data || []);
+        setOrders(ordersRes.data || []);
+      } catch (error) {
+        console.error("Supplier dashboard load error:", error);
+        if (!isMounted) return;
+        setProducts([]);
+        setOrders([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
     loadData();
     return () => { isMounted = false; };
@@ -248,10 +256,10 @@ const Dashboard = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
+                <div className="text-[10px] sm:text-xs text-muted-foreground truncate flex items-center gap-1">
                   <Badge variant="outline" className="text-[8px] px-1 py-0 border-primary/40 text-primary">Fournisseur</Badge>
                   {profile?.business_name || "Espace fournisseur"}
-                </p>
+                </div>
               </div>
             </div>
             <div className="flex gap-2 flex-shrink-0">
