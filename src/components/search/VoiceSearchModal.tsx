@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Search, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -164,6 +164,7 @@ export default function VoiceSearchModal({ open, onClose, onResult }: Props) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="sm:max-w-sm p-0 rounded-2xl overflow-hidden border-0 bg-gradient-to-b from-primary/5 to-background">
+        <DialogTitle className="sr-only">Recherche vocale</DialogTitle>
         <div className="relative flex flex-col items-center py-10 px-6">
           {/* Close button */}
           <button onClick={handleClose} className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors">

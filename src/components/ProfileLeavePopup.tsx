@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, X } from "lucide-react";
 
@@ -48,6 +48,7 @@ export default function ProfileLeavePopup() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-sm border-none p-0 overflow-hidden bg-gradient-to-b from-purple-50 via-purple-100 to-white dark:from-purple-950/40 dark:via-purple-900/30 dark:to-background">
+        <DialogTitle className="sr-only">Offre Premium NukuConnect</DialogTitle>
         <button
           onClick={() => setOpen(false)}
           className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-card/60 backdrop-blur flex items-center justify-center text-foreground/70 hover:text-foreground"

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Camera, ImageIcon, X, Loader2, Search, Leaf, MapPin, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -122,6 +122,7 @@ export default function ImageSearchModal({ open, onClose, onSearch }: Props) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="sm:max-w-md p-0 rounded-2xl overflow-hidden border-0 bg-background max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Recherche par image</DialogTitle>
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
           onChange={(e) => { if (e.target.files?.[0]) handleFileSelected(e.target.files[0]); e.target.value = ""; }} />
         <input ref={galleryInputRef} type="file" accept="image/*" className="hidden"
