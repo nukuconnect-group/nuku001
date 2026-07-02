@@ -785,18 +785,26 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
               key={msg.id}
               data-msg-id={msg.id}
               data-msg-other={msg.senderId === "me" ? "0" : "1"}
-              onPointerDown={() => startLongPress(msg.id)}
+              onPointerDown={(e) => startLongPress(msg.id, e)}
+              onPointerMove={onPointerMoveMsg}
               onPointerUp={cancelLongPress}
               onPointerLeave={cancelLongPress}
               onPointerCancel={cancelLongPress}
-              onClick={(e) => {
+              onClickCapture={(e) => {
+                if (longPressFiredRef.current) {
+                  // Suppress the click that follows a long-press selection.
+                  e.preventDefault();
+                  e.stopPropagation();
+                  longPressFiredRef.current = false;
+                  return;
+                }
                 if (selectionMode) {
                   e.preventDefault();
                   e.stopPropagation();
                   toggleSelect(msg.id);
                 }
               }}
-              className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group ${selectedIds.has(msg.id) ? "bg-primary/10 rounded-lg" : ""}`}
+              className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group py-0.5 px-1 rounded-lg transition-colors ${selectedIds.has(msg.id) ? "bg-primary/10 ring-1 ring-primary/30" : ""}`}
             >
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
