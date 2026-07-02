@@ -758,12 +758,9 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                       {product.image && (
                         <img src={product.image} alt={product.name} className="w-full h-32 object-cover" loading="lazy" />
                       )}
-                      <div className="px-2 py-1.5">
+                      <div className="px-2 py-1.5 min-w-0">
                         <p className={`text-xs font-semibold truncate ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
                           {product.name}
-                        </p>
-                        <p className={`text-[10px] truncate ${msg.senderId === "me" ? "text-primary-foreground/70" : "text-primary"}`}>
-                          {product.url.replace(/^https?:\/\//, "")}
                         </p>
                       </div>
                     </Link>
