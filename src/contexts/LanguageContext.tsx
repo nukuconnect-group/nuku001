@@ -755,6 +755,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.rateLimit": "Too many attempts, try again later",
     "err.serverError": "Server error, try again later",
     "form.requiredFields": "Please fill in all required fields",
+    "buyer.becomeSellerHint": "Complete your business information to activate your seller account.",
     "chat.prefill.label": "Prefilled message",
     "chat.prefill.hint": "Edit or send to confirm",
     "chat.prefill.reset": "Reset",
