@@ -301,5 +301,31 @@ export function useMessages(conversationId: string | null, profileId: string | n
     [conversationId, deliveryId, isDeliveryConversation, profileId, userId, t]
   );
 
-  return { messages, setMessages, loading, sendMessage, lastEmailStatus };
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!conversationId || !messageId || messageId.startsWith("temp-")) return false;
+      const placeholder = t("chat.message.deleted") || "🚫 Message supprimé";
+      const prev = messages;
+      // Optimistic soft-delete: replace content with placeholder immediately.
+      setMessages((cur) =>
+        cur.map((m) =>
+          m.id === messageId ? { ...m, content: placeholder, type: "text" as const, fileUrl: undefined } : m
+        )
+      );
+      const table = isDeliveryConversation ? "delivery_messages" : "messages";
+      const { error } = await supabase
+        .from(table)
+        .update({ content: placeholder } as any)
+        .eq("id", messageId);
+      if (error) {
+        setMessages(prev);
+        toast.error(t("err.generic"), { description: translateBackendError(error, t) });
+        return false;
+      }
+      return true;
+    },
+    [conversationId, isDeliveryConversation, messages, t]
+  );
+
+  return { messages, setMessages, loading, sendMessage, deleteMessage, lastEmailStatus };
 }
