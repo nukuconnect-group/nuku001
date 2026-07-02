@@ -916,7 +916,7 @@ const BuyerDashboard = () => {
               Devenir fournisseur
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Remplissez les informations de votre activité pour activer votre compte vendeur.
+              {t("buyer.becomeSellerHint")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
