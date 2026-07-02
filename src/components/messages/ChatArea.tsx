@@ -281,7 +281,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       toast({ title: "Image envoyée ✓" });
     } catch (error: any) {
       console.error("Image upload error:", error);
-      toast({ title: "Erreur d'envoi", description: error?.message || "Impossible d'envoyer l'image", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
     }
