@@ -67,6 +67,7 @@ import AdminWatermarkErrors from "./pages/AdminWatermarkErrors";
 import SeoPreview from "./pages/admin/SeoPreview";
 import SeoCanonical from "./pages/admin/SeoCanonical";
 import RealtimeDiagnostics from "./pages/admin/RealtimeDiagnostics";
+import ErrorLogs from "./pages/admin/ErrorLogs";
 import Settings from "./pages/Settings";
 import DeliveryAddress from "./pages/DeliveryAddress";
 import BecomeSeller from "./pages/BecomeSeller";
