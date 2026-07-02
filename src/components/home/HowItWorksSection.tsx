@@ -6,6 +6,7 @@ import step1Image from "@/assets/step-1-create-account.jpg";
 import step2Image from "@/assets/step-2-find-products.jpg";
 import step3Image from "@/assets/step-3-order.jpg";
 import step4Image from "@/assets/step-4-delivery.jpg";
+import hiwIllustration from "@/assets/how-it-works-illustration.png.asset.json";
 
 const HowItWorksSection = () => {
   const { t } = useLanguage();
@@ -30,6 +31,20 @@ const HowItWorksSection = () => {
             {t("home.hiwDesc")}
           </p>
         </div>
+
+        {/* Illustration — écosystème agricole connecté */}
+        <div className="max-w-5xl mx-auto mb-6 sm:mb-10 rounded-xl overflow-hidden shadow-elevated border border-border bg-card">
+          <img
+            src={hiwIllustration.url}
+            alt="Écosystème agricole connecté Nukuconnect : marché, informations en temps réel, productivité et GPS"
+            className="w-full h-auto object-cover object-center"
+            loading="lazy"
+            decoding="async"
+            width={1536}
+            height={1024}
+          />
+        </div>
+
 
         {/* Mobile: 1 per line stacked, Desktop: 4 per line */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
