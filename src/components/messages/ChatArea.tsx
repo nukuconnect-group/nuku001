@@ -607,13 +607,25 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       {/* Selection bar (WhatsApp-style) */}
       {selectionMode ? (
         <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 bg-card flex-shrink-0 sticky top-0 z-10">
-          <button onClick={clearSelection} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Annuler">
+          <button
+            onClick={clearSelection}
+            className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-label="Annuler la sélection"
+          >
             <X className="w-5 h-5" />
           </button>
-          <span className="flex-1 text-sm font-medium">{selectedIds.size} sélectionné(s)</span>
+          <span className="flex-1 text-sm font-medium" aria-live="polite">
+            {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
+          </span>
           {onDeleteMessage && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={deleteSelected} aria-label="Supprimer">
-              <Trash2 className="w-4 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={requestDeleteSelected}
+              aria-label={`Supprimer ${selectedIds.size} message${selectedIds.size > 1 ? "s" : ""}`}
+            >
+              <Trash2 className="w-5 h-5" />
             </Button>
           )}
         </div>
