@@ -36,12 +36,15 @@ const ShareDialog = ({ open, onOpenChange, url, previewUrl, title = "Partager", 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string>("");
 
-  // Clean canonical URL shown to the user, copied, encoded in the QR,
-  // and used by native share. NEVER expose the backend (supabase) URL here.
-  const shareableUrl = url;
+  // Human-readable URL shown in the dialog (kept clean: nukuconnect.com/…).
   const displayUrl = url;
-  // Crawler URL kept for social-network buttons so WhatsApp / Facebook /
-  // LinkedIn / Telegram can still unfurl a rich preview behind the scenes.
+  // The URL we copy, encode in the QR, feed to native share AND to social
+  // buttons. Must be the crawler URL so that when the user pastes it in
+  // WhatsApp / Facebook / LinkedIn / Telegram, the unfurler fetches per-item
+  // OG HTML instead of the SPA shell (which would show the homepage logo).
+  // The edge function serves that HTML and refreshes real users back to the
+  // canonical page after ~1s.
+  const shareableUrl = previewUrl || url;
   const socialUrl = previewUrl || url;
 
   useEffect(() => {
