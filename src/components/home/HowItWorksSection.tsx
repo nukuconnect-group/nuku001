@@ -2,16 +2,15 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import step1Image from "@/assets/step-1-create-account.jpg";
+import step1Illustration from "@/assets/how-it-works-illustration.png.asset.json";
 import step2Image from "@/assets/step-2-find-products.jpg";
 import step3Image from "@/assets/step-3-order.jpg";
 import step4Image from "@/assets/step-4-delivery.jpg";
-import hiwIllustration from "@/assets/how-it-works-illustration.png.asset.json";
 
 const HowItWorksSection = () => {
   const { t } = useLanguage();
   const steps = [
-    { title: t("home.step1Title"), description: t("home.step1Desc"), image: step1Image, link: "/auth", linkText: t("home.step1Link") },
+    { title: t("home.step1Title"), description: t("home.step1Desc"), image: step1Illustration.url, link: "/auth", linkText: t("home.step1Link") },
     { title: t("home.step2Title"), description: t("home.step2Desc"), image: step2Image, link: "/marketplace", linkText: t("home.step2Link") },
     { title: t("home.step3Title"), description: t("home.step3Desc"), image: step3Image, link: "/marketplace", linkText: t("home.step3Link") },
     { title: t("home.step4Title"), description: t("home.step4Desc"), image: step4Image, link: "/suivi-livraison", linkText: t("home.step4Link") }
