@@ -220,6 +220,21 @@ const ProductDetail = () => {
       }
 
       // Store prefill draft (NOT sent). ChatArea will hydrate the input.
+      // Persist via localStorage so it survives reload/navigation until Send or Discard.
+      const productSnapshot = {
+        id: product.id,
+        name: product.name,
+        image: (product as any).image || (product as any).images?.[0] || null,
+        url: productLink,
+        price: product.price,
+        unit: product.unit,
+        location: product.location,
+      };
+      saveDraft(
+        { conversationId, userId: sellerId },
+        { text: autoMessage, original: autoMessage, product: productSnapshot, createdAt: Date.now() },
+      );
+      // Keep sessionStorage BC for existing hydration paths.
       try {
         sessionStorage.setItem(`msg-prefill-${conversationId}`, autoMessage);
         sessionStorage.setItem(`msg-prefill-${sellerId}`, autoMessage);
@@ -228,7 +243,7 @@ const ProductDetail = () => {
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error: any) {
       console.error("Open chat error:", error);
-      toast({ title: "Erreur", description: error?.message || "Impossible d'ouvrir la conversation", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     } finally {
       setIsSending(false);
     }
