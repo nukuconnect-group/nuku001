@@ -85,12 +85,23 @@ describe("social SEO rendering", () => {
     });
   });
 
-  it("builds public NukuConnect share links instead of exposing backend function URLs", () => {
+  it("builds clean canonical URLs for humans and crawler URLs that unfurl on WhatsApp/Facebook", () => {
+    // Canonical (address-bar / on-page canonical / clicked link) stays on nukuconnect.com.
     expect(productShareUrl("incubateur-moderne-clarias-togo")).toBe("https://nukuconnect.com/produit/incubateur-moderne-clarias-togo");
     expect(shopShareUrl("Roger Assiontemba", "3fa9c88d-4000-424c-85b7-a40f11f647f3")).toBe("https://nukuconnect.com/producteurs/Roger%20Assiontemba");
-    expect(productCrawlerUrl("incubateur-moderne-clarias-togo")).toContain("https://nukuconnect.com/share/product/incubateur-moderne-clarias-togo?");
-    expect(productCrawlerUrl("incubateur-moderne-clarias-togo")).not.toContain("supabase.co");
-    expect(shopCrawlerUrl("Roger Assiontemba", "3fa9c88d-4000-424c-85b7-a40f11f647f3")).toContain("https://nukuconnect.com/share/shop/roger-assiontemba?");
-    expect(shopCrawlerUrl("Roger Assiontemba", "3fa9c88d-4000-424c-85b7-a40f11f647f3")).not.toContain("supabase.co");
+    // Crawler URL must point at the edge OG renderer directly. A nukuconnect.com/share/... URL
+    // would be served as the SPA shell by Lovable hosting (no _redirects support) and show the
+    // generic homepage preview on WhatsApp — that's the bug this URL exists to prevent.
+    const productCrawl = productCrawlerUrl("incubateur-moderne-clarias-togo");
+    expect(productCrawl).toContain("/functions/v1/share-og");
+    expect(productCrawl).toContain("type=product");
+    expect(productCrawl).toContain("id=incubateur-moderne-clarias-togo");
+    expect(productCrawl).not.toContain("nukuconnect.com/share/");
+    const shopCrawl = shopCrawlerUrl("Roger Assiontemba", "3fa9c88d-4000-424c-85b7-a40f11f647f3");
+    expect(shopCrawl).toContain("/functions/v1/share-og");
+    expect(shopCrawl).toContain("type=shop");
+    expect(shopCrawl).toContain("id=3fa9c88d-4000-424c-85b7-a40f11f647f3");
+    expect(shopCrawl).toContain("name=Roger+Assiontemba");
+    expect(shopCrawl).not.toContain("nukuconnect.com/share/");
   });
 });
