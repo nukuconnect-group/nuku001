@@ -106,6 +106,41 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [callSheetOpen, setCallSheetOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const longPressTimerRef = useRef<number | null>(null);
+  const selectionMode = selectedIds.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const startLongPress = (id: string) => {
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = window.setTimeout(() => {
+      setSelectedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    }, 450);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const deleteSelected = async () => {
+    if (!onDeleteMessage) return;
+    const own = Array.from(selectedIds).filter((id) => !id.startsWith("temp-"));
+    if (!own.length) return clearSelection();
+    if (!window.confirm(t("chat.message.delete.confirm") || `Supprimer ${own.length} message(s) ?`)) return;
+    for (const id of own) {
+      await onDeleteMessage(id);
+    }
+    clearSelection();
+  };
   const [isBlocked, setIsBlocked] = useState(() => {
     if (!conversation) return false;
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
