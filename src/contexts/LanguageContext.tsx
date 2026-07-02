@@ -402,6 +402,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.reset": "Réinitialiser",
     "chat.prefill.discard": "Supprimer le brouillon",
     "chat.prefill.product": "Produit concerné",
+    "chat.input.placeholder": "Écrire un message...",
   },
   en: {
     "nav.home": "Home",
@@ -761,6 +762,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.reset": "Reset",
     "chat.prefill.discard": "Discard draft",
     "chat.prefill.product": "Related product",
+    "chat.input.placeholder": "Type a message...",
   },
   ewe: {
     "nav.home": "Aƒe",
