@@ -110,6 +110,13 @@ const mapDbToProduct = (p: DbProduct, publicProducer?: PublicProducerProfile | n
     images: p.images || [],
     createdAt: p.created_at,
     shippingDelayDays: (p as any).shipping_delay_days ?? 1,
+    isNegotiable: Boolean((p as any).is_negotiable),
+    stockStatus: (p as any).stock_status ?? null,
+    minOrder: (p as any).min_order ?? null,
+    lat: (p as any).lat ?? null,
+    lng: (p as any).lng ?? null,
+    city: (p as any).city ?? null,
+    country: (p as any).country ?? null,
     producer: {
       id: p.producer_id,
       name: displayName,
