@@ -5,21 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { X, ShoppingBag, Truck, ShieldCheck, ArrowRight } from "lucide-react";
 import promoBanner from "@/assets/marketplace-promo-banner.jpg";
 
-const STORAGE_KEY = "nukuconnect_marketplace_promo_seen";
+const STORAGE_KEY = "nukuconnect_marketplace_promo_last_seen";
+const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 const MarketplacePromoPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const seen = sessionStorage.getItem(STORAGE_KEY);
-    if (!seen) {
-      const timer = setTimeout(() => setIsOpen(true), 800);
-      return () => clearTimeout(timer);
-    }
+    try {
+      const lastSeen = Number(localStorage.getItem(STORAGE_KEY) || 0);
+      if (Date.now() - lastSeen < COOLDOWN_MS) return;
+    } catch {}
+    const timer = setTimeout(() => setIsOpen(true), 1200);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
-    sessionStorage.setItem(STORAGE_KEY, "true");
+    try { localStorage.setItem(STORAGE_KEY, String(Date.now())); } catch {}
     setIsOpen(false);
   };
 

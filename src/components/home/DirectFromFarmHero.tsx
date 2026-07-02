@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Sprout, Truck, ArrowRight, BadgeCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import heroSupplier from "@/assets/hero-supplier.jpg";
 
 /**
  * Hero "Achat direct producteur" — visible uniquement sur tablette & ordinateur.
@@ -14,14 +15,12 @@ const DirectFromFarmHero = () => {
       {/* Background image — producteurs en interaction dans un champ */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1530507629858-e3759c1a4c63?auto=format&fit=crop&w=1920&q=80"
-          alt="Producteurs agricoles en interaction avec des acheteurs dans un champ — réseau Nukuconnect"
+          src={heroSupplier}
+          alt="Fournisseurs vérifiés — achetez directement auprès des producteurs sur Nukuconnect"
           className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src =
-              "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1920&q=80";
-          }}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
         />
         {/* Overlay : sombre à gauche, transparent à droite — pour lisibilité du texte */}
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/70 to-foreground/30" />

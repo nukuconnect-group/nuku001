@@ -192,7 +192,7 @@ const App = () => {
               <AnalyticsTracker />
               <PresenceTracker />
               <RealtimeNotifications />
-              <ProfileLeavePopup />
+              {/* ProfileLeavePopup désactivé — seul le popup principal de la Marketplace est conservé */}
               <SmartSuspense>
                 <Routes>
                   <Route path="/" element={<Index />} />

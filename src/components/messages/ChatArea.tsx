@@ -724,19 +724,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-muted/20">
         <OfflineReadIndicator />
-        {/* Protection banner — toujours visible, rappel en début de discussion */}
-        <div className="flex items-start gap-2 mx-auto max-w-md p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 shadow-sm animate-fade-in">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 mb-0.5">
-              Achetez en toute sécurité
-            </p>
-            <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed">
-              Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des commandes.
-              <Link to="/politique-achat" className="text-primary underline ml-1">En savoir plus</Link>
-            </p>
-          </div>
-        </div>
+        {/* La bannière de sécurité est affichée en bas (au-dessus de la zone de saisie) — style Alibaba, discret */}
         {/* Product preview card */}
         {conversation.productName && conversation.productImage && (
           <Link to={`/produit/${conversation.productId}`} className="block">
@@ -964,52 +952,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
         </div>
       )}
 
-      {/* Prefill draft banner — clearly indicates the message is prefilled and offers reset/discard */}
-      {prefillDraft && (
-        <div
-          data-testid="chat-prefill-banner"
-          className="px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-900 flex items-start gap-2"
-        >
-          <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-800 dark:text-amber-200">
-                {t("chat.prefill.label")}
-              </Badge>
-              <span className="text-[10px] text-amber-700 dark:text-amber-300">{t("chat.prefill.hint")}</span>
-            </div>
-            {prefillDraft.product && (
-              <Link to={`/produit/${prefillDraft.product.id}`} className="flex items-center gap-2 mt-1">
-                {prefillDraft.product.image && (
-                  <img src={prefillDraft.product.image} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-foreground truncate">{prefillDraft.product.name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{t("chat.prefill.product")}</p>
-                </div>
-              </Link>
-            )}
-          </div>
-          <div className="flex flex-col gap-1 flex-shrink-0">
-            <button
-              type="button"
-              onClick={resetPrefillDraft}
-              className="text-[10px] px-2 py-0.5 rounded border border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40"
-              data-testid="chat-prefill-reset"
-            >
-              {t("chat.prefill.reset")}
-            </button>
-            <button
-              type="button"
-              onClick={discardPrefillDraft}
-              className="text-[10px] px-2 py-0.5 rounded border border-destructive/40 text-destructive hover:bg-destructive/10"
-              data-testid="chat-prefill-discard"
-            >
-              {t("chat.prefill.discard")}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Bannière sécurité — discrète, en bas de la conversation, au-dessus de la zone de saisie (style Alibaba) */}
+      <div
+        role="note"
+        data-testid="chat-security-banner"
+        className="px-3 py-1.5 bg-emerald-50/80 dark:bg-emerald-950/30 border-t border-emerald-100 dark:border-emerald-900/60 flex items-center gap-2"
+      >
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+        <p className="text-[10px] sm:text-[11px] text-emerald-800 dark:text-emerald-200 leading-snug flex-1 min-w-0">
+          Achetez en toute sécurité. Effectuez vos paiements et discussions sur <strong>NukuConnect</strong> pour bénéficier de la protection des transactions.
+        </p>
+      </div>
 
       {/* Input - responsive, fully aligned on mobile, no bottom-nav overlap */}
       <div className="px-2 sm:px-3 pt-2 pb-2 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}>
