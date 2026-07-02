@@ -163,6 +163,25 @@ export function useMessages(conversationId: string | null, profileId: string | n
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: isDeliveryConversation ? "delivery_messages" : "messages",
+          filter: isDeliveryConversation ? `delivery_id=eq.${deliveryId}` : `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const m = payload.new as any;
+          setMessages((prev) =>
+            prev.map((p) =>
+              p.id === m.id
+                ? { ...p, content: m.content, status: m.is_read ? "read" : p.status }
+                : p,
+            ),
+          );
+        }
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
