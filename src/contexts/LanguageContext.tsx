@@ -753,6 +753,12 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.duplicate": "This item already exists",
     "err.rateLimit": "Too many attempts, try again later",
     "err.serverError": "Server error, try again later",
+    "form.requiredFields": "Please fill in all required fields",
+    "chat.prefill.label": "Prefilled message",
+    "chat.prefill.hint": "Edit or send to confirm",
+    "chat.prefill.reset": "Reset",
+    "chat.prefill.discard": "Discard draft",
+    "chat.prefill.product": "Related product",
   },
   ewe: {
     "nav.home": "Aƒe",
