@@ -164,7 +164,7 @@ const ProductDetail = () => {
   const handleOpenChat = async () => {
     if (!product) return;
     const productLink = `${window.location.origin}/produit/${product.id}`;
-    const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?\n${productLink}`;
+    const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
     setMessage(autoMessage);
 
     const { data: { session } } = await supabase.auth.getSession();
