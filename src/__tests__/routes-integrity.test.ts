@@ -84,14 +84,14 @@ describe("Sitemap + robots + routes stay consistent", () => {
 
   it("every sitemap entry is absolute on the canonical host", () => {
     for (const url of sitemapUrls) {
-      expect(url.startsWith(`${CANONICAL_HOST}/`) || url === CANONICAL_HOST || url === `${CANONICAL_HOST}/`)
+      expect(CANONICAL_HOSTS.some((h) => url === h || url === `${h}/` || url.startsWith(`${h}/`)))
         .toBe(true);
     }
   });
 
   it("no sitemap entry points at a robots-disallowed path", () => {
     for (const url of sitemapUrls) {
-      const path = url.replace(CANONICAL_HOST, "") || "/";
+      const path = stripHost(url) || "/";
       for (const d of disallows) {
         expect(
           path === d || path.startsWith(`${d}/`),
@@ -109,7 +109,7 @@ describe("Sitemap + robots + routes stay consistent", () => {
       .map((p) => (p === "" ? "/" : p));
 
     for (const url of sitemapUrls) {
-      const path = url.replace(CANONICAL_HOST, "") || "/";
+      const path = stripHost(url) || "/";
       const match =
         staticRoutePrefixes.includes(path) ||
         // allow /foo when a route is /foo/:id
@@ -123,7 +123,7 @@ describe("Sitemap + robots + routes stay consistent", () => {
       (p) => p !== "*" && !p.includes(":") && !INTERNAL_OR_PROTECTED.has(p),
     );
     const sitemapPaths = new Set(
-      sitemapUrls.map((u) => u.replace(CANONICAL_HOST, "") || "/"),
+      sitemapUrls.map((u) => stripHost(u) || "/"),
     );
     const missing = publicStaticRoutes.filter((r) => !sitemapPaths.has(r));
     // Soft assertion: log but only fail on the most critical missing entries.
