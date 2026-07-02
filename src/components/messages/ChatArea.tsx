@@ -690,7 +690,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           }
 
           return (
-            <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
+            <div key={msg.id} data-msg-id={msg.id} data-msg-other={msg.senderId === "me" ? "0" : "1"} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
                 {msg.senderId === "me" && (
