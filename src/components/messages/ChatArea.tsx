@@ -145,6 +145,29 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
     setIsBlocked(blocked.includes(conversation.participant.id));
   }, [conversation?.participant.id]);
 
+  // IntersectionObserver: mark messages as read when they actually enter the viewport.
+  // Precision > coarse "mark all on open" — only visible messages count as read.
+  const markedReadRef = useRef<Set<string>>(new Set());
+  useEffect(() => { markedReadRef.current = new Set(); }, [conversation?.id]);
+  useEffect(() => {
+    if (!onMessageVisible || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = (entry.target as HTMLElement).dataset.msgId;
+          if (!id || markedReadRef.current.has(id)) continue;
+          markedReadRef.current.add(id);
+          void onMessageVisible(id);
+        }
+      },
+      { threshold: 0.6 }
+    );
+    const nodes = document.querySelectorAll<HTMLElement>("[data-msg-id][data-msg-other='1']");
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, [messages, onMessageVisible, conversation?.id]);
+
   const toggleBlock = () => {
     if (!conversation) return;
     const blocked: string[] = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
