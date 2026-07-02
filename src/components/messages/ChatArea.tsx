@@ -14,6 +14,10 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
