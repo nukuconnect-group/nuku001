@@ -393,6 +393,14 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.duplicate": "Cet élément existe déjà",
     "err.rateLimit": "Trop de tentatives, réessayez plus tard",
     "err.serverError": "Erreur serveur, réessayez plus tard",
+    // Forms
+    "form.requiredFields": "Veuillez remplir tous les champs obligatoires",
+    // Chat prefill draft banner
+    "chat.prefill.label": "Message prérempli",
+    "chat.prefill.hint": "Modifiez ou envoyez pour confirmer",
+    "chat.prefill.reset": "Réinitialiser",
+    "chat.prefill.discard": "Supprimer le brouillon",
+    "chat.prefill.product": "Produit concerné",
   },
   en: {
     "nav.home": "Home",
