@@ -43,13 +43,14 @@ interface Props {
   messages: MessageItem[];
   onBack: () => void;
   onSend: (content: string, replyToId?: string) => void;
+  onDeleteMessage?: (messageId: string) => Promise<boolean> | void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
+export default function ChatArea({ conversation, messages, onBack, onSend, onDeleteMessage, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startCall } = useCall();
