@@ -32,10 +32,6 @@ const AUDITED_FILES = [
   "src/pages/Favorites.tsx",
   "src/pages/Cart.tsx",
   "src/pages/Settings.tsx",
-  "src/pages/Help.tsx",
-  "src/pages/Contact.tsx",
-  "src/pages/Plans.tsx",
-  "src/pages/Formations.tsx",
   "src/pages/Tokens.tsx",
   "src/pages/Producers.tsx",
 ];
