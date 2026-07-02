@@ -6,6 +6,8 @@ import {
   replayOfflineReads,
 } from "@/lib/messageReadEvents";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { translateBackendError } from "@/lib/i18nErrors";
 
 export interface MessageItem {
   id: string;
@@ -26,6 +28,7 @@ export type EmailNotifyStatus =
   | { state: "error"; at: number; ms: number; message: string };
 
 export function useMessages(conversationId: string | null, profileId: string | null, userId: string | null) {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastEmailStatus, setLastEmailStatus] = useState<EmailNotifyStatus>({ state: "idle" });
@@ -242,7 +245,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
       if (error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
-        toast.error("Message non envoyé", { description: error.message || "La discussion n'a pas abouti." });
+        toast.error(t("err.generic"), { description: translateBackendError(error, t) });
         return false;
       }
 
@@ -295,7 +298,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
       }
       return true;
     },
-    [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
+    [conversationId, deliveryId, isDeliveryConversation, profileId, userId, t]
   );
 
   return { messages, setMessages, loading, sendMessage, lastEmailStatus };

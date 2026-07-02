@@ -19,6 +19,9 @@ import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
 import { useCall } from "@/contexts/CallContext";
 import CallOptionsSheet from "@/components/calls/CallOptionsSheet";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { loadDraft, saveDraft, clearDraft, updateDraftText, type ChatDraft } from "@/lib/chatDraft";
+import { translateBackendError } from "@/lib/i18nErrors";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
@@ -50,22 +53,40 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startCall } = useCall();
+  const { t } = useLanguage();
   const [messageInput, setMessageInput] = useState("");
+  const [prefillDraft, setPrefillDraft] = useState<ChatDraft | null>(null);
 
-  // Hydrate a prefilled draft (from ProductDetail "Discuter" or Réseaux) without sending it.
+  // Hydrate a prefilled draft (from ProductDetail "Discuter" or Réseaux).
+  // Persistent localStorage draft takes precedence; sessionStorage keys are
+  // kept as a backwards-compatible fallback. Nothing is ever sent here.
   useEffect(() => {
     if (!conversation) return;
-    try {
-      const byConv = sessionStorage.getItem(`msg-prefill-${conversation.id}`);
-      const byUser = sessionStorage.getItem(`msg-prefill-${conversation.participant.id}`);
-      const draft = byConv || byUser;
-      if (draft) {
-        setMessageInput(draft);
+    const ids = { conversationId: conversation.id, userId: conversation.participant.id };
+    let draft = loadDraft(ids);
+    if (!draft) {
+      try {
+        const byConv = sessionStorage.getItem(`msg-prefill-${conversation.id}`);
+        const byUser = sessionStorage.getItem(`msg-prefill-${conversation.participant.id}`);
+        const legacy = byConv || byUser;
+        if (legacy) {
+          draft = { text: legacy, original: legacy, createdAt: Date.now() };
+          saveDraft(ids, draft);
+        }
+      } catch {}
+      try {
         sessionStorage.removeItem(`msg-prefill-${conversation.id}`);
         sessionStorage.removeItem(`msg-prefill-${conversation.participant.id}`);
-      }
-    } catch {}
-  }, [conversation?.id]);
+      } catch {}
+    }
+    if (draft) {
+      setPrefillDraft(draft);
+      setMessageInput(draft.text);
+    } else {
+      setPrefillDraft(null);
+    }
+  }, [conversation?.id, conversation?.participant.id]);
+
 
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -141,7 +162,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     }
     if (!confirm(`Vider toute la conversation avec ${conversation.participant.name} ?\n\nTous les messages seront supprimés définitivement.`)) return;
     const { data, error } = await supabase.rpc("clear_conversation_messages", { p_conversation_id: conversation.id });
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+    if (error) { toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" }); return; }
     toast({ title: "🧹 Conversation vidée", description: `${(data as any)?.deleted_count || 0} messages supprimés.` });
   };
 
@@ -152,7 +173,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     }
     if (!confirm(`Supprimer définitivement la boîte de message avec ${conversation.participant.name} ?\n\nCette action est irréversible.`)) return;
     const { error } = await supabase.rpc("delete_conversation_thread", { p_conversation_id: conversation.id });
-    if (error) { toast({ title: "Erreur", description: error.message, variant: "destructive" }); return; }
+    if (error) { toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" }); return; }
     toast({ title: "🗑️ Boîte supprimée" });
     onBack();
   };
@@ -160,7 +181,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const deleteSingleMessage = async (msgId: string) => {
     if (msgId.startsWith("local-")) return;
     const { error } = await supabase.from("messages").delete().eq("id", msgId);
-    if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    if (error) toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
   };
 
   // Typing indicator: listen to realtime presence
@@ -199,8 +220,27 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   }, [conversation?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessageInput(e.target.value);
+    const v = e.target.value;
+    setMessageInput(v);
+    if (prefillDraft && conversation) {
+      updateDraftText({ conversationId: conversation.id, userId: conversation.participant.id }, v);
+    }
     broadcastTyping();
+  };
+
+  const resetPrefillDraft = () => {
+    if (!prefillDraft) return;
+    setMessageInput(prefillDraft.original);
+    if (conversation) {
+      updateDraftText({ conversationId: conversation.id, userId: conversation.participant.id }, prefillDraft.original);
+    }
+  };
+
+  const discardPrefillDraft = () => {
+    if (!conversation) return;
+    clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
+    setPrefillDraft(null);
+    setMessageInput("");
   };
 
   const handleSendMessage = async () => {
@@ -213,6 +253,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     setMessageInput("");
     setReplyTo(null);
     setShowAiSuggestions(false);
+    // Clear persisted prefill draft only on explicit send.
+    if (conversation && prefillDraft) {
+      clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
+      setPrefillDraft(null);
+    }
   };
 
   const uploadAndSendImage = async (file: File, caption?: string) => {
@@ -236,7 +281,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       toast({ title: "Image envoyée ✓" });
     } catch (error: any) {
       console.error("Image upload error:", error);
-      toast({ title: "Erreur d'envoi", description: error?.message || "Impossible d'envoyer l'image", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
     }
@@ -259,7 +304,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       toast({ title: "Vocal envoyé ✓" });
     } catch (error: any) {
       console.error("Voice upload error:", error);
-      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le vocal", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     }
   };
 
@@ -719,6 +764,53 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
           <button onClick={() => setReplyTo(null)} className="p-1 hover:bg-muted rounded-full flex-shrink-0">
             <X className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
+        </div>
+      )}
+
+      {/* Prefill draft banner — clearly indicates the message is prefilled and offers reset/discard */}
+      {prefillDraft && (
+        <div
+          data-testid="chat-prefill-banner"
+          className="px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-900 flex items-start gap-2"
+        >
+          <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-800 dark:text-amber-200">
+                {t("chat.prefill.label")}
+              </Badge>
+              <span className="text-[10px] text-amber-700 dark:text-amber-300">{t("chat.prefill.hint")}</span>
+            </div>
+            {prefillDraft.product && (
+              <Link to={`/produit/${prefillDraft.product.id}`} className="flex items-center gap-2 mt-1">
+                {prefillDraft.product.image && (
+                  <img src={prefillDraft.product.image} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-foreground truncate">{prefillDraft.product.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("chat.prefill.product")}</p>
+                </div>
+              </Link>
+            )}
+          </div>
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            <button
+              type="button"
+              onClick={resetPrefillDraft}
+              className="text-[10px] px-2 py-0.5 rounded border border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+              data-testid="chat-prefill-reset"
+            >
+              {t("chat.prefill.reset")}
+            </button>
+            <button
+              type="button"
+              onClick={discardPrefillDraft}
+              className="text-[10px] px-2 py-0.5 rounded border border-destructive/40 text-destructive hover:bg-destructive/10"
+              data-testid="chat-prefill-discard"
+            >
+              {t("chat.prefill.discard")}
+            </button>
+          </div>
         </div>
       )}
 

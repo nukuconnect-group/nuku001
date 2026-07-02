@@ -46,7 +46,11 @@ describe('Discuter (Contact seller) button — no auto-send contract', () => {
     expect(inserts.length).toBeLessThanOrEqual(1);
   });
 
-  it("stores a prefill draft in sessionStorage keyed by conversation and seller id", () => {
+  it("persists a prefill draft (localStorage) keyed by conversation and seller id", () => {
+    // saveDraft() writes to localStorage under msg-draft-<conversationId>
+    // and msg-draft-user-<sellerId> so the draft survives reload / navigation.
+    expect(body).toMatch(/saveDraft\(\s*\{\s*conversationId,\s*userId:\s*sellerId\s*\}/);
+    // Legacy sessionStorage fallback is still written for BC.
     expect(body).toMatch(/sessionStorage\.setItem\(`msg-prefill-\$\{conversationId\}`/);
     expect(body).toMatch(/sessionStorage\.setItem\(`msg-prefill-\$\{sellerId\}`/);
   });

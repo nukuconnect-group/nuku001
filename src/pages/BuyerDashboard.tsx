@@ -45,7 +45,7 @@ const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'S
 const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { formatPrice } = useLanguage();
+  const { t, formatPrice } = useLanguage();
   const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [orders, setOrders] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
@@ -143,7 +143,7 @@ const BuyerDashboard = () => {
   const handleBecomeProducer = async () => {
     if (!profile) return;
     if (!migrationData.businessName.trim() || !migrationData.phone.trim() || !migrationData.location.trim() || !migrationData.businessType) {
-      toast({ title: "Veuillez remplir tous les champs obligatoires", variant: "destructive" });
+      toast({ title: t("form.requiredFields"), variant: "destructive" });
       return;
     }
     setMigrating(true);
@@ -916,7 +916,7 @@ const BuyerDashboard = () => {
               Devenir fournisseur
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Remplissez les informations de votre activité pour activer votre compte vendeur.
+              {t("buyer.becomeSellerHint")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

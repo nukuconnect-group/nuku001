@@ -393,6 +393,15 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.duplicate": "Cet élément existe déjà",
     "err.rateLimit": "Trop de tentatives, réessayez plus tard",
     "err.serverError": "Erreur serveur, réessayez plus tard",
+    // Forms
+    "form.requiredFields": "Veuillez remplir tous les champs obligatoires",
+    "buyer.becomeSellerHint": "Complétez les informations de votre activité pour activer votre compte vendeur.",
+    // Chat prefill draft banner
+    "chat.prefill.label": "Message prérempli",
+    "chat.prefill.hint": "Modifiez ou envoyez pour confirmer",
+    "chat.prefill.reset": "Réinitialiser",
+    "chat.prefill.discard": "Supprimer le brouillon",
+    "chat.prefill.product": "Produit concerné",
   },
   en: {
     "nav.home": "Home",
@@ -745,6 +754,13 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.duplicate": "This item already exists",
     "err.rateLimit": "Too many attempts, try again later",
     "err.serverError": "Server error, try again later",
+    "form.requiredFields": "Please fill in all required fields",
+    "buyer.becomeSellerHint": "Complete your business information to activate your seller account.",
+    "chat.prefill.label": "Prefilled message",
+    "chat.prefill.hint": "Edit or send to confirm",
+    "chat.prefill.reset": "Reset",
+    "chat.prefill.discard": "Discard draft",
+    "chat.prefill.product": "Related product",
   },
   ewe: {
     "nav.home": "Aƒe",
