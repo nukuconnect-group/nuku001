@@ -507,7 +507,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       const text = content.replace(/\n?\[voice:[^\]]+\]/, "").replace(/\n?\[product:[^\]]+\]/, "").trim();
       return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1], product, call: null };
     }
-    const text = content.replace(/\n?\[product:[^\]]+\]/, "").trim();
+    const text = content
+      .replace(/\n?\[product:[^\]]+\]/, "")
+      .replace(/\n?https?:\/\/\S*\/produit\/\S+/gi, "")
+      .trim();
     return { text, imageUrl: null as string | null, voiceUrl: null as string | null, product, call: null };
   };
 
