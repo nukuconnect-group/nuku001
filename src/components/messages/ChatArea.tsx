@@ -106,6 +106,41 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
   const [replyTo, setReplyTo] = useState<MessageItem | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [callSheetOpen, setCallSheetOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const longPressTimerRef = useRef<number | null>(null);
+  const selectionMode = selectedIds.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const startLongPress = (id: string) => {
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = window.setTimeout(() => {
+      setSelectedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    }, 450);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const deleteSelected = async () => {
+    if (!onDeleteMessage) return;
+    const own = Array.from(selectedIds).filter((id) => !id.startsWith("temp-"));
+    if (!own.length) return clearSelection();
+    if (!window.confirm(t("chat.message.delete.confirm") || `Supprimer ${own.length} message(s) ?`)) return;
+    for (const id of own) {
+      await onDeleteMessage(id);
+    }
+    clearSelection();
+  };
   const [isBlocked, setIsBlocked] = useState(() => {
     if (!conversation) return false;
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
@@ -543,8 +578,22 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
 
-      {/* Header */}
+      {/* Selection bar (WhatsApp-style) */}
+      {selectionMode ? (
+        <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 bg-card flex-shrink-0 sticky top-0 z-10">
+          <button onClick={clearSelection} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Annuler">
+            <X className="w-5 h-5" />
+          </button>
+          <span className="flex-1 text-sm font-medium">{selectedIds.size} sélectionné(s)</span>
+          {onDeleteMessage && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={deleteSelected} aria-label="Supprimer">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      ) : (
       <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card flex-shrink-0 sticky top-0 z-10">
+
         <button onClick={onBack} className="p-1.5 hover:bg-muted rounded-lg lg:hidden">
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
@@ -619,6 +668,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      )}
 
       {/* Mobile product banner */}
       {conversation.productName && (
@@ -693,7 +743,23 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           }
 
           return (
-            <div key={msg.id} data-msg-id={msg.id} data-msg-other={msg.senderId === "me" ? "0" : "1"} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
+            <div
+              key={msg.id}
+              data-msg-id={msg.id}
+              data-msg-other={msg.senderId === "me" ? "0" : "1"}
+              onPointerDown={() => startLongPress(msg.id)}
+              onPointerUp={cancelLongPress}
+              onPointerLeave={cancelLongPress}
+              onPointerCancel={cancelLongPress}
+              onClick={(e) => {
+                if (selectionMode) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleSelect(msg.id);
+                }
+              }}
+              className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group ${selectedIds.has(msg.id) ? "bg-primary/10 rounded-lg" : ""}`}
+            >
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
                 {msg.senderId === "me" && (
@@ -754,18 +820,14 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                   {product && (
                     <Link
                       to={`/produit/${product.id}`}
-                      className={`block mb-1.5 rounded-lg overflow-hidden border ${
-                        msg.senderId === "me" ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-muted/40 border-border"
-                      }`}
+                      className="block mb-1.5 rounded-lg overflow-hidden"
                     >
                       {product.image && (
-                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover" loading="lazy" />
+                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover rounded-lg" loading="lazy" />
                       )}
-                      <div className="px-2 py-1.5 min-w-0">
-                        <p className={`text-xs font-semibold truncate ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
-                          {product.name}
-                        </p>
-                      </div>
+                      <p className={`text-xs font-semibold truncate mt-1 ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
+                        {product.name}
+                      </p>
                     </Link>
                   )}
                   {text && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{text}</p>}
