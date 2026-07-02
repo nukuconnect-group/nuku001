@@ -28,6 +28,13 @@ export interface Product {
   isOrganic: boolean;
   createdAt: string;
   shippingDelayDays?: number | null;
+  isNegotiable?: boolean;
+  stockStatus?: string | null;
+  minOrder?: number | null;
+  lat?: number | null;
+  lng?: number | null;
+  city?: string | null;
+  country?: string | null;
 }
 
 export interface Category {
