@@ -6,6 +6,8 @@ import {
   replayOfflineReads,
 } from "@/lib/messageReadEvents";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { translateBackendError } from "@/lib/i18nErrors";
 
 export interface MessageItem {
   id: string;
