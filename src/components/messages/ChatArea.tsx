@@ -578,8 +578,22 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
 
-      {/* Header */}
+      {/* Selection bar (WhatsApp-style) */}
+      {selectionMode ? (
+        <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 bg-card flex-shrink-0 sticky top-0 z-10">
+          <button onClick={clearSelection} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Annuler">
+            <X className="w-5 h-5" />
+          </button>
+          <span className="flex-1 text-sm font-medium">{selectedIds.size} sélectionné(s)</span>
+          {onDeleteMessage && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={deleteSelected} aria-label="Supprimer">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      ) : (
       <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 sm:gap-3 bg-card flex-shrink-0 sticky top-0 z-10">
+
         <button onClick={onBack} className="p-1.5 hover:bg-muted rounded-lg lg:hidden">
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
