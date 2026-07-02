@@ -14,6 +14,10 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { type ConversationItem } from "@/hooks/useConversations";
 import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
@@ -107,7 +111,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
   const [isTyping, setIsTyping] = useState(false);
   const [callSheetOpen, setCallSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ ids: string[] } | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectionMode = selectedIds.size > 0;
 
   const toggleSelect = (id: string) => {
@@ -118,10 +125,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       return next;
     });
   };
-  const startLongPress = (id: string) => {
+  const startLongPress = (id: string, e: React.PointerEvent) => {
+    longPressFiredRef.current = false;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
       setSelectedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+      // Haptic feedback on supporting devices
+      if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
+        try { (navigator as any).vibrate(15); } catch {}
+      }
     }, 450);
   };
   const cancelLongPress = () => {
@@ -130,15 +144,31 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       longPressTimerRef.current = null;
     }
   };
+  const onPointerMoveMsg = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current) return;
+    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+    if (dx > 10 || dy > 10) cancelLongPress();
+  };
   const clearSelection = () => setSelectedIds(new Set());
-  const deleteSelected = async () => {
-    if (!onDeleteMessage) return;
+  const requestDeleteSelected = () => {
     const own = Array.from(selectedIds).filter((id) => !id.startsWith("temp-"));
     if (!own.length) return clearSelection();
-    if (!window.confirm(t("chat.message.delete.confirm") || `Supprimer ${own.length} message(s) ?`)) return;
-    for (const id of own) {
+    setDeleteConfirm({ ids: own });
+  };
+  const requestDeleteSingle = (id: string) => {
+    if (id.startsWith("temp-")) return;
+    setDeleteConfirm({ ids: [id] });
+  };
+  const confirmDelete = async () => {
+    if (!deleteConfirm || !onDeleteMessage) {
+      setDeleteConfirm(null);
+      return;
+    }
+    for (const id of deleteConfirm.ids) {
       await onDeleteMessage(id);
     }
+    setDeleteConfirm(null);
     clearSelection();
   };
   const [isBlocked, setIsBlocked] = useState(() => {
@@ -581,13 +611,25 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       {/* Selection bar (WhatsApp-style) */}
       {selectionMode ? (
         <div className="p-2 sm:p-3 border-b border-border flex items-center gap-2 bg-card flex-shrink-0 sticky top-0 z-10">
-          <button onClick={clearSelection} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Annuler">
+          <button
+            onClick={clearSelection}
+            className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-label="Annuler la sélection"
+          >
             <X className="w-5 h-5" />
           </button>
-          <span className="flex-1 text-sm font-medium">{selectedIds.size} sélectionné(s)</span>
+          <span className="flex-1 text-sm font-medium" aria-live="polite">
+            {selectedIds.size} sélectionné{selectedIds.size > 1 ? "s" : ""}
+          </span>
           {onDeleteMessage && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={deleteSelected} aria-label="Supprimer">
-              <Trash2 className="w-4 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 text-destructive hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={requestDeleteSelected}
+              aria-label={`Supprimer ${selectedIds.size} message${selectedIds.size > 1 ? "s" : ""}`}
+            >
+              <Trash2 className="w-5 h-5" />
             </Button>
           )}
         </div>
@@ -747,18 +789,26 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
               key={msg.id}
               data-msg-id={msg.id}
               data-msg-other={msg.senderId === "me" ? "0" : "1"}
-              onPointerDown={() => startLongPress(msg.id)}
+              onPointerDown={(e) => startLongPress(msg.id, e)}
+              onPointerMove={onPointerMoveMsg}
               onPointerUp={cancelLongPress}
               onPointerLeave={cancelLongPress}
               onPointerCancel={cancelLongPress}
-              onClick={(e) => {
+              onClickCapture={(e) => {
+                if (longPressFiredRef.current) {
+                  // Suppress the click that follows a long-press selection.
+                  e.preventDefault();
+                  e.stopPropagation();
+                  longPressFiredRef.current = false;
+                  return;
+                }
                 if (selectionMode) {
                   e.preventDefault();
                   e.stopPropagation();
                   toggleSelect(msg.id);
                 }
               }}
-              className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group ${selectedIds.has(msg.id) ? "bg-primary/10 rounded-lg" : ""}`}
+              className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group py-0.5 px-1 rounded-lg transition-colors ${selectedIds.has(msg.id) ? "bg-primary/10 ring-1 ring-primary/30" : ""}`}
             >
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
@@ -769,12 +819,9 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                     </button>
                     {onDeleteMessage && !msg.id.startsWith("temp-") && (
                       <button
-                        onClick={() => {
-                          if (window.confirm(t("chat.message.delete.confirm") || "Supprimer ce message ?")) {
-                            void onDeleteMessage(msg.id);
-                          }
-                        }}
-                        className="p-1 hover:bg-destructive/10 rounded-full"
+                        onClick={() => requestDeleteSingle(msg.id)}
+                        className="p-1 hover:bg-destructive/10 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        aria-label={t("chat.message.delete") || "Supprimer"}
                         title={t("chat.message.delete") || "Supprimer"}
                       >
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
@@ -1071,6 +1118,29 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           });
         }}
       />
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteConfirm && deleteConfirm.ids.length > 1
+                ? `Supprimer ${deleteConfirm.ids.length} messages ?`
+                : "Supprimer ce message ?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le destinataire verra « Message supprimé » à la place.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
