@@ -244,6 +244,7 @@ const Messages = () => {
                 messages={messages}
                 onBack={() => { if (isFullscreen) setIsFullscreen(false); setSelectedConversation(null); }}
                 onSend={sendMessage}
+                onDeleteMessage={deleteMessage}
                 onLocalMessage={handleLocalMessage}
                 messagesEndRef={messagesEndRef}
                 isFullscreen={effectiveFullscreen}
