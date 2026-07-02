@@ -263,9 +263,14 @@ const ProducerProfile = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-4">Fournisseur non trouvé</h1>
-          <Link to="/producteurs"><Button variant="hero">Voir tous les fournisseurs</Button></Link>
+        <div className="container mx-auto px-4 py-16 text-center space-y-4">
+          <h1 className="font-heading text-xl font-bold text-foreground">Boutique introuvable</h1>
+          <p className="text-sm text-muted-foreground">Ce fournisseur n'existe pas ou n'est plus disponible.</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Link to="/producteurs"><Button variant="hero">Voir tous les fournisseurs</Button></Link>
+            <Link to="/dashboard"><Button variant="outline">Aller au tableau de bord</Button></Link>
+            <Link to="/"><Button variant="ghost">Retour à l'accueil</Button></Link>
+          </div>
         </div>
         <Footer />
       </div>
