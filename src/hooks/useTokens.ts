@@ -68,14 +68,22 @@ export const useTokens = () => {
   // Realtime: instant refresh after admin credit, payment completion, or any token mutation
   useEffect(() => {
     if (!userId) return;
-    const ch = supabase
-      .channel("tokens-realtime-" + userId)
-      .on("postgres_changes", { event: "*", schema: "public", table: "token_transactions", filter: `user_id=eq.${userId}` },
-        () => refresh())
-      .on("postgres_changes", { event: "*", schema: "public", table: "token_purchases", filter: `user_id=eq.${userId}` },
-        () => refresh())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    // Unique channel name per hook instance to avoid "cannot add callbacks after subscribe()"
+    // when multiple components mount this hook simultaneously.
+    const chName = `tokens-realtime-${userId}-${Math.random().toString(36).slice(2)}`;
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      ch = supabase
+        .channel(chName)
+        .on("postgres_changes", { event: "*", schema: "public", table: "token_transactions", filter: `user_id=eq.${userId}` },
+          () => refresh())
+        .on("postgres_changes", { event: "*", schema: "public", table: "token_purchases", filter: `user_id=eq.${userId}` },
+          () => refresh())
+        .subscribe();
+    } catch (e) {
+      console.warn("[useTokens] realtime unavailable:", e);
+    }
+    return () => { if (ch) supabase.removeChannel(ch); };
   }, [userId, refresh]);
 
   const spendTokens = useCallback(async (amount: number, reason: string, referenceId?: string, referenceType?: string) => {

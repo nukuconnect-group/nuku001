@@ -41,13 +41,20 @@ export const useSubscription = () => {
 
     // Realtime: instant refresh after admin grant, renewal, or payment
     let realtimeCh: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) return;
-      realtimeCh = supabase
-        .channel("subscription-realtime-" + session.user.id)
-        .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${session.user.id}` },
-          () => fetchSubscription())
-        .subscribe();
+      if (!session?.user || cancelled) return;
+      try {
+        // Unique channel name per hook instance to avoid "cannot add callbacks after subscribe()"
+        const chName = `subscription-realtime-${session.user.id}-${Math.random().toString(36).slice(2)}`;
+        realtimeCh = supabase
+          .channel(chName)
+          .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${session.user.id}` },
+            () => fetchSubscription())
+          .subscribe();
+      } catch (e) {
+        console.warn("[useSubscription] realtime unavailable:", e);
+      }
     });
 
     return () => {
