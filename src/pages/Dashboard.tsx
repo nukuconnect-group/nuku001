@@ -695,9 +695,7 @@ const Dashboard = () => {
 
       <Footer />
       <SupportWidget userId={user?.id} userName={profile?.full_name || undefined} />
-      {!profile?.is_verified && (
-        <SupplierVerificationPopup userId={user?.id} plan={subscription?.plan} isVerified={profile?.is_verified} />
-      )}
+      {/* SupplierVerificationPopup désactivé — les rappels sont visibles dans le tableau de bord sans popup intrusif */}
       <MobileBottomNav />
 
       {/* Dialog: Mes boosts */}
