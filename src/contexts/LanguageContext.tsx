@@ -403,6 +403,10 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.discard": "Supprimer le brouillon",
     "chat.prefill.product": "Produit concerné",
     "chat.input.placeholder": "Écrire un message...",
+    "chat.reply": "Répondre",
+    "chat.message.delete": "Supprimer",
+    "chat.message.delete.confirm": "Supprimer ce message ? Cette action est irréversible.",
+    "chat.message.deleted": "🚫 Message supprimé",
   },
   en: {
     "nav.home": "Home",
