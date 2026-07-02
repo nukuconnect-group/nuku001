@@ -391,17 +391,19 @@ export function useConversations() {
       .channel("conversations-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const m = payload.new as any;
-        logDiag("message", "insert", { conv: m.conversation_id, from: m.sender_id });
-        // Update local instantly
-        if (cache.profileId) {
-          mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
+        if (m?.conversation_id) {
+          logDiag("message", "insert", { conv: m.conversation_id, from: m.sender_id });
+          // Update local instantly
+          if (cache.profileId) {
+            mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
+          }
         }
         scheduleRefetch();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
         // When messages are marked as read (is_read update), update unread count locally
         const m = payload.new as any;
-        if (m.is_read && cache.profileId && m.sender_id !== cache.profileId) {
+        if (m?.is_read && cache.profileId && m.sender_id !== cache.profileId) {
           // This message was just marked as read — reduce unread count locally
           setConversations((prev) => {
             const next = prev.map((c) => {
@@ -416,9 +418,11 @@ export function useConversations() {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "delivery_messages" }, (payload) => {
         const m = payload.new as any;
-        logDiag("message", "delivery-insert", { delivery: m.delivery_id, from: m.sender_id });
-        if (cache.userId) {
-          mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
+        if (m?.delivery_id) {
+          logDiag("message", "delivery-insert", { delivery: m.delivery_id, from: m.sender_id });
+          if (cache.userId) {
+            mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
+          }
         }
         scheduleRefetch();
       })
