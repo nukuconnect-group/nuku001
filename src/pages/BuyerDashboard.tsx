@@ -616,7 +616,7 @@ const BuyerDashboard = () => {
                                           </Button>
                                         </Link>
                                       )}
-                                      <Link to="/help">
+                                      <Link to="/aide">
                                         <Button size="sm" variant="ghost" className="h-7 text-[10px] sm:text-xs">Contacter le support</Button>
                                       </Link>
                                     </div>
