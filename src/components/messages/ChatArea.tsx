@@ -767,6 +767,53 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
       )}
 
+      {/* Prefill draft banner — clearly indicates the message is prefilled and offers reset/discard */}
+      {prefillDraft && (
+        <div
+          data-testid="chat-prefill-banner"
+          className="px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-900 flex items-start gap-2"
+        >
+          <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-800 dark:text-amber-200">
+                {t("chat.prefill.label")}
+              </Badge>
+              <span className="text-[10px] text-amber-700 dark:text-amber-300">{t("chat.prefill.hint")}</span>
+            </div>
+            {prefillDraft.product && (
+              <Link to={`/produit/${prefillDraft.product.id}`} className="flex items-center gap-2 mt-1">
+                {prefillDraft.product.image && (
+                  <img src={prefillDraft.product.image} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-foreground truncate">{prefillDraft.product.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("chat.prefill.product")}</p>
+                </div>
+              </Link>
+            )}
+          </div>
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            <button
+              type="button"
+              onClick={resetPrefillDraft}
+              className="text-[10px] px-2 py-0.5 rounded border border-amber-300 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+              data-testid="chat-prefill-reset"
+            >
+              {t("chat.prefill.reset")}
+            </button>
+            <button
+              type="button"
+              onClick={discardPrefillDraft}
+              className="text-[10px] px-2 py-0.5 rounded border border-destructive/40 text-destructive hover:bg-destructive/10"
+              data-testid="chat-prefill-discard"
+            >
+              {t("chat.prefill.discard")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input - responsive, fully aligned on mobile, no bottom-nav overlap */}
       <div className="px-2 sm:px-3 pt-2 pb-2 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}>
         {isRecording ? (
