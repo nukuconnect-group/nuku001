@@ -37,6 +37,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
 import { useAverageRating } from "@/hooks/useReviews";
+import { saveDraft } from "@/lib/chatDraft";
+import { translateBackendError } from "@/lib/i18nErrors";
 
 const ProductRatingLine = ({ productId }: { productId: string }) => {
   const { average, count } = useAverageRating(productId);
