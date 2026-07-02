@@ -423,6 +423,14 @@ const ProductDetail = () => {
                   {product.isOrganic && (
                     <Badge className="bg-primary text-primary-foreground gap-1 text-[10px] sm:text-xs px-1.5 py-0.5"><Leaf className="w-2.5 h-2.5 sm:w-3 sm:h-3" />BIO</Badge>
                   )}
+                  {product.isNegotiable && (
+                    <Badge className="bg-amber-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">À négocier</Badge>
+                  )}
+                  {product.stockStatus === "out_of_stock" ? (
+                    <Badge className="bg-muted text-muted-foreground text-[10px] sm:text-xs px-1.5 py-0.5">Rupture</Badge>
+                  ) : product.stockStatus === "low_stock" || (product.quantity > 0 && product.quantity <= 5) ? (
+                    <Badge className="bg-orange-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">Stock limité</Badge>
+                  ) : null}
                   {product.discount && (
                     <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs px-1.5 py-0.5">-{product.discount}%</Badge>
                   )}
