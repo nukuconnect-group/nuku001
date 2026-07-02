@@ -1,89 +1,97 @@
+# Plan — Améliorations plateforme (6 axes)
 
-# Plan d'action — 4 chantiers
-
-Travail découpé en 4 lots indépendants. J'attaque dans l'ordre ci-dessous (bugs critiques d'abord, refonte UI ensuite).
-
----
-
-## Lot 1 — Bug critique : redirection Acheteur (au lieu de Apprenant)
-
-**Symptôme** : un compte Acheteur se connecte → arrive sur `LearnerDashboard` (apprenant). Doit cliquer sur Profil pour revenir au bon dashboard.
-
-**Cause probable** : la logique de redirection post-login (dans `Auth.tsx` / `useResolvedUserType` / `App.tsx` `/dashboard`) choisit l'apprenant par défaut quand le rôle n'est pas encore hydraté, ou priorise un rôle apprenant inscrit accessoirement.
-
-**Correctifs** :
-- Auditer `src/hooks/useResolvedUserType.ts` et l'ordre de priorité des rôles (buyer > learner si les deux existent).
-- Forcer dans `Auth.tsx` (callback de connexion) une redirection basée sur le **rôle principal** stocké en DB (`profiles.user_type` ou `user_roles`) au lieu d'un fallback apprenant.
-- Ajouter un guard dans `LearnerDashboard` : si `user_type === 'buyer'`, rediriger automatiquement vers `/buyer-dashboard`.
+Cette demande couvre 6 chantiers indépendants. Je propose de les livrer en **3 lots** priorisés pour éviter une PR géante et permettre validation intermédiaire.
 
 ---
 
-## Lot 2 — Bug critique : Exprimer un besoin + génération IA
+## Lot 1 — Messagerie & produits tagués (axes 1, 2, 6)
 
-**Symptôme** : depuis BuyerDashboard, clic sur "Exprimer un besoin" → erreur. Et il faut pouvoir générer image + texte du besoin via IA.
+**1.1 Aperçu produit dans le message prérempli**
+- Étendre `chatDraft` pour stocker `productImage` en plus de `productId`/`name`/`url`.
+- Dans `ChatArea`, afficher une **carte d'aperçu** (image + titre + lien) au-dessus de la zone de saisie tant que le brouillon est actif — style "reply preview" WhatsApp/Messenger.
+- À l'envoi, insérer le message avec un champ `attachment` JSON (image_url + product_url + title) — nouvelle colonne `attachment jsonb` sur `messages` + rendu bulle riche (image + titre cliquable).
+- Aucun envoi auto : le comportement reste "draft only, send on click".
 
-**Correctifs** :
-- Reproduire l'erreur (console + network) sur le bouton.
-- Corriger l'insertion dans `demands` (vérifier colonnes obligatoires, RLS, payload).
-- Garantir l'unicité de l'ID (UUID `gen_random_uuid()` côté DB déjà OK, mais ajouter un index UNIQUE explicite si manquant pour éviter les doublons de soumission par double-clic — debouncer le bouton + `idempotency_key`).
-- Ajouter dans le formulaire de création :
-  - Bouton "Générer le texte par IA" → appelle edge function `generate-product-description` (réutilisable) avec un prompt "besoin".
-  - Bouton "Générer une image par IA" → nouvelle edge function `generate-demand-image` utilisant Lovable AI (`google/gemini-2.5-flash-image-preview`), upload vers storage, retourne URL.
+**1.2 Notifications & lecture (axe 2)**
+- `useMessages`: marquer `read_at=now()` dès qu'un message reçu entre dans le viewport (IntersectionObserver) — supprimer les cas où seul l'ouverture de la conversation compte.
+- Ajouter menus contextuels : **Supprimer message** (soft delete `deleted_at`), **Supprimer notification** (delete row).
+- Cliquer sur notification → route vers conversation + scroll au message ciblé (ancre `#msg-<id>`).
+- Realtime : garantir que `postgres_changes` sur `messages` & `notifications` met à jour la liste sans reload (déjà en place, à consolider).
 
----
-
-## Lot 3 — Lien de partage sans URL Supabase
-
-**Symptôme** : les liens partagés contiennent encore `fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og`. Doit rester en `nukuconnect.com/share/...` tout en gardant l'aperçu OG correct.
-
-**Correctifs** :
-- Dans `src/lib/shareOg.ts`, `productCrawlerUrl` / `shopCrawlerUrl` retournent actuellement `SHARE_OG_BASE` (supabase). Les remplacer par l'URL publique `${SITE_URL}/share/{type}/{slug}?…` (déjà couverte par `public/_redirects` qui proxy vers la function).
-- Vérifier que le rewrite côté hébergeur fonctionne (sinon ajouter `vercel.json` / `public/_headers` adapté). Note : Lovable hosting fait du SPA fallback, donc `/share/*` doit être réécrit côté infra ou servi par une route catch-all qui re-fetch depuis l'edge.
-- Solution robuste : remplacer `/share/...` par une mini-page qui rend les meta OG côté SPA + redirige humains — OU mieux, configurer Cloudflare/Lovable rewrites. Comme `public/_redirects` n'est pas pris en compte par Lovable hosting, je vais :
-  1. Garder `shopCanonicalUrl` / `productCanonicalUrl` pour l'utilisateur (`nukuconnect.com/produit/...`).
-  2. Pour les crawlers : utiliser un domaine personnalisé `share.nukuconnect.com` pointant sur l'edge function (nécessite config DNS user) **OU** masquer en gardant la version actuelle.
-  - **Décision** : implémenter un proxy via `vercel.json` rewrites SI déployé Vercel ; sinon, créer une edge function `share` montée sur `nukuconnect.com` via le système de routing Lovable. À défaut, garder canonical Supabase mais raccourcir via redirect SPA `/s/:type/:id` qui sert directement des meta côté serveur. (Je vais d'abord investiguer la config d'hébergement réelle.)
+**1.3 UX messagerie WhatsApp-like (axe 6)**
+- `Textarea` auto-grow (1 → 6 lignes max), zone de saisie sticky bas, contenu jamais tronqué.
+- Bulles : `whitespace-pre-wrap break-words max-w-[85%]` + scroll fluide (`overflow-y-auto` + auto-scroll bas sur nouveau message).
+- Statuts ✓/✓✓/✓✓ bleus rendus depuis `delivered_at`/`read_at`.
+- Responsive : liste conversations en drawer sur mobile, split-view desktop.
 
 ---
 
-## Lot 4 — Refonte Formation (style LinkedIn Learning) + onglets produit + historique commandes échouées + suivi commande
+## Lot 2 — Admin : Diagnostic & Supervision DB (axes 3, 4)
 
-### 4a. Refonte module Formation
-- Nouveau layout `Formations.tsx` + `FormationDetail.tsx` :
-  - Sidebar gauche fixe : Home, My Library, Content, Hands-On, Certifications, Trending topics.
-  - Hero personnalisé "Bonjour {prénom}, développez vos compétences avec NukuConnect Learning".
-  - Carrousel "Top picks for {prénom}" (cartes formation pro avec badge Popular/Updated/durée).
-- Utiliser composant `Sidebar` shadcn (déjà disponible).
+**2.1 Journal d'erreurs applicatif (`/admin/errors`)**
+- Nouvelle table `app_error_logs` (message, stack, page, component, user_id, severity, meta jsonb, created_at) + RLS admin-only + GRANT.
+- Hook global `ErrorBoundary` + `window.onerror`/`unhandledrejection` → insert via edge function `log-app-error`.
+- UI admin : filtres (page/severity/user), détail (stack, contexte), suggestions basiques (ex : "ChunkLoadError → reload", "PGRST → check RLS").
 
-### 4b. Onglets Description / Avis sur fiche produit
-- Dans `ProductDetail.tsx`, transformer la section description + reviews en `Tabs` shadcn :
-  - Onglet 1 : "Description produit" (titre H3 ajouté avant le texte).
-  - Onglet 2 : "Avis" (`ReviewSection`).
-- Alignement horizontal en haut, switch entre les deux.
+**2.2 Supervision DB (`/admin/db-health`)**
+- Edge function `db-health` (service_role) exposant : taille DB (`pg_database_size`), tables top-N (`pg_total_relation_size`), stats requêtes (`pg_stat_statements` si dispo), connexions actives (`pg_stat_activity`), slow queries.
+- UI admin : cartes (taille, connexions, uptime), tableau top-tables, tableau slow queries, refresh 10s.
 
-### 4c. Historique commandes échouées / en cours dans l'icône Commandes
-- Sur les dashboards (`BuyerDashboard`, `Dashboard`, etc.), l'icône Commandes affiche déjà les commandes. Étendre le query pour inclure les statuts `failed`, `pending`, `cancelled`, `processing` — avec badge couleur par statut.
-- Ajouter filtre tabs : Toutes / En cours / Échouées / Livrées.
+---
 
-### 4d. Module "Suivre ma commande"
-- Refonte du menu `TrackOrderHero` / `PublicDeliveryTracking` avec images pro, formulaire ID unique avec validation, message d'erreur clair si doublon ou introuvable.
+## Lot 3 — i18n complet (axe 5)
+
+- Audit exhaustif : étendre `AUDITED_FILES` à **toutes** les pages/composants (`src/pages/**`, `src/components/**` hors tests).
+- Migration systématique des chaînes FR restantes vers `t("...")` — Header, Footer, Home, formulaires, toasts, boutons, messages système.
+- Ajout clés EN correspondantes dans `LanguageContext`.
+- CI : test `i18n-audit` échoue si une chaîne FR littérale (regex ciblée) apparaît dans les fichiers audités.
 
 ---
 
 ## Détails techniques
 
-- Stack : React 18 + Vite + Tailwind + shadcn + Supabase (Lovable Cloud).
-- Edge functions : réutiliser `generate-product-description` ; créer `generate-demand-image` (Lovable AI image gen).
-- Migrations DB : index UNIQUE sur `demands.idempotency_key` si manquant.
-- Pas de modification de tables sensibles (orders, user_roles).
+**Nouvelles tables SQL**
+```sql
+-- messages.attachment
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS attachment jsonb;
+
+-- app_error_logs
+CREATE TABLE public.app_error_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid,
+  message text NOT NULL,
+  stack text,
+  page text,
+  component text,
+  severity text DEFAULT 'error',
+  meta jsonb,
+  created_at timestamptz DEFAULT now()
+);
+GRANT SELECT ON public.app_error_logs TO authenticated;
+GRANT ALL ON public.app_error_logs TO service_role;
+ALTER TABLE public.app_error_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admins read errors" ON public.app_error_logs
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'admin'));
+```
+
+**Edge functions**
+- `log-app-error` (public, rate-limited) — insert client errors.
+- `db-health` (admin-gated) — exécute requêtes `pg_stat_*`.
+
+**Fichiers principaux modifiés**
+- `src/components/messages/ChatArea.tsx`, `MessageBubble.tsx`, `ChatInput.tsx`
+- `src/lib/chatDraft.ts`, `src/hooks/useMessages.ts`
+- `src/pages/ProductDetail.tsx`
+- `src/pages/admin/ErrorLogs.tsx` (nouveau), `src/pages/admin/DbHealth.tsx` (nouveau)
+- `src/contexts/LanguageContext.tsx` (+ toutes pages restantes)
+- `src/test/i18n-audit.test.ts`
 
 ---
 
-## Ordre d'exécution
+## Questions avant démarrage
 
-1. **Lot 1** (redirection) — petit fix, impact immédiat.
-2. **Lot 2** (Exprimer un besoin) — debug + IA.
-3. **Lot 3** (partage sans supabase) — investigation hosting d'abord.
-4. **Lot 4** (refonte UI Formation + onglets produit + commandes + suivi) — le plus gros, en dernier.
+1. **Ordre** : je commence par **Lot 1** (messagerie — le plus visible pour vos utilisateurs), OK ?
+2. **Suppression messages** : soft-delete ("Message supprimé") ou hard-delete (disparaît complètement) ?
+3. **i18n Lot 3** : uniquement FR/EN, ou faut-il ajouter d'autres langues (ES, PT, AR) ?
 
-Confirme-moi si je peux démarrer dans cet ordre, ou si tu veux réordonner / retirer un lot.
+Répondez oui/préférences et j'attaque Lot 1 immédiatement.

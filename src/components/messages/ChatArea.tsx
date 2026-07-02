@@ -249,11 +249,23 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       return;
     }
     if (!messageInput.trim()) return;
-    onSend(messageInput.trim(), replyTo?.id);
+    // If a product snapshot is attached to the prefill draft, embed it as an
+    // inline tag so the message bubble renders a rich preview (image + title + link).
+    let content = messageInput.trim();
+    if (prefillDraft?.product) {
+      try {
+        const p = prefillDraft.product;
+        const payload = { id: p.id, name: p.name, image: p.image || null, url: p.url };
+        const b64 = typeof window !== "undefined"
+          ? window.btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+          : "";
+        if (b64) content = `${content}\n[product:${b64}]`;
+      } catch {}
+    }
+    onSend(content, replyTo?.id);
     setMessageInput("");
     setReplyTo(null);
     setShowAiSuggestions(false);
-    // Clear persisted prefill draft only on explicit send.
     if (conversation && prefillDraft) {
       clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
       setPrefillDraft(null);
@@ -443,24 +455,35 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     const imageMatch = content.match(/\[image:(https?:\/\/[^\]]+)\]/);
     const voiceMatch = content.match(/\[voice:(https?:\/\/[^\]]+)\]/);
     const callMatch = content.match(/\[call:([a-z-]+):(\d+)\]/);
+    const productMatch = content.match(/\[product:([A-Za-z0-9+/=]+)\]/);
+    let product: { id: string; name: string; image?: string | null; url: string } | null = null;
+    if (productMatch) {
+      try {
+        const json = decodeURIComponent(escape(window.atob(productMatch[1])));
+        const parsed = JSON.parse(json);
+        if (parsed && typeof parsed.name === "string") product = parsed;
+      } catch {}
+    }
     if (callMatch) {
       const text = content.replace(/\n?\[call:[^\]]+\]/, "").trim();
       return {
         text: text || "Appel",
         imageUrl: null as string | null,
         voiceUrl: null as string | null,
+        product,
         call: { status: callMatch[1] as "missed" | "ended" | "declined" | "outgoing-missed", duration: parseInt(callMatch[2], 10) },
       };
     }
     if (imageMatch) {
-      const text = content.replace(/\n?\[image:[^\]]+\]/, "").trim();
-      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null, call: null };
+      const text = content.replace(/\n?\[image:[^\]]+\]/, "").replace(/\n?\[product:[^\]]+\]/, "").trim();
+      return { text: text || "📷 Photo", imageUrl: imageMatch[1], voiceUrl: null as string | null, product, call: null };
     }
     if (voiceMatch) {
-      const text = content.replace(/\n?\[voice:[^\]]+\]/, "").trim();
-      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1], call: null };
+      const text = content.replace(/\n?\[voice:[^\]]+\]/, "").replace(/\n?\[product:[^\]]+\]/, "").trim();
+      return { text: text || "🎙️ Vocal", imageUrl: null as string | null, voiceUrl: voiceMatch[1], product, call: null };
     }
-    return { text: content, imageUrl: null as string | null, voiceUrl: null as string | null, call: null };
+    const text = content.replace(/\n?\[product:[^\]]+\]/, "").trim();
+    return { text, imageUrl: null as string | null, voiceUrl: null as string | null, product, call: null };
   };
 
   const handleReply = (msg: MessageItem) => {
@@ -612,7 +635,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
         {messages.map((msg) => {
           const parsed = parseMessage(msg.content);
-          const { text, imageUrl, voiceUrl, call } = parsed;
+          const { text, imageUrl, voiceUrl, call, product } = parsed;
           const repliedMsg = findReplyMessage(msg.replyToId);
 
           // Render call log style WhatsApp
@@ -685,7 +708,27 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
                       <span className="text-xs truncate">{msg.fileName}</span>
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed">{text}</p>
+                  {product && (
+                    <Link
+                      to={`/produit/${product.id}`}
+                      className={`block mb-1.5 rounded-lg overflow-hidden border ${
+                        msg.senderId === "me" ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-muted/40 border-border"
+                      }`}
+                    >
+                      {product.image && (
+                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover" loading="lazy" />
+                      )}
+                      <div className="px-2 py-1.5">
+                        <p className={`text-xs font-semibold truncate ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
+                          {product.name}
+                        </p>
+                        <p className={`text-[10px] truncate ${msg.senderId === "me" ? "text-primary-foreground/70" : "text-primary"}`}>
+                          {product.url.replace(/^https?:\/\//, "")}
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+                  {text && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{text}</p>}
                   <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
                     <span className="text-[10px] opacity-70">
                       {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
@@ -864,7 +907,25 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="w-5 h-5 text-muted-foreground" />
             </Button>
-            <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
+            <textarea
+              ref={inputRef as unknown as React.RefObject<HTMLTextAreaElement>}
+              value={messageInput}
+              onChange={(e) => {
+                handleInputChange({ target: { value: e.target.value } } as unknown as React.ChangeEvent<HTMLInputElement>);
+                const el = e.currentTarget;
+                el.style.height = "auto";
+                el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              rows={1}
+              placeholder={t("chat.input.placeholder") || "Écrire un message..."}
+              className="flex-1 min-w-0 max-h-[140px] resize-none text-sm rounded-2xl px-4 py-2.5 border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring leading-relaxed"
+            />
             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleRecording}>
               <Mic className="w-5 h-5 text-muted-foreground" />
             </Button>
