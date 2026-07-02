@@ -767,6 +767,10 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.discard": "Discard draft",
     "chat.prefill.product": "Related product",
     "chat.input.placeholder": "Type a message...",
+    "chat.reply": "Reply",
+    "chat.message.delete": "Delete",
+    "chat.message.delete.confirm": "Delete this message? This cannot be undone.",
+    "chat.message.deleted": "🚫 Message deleted",
   },
   ewe: {
     "nav.home": "Aƒe",
