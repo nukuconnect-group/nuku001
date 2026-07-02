@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Sprout, Truck, ArrowRight, BadgeCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import heroSupplier from "@/assets/hero-supplier.jpg";
 
 /**
  * Hero "Achat direct producteur" — visible uniquement sur tablette & ordinateur.
