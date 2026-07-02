@@ -249,11 +249,23 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       return;
     }
     if (!messageInput.trim()) return;
-    onSend(messageInput.trim(), replyTo?.id);
+    // If a product snapshot is attached to the prefill draft, embed it as an
+    // inline tag so the message bubble renders a rich preview (image + title + link).
+    let content = messageInput.trim();
+    if (prefillDraft?.product) {
+      try {
+        const p = prefillDraft.product;
+        const payload = { id: p.id, name: p.name, image: p.image || null, url: p.url };
+        const b64 = typeof window !== "undefined"
+          ? window.btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+          : "";
+        if (b64) content = `${content}\n[product:${b64}]`;
+      } catch {}
+    }
+    onSend(content, replyTo?.id);
     setMessageInput("");
     setReplyTo(null);
     setShowAiSuggestions(false);
-    // Clear persisted prefill draft only on explicit send.
     if (conversation && prefillDraft) {
       clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
       setPrefillDraft(null);
