@@ -395,6 +395,7 @@ const translations: Record<LangCode, Record<string, string>> = {
     "err.serverError": "Erreur serveur, réessayez plus tard",
     // Forms
     "form.requiredFields": "Veuillez remplir tous les champs obligatoires",
+    "buyer.becomeSellerHint": "Complétez les informations de votre activité pour activer votre compte vendeur.",
     // Chat prefill draft banner
     "chat.prefill.label": "Message prérempli",
     "chat.prefill.hint": "Modifiez ou envoyez pour confirmer",
