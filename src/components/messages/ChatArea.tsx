@@ -51,6 +51,22 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const { toast } = useToast();
   const { startCall } = useCall();
   const [messageInput, setMessageInput] = useState("");
+
+  // Hydrate a prefilled draft (from ProductDetail "Discuter" or Réseaux) without sending it.
+  useEffect(() => {
+    if (!conversation) return;
+    try {
+      const byConv = sessionStorage.getItem(`msg-prefill-${conversation.id}`);
+      const byUser = sessionStorage.getItem(`msg-prefill-${conversation.participant.id}`);
+      const draft = byConv || byUser;
+      if (draft) {
+        setMessageInput(draft);
+        sessionStorage.removeItem(`msg-prefill-${conversation.id}`);
+        sessionStorage.removeItem(`msg-prefill-${conversation.participant.id}`);
+      }
+    } catch {}
+  }, [conversation?.id]);
+
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
