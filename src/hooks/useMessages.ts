@@ -327,5 +327,36 @@ export function useMessages(conversationId: string | null, profileId: string | n
     [conversationId, isDeliveryConversation, messages, t]
   );
 
-  return { messages, setMessages, loading, sendMessage, deleteMessage, lastEmailStatus };
+  /**
+   * Mark a single message as read when it becomes visible in the viewport.
+   * Used by the ChatArea IntersectionObserver — replaces the coarser
+   * "mark all as read on open" behaviour with per-message precision.
+   */
+  const markMessageRead = useCallback(
+    async (messageId: string) => {
+      if (!conversationId || !messageId || messageId.startsWith("temp-")) return;
+      const msg = messages.find((m) => m.id === messageId);
+      if (!msg || msg.senderId === "me" || msg.status === "read") return;
+      // Optimistic
+      setMessages((cur) =>
+        cur.map((m) => (m.id === messageId ? { ...m, status: "read" as const } : m))
+      );
+      const table = isDeliveryConversation ? "delivery_messages" : "messages";
+      const { error } = await supabase
+        .from(table)
+        .update({ is_read: true } as any)
+        .eq("id", messageId)
+        .eq("is_read", false);
+      if (!error) {
+        emitMessagesRead({
+          conversationId,
+          decrement: 1,
+          eventId: `${conversationId}:visible:${messageId}`,
+        });
+      }
+    },
+    [conversationId, isDeliveryConversation, messages]
+  );
+
+  return { messages, setMessages, loading, sendMessage, deleteMessage, markMessageRead, lastEmailStatus };
 }
