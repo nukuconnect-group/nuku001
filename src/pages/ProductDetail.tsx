@@ -334,7 +334,7 @@ const ProductDetail = () => {
       navigate(`/messages?product=${product.id}&seller=${encodeURIComponent(product.producer.name)}`);
     } catch (error: any) {
       console.error("Send message error:", error);
-      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le message", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     } finally {
       setIsSending(false);
     }
