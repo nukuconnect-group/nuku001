@@ -708,7 +708,27 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
                       <span className="text-xs truncate">{msg.fileName}</span>
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed">{text}</p>
+                  {product && (
+                    <Link
+                      to={`/produit/${product.id}`}
+                      className={`block mb-1.5 rounded-lg overflow-hidden border ${
+                        msg.senderId === "me" ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-muted/40 border-border"
+                      }`}
+                    >
+                      {product.image && (
+                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover" loading="lazy" />
+                      )}
+                      <div className="px-2 py-1.5">
+                        <p className={`text-xs font-semibold truncate ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
+                          {product.name}
+                        </p>
+                        <p className={`text-[10px] truncate ${msg.senderId === "me" ? "text-primary-foreground/70" : "text-primary"}`}>
+                          {product.url.replace(/^https?:\/\//, "")}
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+                  {text && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{text}</p>}
                   <div className={`flex items-center gap-1 mt-1 ${msg.senderId === "me" ? "justify-end" : ""}`}>
                     <span className="text-[10px] opacity-70">
                       {msg.timestamp.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
