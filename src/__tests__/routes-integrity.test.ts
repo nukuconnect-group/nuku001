@@ -15,7 +15,11 @@ import { resolve } from "node:path";
 
 const read = (p: string) => readFileSync(resolve(p), "utf8");
 
-const CANONICAL_HOST = "https://nukuconnect.com";
+const CANONICAL_HOSTS = ["https://nukuconnect.com", "https://www.nukuconnect.com"];
+const stripHost = (u: string) => {
+  for (const h of CANONICAL_HOSTS) if (u.startsWith(h)) return u.slice(h.length) || "/";
+  return u;
+};
 
 // Paths that legitimately don't belong in the sitemap.
 const INTERNAL_OR_PROTECTED = new Set<string>([
