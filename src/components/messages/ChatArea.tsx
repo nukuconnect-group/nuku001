@@ -304,7 +304,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
       toast({ title: "Vocal envoyé ✓" });
     } catch (error: any) {
       console.error("Voice upload error:", error);
-      toast({ title: "Erreur", description: error?.message || "Impossible d'envoyer le vocal", variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(error, t), variant: "destructive" });
     }
   };
 
