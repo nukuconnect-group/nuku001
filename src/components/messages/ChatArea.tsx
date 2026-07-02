@@ -668,6 +668,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      )}
 
       {/* Mobile product banner */}
       {conversation.productName && (
