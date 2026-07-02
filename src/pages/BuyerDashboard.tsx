@@ -143,7 +143,7 @@ const BuyerDashboard = () => {
   const handleBecomeProducer = async () => {
     if (!profile) return;
     if (!migrationData.businessName.trim() || !migrationData.phone.trim() || !migrationData.location.trim() || !migrationData.businessType) {
-      toast({ title: "Veuillez remplir tous les champs obligatoires", variant: "destructive" });
+      toast({ title: t("form.requiredFields"), variant: "destructive" });
       return;
     }
     setMigrating(true);
