@@ -158,10 +158,16 @@ const Notifications = () => {
   };
 
   const handleNotifClick = async (notif: Notification) => {
+    // Mark as read on first interaction
     if (!notif.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
       updateNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
       window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
+    }
+    // First tap = expand full content in place; second tap = navigate.
+    if (expandedId !== notif.id) {
+      setExpandedId(notif.id);
+      return;
     }
     const link = getNotifLink(notif);
     if (link) navigate(link);
