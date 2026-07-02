@@ -290,7 +290,9 @@ const Notifications = () => {
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Vos alertes apparaîtront ici</p>
                 </div>
               ) : (
-                filteredNotifications.map((notif) => (
+                filteredNotifications.map((notif) => {
+                  const isExpanded = expandedId === notif.id;
+                  return (
                   <div
                     key={notif.id}
                     onClick={() => handleNotifClick(notif)}
@@ -298,17 +300,15 @@ const Notifications = () => {
                       !notif.is_read
                         ? "bg-primary/[0.03] border-primary/10 hover:bg-primary/[0.06]"
                         : "bg-card border-border/50 hover:bg-muted/40"
-                    }`}
+                    } ${isExpanded ? "ring-1 ring-primary/30" : ""}`}
                   >
-                    {/* Icon */}
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 border ${getTypeColor(notif.type)}`}>
                       {getIcon(notif.type)}
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-[12px] leading-snug line-clamp-1 ${
+                        <p className={`text-[12px] leading-snug ${isExpanded ? "" : "line-clamp-1"} ${
                           notif.is_read ? "text-muted-foreground font-normal" : "text-foreground font-semibold"
                         }`}>
                           {notif.title}
@@ -318,18 +318,19 @@ const Notifications = () => {
                         </span>
                       </div>
                       {notif.description && (
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mt-0.5">
+                        <p className={`text-[11px] text-muted-foreground leading-relaxed mt-0.5 ${
+                          isExpanded ? "whitespace-pre-wrap break-words" : "line-clamp-2"
+                        }`}>
                           {notif.description}
                         </p>
                       )}
                       {getNotifLink(notif) && (
                         <span className="inline-flex items-center gap-0.5 text-[10px] text-primary font-medium mt-1">
-                          Voir <ChevronRight className="w-2.5 h-2.5" />
+                          {isExpanded ? "Ouvrir" : "Voir"} <ChevronRight className="w-2.5 h-2.5" />
                         </span>
                       )}
                     </div>
 
-                    {/* Unread dot + delete */}
                     <div className="flex flex-col items-center gap-2 flex-shrink-0">
                       {!notif.is_read && (
                         <div className="w-2 h-2 rounded-full bg-primary mt-1" />
@@ -337,12 +338,14 @@ const Notifications = () => {
                       <button
                         className="p-1 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}
+                        aria-label="Supprimer la notification"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
