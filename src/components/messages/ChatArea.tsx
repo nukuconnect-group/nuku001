@@ -867,12 +867,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                   {product && (
                     <Link
                       to={`/produit/${product.id}`}
-                      className="block mb-1.5 rounded-lg overflow-hidden"
+                      className="block -m-2.5 mb-1.5 overflow-hidden rounded-t-lg"
                     >
                       {product.image && (
-                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover rounded-lg" loading="lazy" />
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-40 object-cover block"
+                          loading="lazy"
+                        />
                       )}
-                      <p className={`text-xs font-semibold truncate mt-1 ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
+                      <p className={`text-xs font-semibold truncate px-2.5 pt-1.5 ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
                         {product.name}
                       </p>
                     </Link>
