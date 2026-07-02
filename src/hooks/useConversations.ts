@@ -136,7 +136,30 @@ export function useConversations() {
       }
     }
 
-    const items: ConversationItem[] = convs.map((c: any) => {
+    // Conversations without any message are "drafts" created by the buyer
+    // (e.g. via "Discuter" on a product). They must stay INVISIBLE to the
+    // seller until the buyer explicitly sends the first message.
+    // lastMsgMap only covers the 500 most recent messages, so double-check
+    // emptiness with a targeted query before hiding anything.
+    const maybeEmptyIds = (convs as any[])
+      .filter((c) => !lastMsgMap.has(c.id))
+      .map((c) => c.id);
+    const nonEmptySet = new Set<string>();
+    if (maybeEmptyIds.length > 0) {
+      const { data: anyMsgs } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", maybeEmptyIds);
+      anyMsgs?.forEach((m: any) => nonEmptySet.add(m.conversation_id));
+    }
+
+    const visibleConvs = (convs as any[]).filter((c) => {
+      const isBuyer = c.buyer_id === profile.id;
+      const hasMessages = lastMsgMap.has(c.id) || nonEmptySet.has(c.id);
+      return isBuyer || hasMessages;
+    });
+
+    const items: ConversationItem[] = visibleConvs.map((c: any) => {
       const isBuyer = c.buyer_id === profile.id;
       const other = isBuyer ? c.seller : c.buyer;
       const isOnline = other?.user_id ? (presenceMap.get(other.user_id) || false) : false;
