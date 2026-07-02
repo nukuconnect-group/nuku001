@@ -28,6 +28,7 @@ export type EmailNotifyStatus =
   | { state: "error"; at: number; ms: number; message: string };
 
 export function useMessages(conversationId: string | null, profileId: string | null, userId: string | null) {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastEmailStatus, setLastEmailStatus] = useState<EmailNotifyStatus>({ state: "idle" });
