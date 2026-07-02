@@ -298,7 +298,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
       }
       return true;
     },
-    [conversationId, deliveryId, isDeliveryConversation, profileId, userId]
+    [conversationId, deliveryId, isDeliveryConversation, profileId, userId, t]
   );
 
   return { messages, setMessages, loading, sendMessage, lastEmailStatus };
