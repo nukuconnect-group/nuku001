@@ -149,9 +149,9 @@ describe("readCachedUserGeo / writeCachedUserGeo (localStorage fallback)", () =>
 
 describe("distance resolution scenarios (Section 5 spec)", () => {
   it("géolocalisation autorisée + coordonnées produit présentes → distance chiffrée", () => {
-    // user in Lomé, product in Accra → ~156 km, formatted as "156 km"
+    // user in Lomé, product in Accra → ~167 km great-circle → "167 km"
     const d = haversineKm(6.1319, 1.2228, 5.6037, -0.187);
-    expect(formatDistanceKm(d)).toMatch(/15[4-8] km/);
+    expect(formatDistanceKm(d)).toMatch(/16[5-9] km/);
   });
 
   it("coordonnées GPS absentes du produit → aucun calcul, fallback ville doit prendre le relais", () => {
