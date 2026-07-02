@@ -635,7 +635,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
         </div>
         {messages.map((msg) => {
           const parsed = parseMessage(msg.content);
-          const { text, imageUrl, voiceUrl, call } = parsed;
+          const { text, imageUrl, voiceUrl, call, product } = parsed;
           const repliedMsg = findReplyMessage(msg.replyToId);
 
           // Render call log style WhatsApp
