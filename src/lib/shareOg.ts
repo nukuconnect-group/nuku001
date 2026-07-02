@@ -1,22 +1,26 @@
 /**
  * Build share URLs for NukuConnect.
  *
- * Two flavours, both needed:
- *
  *  - `productCanonicalUrl` / `shopCanonicalUrl` → clean
- *    `https://nukuconnect.com/...` links. Used everywhere a HUMAN sees
- *    the URL (copy button, QR code, address bar of the dialog).
+ *    `https://nukuconnect.com/...` links. Used for the on-page canonical
+ *    tag, the address bar, and any "View" link that a HUMAN will click.
  *
- *  - `productCrawlerUrl` / `shopCrawlerUrl` → public `/share/...`
- *    URLs on nukuconnect.com, reverse-proxied to the `share-og`
- *    renderer. They return proper Open Graph / Twitter Card HTML
- *    (title + description + cover image) so WhatsApp, Facebook,
- *    LinkedIn and Telegram render a rich preview without exposing a
- *    backend URL to users.
+ *  - `productCrawlerUrl` / `shopCrawlerUrl` → the URL we hand to social
+ *    unfurlers (WhatsApp / Facebook / LinkedIn / Telegram / X) AND the
+ *    URL we place in the clipboard / QR code, because when a user pastes
+ *    a link in WhatsApp the app fetches whatever URL it sees. This must
+ *    resolve to per-item OG HTML — otherwise crawlers get the SPA
+ *    `index.html` with the generic homepage preview.
  *
- * The SPA hosted on nukuconnect.com cannot serve per-product OG tags
- * because social crawlers don't execute JS, so the crawler URL is the
- * only reliable way to restore link previews on chat / social apps.
+ *    The Lovable static host does NOT process `public/_redirects`
+ *    (Netlify-only convention), so a `nukuconnect.com/share/...` URL is
+ *    served as the SPA shell with the generic OG tags — that's the
+ *    "homepage logo" preview bug reported on WhatsApp. Point the
+ *    crawler URL directly at the Supabase edge function instead; the
+ *    function replies with proper `og:*` HTML plus a
+ *    `<meta http-equiv="refresh">` back to the canonical page so a real
+ *    user who clicks the shared link lands on `/produit/...` or
+ *    `/producteurs/...` a second later.
  */
 
 export const SITE_URL = "https://nukuconnect.com";
@@ -27,21 +31,10 @@ const SHARE_OG_BASE = `${import.meta.env.VITE_SUPABASE_URL || "https://fpnhdihvn
 
 const cleanSegment = (value: string) => encodeURIComponent(value.trim());
 
-const normalizeSlug = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 90);
-
-const publicOgPath = (type: "product" | "shop", id: string, name?: string | null) => {
-  const slug = normalizeSlug(name || id) || type;
+const edgeOgUrl = (type: "product" | "shop", id: string, name?: string | null) => {
   const params = new URLSearchParams({ type, id, source: "share" });
   if (name?.trim() && name.trim() !== id) params.set("name", name.trim());
-  return `${SITE_URL}/share/${type}/${slug}?${params.toString()}`;
+  return `${SHARE_OG_BASE}?${params.toString()}`;
 };
 
 const edgeOgUrl = (type: "product" | "shop", id: string, name?: string | null) => {
