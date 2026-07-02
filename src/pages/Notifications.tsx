@@ -43,6 +43,7 @@ const Notifications = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const queryKey = useMemo(() => ["notifications", userId] as const, [userId]);
 
   useEffect(() => {
