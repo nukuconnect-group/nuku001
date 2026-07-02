@@ -58,6 +58,7 @@ export const useSubscription = () => {
     });
 
     return () => {
+      cancelled = true;
       authSub.unsubscribe();
       if (realtimeCh) supabase.removeChannel(realtimeCh);
     };
