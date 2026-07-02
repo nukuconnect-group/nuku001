@@ -136,7 +136,30 @@ export function useConversations() {
       }
     }
 
-    const items: ConversationItem[] = convs.map((c: any) => {
+    // Conversations without any message are "drafts" created by the buyer
+    // (e.g. via "Discuter" on a product). They must stay INVISIBLE to the
+    // seller until the buyer explicitly sends the first message.
+    // lastMsgMap only covers the 500 most recent messages, so double-check
+    // emptiness with a targeted query before hiding anything.
+    const maybeEmptyIds = (convs as any[])
+      .filter((c) => !lastMsgMap.has(c.id))
+      .map((c) => c.id);
+    const nonEmptySet = new Set<string>();
+    if (maybeEmptyIds.length > 0) {
+      const { data: anyMsgs } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .in("conversation_id", maybeEmptyIds);
+      anyMsgs?.forEach((m: any) => nonEmptySet.add(m.conversation_id));
+    }
+
+    const visibleConvs = (convs as any[]).filter((c) => {
+      const isBuyer = c.buyer_id === profile.id;
+      const hasMessages = lastMsgMap.has(c.id) || nonEmptySet.has(c.id);
+      return isBuyer || hasMessages;
+    });
+
+    const items: ConversationItem[] = visibleConvs.map((c: any) => {
       const isBuyer = c.buyer_id === profile.id;
       const other = isBuyer ? c.seller : c.buyer;
       const isOnline = other?.user_id ? (presenceMap.get(other.user_id) || false) : false;
@@ -368,17 +391,19 @@ export function useConversations() {
       .channel("conversations-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const m = payload.new as any;
-        logDiag("message", "insert", { conv: m.conversation_id, from: m.sender_id });
-        // Update local instantly
-        if (cache.profileId) {
-          mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
+        if (m?.conversation_id) {
+          logDiag("message", "insert", { conv: m.conversation_id, from: m.sender_id });
+          // Update local instantly
+          if (cache.profileId) {
+            mergeLastMessage(m.conversation_id, m.content, m.sender_id !== cache.profileId);
+          }
         }
         scheduleRefetch();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
         // When messages are marked as read (is_read update), update unread count locally
         const m = payload.new as any;
-        if (m.is_read && cache.profileId && m.sender_id !== cache.profileId) {
+        if (m?.is_read && cache.profileId && m.sender_id !== cache.profileId) {
           // This message was just marked as read — reduce unread count locally
           setConversations((prev) => {
             const next = prev.map((c) => {
@@ -393,9 +418,11 @@ export function useConversations() {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, scheduleRefetch)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "delivery_messages" }, (payload) => {
         const m = payload.new as any;
-        logDiag("message", "delivery-insert", { delivery: m.delivery_id, from: m.sender_id });
-        if (cache.userId) {
-          mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
+        if (m?.delivery_id) {
+          logDiag("message", "delivery-insert", { delivery: m.delivery_id, from: m.sender_id });
+          if (cache.userId) {
+            mergeLastMessage("", m.content, m.sender_id !== cache.userId, m.delivery_id);
+          }
         }
         scheduleRefetch();
       })
