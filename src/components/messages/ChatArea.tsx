@@ -907,7 +907,25 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 hidden sm:flex" onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="w-5 h-5 text-muted-foreground" />
             </Button>
-            <Input ref={inputRef} value={messageInput} onChange={handleInputChange} placeholder="Écrire un message..." className="flex-1 min-w-0 h-11 text-sm rounded-full px-4" />
+            <textarea
+              ref={inputRef as unknown as React.RefObject<HTMLTextAreaElement>}
+              value={messageInput}
+              onChange={(e) => {
+                handleInputChange({ target: { value: e.target.value } } as unknown as React.ChangeEvent<HTMLInputElement>);
+                const el = e.currentTarget;
+                el.style.height = "auto";
+                el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              rows={1}
+              placeholder={t("chat.input.placeholder") || "Écrire un message..."}
+              className="flex-1 min-w-0 max-h-[140px] resize-none text-sm rounded-2xl px-4 py-2.5 border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring leading-relaxed"
+            />
             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={toggleRecording}>
               <Mic className="w-5 h-5 text-muted-foreground" />
             </Button>
