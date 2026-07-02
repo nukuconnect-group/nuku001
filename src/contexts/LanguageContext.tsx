@@ -403,6 +403,10 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.discard": "Supprimer le brouillon",
     "chat.prefill.product": "Produit concerné",
     "chat.input.placeholder": "Écrire un message...",
+    "chat.reply": "Répondre",
+    "chat.message.delete": "Supprimer",
+    "chat.message.delete.confirm": "Supprimer ce message ? Cette action est irréversible.",
+    "chat.message.deleted": "🚫 Message supprimé",
   },
   en: {
     "nav.home": "Home",
@@ -763,6 +767,10 @@ const translations: Record<LangCode, Record<string, string>> = {
     "chat.prefill.discard": "Discard draft",
     "chat.prefill.product": "Related product",
     "chat.input.placeholder": "Type a message...",
+    "chat.reply": "Reply",
+    "chat.message.delete": "Delete",
+    "chat.message.delete.confirm": "Delete this message? This cannot be undone.",
+    "chat.message.deleted": "🚫 Message deleted",
   },
   ewe: {
     "nav.home": "Aƒe",

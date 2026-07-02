@@ -43,13 +43,14 @@ interface Props {
   messages: MessageItem[];
   onBack: () => void;
   onSend: (content: string, replyToId?: string) => void;
+  onDeleteMessage?: (messageId: string) => Promise<boolean> | void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, onBack, onSend, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
+export default function ChatArea({ conversation, messages, onBack, onSend, onDeleteMessage, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startCall } = useCall();
@@ -669,9 +670,24 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
                 {msg.senderId === "me" && (
-                  <button onClick={() => handleReply(msg)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded-full" title="Répondre">
-                    <Reply className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+                  <div className="flex flex-col items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleReply(msg)} className="p-1 hover:bg-muted rounded-full" title={t("chat.reply") || "Répondre"}>
+                      <Reply className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                    {onDeleteMessage && !msg.id.startsWith("temp-") && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(t("chat.message.delete.confirm") || "Supprimer ce message ?")) {
+                            void onDeleteMessage(msg.id);
+                          }
+                        }}
+                        className="p-1 hover:bg-destructive/10 rounded-full"
+                        title={t("chat.message.delete") || "Supprimer"}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </button>
+                    )}
+                  </div>
                 )}
                 <Card className={`p-2.5 shadow-sm border-0 ${
                   msg.senderId === "me" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card rounded-bl-sm"
