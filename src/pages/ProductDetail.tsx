@@ -631,7 +631,7 @@ const ProductDetail = () => {
                     {discount > 0 && (
                       <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs">-{discount}% PROMO</Badge>
                     )}
-                    {(product as any).is_negotiable && (
+                    {product.isNegotiable && (
                       <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
                     )}
                   </div>
