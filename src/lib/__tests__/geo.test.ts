@@ -13,18 +13,18 @@ describe("haversineKm", () => {
     expect(haversineKm(6.1319, 1.2228, 6.1319, 1.2228)).toBe(0);
   });
 
-  it("computes Lomé → Accra ≈ 156 km (±3 km)", () => {
+  it("computes Lomé → Accra ≈ 167 km (±3 km great-circle)", () => {
     // Lomé (TG) 6.1319, 1.2228 ; Accra (GH) 5.6037, -0.1870
     const d = haversineKm(6.1319, 1.2228, 5.6037, -0.187);
-    expect(d).toBeGreaterThan(153);
-    expect(d).toBeLessThan(159);
+    expect(d).toBeGreaterThan(164);
+    expect(d).toBeLessThan(170);
   });
 
-  it("computes Abidjan → Dakar ≈ 1 934 km (±10 km)", () => {
+  it("computes Abidjan → Dakar ≈ 1 802 km (±10 km great-circle)", () => {
     // Abidjan (CI) 5.3600, -4.0083 ; Dakar (SN) 14.7167, -17.4677
     const d = haversineKm(5.36, -4.0083, 14.7167, -17.4677);
-    expect(d).toBeGreaterThan(1924);
-    expect(d).toBeLessThan(1944);
+    expect(d).toBeGreaterThan(1792);
+    expect(d).toBeLessThan(1812);
   });
 
   it("is symmetric: d(A,B) === d(B,A)", () => {
