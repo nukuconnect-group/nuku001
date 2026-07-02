@@ -393,7 +393,6 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           delivery_fee: number
-          delivery_otp: string | null
           distance_km: number | null
           driver_current_lat: number | null
           driver_current_lng: number | null
@@ -405,7 +404,6 @@ export type Database = {
           estimated_minutes: number | null
           id: string
           order_id: string
-          otp_verified_at: string | null
           picked_up_at: string | null
           pickup_address: string | null
           pickup_lat: number | null
@@ -420,7 +418,6 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_fee?: number
-          delivery_otp?: string | null
           distance_km?: number | null
           driver_current_lat?: number | null
           driver_current_lng?: number | null
@@ -432,7 +429,6 @@ export type Database = {
           estimated_minutes?: number | null
           id?: string
           order_id: string
-          otp_verified_at?: string | null
           picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
@@ -447,7 +443,6 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_fee?: number
-          delivery_otp?: string | null
           distance_km?: number | null
           driver_current_lat?: number | null
           driver_current_lng?: number | null
@@ -459,7 +454,6 @@ export type Database = {
           estimated_minutes?: number | null
           id?: string
           order_id?: string
-          otp_verified_at?: string | null
           picked_up_at?: string | null
           pickup_address?: string | null
           pickup_lat?: number | null
@@ -566,6 +560,38 @@ export type Database = {
           sender_role?: string
         }
         Relationships: []
+      }
+      delivery_otps: {
+        Row: {
+          created_at: string
+          delivery_id: string
+          otp: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          otp: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          otp?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_otps_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: true
+            referencedRelation: "deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_track_points: {
         Row: {
