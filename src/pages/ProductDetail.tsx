@@ -159,12 +159,76 @@ const ProductDetail = () => {
     navigate("/panier");
   };
 
-  const handleOpenChat = () => {
+  const handleOpenChat = async () => {
     if (!product) return;
     const autoMessage = `Bonjour, je suis intéressé(e) par "${product.name}" (${formatPrice(product.price)}/${product.unit}) disponible à ${product.location}. Est-ce toujours disponible ?`;
     setMessage(autoMessage);
-    // Direct redirect: create conversation, send the prefilled message, then go to /messages
-    void handleSendAndRedirect(autoMessage);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Connexion requise", description: "Connectez-vous pour contacter le fournisseur", variant: "destructive" });
+      navigate(`/auth?returnTo=${encodeURIComponent(`/produit/${id}`)}`);
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
+      if (!buyerProfile) throw new Error("Profile not found");
+
+      let sellerId = product.producer.id;
+      const isValidUUID = sellerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sellerId);
+
+      if (!isValidUUID) {
+        const { data: sellerProfile } = await supabase
+          .from("profiles").select("id").eq("user_type", "producer").limit(1).maybeSingle();
+        if (!sellerProfile) {
+          toast({ title: "Fournisseur introuvable", description: "Ce produit de démonstration n'a pas de fournisseur réel associé.", variant: "destructive" });
+          return;
+        }
+        sellerId = sellerProfile.id;
+      } else {
+        const { data: existingSeller } = await supabase
+          .from("profiles").select("id").eq("id", sellerId).maybeSingle();
+        if (!existingSeller) {
+          toast({ title: "Fournisseur introuvable", description: "Ce fournisseur n'est plus disponible pour la messagerie.", variant: "destructive" });
+          return;
+        }
+      }
+
+      if (sellerId === buyerProfile.id) {
+        toast({ title: "Action impossible", description: "Vous ne pouvez pas vous envoyer un message à vous-même.", variant: "destructive" });
+        return;
+      }
+
+      const { data: existingConv } = await supabase
+        .from("conversations").select("id")
+        .eq("buyer_id", buyerProfile.id).eq("seller_id", sellerId).maybeSingle();
+
+      let conversationId = existingConv?.id;
+      if (!conversationId) {
+        const productId = isValidUUID || /^[0-9a-f]{8}-/i.test(product.id) ? product.id : null;
+        const { data: newConv, error: convError } = await supabase
+          .from("conversations")
+          .insert({ buyer_id: buyerProfile.id, seller_id: sellerId, product_id: productId })
+          .select("id").single();
+        if (convError) throw convError;
+        conversationId = newConv.id;
+      }
+
+      // Store prefill draft (NOT sent). ChatArea will hydrate the input.
+      try {
+        sessionStorage.setItem(`msg-prefill-${conversationId}`, autoMessage);
+        sessionStorage.setItem(`msg-prefill-${sellerId}`, autoMessage);
+      } catch {}
+
+      navigate(`/messages?conversation=${conversationId}`);
+    } catch (error: any) {
+      console.error("Open chat error:", error);
+      toast({ title: "Erreur", description: error?.message || "Impossible d'ouvrir la conversation", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSendAndRedirect = async (overrideMessage?: string) => {
