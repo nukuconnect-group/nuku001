@@ -172,6 +172,48 @@ export type Database = {
         }
         Relationships: []
       }
+      app_error_logs: {
+        Row: {
+          component: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          message: string
+          meta: Json | null
+          page: string | null
+          severity: string
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          meta?: Json | null
+          page?: string | null
+          severity?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          meta?: Json | null
+          page?: string | null
+          severity?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_comment_likes: {
         Row: {
           comment_id: string
