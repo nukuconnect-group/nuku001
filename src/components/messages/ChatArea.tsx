@@ -815,12 +815,9 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                     </button>
                     {onDeleteMessage && !msg.id.startsWith("temp-") && (
                       <button
-                        onClick={() => {
-                          if (window.confirm(t("chat.message.delete.confirm") || "Supprimer ce message ?")) {
-                            void onDeleteMessage(msg.id);
-                          }
-                        }}
-                        className="p-1 hover:bg-destructive/10 rounded-full"
+                        onClick={() => requestDeleteSingle(msg.id)}
+                        className="p-1 hover:bg-destructive/10 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        aria-label={t("chat.message.delete") || "Supprimer"}
                         title={t("chat.message.delete") || "Supprimer"}
                       >
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
