@@ -112,7 +112,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user?.id) return;
     const channel = supabase
-      .channel(`profile-self-${user.id}`)
+      .channel(`profile-self-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
