@@ -8,4 +8,4 @@ Disallow: /buyer-dashboard
 Disallow: /driver-dashboard
 Disallow: /learner-dashboard
 
-Sitemap: https://www.nukuconnect.com/sitemap.xml
+Sitemap: https://nukuconnect.com/sitemap.xml
