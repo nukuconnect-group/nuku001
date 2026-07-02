@@ -19,6 +19,9 @@ import { type MessageItem } from "@/hooks/useMessages";
 import OfflineReadIndicator from "./OfflineReadIndicator";
 import { useCall } from "@/contexts/CallContext";
 import CallOptionsSheet from "@/components/calls/CallOptionsSheet";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { loadDraft, saveDraft, clearDraft, updateDraftText, type ChatDraft } from "@/lib/chatDraft";
+import { translateBackendError } from "@/lib/i18nErrors";
 
 const AI_QUICK_REPLIES = [
   { label: "Disponibilité", text: "Bonjour, est-ce que ce produit est encore disponible ?" },
