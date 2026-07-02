@@ -45,7 +45,7 @@ const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'S
 const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { formatPrice } = useLanguage();
+  const { t, formatPrice } = useLanguage();
   const { user, profile, isLoading: profileLoading, isReady, updateProfile } = useProfile();
   const [orders, setOrders] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
