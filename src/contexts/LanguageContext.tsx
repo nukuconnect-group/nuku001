@@ -1222,9 +1222,29 @@ const translations: Record<LangCode, Record<string, string>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const SUPPORTED_LANGS: LangCode[] = ["fr", "en", "ewe", "kab", "wo"];
+
+const detectBrowserLang = (): LangCode => {
+  if (typeof navigator === "undefined") return "fr";
+  const candidates: string[] = [];
+  if (navigator.languages && navigator.languages.length) candidates.push(...navigator.languages);
+  if (navigator.language) candidates.push(navigator.language);
+  for (const raw of candidates) {
+    const code = raw.toLowerCase().split("-")[0];
+    if (code === "fr") return "fr";
+    if (code === "en") return "en";
+    if (code === "ee" || code === "ewe") return "ewe";
+    if (code === "kab" || code === "ber") return "kab";
+    if (code === "wo") return "wo";
+  }
+  return "en"; // default for non-French browsers instead of forcing FR
+};
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [lang, setLang] = useState<LangCode>(() => {
-    return (localStorage.getItem("nukuconnect-lang") as LangCode) || "fr";
+    const stored = localStorage.getItem("nukuconnect-lang") as LangCode | null;
+    if (stored && SUPPORTED_LANGS.includes(stored)) return stored;
+    return detectBrowserLang();
   });
   const [currency, setCurrency] = useState<CurrencyCode>(() => {
     return (localStorage.getItem("nukuconnect-currency") as CurrencyCode) || "XOF";

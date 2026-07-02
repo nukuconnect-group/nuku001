@@ -561,10 +561,24 @@ const ProductDetail = () => {
                 shippingDays={product.shippingDelayDays}
               />
 
-              {/* Description (avec titre) */}
-              <div className="space-y-1.5">
-                <h3 className="font-semibold text-sm text-foreground">Description produit</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
+              {/* Onglets Description / Avis — mobile & tablette */}
+              <div className="lg:hidden">
+                <Tabs defaultValue="description" className="w-full">
+                  <TabsList className="grid grid-cols-2 w-full h-9">
+                    <TabsTrigger value="description" className="text-xs">Description</TabsTrigger>
+                    <TabsTrigger value="reviews" className="text-xs">Avis</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="description" className="mt-3">
+                    <div className="space-y-1.5">
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {product.description || "Aucune description disponible."}
+                      </p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="reviews" className="mt-3">
+                    <ReviewSection productId={product.id} />
+                  </TabsContent>
+                </Tabs>
               </div>
 
               {/* Stock + delivery */}
@@ -923,10 +937,9 @@ const ProductDetail = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Reviews */}
-              <ReviewSection productId={product.id} />
           </div>
           {/* ===== END MOBILE SECTIONS ===== */}
+
 
           {/* ===== SIMILAR PRODUCTS ===== */}
           <SimilarProducts currentProduct={product} />
