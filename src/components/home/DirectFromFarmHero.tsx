@@ -11,19 +11,19 @@ import heroSupplier from "@/assets/hero-supplier.jpg";
 const DirectFromFarmHero = () => {
   const { t } = useLanguage();
   return (
-    <section className="relative overflow-hidden border-t border-border/40">
+    <section className="relative overflow-hidden border-t border-border/40 min-h-[420px] sm:min-h-[480px] lg:min-h-[560px] flex items-center">
       {/* Background image — producteurs en interaction dans un champ */}
       <div className="absolute inset-0">
         <img
           src={heroSupplier}
           alt="Fournisseurs vérifiés — achetez directement auprès des producteurs sur Nukuconnect"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-[center_30%] sm:object-center"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
-        {/* Overlay : sombre à gauche, transparent à droite — pour lisibilité du texte */}
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/90 via-foreground/70 to-foreground/30" />
+        {/* Overlay adaptatif : plus sombre sur mobile pour lisibilité du texte, dégradé horizontal sur desktop */}
+        <div className="absolute inset-0 bg-foreground/60 sm:bg-gradient-to-r sm:from-foreground/90 sm:via-foreground/70 sm:to-foreground/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
       </div>
 
