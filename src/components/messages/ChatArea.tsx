@@ -53,22 +53,40 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startCall } = useCall();
+  const { t } = useLanguage();
   const [messageInput, setMessageInput] = useState("");
+  const [prefillDraft, setPrefillDraft] = useState<ChatDraft | null>(null);
 
-  // Hydrate a prefilled draft (from ProductDetail "Discuter" or Réseaux) without sending it.
+  // Hydrate a prefilled draft (from ProductDetail "Discuter" or Réseaux).
+  // Persistent localStorage draft takes precedence; sessionStorage keys are
+  // kept as a backwards-compatible fallback. Nothing is ever sent here.
   useEffect(() => {
     if (!conversation) return;
-    try {
-      const byConv = sessionStorage.getItem(`msg-prefill-${conversation.id}`);
-      const byUser = sessionStorage.getItem(`msg-prefill-${conversation.participant.id}`);
-      const draft = byConv || byUser;
-      if (draft) {
-        setMessageInput(draft);
+    const ids = { conversationId: conversation.id, userId: conversation.participant.id };
+    let draft = loadDraft(ids);
+    if (!draft) {
+      try {
+        const byConv = sessionStorage.getItem(`msg-prefill-${conversation.id}`);
+        const byUser = sessionStorage.getItem(`msg-prefill-${conversation.participant.id}`);
+        const legacy = byConv || byUser;
+        if (legacy) {
+          draft = { text: legacy, original: legacy, createdAt: Date.now() };
+          saveDraft(ids, draft);
+        }
+      } catch {}
+      try {
         sessionStorage.removeItem(`msg-prefill-${conversation.id}`);
         sessionStorage.removeItem(`msg-prefill-${conversation.participant.id}`);
-      }
-    } catch {}
-  }, [conversation?.id]);
+      } catch {}
+    }
+    if (draft) {
+      setPrefillDraft(draft);
+      setMessageInput(draft.text);
+    } else {
+      setPrefillDraft(null);
+    }
+  }, [conversation?.id, conversation?.participant.id]);
+
 
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
