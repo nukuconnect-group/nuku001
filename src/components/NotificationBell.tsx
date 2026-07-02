@@ -50,9 +50,19 @@ const NotificationBell = () => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
         setNotifications(prev => prev.map(n => n.id === (payload.new as Notification).id ? (payload.new as Notification) : n));
       })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, (payload) => {
+        const oldId = (payload.old as any)?.id;
+        if (oldId) setNotifications(prev => prev.filter(n => n.id !== oldId));
+      })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    const onRefresh = () => { fetchNotifications(); };
+    window.addEventListener("nuku:notifications-updated", onRefresh);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("nuku:notifications-updated", onRefresh);
+    };
   }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
