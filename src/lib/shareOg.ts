@@ -37,11 +37,6 @@ const edgeOgUrl = (type: "product" | "shop", id: string, name?: string | null) =
   return `${SHARE_OG_BASE}?${params.toString()}`;
 };
 
-const edgeOgUrl = (type: "product" | "shop", id: string, name?: string | null) => {
-  const params = new URLSearchParams({ type, id, source: "share" });
-  if (name?.trim() && name.trim() !== id) params.set("name", name.trim());
-  return `${SHARE_OG_BASE}?${params.toString()}`;
-};
 
 /* --------------------- Canonical (human-facing) URLs --------------------- */
 
