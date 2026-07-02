@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { type CurrencyCode } from "@/contexts/LanguageContext";
 import SellerCard from "@/components/seller/SellerCard";
+import ProductDistance from "@/components/product/ProductDistance";
 import { producerShopUrl } from "@/lib/producerLinks";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -423,6 +424,14 @@ const ProductDetail = () => {
                   {product.isOrganic && (
                     <Badge className="bg-primary text-primary-foreground gap-1 text-[10px] sm:text-xs px-1.5 py-0.5"><Leaf className="w-2.5 h-2.5 sm:w-3 sm:h-3" />BIO</Badge>
                   )}
+                  {product.isNegotiable && (
+                    <Badge className="bg-amber-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">À négocier</Badge>
+                  )}
+                  {product.stockStatus === "out_of_stock" ? (
+                    <Badge className="bg-muted text-muted-foreground text-[10px] sm:text-xs px-1.5 py-0.5">Rupture</Badge>
+                  ) : product.stockStatus === "low_stock" || (product.quantity > 0 && product.quantity <= 5) ? (
+                    <Badge className="bg-orange-500 text-white text-[10px] sm:text-xs px-1.5 py-0.5">Stock limité</Badge>
+                  ) : null}
                   {product.discount && (
                     <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs px-1.5 py-0.5">-{product.discount}%</Badge>
                   )}
@@ -623,7 +632,7 @@ const ProductDetail = () => {
                     {discount > 0 && (
                       <Badge className="bg-destructive text-destructive-foreground font-bold text-[10px] sm:text-xs">-{discount}% PROMO</Badge>
                     )}
-                    {(product as any).is_negotiable && (
+                    {product.isNegotiable && (
                       <Badge className="bg-amber-500 text-white text-[10px] gap-1 ml-auto">À négocier</Badge>
                     )}
                   </div>
@@ -663,16 +672,45 @@ const ProductDetail = () => {
                 </Tabs>
               </div>
 
-              {/* Stock + delivery */}
-              <div className="flex items-center gap-4 sm:gap-6 py-3 border-y border-border">
+              {/* Stock + delivery + min order + distance */}
+              <div className="grid grid-cols-2 gap-2 py-3 border-y border-border text-[11px] sm:text-xs">
                 <div className="flex items-center gap-1.5">
-                  <Package className="w-4 h-4 text-primary" />
-                  <span className="text-xs sm:text-sm"><span className="font-semibold text-foreground">{product.quantity}</span> {product.unit}s {t("product.available")}</span>
+                  <Package className="w-4 h-4 text-primary flex-shrink-0" />
+                  {product.stockStatus === "out_of_stock" || product.quantity <= 0 ? (
+                    <span className="font-semibold text-destructive">Rupture de stock</span>
+                  ) : (
+                    <span>
+                      <span className="font-semibold text-foreground">{product.quantity}</span>{" "}
+                      {product.unit}(s){" "}
+                      {(product.stockStatus === "low_stock" || product.quantity <= 5) && (
+                        <span className="text-orange-600 font-semibold">(stock limité)</span>
+                      )}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-primary" />
-                  <span className="text-xs sm:text-sm text-muted-foreground">{t("product.deliveryAvailable")}</span>
+                  <Truck className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-muted-foreground">
+                    Livraison{" "}
+                    <span className="text-foreground font-semibold">
+                      {product.shippingDelayDays && product.shippingDelayDays > 0
+                        ? `${product.shippingDelayDays} j`
+                        : "24 h"}
+                    </span>
+                  </span>
                 </div>
+                {product.minOrder && product.minOrder > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingCart className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                      Min.{" "}
+                      <span className="text-foreground font-semibold">
+                        {product.minOrder} {product.unit}(s)
+                      </span>
+                    </span>
+                  </div>
+                )}
+                <ProductDistance productLat={product.lat ?? null} productLng={product.lng ?? null} location={product.location} />
               </div>
 
               {/* Seller card — moved right after stock + delivery summary */}
