@@ -220,8 +220,27 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
   }, [conversation?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessageInput(e.target.value);
+    const v = e.target.value;
+    setMessageInput(v);
+    if (prefillDraft && conversation) {
+      updateDraftText({ conversationId: conversation.id, userId: conversation.participant.id }, v);
+    }
     broadcastTyping();
+  };
+
+  const resetPrefillDraft = () => {
+    if (!prefillDraft) return;
+    setMessageInput(prefillDraft.original);
+    if (conversation) {
+      updateDraftText({ conversationId: conversation.id, userId: conversation.participant.id }, prefillDraft.original);
+    }
+  };
+
+  const discardPrefillDraft = () => {
+    if (!conversation) return;
+    clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
+    setPrefillDraft(null);
+    setMessageInput("");
   };
 
   const handleSendMessage = async () => {
@@ -234,6 +253,11 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onLoc
     setMessageInput("");
     setReplyTo(null);
     setShowAiSuggestions(false);
+    // Clear persisted prefill draft only on explicit send.
+    if (conversation && prefillDraft) {
+      clearDraft({ conversationId: conversation.id, userId: conversation.participant.id });
+      setPrefillDraft(null);
+    }
   };
 
   const uploadAndSendImage = async (file: File, caption?: string) => {
