@@ -245,7 +245,7 @@ export function useMessages(conversationId: string | null, profileId: string | n
 
       if (error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
-        toast.error("Message non envoyé", { description: error.message || "La discussion n'a pas abouti." });
+        toast.error(t("err.generic"), { description: translateBackendError(error, t) });
         return false;
       }
 
