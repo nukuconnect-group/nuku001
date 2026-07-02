@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { type CurrencyCode } from "@/contexts/LanguageContext";
 import SellerCard from "@/components/seller/SellerCard";
+import ProductDistance from "@/components/product/ProductDistance";
 import { producerShopUrl } from "@/lib/producerLinks";
 
 import { supabase } from "@/integrations/supabase/client";
