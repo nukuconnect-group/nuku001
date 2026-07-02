@@ -754,18 +754,14 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
                   {product && (
                     <Link
                       to={`/produit/${product.id}`}
-                      className={`block mb-1.5 rounded-lg overflow-hidden border ${
-                        msg.senderId === "me" ? "bg-primary-foreground/10 border-primary-foreground/20" : "bg-muted/40 border-border"
-                      }`}
+                      className="block mb-1.5 rounded-lg overflow-hidden"
                     >
                       {product.image && (
-                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover" loading="lazy" />
+                        <img src={product.image} alt={product.name} className="w-full h-32 object-cover rounded-lg" loading="lazy" />
                       )}
-                      <div className="px-2 py-1.5 min-w-0">
-                        <p className={`text-xs font-semibold truncate ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
-                          {product.name}
-                        </p>
-                      </div>
+                      <p className={`text-xs font-semibold truncate mt-1 ${msg.senderId === "me" ? "text-primary-foreground" : "text-foreground"}`}>
+                        {product.name}
+                      </p>
                     </Link>
                   )}
                   {text && <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{text}</p>}
