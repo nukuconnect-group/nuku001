@@ -43,7 +43,7 @@ describe("Share URL builders never fall back on the homepage", () => {
     expect(withUuid).toContain("name=Ferme+Kokou");
 
     const withName = shopCrawlerUrl("Ferme Kokou");
-    expect(withName).toContain("id=Ferme%20Kokou");
+    expect(withName).toContain("id=Ferme+Kokou");
     expect(withName).not.toBe(SITE_URL);
     expect(withName).not.toBe(`${SITE_URL}/producteurs`);
   });
