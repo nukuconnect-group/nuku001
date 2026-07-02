@@ -50,7 +50,7 @@ const Messages = () => {
   // On mobile, opening a conversation auto-fullscreens
   const effectiveFullscreen = isFullscreen || (isMobile && !!selectedConversation);
   const { conversations, loading, profileId, userId, refetch } = useConversations();
-  const { messages, setMessages, sendMessage, deleteMessage } = useMessages(
+  const { messages, setMessages, sendMessage, deleteMessage, markMessageRead } = useMessages(
     selectedConversation?.id || null,
     profileId,
     userId
@@ -245,6 +245,7 @@ const Messages = () => {
                 onBack={() => { if (isFullscreen) setIsFullscreen(false); setSelectedConversation(null); }}
                 onSend={sendMessage}
                 onDeleteMessage={deleteMessage}
+                onMessageVisible={markMessageRead}
                 onLocalMessage={handleLocalMessage}
                 messagesEndRef={messagesEndRef}
                 isFullscreen={effectiveFullscreen}

@@ -44,13 +44,14 @@ interface Props {
   onBack: () => void;
   onSend: (content: string, replyToId?: string) => void;
   onDeleteMessage?: (messageId: string) => Promise<boolean> | void;
+  onMessageVisible?: (messageId: string) => Promise<void> | void;
   onLocalMessage: (msg: MessageItem) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, onBack, onSend, onDeleteMessage, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
+export default function ChatArea({ conversation, messages, onBack, onSend, onDeleteMessage, onMessageVisible, onLocalMessage, messagesEndRef, isFullscreen, onToggleFullscreen }: Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { startCall } = useCall();
@@ -143,6 +144,29 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
     const blocked = JSON.parse(localStorage.getItem("nuku_blocked_users") || "[]");
     setIsBlocked(blocked.includes(conversation.participant.id));
   }, [conversation?.participant.id]);
+
+  // IntersectionObserver: mark messages as read when they actually enter the viewport.
+  // Precision > coarse "mark all on open" — only visible messages count as read.
+  const markedReadRef = useRef<Set<string>>(new Set());
+  useEffect(() => { markedReadRef.current = new Set(); }, [conversation?.id]);
+  useEffect(() => {
+    if (!onMessageVisible || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = (entry.target as HTMLElement).dataset.msgId;
+          if (!id || markedReadRef.current.has(id)) continue;
+          markedReadRef.current.add(id);
+          void onMessageVisible(id);
+        }
+      },
+      { threshold: 0.6 }
+    );
+    const nodes = document.querySelectorAll<HTMLElement>("[data-msg-id][data-msg-other='1']");
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, [messages, onMessageVisible, conversation?.id]);
 
   const toggleBlock = () => {
     if (!conversation) return;
@@ -666,7 +690,7 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           }
 
           return (
-            <div key={msg.id} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
+            <div key={msg.id} data-msg-id={msg.id} data-msg-other={msg.senderId === "me" ? "0" : "1"} className={`flex ${msg.senderId === "me" ? "justify-end" : "justify-start"} group`}>
               <div className="flex items-center gap-1 max-w-[85%] sm:max-w-[75%]">
                 {/* Reply button (on hover, left side for own messages) */}
                 {msg.senderId === "me" && (

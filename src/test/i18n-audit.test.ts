@@ -23,6 +23,17 @@ const AUDITED_FILES = [
   "src/pages/DriverDashboard.tsx",
   "src/pages/LearnerDashboard.tsx",
   "src/pages/Notifications.tsx",
+  // Newly frozen: admin + auxiliary pages
+  "src/pages/admin/ErrorLogs.tsx",
+  "src/pages/admin/RealtimeDiagnostics.tsx",
+  "src/pages/admin/SeoPreview.tsx",
+  "src/pages/admin/SeoCanonical.tsx",
+  "src/pages/AdminWatermarkErrors.tsx",
+  "src/pages/Favorites.tsx",
+  "src/pages/Cart.tsx",
+  "src/pages/Settings.tsx",
+  "src/pages/Tokens.tsx",
+  "src/pages/Producers.tsx",
 ];
 
 // Common French words that indicate a hardcoded user-facing UI string.

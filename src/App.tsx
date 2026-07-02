@@ -67,6 +67,7 @@ import AdminWatermarkErrors from "./pages/AdminWatermarkErrors";
 import SeoPreview from "./pages/admin/SeoPreview";
 import SeoCanonical from "./pages/admin/SeoCanonical";
 import RealtimeDiagnostics from "./pages/admin/RealtimeDiagnostics";
+import ErrorLogs from "./pages/admin/ErrorLogs";
 import Settings from "./pages/Settings";
 import DeliveryAddress from "./pages/DeliveryAddress";
 import BecomeSeller from "./pages/BecomeSeller";
@@ -236,6 +237,7 @@ const App = () => {
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
                   <Route path="/admin/watermark-errors" element={<AdminWatermarkErrors />} />
                   <Route path="/admin/realtime-diagnostics" element={<RealtimeDiagnostics />} />
+                  <Route path="/admin/errors" element={<ErrorLogs />} />
                   <Route path="/mon-compte" element={<AccountAccess />} />
                   <Route path="/remboursements" element={<Refunds />} />
                   <Route path="/factures" element={<Invoices />} />

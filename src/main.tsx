@@ -3,6 +3,9 @@ import "./index.css";
 import App from "./App";
 import { initSecurity } from "./utils/security";
 import { logClientDiag } from "./lib/clientDiagnostics";
+import { installGlobalErrorLogger } from "./lib/logAppError";
+
+installGlobalErrorLogger();
 
 
 type IdleCallback = (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void;
