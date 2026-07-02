@@ -1114,6 +1114,29 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
           });
         }}
       />
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteConfirm && deleteConfirm.ids.length > 1
+                ? `Supprimer ${deleteConfirm.ids.length} messages ?`
+                : "Supprimer ce message ?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le destinataire verra « Message supprimé » à la place.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
