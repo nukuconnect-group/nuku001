@@ -107,7 +107,10 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
   const [isTyping, setIsTyping] = useState(false);
   const [callSheetOpen, setCallSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ ids: string[] } | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectionMode = selectedIds.size > 0;
 
   const toggleSelect = (id: string) => {
@@ -118,10 +121,17 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       return next;
     });
   };
-  const startLongPress = (id: string) => {
+  const startLongPress = (id: string, e: React.PointerEvent) => {
+    longPressFiredRef.current = false;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
       setSelectedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+      // Haptic feedback on supporting devices
+      if (typeof navigator !== "undefined" && (navigator as any).vibrate) {
+        try { (navigator as any).vibrate(15); } catch {}
+      }
     }, 450);
   };
   const cancelLongPress = () => {
@@ -130,15 +140,31 @@ export default function ChatArea({ conversation, messages, onBack, onSend, onDel
       longPressTimerRef.current = null;
     }
   };
+  const onPointerMoveMsg = (e: React.PointerEvent) => {
+    if (!pointerStartRef.current) return;
+    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+    if (dx > 10 || dy > 10) cancelLongPress();
+  };
   const clearSelection = () => setSelectedIds(new Set());
-  const deleteSelected = async () => {
-    if (!onDeleteMessage) return;
+  const requestDeleteSelected = () => {
     const own = Array.from(selectedIds).filter((id) => !id.startsWith("temp-"));
     if (!own.length) return clearSelection();
-    if (!window.confirm(t("chat.message.delete.confirm") || `Supprimer ${own.length} message(s) ?`)) return;
-    for (const id of own) {
+    setDeleteConfirm({ ids: own });
+  };
+  const requestDeleteSingle = (id: string) => {
+    if (id.startsWith("temp-")) return;
+    setDeleteConfirm({ ids: [id] });
+  };
+  const confirmDelete = async () => {
+    if (!deleteConfirm || !onDeleteMessage) {
+      setDeleteConfirm(null);
+      return;
+    }
+    for (const id of deleteConfirm.ids) {
       await onDeleteMessage(id);
     }
+    setDeleteConfirm(null);
     clearSelection();
   };
   const [isBlocked, setIsBlocked] = useState(() => {
