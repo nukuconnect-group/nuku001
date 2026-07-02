@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { translateBackendError } from "@/lib/i18nErrors";
 import { Upload, Loader2, CheckCircle2, Clock, AlertCircle, Camera } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -40,6 +42,7 @@ const compressImage = (file: File | Blob, maxWidth = 1200, quality = 0.7): Promi
 
 const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [idType, setIdType] = useState("cni");
   const [idNumber, setIdNumber] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -92,16 +95,15 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
     try {
       const url = await uploadFile(file, path);
       setter(url);
-      toast({ title: "Photo uploadée ✓" });
+      toast({ title: t("kyc.photoUploaded") });
     } catch (err: any) {
-      toast({ title: "Erreur d'upload", description: err.message, variant: "destructive" });
+      toast({ title: t("kyc.uploadError"), description: translateBackendError(err, t), variant: "destructive" });
     } finally {
       setUploading(null);
       e.target.value = "";
     }
   };
 
-  // Camera selfie
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
@@ -111,7 +113,7 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
       }, 100);
     } catch {
-      toast({ title: "Impossible d'accéder à la caméra", variant: "destructive" });
+      toast({ title: t("kyc.cameraError"), variant: "destructive" });
     }
   };
 
@@ -130,33 +132,33 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
       );
       const url = await uploadFile(blob, "supplier-selfie");
       setSelfieUrl(url);
-      toast({ title: "Selfie capturé ✓" });
+      toast({ title: t("kyc.selfieCaptured") });
     } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(err, t), variant: "destructive" });
     } finally {
       setUploading(null);
     }
   };
 
   const stopCamera = () => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((tr) => tr.stop());
     streamRef.current = null;
     setShowCamera(false);
   };
 
-  useEffect(() => () => { streamRef.current?.getTracks().forEach((t) => t.stop()); }, []);
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((tr) => tr.stop()); }, []);
 
   const handleSubmit = async () => {
     if (!userId || !idNumber.trim()) {
-      toast({ title: "Remplissez le numéro de pièce", variant: "destructive" });
+      toast({ title: t("kyc.errIdNumberRequired"), variant: "destructive" });
       return;
     }
     if (!idFrontUrl) {
-      toast({ title: "Veuillez uploader le recto de la pièce", variant: "destructive" });
+      toast({ title: t("kyc.errFrontRequired"), variant: "destructive" });
       return;
     }
     if (!selfieUrl) {
-      toast({ title: "Veuillez prendre votre photo (selfie)", variant: "destructive" });
+      toast({ title: t("kyc.errSelfieRequired"), variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -173,10 +175,10 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
         status: "pending",
       });
       if (error) throw error;
-      toast({ title: "KYC soumis ! 🎉", description: "Votre demande sera examinée sous 24-48h." });
+      toast({ title: t("kyc.submitted"), description: t("kyc.submittedDesc") });
       onSubmitted();
     } catch (err: any) {
-      toast({ title: "Erreur", description: err.message, variant: "destructive" });
+      toast({ title: t("err.generic"), description: translateBackendError(err, t), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -194,24 +196,24 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
         {existingKyc.status === "pending" ? (
           <>
             <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-            <span className="text-xs text-yellow-800">KYC soumis — en attente de vérification (24-48h)</span>
+            <span className="text-xs text-yellow-800">{t("kyc.pending")}</span>
           </>
         ) : existingKyc.status === "approved" ? (
           <>
             <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-            <span className="text-xs text-green-800">✓ Fournisseur vérifié — Badge activé</span>
+            <span className="text-xs text-green-800">{t("kyc.approved")}</span>
           </>
         ) : (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-              <span className="text-xs text-red-800 font-medium">KYC refusé</span>
+              <span className="text-xs text-red-800 font-medium">{t("kyc.rejected")}</span>
             </div>
             {existingKyc.admin_note && (
-              <p className="text-xs text-red-700 ml-6">Motif : {existingKyc.admin_note}</p>
+              <p className="text-xs text-red-700 ml-6">{t("kyc.rejectReason")} {existingKyc.admin_note}</p>
             )}
             <Button variant="outline" size="sm" className="ml-6 text-xs" onClick={() => setExistingKyc(null)}>
-              Resoumettre
+              {t("kyc.resubmit")}
             </Button>
           </div>
         )}
@@ -240,7 +242,7 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
                 onClick={() => setter("")}
                 className="px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium"
               >
-                Remplacer
+                {t("kyc.replace")}
               </button>
             </div>
             <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px]">
@@ -249,15 +251,14 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            {/* Galerie */}
             <label className="flex flex-col items-center justify-center h-36 sm:h-44 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary/40 transition-colors">
               {uploading === path ? (
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               ) : (
                 <>
                   <Upload className="w-7 h-7 text-muted-foreground mb-1.5" />
-                  <span className="text-[10px] font-medium text-foreground">Galerie</span>
-                  <span className="text-[9px] text-muted-foreground">Choisir une photo</span>
+                  <span className="text-[10px] font-medium text-foreground">{t("kyc.gallery")}</span>
+                  <span className="text-[9px] text-muted-foreground">{t("kyc.galleryHint")}</span>
                 </>
               )}
               <input
@@ -268,15 +269,14 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
                 onChange={(e) => handleFileUpload(e, setter, path)}
               />
             </label>
-            {/* Caméra */}
             <label className="flex flex-col items-center justify-center h-36 sm:h-44 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 hover:border-primary/40 transition-colors">
               {uploading === `${path}-cam` ? (
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
               ) : (
                 <>
                   <Camera className="w-7 h-7 text-muted-foreground mb-1.5" />
-                  <span className="text-[10px] font-medium text-foreground">Caméra</span>
-                  <span className="text-[9px] text-muted-foreground">Prendre maintenant</span>
+                  <span className="text-[10px] font-medium text-foreground">{t("kyc.camera")}</span>
+                  <span className="text-[9px] text-muted-foreground">{t("kyc.cameraHint")}</span>
                 </>
               )}
               <input
@@ -298,17 +298,17 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Nom entreprise / activité</Label>
-          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex: Ferme Kokoe" className="h-9 text-sm" />
+          <Label className="text-xs font-medium">{t("kyc.businessName")}</Label>
+          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder={t("kyc.businessNamePh")} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Type d'activité</Label>
+          <Label className="text-xs font-medium">{t("kyc.businessType")}</Label>
           <Select value={businessType} onValueChange={setBusinessType}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="individual">Individuel</SelectItem>
-              <SelectItem value="cooperative">Coopérative</SelectItem>
-              <SelectItem value="enterprise">Entreprise</SelectItem>
+              <SelectItem value="individual">{t("kyc.businessType.individual")}</SelectItem>
+              <SelectItem value="cooperative">{t("kyc.businessType.cooperative")}</SelectItem>
+              <SelectItem value="enterprise">{t("kyc.businessType.enterprise")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -316,51 +316,50 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Type de pièce d'identité</Label>
+          <Label className="text-xs font-medium">{t("kyc.idType")}</Label>
           <Select value={idType} onValueChange={setIdType}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="cni">Carte Nationale (CNI)</SelectItem>
-              <SelectItem value="passport">Passeport</SelectItem>
-              <SelectItem value="permis">Permis de conduire</SelectItem>
+              <SelectItem value="cni">{t("kyc.idType.cni")}</SelectItem>
+              <SelectItem value="passport">{t("kyc.idType.passport")}</SelectItem>
+              <SelectItem value="permis">{t("kyc.idType.permis")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Numéro de pièce <span className="text-destructive">*</span></Label>
-          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="N° de la pièce" className="h-9 text-sm" />
+          <Label className="text-xs font-medium">{t("kyc.idNumber")} <span className="text-destructive">*</span></Label>
+          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder={t("kyc.idNumberPh")} className="h-9 text-sm" />
         </div>
       </div>
 
       <div className="space-y-3">
-        {renderUploadBox("Recto de la pièce", idFrontUrl, setIdFrontUrl, "supplier-id-front", true)}
-        {renderUploadBox("Verso de la pièce", idBackUrl, setIdBackUrl, "supplier-id-back", false)}
+        {renderUploadBox(t("kyc.idFront"), idFrontUrl, setIdFrontUrl, "supplier-id-front", true)}
+        {renderUploadBox(t("kyc.idBack"), idBackUrl, setIdBackUrl, "supplier-id-back", false)}
 
-        {/* Selfie */}
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">Photo portrait (selfie) <span className="text-destructive">*</span></Label>
+          <Label className="text-xs font-medium">{t("kyc.selfie")} <span className="text-destructive">*</span></Label>
           {showCamera ? (
             <div className="relative h-44 sm:h-56 rounded-lg overflow-hidden border-2 border-primary">
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
               <div className="absolute bottom-0 inset-x-0 flex justify-center gap-2 p-2 bg-black/50">
                 <Button size="sm" variant="hero" className="h-8 text-xs gap-1" onClick={capturePhoto}>
-                  📸 Capturer
+                  📸 {t("kyc.capture")}
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 text-xs text-white hover:text-white hover:bg-white/20" onClick={stopCamera}>
-                  ✕ Annuler
+                  ✕ {t("kyc.cancel")}
                 </Button>
               </div>
             </div>
           ) : selfieUrl ? (
             <div className="relative h-36 sm:h-44 rounded-lg overflow-hidden border-2 border-emerald-300 group">
-              <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+              <img src={selfieUrl} alt={t("kyc.selfie")} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <button
                   type="button"
                   onClick={() => setSelfieUrl("")}
                   className="px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-medium"
                 >
-                  Reprendre
+                  {t("kyc.retake")}
                 </button>
               </div>
               <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px]">
@@ -379,8 +378,8 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
               ) : (
                 <>
                   <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                  <span className="text-xs font-medium text-foreground">Activer la caméra</span>
-                  <span className="text-[10px] text-muted-foreground">Selfie en direct (sécurité)</span>
+                  <span className="text-xs font-medium text-foreground">{t("kyc.activateCamera")}</span>
+                  <span className="text-[10px] text-muted-foreground">{t("kyc.selfieHint")}</span>
                 </>
               )}
             </button>
@@ -390,10 +389,10 @@ const SupplierKYCForm = ({ userId, onSubmitted }: SupplierKYCFormProps) => {
 
       <Button variant="hero" size="lg" className="w-full gap-2" onClick={handleSubmit} disabled={submitting || !!uploading}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-        Soumettre pour vérification
+        {t("kyc.submit")}
       </Button>
       <p className="text-[10px] text-muted-foreground text-center">
-        🔒 Vos données sont chiffrées et utilisées uniquement pour la vérification. Réponse sous 24-48h.
+        {t("kyc.footerPrivacy")}
       </p>
     </div>
   );
