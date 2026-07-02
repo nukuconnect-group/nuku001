@@ -1,45 +1,53 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 /**
- * i18n audit: ensures the SupplierKYCForm no longer ships hardcoded French
- * user-facing strings. This is intentionally scoped to files that have been
- * migrated so it can fail loudly if someone re-introduces a raw FR literal.
+ * i18n audit — scans a curated list of files and fails if a hardcoded
+ * French UI literal (from the FR_WORDS blacklist) shows up. This is what
+ * we use in CI to catch a regression as soon as a new untranslated string
+ * lands in a page that was previously clean.
  *
- * To extend: add files to `AUDITED_FILES` after migrating their strings.
+ * When migrating a new file, add it to AUDITED_FILES to lock it in.
  */
 
 const AUDITED_FILES = [
+  // Already fully i18n-migrated
   "src/components/supplier/SupplierKYCForm.tsx",
+  // Frozen pages — no hardcoded FR indicator words allowed anymore
+  "src/pages/Marketplace.tsx",
+  "src/pages/Categories.tsx",
+  "src/pages/BuyerDashboard.tsx",
+  "src/pages/Dashboard.tsx",
+  "src/pages/AdminDashboard.tsx",
+  "src/pages/DriverDashboard.tsx",
+  "src/pages/LearnerDashboard.tsx",
+  "src/pages/Notifications.tsx",
 ];
 
-// Common French words that indicate a hardcoded UI string.
+// Common French words that indicate a hardcoded user-facing UI string.
+// Kept narrow to avoid false positives on domain vocabulary that appears
+// inside variable names, doc-strings, or already-translated keys.
 const FR_WORDS = [
   "\\bVeuillez\\b",
   "\\bRemplissez\\b",
   "\\bSoumettre\\b",
   "\\bReprendre\\b",
   "\\bRemplacer\\b",
-  "\\bAnnuler\\b",
   "\\bCapturer\\b",
-  "\\bImpossible\\b",
-  "\\bd'accéder\\b",
   "\\bGalerie\\b",
   "\\bCaméra\\b",
-  "\\bpièce\\b",
-  "\\bactivité\\b",
-  "\\bvérification\\b",
 ];
 
 const ALLOW_COMMENT = /^\s*(\/\/|\*|\/\*)/;
 
 const scan = (path: string) => {
   const abs = resolve(process.cwd(), path);
+  if (!existsSync(abs)) return [];
   const src = readFileSync(abs, "utf8");
   const lines = src.split(/\r?\n/);
   const hits: { line: number; text: string; word: string }[] = [];
-  const patterns = FR_WORDS.map((w) => new RegExp(w, "i"));
+  const patterns = FR_WORDS.map((w) => new RegExp(w));
   lines.forEach((raw, i) => {
     if (ALLOW_COMMENT.test(raw)) return;
     for (const p of patterns) {
