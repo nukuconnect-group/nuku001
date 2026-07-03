@@ -70,12 +70,25 @@ export function shopShareUrl(businessNameOrFull: string, profileId?: string | nu
 const cacheBust = () => Math.random().toString(36).slice(2, 10);
 
 /**
+ * When `VITE_CLOUDFLARE_OG_PROXY=true`, a Cloudflare Worker in front of
+ * `nukuconnect.com` routes crawlers to the edge OG endpoint transparently
+ * (see docs/SHARE-OG-DEFINITIVE.md). In that mode we can safely hand the
+ * clean canonical URL to every social button — WhatsApp/FB/LinkedIn will
+ * still get rich previews AND users see nukuconnect.com everywhere.
+ * Until the Worker is deployed we fall back to the direct edge URL so
+ * previews keep working (the trade-off being the visible Supabase URL).
+ */
+const USE_CF_PROXY =
+  String(import.meta.env.VITE_CLOUDFLARE_OG_PROXY || "").toLowerCase() === "true";
+
+/**
  * URL fed to WhatsApp / Facebook / LinkedIn / Telegram link unfurlers.
  * Returns OG/Twitter HTML with the product's image, title, description.
  */
 export function productCrawlerUrl(idOrSlug: string): string {
   const safe = idOrSlug.trim();
   if (!safe) return SITE_URL;
+  if (USE_CF_PROXY) return productCanonicalUrl(safe);
   return `${edgeOgUrl("product", safe)}&v=${cacheBust()}`;
 }
 
@@ -86,6 +99,7 @@ export function productCrawlerUrl(idOrSlug: string): string {
 export function shopCrawlerUrl(businessNameOrFull: string, profileId?: string | null): string {
   const id = isUuid(profileId) ? profileId! : businessNameOrFull.trim();
   if (!id) return SITE_URL;
+  if (USE_CF_PROXY) return shopCanonicalUrl(id);
   return `${edgeOgUrl("shop", id, businessNameOrFull)}&v=${cacheBust()}`;
 }
 
