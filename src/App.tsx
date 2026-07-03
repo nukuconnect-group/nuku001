@@ -179,6 +179,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <UpdatePrompt />
             {showSplash && isFirstVisit && (
               <SplashScreen onComplete={handleSplashComplete} />
             )}
