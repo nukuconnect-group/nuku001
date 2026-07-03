@@ -90,6 +90,7 @@ import DeleteAccount from "./pages/DeleteAccount";
 import PaymentCallback from "./pages/PaymentCallback";
 import PaymentTracking from "./pages/PaymentTracking";
 import ShareDiagnostic from "./pages/ShareDiagnostic";
+import UpdatePrompt from "./components/UpdatePrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
