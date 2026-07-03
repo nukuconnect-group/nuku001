@@ -42,7 +42,10 @@ export default function ProducerCard({ producer, compact = false, index = 0 }: P
 
   const following = isFollowing(producer.id);
   const isSelf = myProfile?.id === producer.id;
-  const profileHref = `/producteurs/${encodeURIComponent(producer.name || producer.id)}`;
+  // Route by profile UUID: guaranteed unique, unambiguous, always resolvable.
+  // Names can be missing, duplicated, or contain special characters that
+  // break the lookup and trigger the "Boutique introuvable" state.
+  const profileHref = `/producteurs/${encodeURIComponent(producer.id)}`;
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.preventDefault();

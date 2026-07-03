@@ -1,10 +1,37 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { writeFileSync, mkdirSync } from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+const APP_BUILD_ID = String(Date.now());
+
+// Emits /version.json in dev (via middleware) and in dist (via writeBundle) so
+// the running app can poll it and detect deployed updates.
+function versionJsonPlugin(): Plugin {
+  const payload = JSON.stringify({ buildId: APP_BUILD_ID }) + "\n";
+  return {
+    name: "nukuconnect-version-json",
+    configureServer(server) {
+      server.middlewares.use("/version.json", (_req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-store, max-age=0");
+        res.end(payload);
+      });
+    },
+    writeBundle(options) {
+      const dir = options.dir || "dist";
+      try { mkdirSync(dir, { recursive: true }); } catch {}
+      writeFileSync(path.join(dir, "version.json"), payload);
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
+  define: {
+    __APP_BUILD_ID__: JSON.stringify(APP_BUILD_ID),
+  },
   server: {
     host: "::",
     port: 8080,
@@ -30,6 +57,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    versionJsonPlugin(),
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
