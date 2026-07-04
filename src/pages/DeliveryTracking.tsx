@@ -59,8 +59,8 @@ const DeliveryTracking = () => {
       if (updated) setSelectedOrder(updated);
     }
     // Fetch delivery records for these orders
-    if (data && data.length > 0) {
-      const orderIds = data.map((o: any) => o.id);
+    if (trackable.length > 0) {
+      const orderIds = trackable.map((o: any) => o.id);
       const { data: dels } = await supabase
         .from("deliveries")
         .select("*")
