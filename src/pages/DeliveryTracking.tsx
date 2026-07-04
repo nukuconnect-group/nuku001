@@ -47,10 +47,15 @@ const DeliveryTracking = () => {
       .select("*, products(name, images, category, unit, price, location), profiles!orders_seller_id_fkey(full_name)")
       .or(`buyer_id.eq.${prof.id},seller_id.eq.${prof.id}`)
       .order("created_at", { ascending: false });
-    setOrders(data || []);
-    if (data && data.length > 0 && !selectedOrder) setSelectedOrder(data[0]);
-    if (selectedOrder && data) {
-      const updated = data.find((o: any) => o.id === selectedOrder.id);
+    // "Suivre commande" ne doit afficher que les commandes réellement engagées :
+    // on masque les commandes en attente de paiement (pending / awaiting_payment).
+    const trackable = (data || []).filter((o: any) =>
+      !["pending", "awaiting_payment"].includes(String(o.status))
+    );
+    setOrders(trackable);
+    if (trackable.length > 0 && !selectedOrder) setSelectedOrder(trackable[0]);
+    if (selectedOrder) {
+      const updated = trackable.find((o: any) => o.id === selectedOrder.id);
       if (updated) setSelectedOrder(updated);
     }
     // Fetch delivery records for these orders
