@@ -238,23 +238,26 @@ export default function SupportWidget({ userId, userName, userEmail, openByDefau
     setMessages([]);
   };
 
-  const widgetSize = expanded
-    ? "fixed inset-4 lg:inset-8 z-50"
-    : "fixed bottom-20 lg:bottom-6 right-4 z-50 w-80 sm:w-96";
+  const widgetSize = asPage
+    ? "relative w-full"
+    : expanded
+      ? "fixed inset-4 lg:inset-8 z-50"
+      : "fixed bottom-20 lg:bottom-6 right-4 z-50 w-80 sm:w-96";
 
   return (
     <>
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
+      {!open && !asPage && (
+        <Link
+          to="/support"
           className="fixed bottom-20 lg:bottom-6 right-4 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-elevated flex items-center justify-center hover:scale-105 transition-transform"
+          aria-label="Ouvrir le support client"
         >
           <MessageCircle className="w-5 h-5" />
-        </button>
+        </Link>
       )}
 
       {open && (
-        <div className={`${widgetSize} bg-card border border-border rounded-2xl shadow-elevated flex flex-col ${expanded ? "max-h-full" : "max-h-[70vh]"}`}>
+        <div className={`${widgetSize} bg-card border border-border ${asPage ? "rounded-xl" : "rounded-2xl shadow-elevated"} flex flex-col ${asPage ? "min-h-[70vh]" : expanded ? "max-h-full" : "max-h-[70vh]"}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-border bg-primary/5 rounded-t-2xl">
             <div className="flex items-center gap-2">
