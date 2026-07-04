@@ -61,6 +61,7 @@ import Legal from "./pages/Legal";
 import PurchasePolicy from "./pages/PurchasePolicy";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWatermarkErrors from "./pages/AdminWatermarkErrors";
