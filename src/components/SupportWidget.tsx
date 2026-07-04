@@ -82,9 +82,11 @@ interface Props {
   userName?: string;
   userEmail?: string;
   openByDefault?: boolean;
+  /** Render inline as a full-page block instead of a floating popup. */
+  asPage?: boolean;
 }
 
-export default function SupportWidget({ userId, userName, userEmail, openByDefault = false }: Props) {
+export default function SupportWidget({ userId, userName, userEmail, openByDefault = false, asPage = false }: Props) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
