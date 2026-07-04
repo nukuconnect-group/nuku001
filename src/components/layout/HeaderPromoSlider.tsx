@@ -66,7 +66,7 @@ const slides = [
   {
     eyebrow: "Assistant IA agricole",
     pill: "Nouveau",
-    title: "NukuConnect IA accompagne agriculteurs et acheteurs",
+    title: "NukuConnect IA accompagne producteurs et acheteurs",
     subtitle: "Conseils techniques, recommandations et support intelligent à tout moment.",
     cta: { label: "Discuter avec l'IA", to: "/nuku-ai" },
     secondary: { label: "Voir la FAQ", to: "/faq-nuku-ai" },
