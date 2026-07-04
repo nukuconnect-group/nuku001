@@ -159,7 +159,7 @@ const LocationPickerDialog = ({ open, onOpenChange, currentLocation, onSave }: P
       
       toast({ title: "Position détectée", description: `${detectedCity}, ${found?.name || countryCode}` });
     } catch {
-      toast({ title: "Erreur GPS", description: "Impossible de détecter votre position. Vérifiez les permissions.", variant: "destructive" });
+      toast({ title: "GPS indisponible", description: "Sélectionnez votre pays et votre ville ci-dessous.", });
     }
     setDetecting(false);
   }, [toast]);

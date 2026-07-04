@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
-import nukuDeliveryRider from "@/assets/header-slide-nuku-delivery-rider.jpg";
+import nukuDeliveryRiderAsset from "@/assets/delivery-man-packages.jpg.asset.json";
+const nukuDeliveryRider = nukuDeliveryRiderAsset.url;
 import airplaneTakeoff from "@/assets/header-slide-airplane-takeoff.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
 import agriDrone from "@/assets/header-slide-agri-drone.jpg";
@@ -65,7 +66,7 @@ const slides = [
   {
     eyebrow: "Assistant IA agricole",
     pill: "Nouveau",
-    title: "NukuConnect IA accompagne agriculteurs et acheteurs",
+    title: "NukuConnect IA accompagne producteurs et acheteurs",
     subtitle: "Conseils techniques, recommandations et support intelligent à tout moment.",
     cta: { label: "Discuter avec l'IA", to: "/nuku-ai" },
     secondary: { label: "Voir la FAQ", to: "/faq-nuku-ai" },

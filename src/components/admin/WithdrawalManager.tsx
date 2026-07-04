@@ -39,14 +39,26 @@ const WithdrawalManager = () => {
 
   useEffect(() => {
     fetchWithdrawals();
+    // Realtime : toute nouvelle demande / mise à jour est reflétée sans reload.
+    const channel = supabase
+      .channel("admin-withdrawals")
+      .on("postgres_changes", { event: "*", schema: "public", table: "withdrawals" }, () => {
+        fetchWithdrawals();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchWithdrawals = async () => {
     setIsLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("withdrawals")
       .select("*, profiles:profile_id(full_name, phone, avatar_url, user_type)")
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("[WithdrawalManager] fetch failed", error);
+      toast({ title: "Erreur chargement retraits", description: error.message, variant: "destructive" });
+    }
     setWithdrawals(data || []);
     setIsLoading(false);
   };

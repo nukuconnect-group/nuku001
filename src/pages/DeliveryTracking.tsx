@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
-import heroDelivery from "@/assets/hero-delivery-modern.jpg";
+import heroDeliveryAsset from "@/assets/delivery-hero-modern.jpg.asset.json";
+const heroDelivery = heroDeliveryAsset.url;
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import DriverLiveMap from "@/components/delivery/DriverLiveMap";
 import DriverRatingModal from "@/components/delivery/DriverRatingModal";
@@ -46,15 +47,20 @@ const DeliveryTracking = () => {
       .select("*, products(name, images, category, unit, price, location), profiles!orders_seller_id_fkey(full_name)")
       .or(`buyer_id.eq.${prof.id},seller_id.eq.${prof.id}`)
       .order("created_at", { ascending: false });
-    setOrders(data || []);
-    if (data && data.length > 0 && !selectedOrder) setSelectedOrder(data[0]);
-    if (selectedOrder && data) {
-      const updated = data.find((o: any) => o.id === selectedOrder.id);
+    // "Suivre commande" ne doit afficher que les commandes réellement engagées :
+    // on masque les commandes en attente de paiement (pending / awaiting_payment).
+    const trackable = (data || []).filter((o: any) =>
+      !["pending", "awaiting_payment"].includes(String(o.status))
+    );
+    setOrders(trackable);
+    if (trackable.length > 0 && !selectedOrder) setSelectedOrder(trackable[0]);
+    if (selectedOrder) {
+      const updated = trackable.find((o: any) => o.id === selectedOrder.id);
       if (updated) setSelectedOrder(updated);
     }
     // Fetch delivery records for these orders
-    if (data && data.length > 0) {
-      const orderIds = data.map((o: any) => o.id);
+    if (trackable.length > 0) {
+      const orderIds = trackable.map((o: any) => o.id);
       const { data: dels } = await supabase
         .from("deliveries")
         .select("*")

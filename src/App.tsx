@@ -61,6 +61,7 @@ import Legal from "./pages/Legal";
 import PurchasePolicy from "./pages/PurchasePolicy";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminWatermarkErrors from "./pages/AdminWatermarkErrors";
@@ -234,6 +235,7 @@ const App = () => {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
+                  <Route path="/support" element={<Support />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />

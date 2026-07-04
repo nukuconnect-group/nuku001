@@ -3394,6 +3394,36 @@ export type Database = {
         }[]
       }
       get_public_delivery_tracking: { Args: { p_token: string }; Returns: Json }
+      get_public_profile: {
+        Args: { _id_or_name: string }
+        Returns: {
+          availability_end: string | null
+          availability_start: string | null
+          avatar_url: string | null
+          bio: string | null
+          business_name: string | null
+          cover_images: string[] | null
+          cover_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          is_verified: boolean
+          location: string | null
+          response_rate: number | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          user_type: string
+          username: string | null
+          years_active: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_public_profile_data: { Args: { p_profile_id: string }; Returns: Json }
       get_route_performance_stats: {
         Args: { _days?: number }

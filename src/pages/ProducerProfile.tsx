@@ -103,36 +103,32 @@ const ProducerProfile = () => {
     queryKey: ["producer-profile", profileId],
     queryFn: async () => {
       if (isDemo) return demoSuppliers[profileId] || null;
-      // Try UUID match first
+      const decodedName = decodeURIComponent(profileId);
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(profileId);
+
+      // 1) SECURITY DEFINER RPC — works for anon AND authenticated users,
+      //    resolves either UUID or business/full name in a single roundtrip.
+      const { data: rpcData } = await (supabase as any).rpc(
+        "get_public_profile",
+        { _id_or_name: isUUID ? profileId : decodedName },
+      );
+      const rpcRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      if (rpcRow) return rpcRow;
+
+      // 2) Fallback direct queries (authenticated marketplace policy).
       if (isUUID) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", profileId)
-          .maybeSingle();
+        const { data } = await supabase.from("profiles").select("*").eq("id", profileId).maybeSingle();
         if (data) return data;
       }
-      // Fallback: canonical public route uses the business name first, then full name.
-      const decodedName = decodeURIComponent(profileId);
-      const { data: byBusiness, error: businessError } = await supabase
-        .from("profiles")
-        .select("*")
-        .ilike("business_name", decodedName)
-        .limit(1)
-        .maybeSingle();
-      if (businessError) throw businessError;
+      const { data: byBusiness } = await supabase
+        .from("profiles").select("*").ilike("business_name", decodedName).limit(1).maybeSingle();
       if (byBusiness) return byBusiness;
-      const { data: byFullName, error: fullNameError } = await supabase
-        .from("profiles")
-        .select("*")
-        .ilike("full_name", decodedName)
-        .limit(1)
-        .maybeSingle();
-      if (fullNameError) throw fullNameError;
+      const { data: byFullName } = await supabase
+        .from("profiles").select("*").ilike("full_name", decodedName).limit(1).maybeSingle();
       return byFullName;
     },
     enabled: !!profileId,
+    retry: 1,
   });
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
