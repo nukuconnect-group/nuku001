@@ -235,6 +235,7 @@ const App = () => {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/aide" element={<Help />} />
                   <Route path="/faq" element={<Help />} />
+                  <Route path="/support" element={<Support />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/seo-preview" element={<SeoPreview />} />
                   <Route path="/admin/seo-canonical" element={<SeoCanonical />} />
