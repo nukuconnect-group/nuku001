@@ -716,6 +716,7 @@ const ProductDetail = () => {
               {/* Seller card — moved right after stock + delivery summary */}
               <SellerCard
                 businessName={product.producer.name}
+                producerId={product.producer.id}
                 avatarUrl={product.producer.avatar}
                 verified={product.producer.verified}
                 rating={product.producer.rating}
