@@ -28,6 +28,7 @@ export interface SellerCardProps {
  */
 export default function SellerCard({
   businessName,
+  producerId,
   avatarUrl,
   verified,
   rating,
@@ -35,7 +36,13 @@ export default function SellerCard({
   onContact,
   compact = false,
 }: SellerCardProps) {
-  const shopUrl = producerShopUrl(businessName);
+  // Prefer routing by UUID (unambiguous, always resolvable) — fall back to the
+  // business_name-based slug only when the caller didn't provide an id. This
+  // eliminates the "Boutique introuvable" state triggered by name mismatches.
+  const isUUID = !!producerId && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(producerId);
+  const shopUrl = isUUID
+    ? `/producteurs/${encodeURIComponent(producerId!)}`
+    : producerShopUrl(businessName);
 
   return (
     <Card
