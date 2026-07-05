@@ -144,6 +144,9 @@ const Auth = () => {
   const [buyerLocation, setBuyerLocation] = useState("");
   const [buyerCountry, setBuyerCountry] = useState("");
   const [buyerCompany, setBuyerCompany] = useState(""); // Optionnel — nom d'entreprise pour acheteurs/apprenants
+  const [buyerIsAggregator, setBuyerIsAggregator] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
 
   useEffect(() => {
     if (buyerCountry) return;
@@ -680,12 +683,7 @@ const Auth = () => {
                         aria-invalid={companyMissing}
                       />
                     </div>
-                    {companyMissing ? (
-                      <p className="text-[11px] text-destructive flex items-center gap-1 -mt-1">
-                        <AlertCircle className="w-3 h-3" />
-                        Le nom de l'entreprise est obligatoire pour finaliser l'inscription.
-                      </p>
-                    ) : (
+                    {!companyMissing && (
                       <p className="text-[10px] text-muted-foreground -mt-1 flex items-center gap-1">
                         <Check className="w-3 h-3 text-primary" />
                         Ce nom sera affiché publiquement à la place de votre nom personnel.
