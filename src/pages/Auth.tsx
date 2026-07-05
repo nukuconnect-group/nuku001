@@ -763,10 +763,79 @@ const Auth = () => {
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input type="text" placeholder="Votre ville" value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} className="pl-10" required />
                     </div>
-                    <Select value={buyerCountry} onValueChange={setBuyerCountry}>
-                      <SelectTrigger><SelectValue placeholder="Choisir un pays" /></SelectTrigger>
-                      <SelectContent>{countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                    </Select>
+                    {/* Pays — recherche + drapeaux (Popover) */}
+                    <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm h-10 hover:bg-accent/30 transition"
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            {(() => {
+                              const sel = countries.find((c) => c.name === buyerCountry);
+                              return sel ? (
+                                <>
+                                  <span className="text-base leading-none">{sel.flag}</span>
+                                  <span className="text-foreground truncate">{sel.name}</span>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Choisir un pays</span>
+                              );
+                            })()}
+                          </span>
+                          <ChevronsUpDown className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <div className="p-2 border-b border-border">
+                          <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Input
+                              autoFocus
+                              value={countrySearch}
+                              onChange={(e) => setCountrySearch(e.target.value)}
+                              placeholder="Rechercher un pays…"
+                              className="pl-7 h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <ScrollArea className="max-h-64">
+                          <div className="p-1">
+                            {countries
+                              .filter((c) => c.name.toLowerCase().includes(countrySearch.trim().toLowerCase()))
+                              .map((c) => (
+                                <button
+                                  type="button"
+                                  key={c.code}
+                                  onClick={() => { setBuyerCountry(c.name); setCountryOpen(false); setCountrySearch(""); }}
+                                  className={`w-full text-left text-xs px-2 py-1.5 rounded hover:bg-accent flex items-center gap-2 ${buyerCountry === c.name ? "bg-accent/60 font-semibold" : ""}`}
+                                >
+                                  <span className="text-base leading-none">{c.flag}</span>
+                                  <span className="truncate flex-1">{c.name}</span>
+                                  <span className="text-[10px] text-muted-foreground">+{c.dial}</span>
+                                  {buyerCountry === c.name && <Check className="w-3 h-3 text-primary" />}
+                                </button>
+                              ))}
+                          </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Agrégateur toggle — un acheteur peut aussi faire des achats en gros */}
+                    <label className="flex items-start gap-2 p-2.5 rounded-lg border border-border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={buyerIsAggregator}
+                        onChange={(e) => setBuyerIsAggregator(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      />
+                      <span className="flex-1">
+                        <span className="block text-xs font-semibold text-foreground">Je suis aussi agrégateur</span>
+                        <span className="block text-[10px] text-muted-foreground leading-tight">
+                          Achats en gros directement auprès des producteurs (revente, groupement, coopérative).
+                        </span>
+                      </span>
+                    </label>
 
                     {/* Optionnel : nom d'entreprise pour les acheteurs (B2B) */}
                     <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground flex items-start gap-2">
