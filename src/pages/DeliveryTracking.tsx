@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
-import heroDeliveryAsset from "@/assets/delivery-hero-modern.jpg.asset.json";
+import heroDeliveryAsset from "@/assets/suivi-commande-hero.jpg.asset.json";
 const heroDelivery = heroDeliveryAsset.url;
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import DriverLiveMap from "@/components/delivery/DriverLiveMap";

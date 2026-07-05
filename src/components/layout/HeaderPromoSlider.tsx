@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import agriWomanSmartphone from "@/assets/header-agri-woman-smartphone.jpg";
 import agriFarmersPhones from "@/assets/header-agri-farmers-phones.jpg";
 import agriTransactionDelivery from "@/assets/header-agri-transaction-delivery.jpg";
-import nukuDeliveryRiderAsset from "@/assets/delivery-man-packages.jpg.asset.json";
+import nukuDeliveryRiderAsset from "@/assets/nukuconnect-delivery-truck.png.asset.json";
 const nukuDeliveryRider = nukuDeliveryRiderAsset.url;
 import airplaneTakeoff from "@/assets/header-slide-airplane-takeoff.jpg";
 import aiAssistant from "@/assets/header-slide-ai-assistant.jpg";
