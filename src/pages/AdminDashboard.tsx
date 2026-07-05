@@ -119,55 +119,87 @@ const AdminDashboard = () => {
     let isMounted = true;
 
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth", { replace: true }); return; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { navigate("/auth", { replace: true }); return; }
 
-      const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
-        _user_id: session.user.id,
-        _role: "admin",
-      } as any);
+        const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
+          _user_id: session.user.id,
+          _role: "admin",
+        } as any);
 
-      if (roleError || !hasAdminRole) {
-        if (isMounted) {
+        if (roleError || !hasAdminRole) {
+          if (isMounted) {
+            toast({
+              title: "Accès refusé",
+              description: roleError?.message || "Vous n'êtes pas administrateur.",
+              variant: "destructive",
+            });
+            navigate("/", { replace: true });
+          }
+          return;
+        }
+
+        if (isMounted) setIsAdmin(true);
+
+        // Resilient loading: use allSettled so one failing RPC does NOT hang
+        // the whole admin dashboard ("Chargement interrompu"). Each result is
+        // applied independently; failures are logged but don't block the UI.
+        const results = await Promise.allSettled([
+          supabase.rpc("get_admin_stats"),
+          supabase.rpc("get_admin_users"),
+          supabase.rpc("get_admin_orders"),
+          supabase.rpc("get_admin_subscriptions"),
+          supabase.rpc("get_admin_analytics"),
+          supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
+        ]);
+
+        if (!isMounted) return;
+
+        const [statsRes, usersRes, ordersRes, subsRes, analyticsRes, profileRes] = results;
+        const val = (r: any) => (r.status === "fulfilled" ? r.value?.data : null);
+        setStats(val(statsRes));
+        setUsers(val(usersRes) || []);
+        setOrders(val(ordersRes) || []);
+        setSubscriptions(val(subsRes) || []);
+        setAnalytics(val(analyticsRes));
+        setAdminProfile(val(profileRes));
+
+        const failed = results.filter(r => r.status === "rejected");
+        if (failed.length) {
+          console.error("[AdminDashboard] Partial load failure:", failed);
           toast({
-            title: "Accès refusé",
-            description: roleError?.message || "Vous n'êtes pas administrateur.",
+            title: "Chargement partiel",
+            description: `${failed.length} module(s) indisponible(s). Les autres sont chargés.`,
             variant: "destructive",
           });
-          navigate("/", { replace: true });
         }
-        return;
-      }
 
-      if (isMounted) setIsAdmin(true);
-
-      const [statsRes, usersRes, ordersRes, subsRes, analyticsRes, profileRes] = await Promise.all([
-        supabase.rpc("get_admin_stats"),
-        supabase.rpc("get_admin_users"),
-        supabase.rpc("get_admin_orders"),
-        supabase.rpc("get_admin_subscriptions"),
-        supabase.rpc("get_admin_analytics"),
-        supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
-      ]);
-
-      if (isMounted) {
-        setStats(statsRes.data);
-        setUsers(usersRes.data || []);
-        setOrders(ordersRes.data || []);
-        setSubscriptions(subsRes.data || []);
-        setAnalytics(analyticsRes.data);
-        setAdminProfile(profileRes.data);
-        setIsLoading(false);
-      }
-
-      // Load conversations for admin chat
-      if (profileRes.data) {
-        const { data: convs } = await supabase
-          .from("conversations")
-          .select("*, profiles!conversations_buyer_id_fkey(full_name, avatar_url), profiles!conversations_seller_id_fkey(full_name, avatar_url)")
-          .or(`buyer_id.eq.${profileRes.data.id},seller_id.eq.${profileRes.data.id}`)
-          .order("updated_at", { ascending: false });
-        if (isMounted) setConversations(convs || []);
+        // Load conversations for admin chat (best-effort)
+        const adminProfileData = val(profileRes);
+        if (adminProfileData) {
+          try {
+            const { data: convs } = await supabase
+              .from("conversations")
+              .select("*, profiles!conversations_buyer_id_fkey(full_name, avatar_url), profiles!conversations_seller_id_fkey(full_name, avatar_url)")
+              .or(`buyer_id.eq.${adminProfileData.id},seller_id.eq.${adminProfileData.id}`)
+              .order("updated_at", { ascending: false });
+            if (isMounted) setConversations(convs || []);
+          } catch (e) {
+            console.error("[AdminDashboard] conversations load failed:", e);
+          }
+        }
+      } catch (err: any) {
+        console.error("[AdminDashboard] Fatal load error:", err);
+        if (isMounted) {
+          toast({
+            title: "Erreur de chargement",
+            description: err?.message || "Impossible de charger le panneau admin.",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
