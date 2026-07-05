@@ -50,14 +50,8 @@ const sectors = [
   "Autre",
 ].sort((a, b) => a.localeCompare(b, "fr"));
 
-const countries = [
-  "Togo", "Bénin", "Ghana", "Côte d'Ivoire", "Burkina Faso",
-  "Niger", "Mali", "Sénégal", "Guinée", "Cameroun",
-  "Nigeria", "RDC", "Congo", "Gabon", "Tchad",
-  "Mauritanie", "Gambie", "Sierra Leone", "Liberia",
-  "Cap-Vert", "Guinée-Bissau", "Guinée équatoriale",
-  "São Tomé-et-Príncipe", "Centrafrique",
-];
+import { COUNTRIES, type Country } from "@/data/countries";
+const countries = COUNTRIES;
 
 const profileTypes = [
   { type: "buyer" as const, icon: Store, label: "Acheteur", desc: "Achetez des produits agricoles auprès de fournisseurs vérifiés", features: ["Recommandations IA", "Suivi de commandes", "Messagerie directe"] },
