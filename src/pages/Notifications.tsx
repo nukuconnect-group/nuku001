@@ -158,19 +158,20 @@ const Notifications = () => {
   };
 
   const handleNotifClick = async (notif: Notification) => {
-    // Mark as read on first interaction
+    // Mark as read on interaction
     if (!notif.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", notif.id);
       updateNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, is_read: true } : n));
       window.dispatchEvent(new CustomEvent("nuku:notifications-updated"));
     }
-    // First tap = expand full content in place; second tap = navigate.
-    if (expandedId !== notif.id) {
-      setExpandedId(notif.id);
+    // Single click → navigate directly to the relevant module/details when a
+    // link is resolvable; otherwise just expand the content in place.
+    const link = getNotifLink(notif);
+    if (link) {
+      navigate(link);
       return;
     }
-    const link = getNotifLink(notif);
-    if (link) navigate(link);
+    setExpandedId(expandedId === notif.id ? null : notif.id);
   };
 
   const timeAgo = (date: string) => {

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
-import heroDeliveryAsset from "@/assets/delivery-hero-modern.jpg.asset.json";
+import heroDeliveryAsset from "@/assets/suivi-commande-hero.jpg.asset.json";
 const heroDelivery = heroDeliveryAsset.url;
 import DeliveryChat from "@/components/delivery/DeliveryChat";
 import DriverLiveMap from "@/components/delivery/DriverLiveMap";
@@ -581,7 +581,17 @@ const DeliveryTracking = () => {
                 {orders.map((order) => (
                   <Card key={order.id}
                     className={`cursor-pointer transition-all hover:shadow-md overflow-hidden ${selectedOrder?.id === order.id ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => setSelectedOrder(order)}>
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      // Scroll back to the top so the detail view opens on its
+                      // first element rather than leaving the user at the bottom
+                      // of the list (mobile).
+                      setTimeout(() => {
+                        const el = document.getElementById("suivi-detail-top");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        else window.scrollTo({ top: 0, behavior: "smooth" });
+                      }, 50);
+                    }}>
                     <CardContent className="p-3 sm:p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -618,7 +628,7 @@ const DeliveryTracking = () => {
 
               {/* Detail view */}
               {selectedOrder && (
-                <Card className="overflow-hidden">
+                <Card id="suivi-detail-top" className="overflow-hidden scroll-mt-20">
                   <CardHeader className="p-3 sm:p-4 pb-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
