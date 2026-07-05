@@ -8,6 +8,8 @@ import { producerShopUrl } from "@/lib/producerLinks";
 export interface SellerCardProps {
   /** business_name (preferred) or fallback name already resolved upstream */
   businessName: string;
+  /** Profile UUID — preferred routing target ("Voir la boutique"). */
+  producerId?: string;
   avatarUrl: string;
   verified: boolean;
   rating?: number;
