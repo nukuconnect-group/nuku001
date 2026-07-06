@@ -6,6 +6,14 @@
         { "key": "Content-Type", "value": "text/html; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600" }
       ]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
     }
   ],
   "rewrites": [
@@ -18,7 +26,7 @@
       "destination": "https://fpnhdihvnfsiymopbjgt.supabase.co/functions/v1/share-og"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!\\.well-known/).*)",
       "destination": "/index.html"
     }
   ]
