@@ -8,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "com.nukuconnect.app",
       "sha256_cert_fingerprints": [
-        "E5:A9:1D:84:E8:1A:21:D9:66:3D:E2:9E:3E:86:2F:4D:A5:9A:0A:1E:57:CF:D3:23:B7:7F:11:E5:68:CB:A8:7A"
+        "E5:A9:1D:84:E8:1A:21:D9:66:3D:E2:9E:3E:86:2F:4D:A5:9A:0A:1E:57:CF:D3:23:B7:7F:11:E5:68:CB:A8:7A",
+        "F2:BC:70:0B:8A:6E:C0:FD:68:73:16:C6:3E:74:25:F6:FD:3B:16:82:3E:5C:EC:DC:3E:60:B8:EE:67:BF:82:0E"
       ]
     }
   }
