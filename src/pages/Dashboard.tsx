@@ -589,24 +589,40 @@ const Dashboard = () => {
                             onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
                             <Edit className="w-3 h-3" />Modifier
                           </Button>
-                          <div className="grid grid-cols-3 gap-1">
+                          <div className="grid grid-cols-5 gap-1">
                             {!isProductBoosted(activeBoosts, product.id) ? (
                               <Button variant="outline" size="sm" className="h-8 px-1 text-primary gap-1 text-[10px]" onClick={() => setBoostProduct(product)} aria-label="Booster">
-                                <Rocket className="w-3 h-3" /><span className="hidden sm:inline">Boost</span>
+                                <Rocket className="w-3 h-3" />
                               </Button>
                             ) : (
                               <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" disabled aria-label="Boosté">
-                                <Rocket className="w-3 h-3 text-primary" /><span className="hidden sm:inline">Actif</span>
+                                <Rocket className="w-3 h-3 text-primary" />
                               </Button>
                             )}
+                            <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" onClick={() => navigate(`/produit/${product.id}`)} aria-label="Voir">
+                              <Eye className="w-3 h-3" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" onClick={async () => {
+                              const url = `${window.location.origin}/produit/${product.id}`;
+                              try {
+                                if (navigator.share) await navigator.share({ title: product.name, url });
+                                else { await navigator.clipboard.writeText(url); toast({ title: "Lien copié" }); }
+                              } catch {}
+                            }} aria-label="Partager">
+                              <Share2 className="w-3 h-3" />
+                            </Button>
                             <Button variant="outline" size="sm" className="h-8 px-1 gap-1 text-[10px]" onClick={() => navigate(`/tracabilite`)} aria-label="Traçabilité">
-                              <QrCode className="w-3 h-3 text-blue-500" /><span className="hidden sm:inline">QR</span>
+                              <QrCode className="w-3 h-3 text-blue-500" />
                             </Button>
                             <Button variant="outline" size="sm" className="h-8 px-1 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1 text-[10px]"
                               onClick={() => setProductToDelete(product)} aria-label="Supprimer">
-                              <Trash2 className="w-3 h-3" /><span className="hidden sm:inline">Suppr.</span>
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
+                          <p className="text-[9px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                            <Calendar className="w-2.5 h-2.5" />
+                            Publié le {new Date(product.created_at).toLocaleDateString("fr-FR")}
+                          </p>
                         </CardContent>
                       </Card>
                     );
