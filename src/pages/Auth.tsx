@@ -57,8 +57,10 @@ const profileTypes = [
   { type: "buyer" as const, icon: Store, label: "Acheteur", desc: "Achetez des produits agricoles auprès de fournisseurs vérifiés", features: ["Recommandations IA", "Suivi de commandes", "Messagerie directe"] },
   { type: "producer" as const, icon: User, label: "Fournisseur", desc: "Vendez vos produits sur la marketplace intelligente", features: ["Gestion de stock", "Statistiques de vente", "Boost produits"] },
   { type: "driver" as const, icon: Truck, label: "Livreur", desc: "Livrez les commandes et gagnez des revenus", features: ["GPS en temps réel", "Revenus transparents", "Attribution intelligente"] },
-  { type: "learner" as const, icon: GraduationCap, label: "Apprenant", desc: "Suivez des formations agricoles certifiées", features: ["Cours en ligne", "Certificats", "Communauté"] },
-  { type: "trainer" as const, icon: BookOpen, label: "Formateur", desc: "Créez et dispensez des formations agricoles", features: ["Gestion de cours", "Suivi des apprenants", "Revenus formateur"] },
+  // Les profils "Apprenant" et "Formateur" sont temporairement désactivés à l'inscription publique.
+  // Ne pas les réactiver sans vérifier les redirections et permissions associées.
+  // { type: "learner" as const, icon: GraduationCap, label: "Apprenant", desc: "...", features: [] },
+  // { type: "trainer" as const, icon: BookOpen, label: "Formateur", desc: "...", features: [] },
 ];
 
 const Auth = () => {

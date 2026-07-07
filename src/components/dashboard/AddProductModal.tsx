@@ -279,17 +279,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
         }
       };
       hydrate(editProduct);
-      // Only do an authoritative DB refetch if the parent reference is
-      // partial (missing one of the snake_case-only fields). When the
-      // parent already provided full data, skip it to avoid races that
-      // wipe in-progress user edits.
-      const needsRefetch =
-        editProduct.id && (
-          editProduct.description === undefined ||
-          editProduct.quantity_available === undefined ||
-          editProduct.stock_status === undefined
-        );
-      if (needsRefetch) {
+      // Toujours re-fetcher la ligne complète depuis la base pour garantir
+      // que TOUS les champs (description, stock, catégorie, promo, min_order,
+      // shipping_delay_days, is_negotiable, localisation, etc.) sont préremplis,
+      // peu importe la forme (raw DB row ou objet Product camelCase) reçue du parent.
+      if (editProduct.id) {
         supabase
           .from("products")
           .select("*")
