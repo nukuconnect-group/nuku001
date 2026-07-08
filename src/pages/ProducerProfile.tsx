@@ -15,6 +15,9 @@ import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
 import { shopShareUrl, shopCrawlerUrl } from "@/lib/shareOg";
+import { useFollows, useProfileFollowerCount } from "@/hooks/useFollows";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
+
 import { buildShopSeoMeta } from "@/lib/socialMeta";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
