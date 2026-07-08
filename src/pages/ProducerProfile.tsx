@@ -549,23 +549,45 @@ const ProducerProfile = () => {
             </Card>
           )}
 
-          <div>
-            <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
-              Produits de {(producer as any).business_name || producer.full_name} ({products.length})
-            </h2>
-            {mappedProducts.length > 0 ? (
+          {boostedProducts.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+                  <Star className="w-4 h-4 text-white fill-white" />
+                </div>
+                <h2 className="font-heading text-lg lg:text-xl font-bold text-foreground">
+                  Produits en vedette ({boostedProducts.length})
+                </h2>
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px]">
+                  Boostés
+                </Badge>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {mappedProducts.map((product) => (
+                {boostedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} hideProducer />
                 ))}
               </div>
-            ) : (
+            </div>
+          )}
+
+          <div>
+            <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
+              {boostedProducts.length > 0 ? "Autres produits" : "Produits"} de {(producer as any).business_name || producer.full_name} ({products.length})
+            </h2>
+            {regularProducts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {regularProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} hideProducer />
+                ))}
+              </div>
+            ) : mappedProducts.length === 0 ? (
               <div className="text-center py-12 bg-muted rounded-xl">
                 <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Aucun produit disponible pour le moment</p>
               </div>
-            )}
+            ) : null}
           </div>
+
         </div>
       </main>
       <Footer />
