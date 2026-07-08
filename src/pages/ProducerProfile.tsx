@@ -101,6 +101,10 @@ const ProducerProfile = () => {
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
   const [shareOpen, setShareOpen] = useState(false);
+  const { isFollowing, toggleFollow, isPending: followPending } = useFollows();
+  const { data: activeBoosts = [] } = useActiveBoosts();
+
+
 
   const { data: producer, isLoading: loadingProducer } = useQuery({
     queryKey: ["producer-profile", profileId],
