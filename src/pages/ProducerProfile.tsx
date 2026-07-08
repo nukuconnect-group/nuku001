@@ -240,7 +240,12 @@ const ProducerProfile = () => {
     : null;
   const coords: [number, number] | null = profileCoords || geocoded || null;
   const rating = avgRating || 0;
+  const { data: followerCount = 0 } = useProfileFollowerCount(producer?.id);
+  const following = producer?.id ? isFollowing(producer.id) : false;
+  const boostedProducts = mappedProducts.filter(p => isProductBoosted(activeBoosts, p.id));
+  const regularProducts = mappedProducts.filter(p => !isProductBoosted(activeBoosts, p.id));
   const shopName = ((producer as any)?.business_name || producer?.full_name || "Boutique").trim();
+
   const shopSeoMeta = buildShopSeoMeta({
     name: shopName,
     bio: producer?.bio,
