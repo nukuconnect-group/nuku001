@@ -1889,6 +1889,7 @@ export type Database = {
         Row: {
           category: string
           city: string | null
+          click_count: number
           country: string | null
           created_at: string
           description: string | null
@@ -1915,10 +1916,12 @@ export type Database = {
           stock_status: string
           unit: string
           updated_at: string
+          view_count: number
         }
         Insert: {
           category: string
           city?: string | null
+          click_count?: number
           country?: string | null
           created_at?: string
           description?: string | null
@@ -1945,10 +1948,12 @@ export type Database = {
           stock_status?: string
           unit?: string
           updated_at?: string
+          view_count?: number
         }
         Update: {
           category?: string
           city?: string | null
+          click_count?: number
           country?: string | null
           created_at?: string
           description?: string | null
@@ -1975,6 +1980,7 @@ export type Database = {
           stock_status?: string
           unit?: string
           updated_at?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -3351,6 +3357,7 @@ export type Database = {
         Returns: {
           category: string
           city: string | null
+          click_count: number
           country: string | null
           created_at: string
           description: string | null
@@ -3377,6 +3384,7 @@ export type Database = {
           stock_status: string
           unit: string
           updated_at: string
+          view_count: number
         }[]
         SetofOptions: {
           from: "*"
@@ -3460,6 +3468,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_product_click: {
+        Args: { p_product_id: string }
+        Returns: undefined
+      }
+      increment_product_view: {
+        Args: { p_product_id: string }
+        Returns: undefined
       }
       is_conversation_participant: {
         Args: { _conversation_id: string }
