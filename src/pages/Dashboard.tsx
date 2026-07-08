@@ -574,7 +574,7 @@ const Dashboard = () => {
                             </span>
                             <span className="text-[9px] text-muted-foreground whitespace-nowrap">/{product.unit}</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-1 mb-2">
+                          <div className="grid grid-cols-2 gap-1 mb-1">
                             <div className="bg-muted/50 rounded-md p-1.5 text-center">
                               <p className="text-[9px] text-muted-foreground">Vendus</p>
                               <p className="text-xs font-bold text-foreground">{productSold}</p>
@@ -584,6 +584,17 @@ const Dashboard = () => {
                               <p className="text-xs font-bold text-primary truncate">{productRevenue > 0 ? `${(productRevenue / 1000).toFixed(0)}K` : "0"} F</p>
                             </div>
                           </div>
+                          <div className="grid grid-cols-2 gap-1 mb-2">
+                            <div className="bg-primary/5 rounded-md p-1.5 text-center border border-primary/10">
+                              <p className="text-[9px] text-muted-foreground flex items-center justify-center gap-0.5"><Eye className="w-2.5 h-2.5" />Vues</p>
+                              <p className="text-xs font-bold text-foreground">{(product as any).view_count ?? 0}</p>
+                            </div>
+                            <div className="bg-primary/5 rounded-md p-1.5 text-center border border-primary/10">
+                              <p className="text-[9px] text-muted-foreground flex items-center justify-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />Clics</p>
+                              <p className="text-xs font-bold text-foreground">{(product as any).click_count ?? 0}</p>
+                            </div>
+                          </div>
+
                           {/* Actions: Modifier en pleine largeur + ligne d'icônes équilibrée */}
                           <Button variant="outline" size="sm" className="w-full gap-1 text-[11px] h-8 mb-1.5"
                             onClick={() => { setEditingProduct(product); setShowAddProduct(true); }}>
