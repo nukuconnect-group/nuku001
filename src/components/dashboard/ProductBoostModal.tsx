@@ -150,7 +150,25 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {activeBoost && (
+              <div className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Boost actif</p>
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                      Plan {activeBoost.plan_name} — {daysLeft} jour{daysLeft > 1 ? "s" : ""} restant{daysLeft > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-600 text-white text-[10px] flex-shrink-0">En cours</Badge>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+
               {boostPlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 return (
