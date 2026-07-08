@@ -149,8 +149,12 @@ const ProductDetail = () => {
     if (product) {
       addItem(product, quantity);
       toast({ title: t("product.addedToCart"), description: `${quantity} ${product.unit}(s) de ${product.name}` });
+      // Track engagement click for supplier stats
+      supabase.rpc("increment_product_click" as any, { p_product_id: product.id }).then(() => {}, () => {});
     }
   };
+
+
 
   const handleBuyNow = async () => {
     if (!product) return;
