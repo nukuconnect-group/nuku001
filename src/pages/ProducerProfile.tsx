@@ -379,9 +379,26 @@ const ProducerProfile = () => {
                     <Button variant="hero" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate(`/messages?contact=${producer.id}`)}>
                       <MessageCircle className="w-3.5 h-3.5" />Contacter
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-                      <Star className="w-3.5 h-3.5" />Suivre
+                    <Button
+                      variant={following ? "outline" : "hero"}
+                      size="sm"
+                      className="gap-1.5 text-xs h-8"
+                      disabled={followPending || !producer?.id}
+                      onClick={async () => {
+                        try {
+                          await toggleFollow(producer!.id);
+                          toast({ title: following ? "Vous ne suivez plus cette boutique" : "Boutique suivie ✓" });
+                        } catch {
+                          toast({ title: "Connexion requise", description: "Connectez-vous pour suivre une boutique.", variant: "destructive" });
+                          navigate("/auth");
+                        }
+                      }}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${following ? "fill-accent text-accent" : ""}`} />
+                      {following ? "Suivi" : "Suivre"}
+                      {followerCount > 0 && <span className="opacity-70">· {followerCount}</span>}
                     </Button>
+
                     {producer.location && (
                       <Button
                         variant="outline"
