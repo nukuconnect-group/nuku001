@@ -136,11 +136,14 @@ const ProductDetail = () => {
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
         } as any);
+        // Bump aggregated view counter on the product row (used for supplier stats)
+        await supabase.rpc("increment_product_view" as any, { p_product_id: productUUID });
       } catch {
         // silent
       }
     })();
   }, [product?.id]);
+
 
   const handleAddToCart = () => {
     if (product) {
