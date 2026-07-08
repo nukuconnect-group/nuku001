@@ -7,8 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTokens } from "@/hooks/useTokens";
-import { Rocket, Coins, Check, Loader2, Clock, Sparkles } from "lucide-react";
+import { Rocket, Coins, Check, Loader2, Clock, Sparkles, TrendingUp } from "lucide-react";
 import ProductBoostStats from "./ProductBoostStats";
+import { useProductBoosts } from "@/hooks/useBoosts";
+
 
 interface BoostPlan {
   id: string;
