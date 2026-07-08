@@ -39,9 +39,15 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
   const { toast } = useToast();
   const navigate = useNavigate();
   const { balance, spendTokens, loading: balanceLoading } = useTokens();
+  const { data: boosts = [] } = useProductBoosts(product?.id);
+  const activeBoost = boosts.find(b => b.is_active && new Date(b.expires_at) > new Date());
+  const daysLeft = activeBoost
+    ? Math.max(0, Math.ceil((new Date(activeBoost.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [isLoading, setIsLoading] = useState(false);
   const [boostedSuccess, setBoostedSuccess] = useState(false);
+
 
   const handleBoost = async () => {
     if (!product) return;
