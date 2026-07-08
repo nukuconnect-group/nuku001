@@ -7,8 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTokens } from "@/hooks/useTokens";
-import { Rocket, Coins, Check, Loader2, Clock, Sparkles } from "lucide-react";
+import { Rocket, Coins, Check, Loader2, Clock, Sparkles, TrendingUp } from "lucide-react";
 import ProductBoostStats from "./ProductBoostStats";
+import { useProductBoosts } from "@/hooks/useBoosts";
+
 
 interface BoostPlan {
   id: string;
@@ -20,9 +22,11 @@ interface BoostPlan {
 }
 
 const boostPlans: BoostPlan[] = [
-  { id: "basic",    name: "Boost 7 jours",  days: 7,  tokens: 1, features: ["Mise en avant 7 jours", "Badge « En vedette »", "Position prioritaire dans la catégorie", "1 crédit utilisé"] },
-  { id: "standard", name: "Boost 30 jours", days: 30, tokens: 4, features: ["Mise en avant 30 jours", "Badge « Top Produit »", "Affiché sur l'accueil", "Notification aux acheteurs", "4 crédits utilisés"], popular: true },
+  { id: "basic",    name: "Boost 7 jours",  days: 7,  tokens: 1, features: ["Mise en avant 7 jours", "Badge « En vedette »", "Position prioritaire dans la catégorie", "1 crédit"] },
+  { id: "standard", name: "Boost 30 jours", days: 30, tokens: 4, features: ["Mise en avant 30 jours", "Badge « Top Produit »", "Affiché sur l'accueil", "Notification aux acheteurs", "4 crédits — économisez 25%"], popular: true },
+  { id: "premium",  name: "Boost 90 jours", days: 90, tokens: 10, features: ["Mise en avant 3 mois", "Badge « Premium » doré", "Home + catégorie + recherche", "Push notifications ciblées", "10 crédits — meilleure valeur"] },
 ];
+
 
 interface ProductBoostModalProps {
   open: boolean;
@@ -35,9 +39,15 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
   const { toast } = useToast();
   const navigate = useNavigate();
   const { balance, spendTokens, loading: balanceLoading } = useTokens();
+  const { data: boosts = [] } = useProductBoosts(product?.id);
+  const activeBoost = boosts.find(b => b.is_active && new Date(b.expires_at) > new Date());
+  const daysLeft = activeBoost
+    ? Math.max(0, Math.ceil((new Date(activeBoost.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [isLoading, setIsLoading] = useState(false);
   const [boostedSuccess, setBoostedSuccess] = useState(false);
+
 
   const handleBoost = async () => {
     if (!product) return;
@@ -140,7 +150,25 @@ const ProductBoostModal = ({ open, onOpenChange, product, onBoostSuccess }: Prod
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {activeBoost && (
+              <div className="rounded-xl border-2 border-emerald-500/40 bg-emerald-500/5 p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Boost actif</p>
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                      Plan {activeBoost.plan_name} — {daysLeft} jour{daysLeft > 1 ? "s" : ""} restant{daysLeft > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-600 text-white text-[10px] flex-shrink-0">En cours</Badge>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+
               {boostPlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 return (

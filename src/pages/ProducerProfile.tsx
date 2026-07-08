@@ -15,6 +15,9 @@ import DriverBadges from "@/components/driver/DriverBadges";
 import defaultAvatar from "@/assets/default-producer-avatar.png";
 import ShareDialog from "@/components/share/ShareDialog";
 import { shopShareUrl, shopCrawlerUrl } from "@/lib/shareOg";
+import { useFollows, useProfileFollowerCount } from "@/hooks/useFollows";
+import { useActiveBoosts, isProductBoosted } from "@/hooks/useBoosts";
+
 import { buildShopSeoMeta } from "@/lib/socialMeta";
 import UserPixels from "@/components/marketing/UserPixels";
 import LocationBadge from "@/components/profile/LocationBadge";
@@ -98,6 +101,10 @@ const ProducerProfile = () => {
   const profileId = name || "";
   const isDemo = profileId.startsWith("demo-");
   const [shareOpen, setShareOpen] = useState(false);
+  const { isFollowing, toggleFollow, isPending: followPending } = useFollows();
+  const { data: activeBoosts = [] } = useActiveBoosts();
+
+
 
   const { data: producer, isLoading: loadingProducer } = useQuery({
     queryKey: ["producer-profile", profileId],
@@ -233,7 +240,12 @@ const ProducerProfile = () => {
     : null;
   const coords: [number, number] | null = profileCoords || geocoded || null;
   const rating = avgRating || 0;
+  const { data: followerCount = 0 } = useProfileFollowerCount(producer?.id);
+  const following = producer?.id ? isFollowing(producer.id) : false;
+  const boostedProducts = mappedProducts.filter(p => isProductBoosted(activeBoosts, p.id));
+  const regularProducts = mappedProducts.filter(p => !isProductBoosted(activeBoosts, p.id));
   const shopName = ((producer as any)?.business_name || producer?.full_name || "Boutique").trim();
+
   const shopSeoMeta = buildShopSeoMeta({
     name: shopName,
     bio: producer?.bio,
@@ -367,9 +379,26 @@ const ProducerProfile = () => {
                     <Button variant="hero" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate(`/messages?contact=${producer.id}`)}>
                       <MessageCircle className="w-3.5 h-3.5" />Contacter
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-                      <Star className="w-3.5 h-3.5" />Suivre
+                    <Button
+                      variant={following ? "outline" : "hero"}
+                      size="sm"
+                      className="gap-1.5 text-xs h-8"
+                      disabled={followPending || !producer?.id}
+                      onClick={async () => {
+                        try {
+                          await toggleFollow(producer!.id);
+                          toast({ title: following ? "Vous ne suivez plus cette boutique" : "Boutique suivie ✓" });
+                        } catch {
+                          toast({ title: "Connexion requise", description: "Connectez-vous pour suivre une boutique.", variant: "destructive" });
+                          navigate("/auth");
+                        }
+                      }}
+                    >
+                      <Star className={`w-3.5 h-3.5 ${following ? "fill-accent text-accent" : ""}`} />
+                      {following ? "Suivi" : "Suivre"}
+                      {followerCount > 0 && <span className="opacity-70">· {followerCount}</span>}
                     </Button>
+
                     {producer.location && (
                       <Button
                         variant="outline"
@@ -520,23 +549,45 @@ const ProducerProfile = () => {
             </Card>
           )}
 
-          <div>
-            <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
-              Produits de {(producer as any).business_name || producer.full_name} ({products.length})
-            </h2>
-            {mappedProducts.length > 0 ? (
+          {boostedProducts.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+                  <Star className="w-4 h-4 text-white fill-white" />
+                </div>
+                <h2 className="font-heading text-lg lg:text-xl font-bold text-foreground">
+                  Produits en vedette ({boostedProducts.length})
+                </h2>
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px]">
+                  Boostés
+                </Badge>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {mappedProducts.map((product) => (
+                {boostedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} hideProducer />
                 ))}
               </div>
-            ) : (
+            </div>
+          )}
+
+          <div>
+            <h2 className="font-heading text-xl lg:text-2xl font-bold text-foreground mb-6">
+              {boostedProducts.length > 0 ? "Autres produits" : "Produits"} de {(producer as any).business_name || producer.full_name} ({products.length})
+            </h2>
+            {regularProducts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {regularProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} hideProducer />
+                ))}
+              </div>
+            ) : mappedProducts.length === 0 ? (
               <div className="text-center py-12 bg-muted rounded-xl">
                 <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Aucun produit disponible pour le moment</p>
               </div>
-            )}
+            ) : null}
           </div>
+
         </div>
       </main>
       <Footer />
