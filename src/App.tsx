@@ -183,6 +183,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <UpdatePrompt />
+            <AuthCacheGuard />
             {showSplash && isFirstVisit && (
               <SplashScreen onComplete={handleSplashComplete} />
             )}
