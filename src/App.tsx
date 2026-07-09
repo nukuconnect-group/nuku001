@@ -92,6 +92,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import PaymentTracking from "./pages/PaymentTracking";
 import ShareDiagnostic from "./pages/ShareDiagnostic";
 import UpdatePrompt from "./components/UpdatePrompt";
+import AuthCacheGuard from "./components/AuthCacheGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
