@@ -96,9 +96,19 @@ const plans = [
 const Plans = () => {
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
+
+  // Annual = 12 mois avec -20% (2.4 mois offerts)
+  const ANNUAL_DISCOUNT = 0.20;
+  const computePrice = (monthly: number) => {
+    if (monthly <= 0) return monthly;
+    if (billingPeriod === "monthly") return monthly;
+    return Math.round(monthly * 12 * (1 - ANNUAL_DISCOUNT));
+  };
+  const monthlySavings = useMemo(() => Math.round(ANNUAL_DISCOUNT * 100), []);
 
   const activateSubscription = useCallback(async (planId: string, paymentProof?: { transactionId?: string }) => {
     const plan = plans.find(p => p.id === planId);
