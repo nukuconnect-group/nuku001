@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,9 +96,19 @@ const plans = [
 const Plans = () => {
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { subscription, refreshSubscription } = useSubscription();
+
+  // Annual = 12 mois avec -20% (2.4 mois offerts)
+  const ANNUAL_DISCOUNT = 0.20;
+  const computePrice = (monthly: number) => {
+    if (monthly <= 0) return monthly;
+    if (billingPeriod === "monthly") return monthly;
+    return Math.round(monthly * 12 * (1 - ANNUAL_DISCOUNT));
+  };
+  const monthlySavings = useMemo(() => Math.round(ANNUAL_DISCOUNT * 100), []);
 
   const activateSubscription = useCallback(async (planId: string, paymentProof?: { transactionId?: string }) => {
     const plan = plans.find(p => p.id === planId);
@@ -123,7 +133,7 @@ const Plans = () => {
 
     const data = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
       plan: planId,
-      billing_period: "annual",
+      billing_period: billingPeriod,
       payment_identifier: paymentProof?.transactionId,
     }, session);
 
@@ -141,7 +151,7 @@ const Plans = () => {
     await refreshSubscription();
     toast({ title: "🎉 Abonnement activé !", description: `Plan ${plan.name} activé avec succès.` });
     setSubscribing(null);
-  }, [refreshSubscription, toast]);
+  }, [refreshSubscription, toast, billingPeriod]);
 
   // Auto-resume after returning from /auth
   useEffect(() => {
@@ -201,14 +211,17 @@ const Plans = () => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
 
+    const amount = computePrice(plan.price);
+    const periodLabel = billingPeriod === "annual" ? "12 mois" : "1 mois";
+
     setSubscribing(planId);
 
     openMonerooPay({
-      amount: plan.price,
-      description: `Plan ${plan.name} - NUKUCONNECT (12 mois)`,
+      amount,
+      description: `Plan ${plan.name} - NUKUCONNECT (${periodLabel})`,
       customer: { email: session.user.email || "" },
       context: "plan",
-      contextData: { planId, planName: plan.name },
+      contextData: { planId, planName: plan.name, billingPeriod },
       onError: (msg) => {
         setSubscribing(null);
         toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
@@ -244,8 +257,31 @@ const Plans = () => {
             </div>
           )}
 
+          {/* Toggle Mensuel / Annuel */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted border shadow-sm mb-3">
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              aria-pressed={billingPeriod === "monthly"}
+            >
+              Mensuel
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("annual")}
+              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 ${billingPeriod === "annual" ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              aria-pressed={billingPeriod === "annual"}
+            >
+              Annuel
+              <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0">−{monthlySavings}%</Badge>
+            </button>
+          </div>
+
           <p className="text-[10px] sm:text-xs text-muted-foreground italic">
-            Tous les packs payants sont valables 12 mois.
+            {billingPeriod === "annual"
+              ? `Économisez ${monthlySavings}% avec l'annuel (12 mois — meilleure offre).`
+              : "Facturation mensuelle — sans engagement long terme."}
           </p>
         </div>
       </section>
@@ -273,9 +309,11 @@ const Plans = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             {plans.map((plan) => {
-              const price = plan.price;
-              const isCustom = price === -1;
+              const monthly = plan.price;
+              const isCustom = monthly === -1;
               const isCurrent = currentPlan === plan.id;
+              const displayPrice = computePrice(monthly);
+              const strikePrice = billingPeriod === "annual" && monthly > 0 ? monthly * 12 : null;
 
               return (
                 <Card key={plan.id} className={`relative overflow-hidden flex flex-col ${plan.popular ? "border-primary shadow-elevated lg:scale-105 z-10" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
@@ -298,13 +336,20 @@ const Plans = () => {
                     <div>
                       {isCustom ? (
                         <span className="font-heading text-base font-bold text-foreground">Sur devis</span>
-                      ) : price === 0 ? (
+                      ) : monthly === 0 ? (
                         <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">Gratuit</span>
                       ) : (
                         <>
-                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{price.toLocaleString("en-US")}</span>
+                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{displayPrice.toLocaleString("en-US")}</span>
                           <span className="text-[10px] sm:text-xs text-muted-foreground"> FCFA</span>
-                          <span className="text-[9px] sm:text-[10px] text-muted-foreground block">/an</span>
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
+                            {billingPeriod === "annual" ? "/an" : "/mois"}
+                          </span>
+                          {strikePrice && (
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through block">
+                              {strikePrice.toLocaleString("en-US")} FCFA/an
+                            </span>
+                          )}
                         </>
                       )}
                     </div>

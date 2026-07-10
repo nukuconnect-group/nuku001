@@ -170,7 +170,10 @@ const Auth = () => {
     } catch { setBuyerCountry("Togo"); }
   }, []);
 
-  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  const _params = new URLSearchParams(window.location.search);
+  // Support ?returnTo=, ?redirect=, ?next= — same-origin paths only
+  const _raw = _params.get("returnTo") || _params.get("redirect") || _params.get("next") || "";
+  const returnTo = _raw && _raw.startsWith("/") && !_raw.startsWith("//") ? _raw : null;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
