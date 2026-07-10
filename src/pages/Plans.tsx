@@ -309,9 +309,11 @@ const Plans = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
             {plans.map((plan) => {
-              const price = plan.price;
-              const isCustom = price === -1;
+              const monthly = plan.price;
+              const isCustom = monthly === -1;
               const isCurrent = currentPlan === plan.id;
+              const displayPrice = computePrice(monthly);
+              const strikePrice = billingPeriod === "annual" && monthly > 0 ? monthly * 12 : null;
 
               return (
                 <Card key={plan.id} className={`relative overflow-hidden flex flex-col ${plan.popular ? "border-primary shadow-elevated lg:scale-105 z-10" : ""} ${isCurrent ? "ring-2 ring-primary" : ""}`}>
@@ -334,13 +336,20 @@ const Plans = () => {
                     <div>
                       {isCustom ? (
                         <span className="font-heading text-base font-bold text-foreground">Sur devis</span>
-                      ) : price === 0 ? (
+                      ) : monthly === 0 ? (
                         <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">Gratuit</span>
                       ) : (
                         <>
-                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{price.toLocaleString("en-US")}</span>
+                          <span className="font-heading text-xl sm:text-2xl font-bold text-foreground">{displayPrice.toLocaleString("en-US")}</span>
                           <span className="text-[10px] sm:text-xs text-muted-foreground"> FCFA</span>
-                          <span className="text-[9px] sm:text-[10px] text-muted-foreground block">/an</span>
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
+                            {billingPeriod === "annual" ? "/an" : "/mois"}
+                          </span>
+                          {strikePrice && (
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through block">
+                              {strikePrice.toLocaleString("en-US")} FCFA/an
+                            </span>
+                          )}
                         </>
                       )}
                     </div>
