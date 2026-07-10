@@ -151,7 +151,7 @@ const Plans = () => {
     await refreshSubscription();
     toast({ title: "🎉 Abonnement activé !", description: `Plan ${plan.name} activé avec succès.` });
     setSubscribing(null);
-  }, [refreshSubscription, toast]);
+  }, [refreshSubscription, toast, billingPeriod]);
 
   // Auto-resume after returning from /auth
   useEffect(() => {
