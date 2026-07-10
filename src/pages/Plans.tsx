@@ -133,7 +133,7 @@ const Plans = () => {
 
     const data = await invokeAuthenticatedFunction<{ error?: string }>("update-subscription", {
       plan: planId,
-      billing_period: "annual",
+      billing_period: billingPeriod,
       payment_identifier: paymentProof?.transactionId,
     }, session);
 
