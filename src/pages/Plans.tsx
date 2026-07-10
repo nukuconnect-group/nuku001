@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
+import { Check, Crown, Rocket, Zap, Star, ArrowRight, Loader2, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
