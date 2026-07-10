@@ -257,8 +257,31 @@ const Plans = () => {
             </div>
           )}
 
+          {/* Toggle Mensuel / Annuel */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted border shadow-sm mb-3">
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              aria-pressed={billingPeriod === "monthly"}
+            >
+              Mensuel
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("annual")}
+              className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 ${billingPeriod === "annual" ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              aria-pressed={billingPeriod === "annual"}
+            >
+              Annuel
+              <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0">−{monthlySavings}%</Badge>
+            </button>
+          </div>
+
           <p className="text-[10px] sm:text-xs text-muted-foreground italic">
-            Tous les packs payants sont valables 12 mois.
+            {billingPeriod === "annual"
+              ? `Économisez ${monthlySavings}% avec l'annuel (12 mois — meilleure offre).`
+              : "Facturation mensuelle — sans engagement long terme."}
           </p>
         </div>
       </section>
