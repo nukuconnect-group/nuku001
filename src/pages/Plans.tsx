@@ -211,14 +211,17 @@ const Plans = () => {
     const plan = plans.find(p => p.id === planId);
     if (!plan) return;
 
+    const amount = computePrice(plan.price);
+    const periodLabel = billingPeriod === "annual" ? "12 mois" : "1 mois";
+
     setSubscribing(planId);
 
     openMonerooPay({
-      amount: plan.price,
-      description: `Plan ${plan.name} - NUKUCONNECT (12 mois)`,
+      amount,
+      description: `Plan ${plan.name} - NUKUCONNECT (${periodLabel})`,
       customer: { email: session.user.email || "" },
       context: "plan",
-      contextData: { planId, planName: plan.name },
+      contextData: { planId, planName: plan.name, billingPeriod },
       onError: (msg) => {
         setSubscribing(null);
         toast({ title: "❌ Erreur de paiement", description: msg, variant: "destructive" });
