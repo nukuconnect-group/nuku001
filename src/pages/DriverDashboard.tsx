@@ -457,12 +457,14 @@ const DriverDashboard = () => {
 
         {/* Mission detail view */}
         {selectedMission ? (
-          <MissionDetailView
-            delivery={selectedMission}
-            driverPosition={driverPosition}
-            onBack={() => setSelectedMission(null)}
-            onStatusUpdate={updateDeliveryStatus}
-          />
+          <MissionErrorBoundary onBack={() => setSelectedMission(null)}>
+            <MissionDetailView
+              delivery={selectedMission}
+              driverPosition={driverPosition}
+              onBack={() => setSelectedMission(null)}
+              onStatusUpdate={updateDeliveryStatus}
+            />
+          </MissionErrorBoundary>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-10">
