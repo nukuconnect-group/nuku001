@@ -22,6 +22,7 @@ import DriverKYCSection from "@/components/driver/DriverKYCSection";
 import DriverStatusHeader from "@/components/driver/DriverStatusHeader";
 import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
+import MissionErrorBoundary from "@/components/driver/MissionErrorBoundary";
 import DriverEarningsPanel from "@/components/driver/DriverEarningsPanel";
 import DriverStatsCharts from "@/components/driver/DriverStatsCharts";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
@@ -456,12 +457,14 @@ const DriverDashboard = () => {
 
         {/* Mission detail view */}
         {selectedMission ? (
-          <MissionDetailView
-            delivery={selectedMission}
-            driverPosition={driverPosition}
-            onBack={() => setSelectedMission(null)}
-            onStatusUpdate={updateDeliveryStatus}
-          />
+          <MissionErrorBoundary onBack={() => setSelectedMission(null)}>
+            <MissionDetailView
+              delivery={selectedMission}
+              driverPosition={driverPosition}
+              onBack={() => setSelectedMission(null)}
+              onStatusUpdate={updateDeliveryStatus}
+            />
+          </MissionErrorBoundary>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 h-10">

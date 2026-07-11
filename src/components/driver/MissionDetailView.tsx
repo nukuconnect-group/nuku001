@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import "leaflet/dist/leaflet.css";
 import {
   MapPin, Navigation, Package, CheckCircle2,
   Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield,
@@ -282,8 +283,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     let cancelled = false;
 
     const initMap = async () => {
-      const L = await import("leaflet");
-      await import("leaflet/dist/leaflet.css");
+      const leafletModule: any = await import("leaflet");
+      const L = leafletModule.default ?? leafletModule;
       leafletRef.current = L;
 
       if (mapInstanceRef.current) {
