@@ -22,6 +22,7 @@ import DriverKYCSection from "@/components/driver/DriverKYCSection";
 import DriverStatusHeader from "@/components/driver/DriverStatusHeader";
 import MissionCard from "@/components/driver/MissionCard";
 import MissionDetailView from "@/components/driver/MissionDetailView";
+import MissionErrorBoundary from "@/components/driver/MissionErrorBoundary";
 import DriverEarningsPanel from "@/components/driver/DriverEarningsPanel";
 import DriverStatsCharts from "@/components/driver/DriverStatsCharts";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
