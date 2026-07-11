@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import DeliveryChat from "@/components/delivery/DeliveryChat";
+import "leaflet/dist/leaflet.css";
 import {
   MapPin, Navigation, Package, CheckCircle2,
   Clock, Truck, ArrowLeft, User, Store, MessageCircle, Shield,
