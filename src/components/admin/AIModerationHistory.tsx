@@ -74,30 +74,22 @@ export default function AIModerationHistory() {
 
       // Envoyer un email au propriétaire (approuvé)
       try {
-        const result = data as { owner_user_id?: string; owner_name?: string } | null;
-        const ownerUserId = result?.owner_user_id;
-        if (ownerUserId) {
-          const { data: authUser } = await supabase
-            .from("profile_private" as any)
-            .select("email")
-            .eq("user_id", ownerUserId)
-            .maybeSingle();
-          const recipientEmail = (authUser as any)?.email;
-          if (recipientEmail) {
-            await supabase.functions.invoke("send-transactional-email", {
-              body: {
-                templateName: "product-moderation",
-                recipientEmail,
-                idempotencyKey: `product-republish-${republishProduct.id}-${Date.now()}`,
-                templateData: {
-                  recipientName: result?.owner_name || "",
-                  productName: editName.trim(),
-                  status: "approved",
-                  productUrl: `https://www.nukuconnect.com/produit/${republishProduct.slug || republishProduct.id}`,
-                },
+        const result = data as { owner_email?: string; owner_name?: string; product_slug?: string } | null;
+        const recipientEmail = result?.owner_email;
+        if (recipientEmail) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "product-moderation",
+              recipientEmail,
+              idempotencyKey: `product-republish-${republishProduct.id}-${Date.now()}`,
+              templateData: {
+                recipientName: result?.owner_name || "",
+                productName: editName.trim(),
+                status: "approved",
+                productUrl: `https://www.nukuconnect.com/produit/${result?.product_slug || republishProduct.id}`,
               },
-            });
-          }
+            },
+          });
         }
       } catch (mailErr) {
         console.warn("[republish] email non envoyé:", mailErr);
