@@ -283,8 +283,8 @@ const MissionDetailView = ({ delivery, driverPosition, onBack, onStatusUpdate }:
     let cancelled = false;
 
     const initMap = async () => {
-      const L = await import("leaflet");
-      await import("leaflet/dist/leaflet.css");
+      const leafletModule: any = await import("leaflet");
+      const L = leafletModule.default ?? leafletModule;
       leafletRef.current = L;
 
       if (mapInstanceRef.current) {
