@@ -87,7 +87,7 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
   useEffect(() => {
     if (!active) return;
     const channel = supabase
-      .channel(`boost-stats-${productId}`)
+      .channel(`boost-stats-${productId}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "analytics_visits" }, (payload: any) => {
         const path = payload?.new?.page_path || "";
         if (path.includes(productId)) setTick((t) => t + 1);
@@ -102,9 +102,6 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
     if (!reference || !period) { setMetrics(null); return; }
     let cancelled = false;
     (async () => {
-      const since = period.from;
-      const until = period.to;
-
       const { data: adStats } = await supabase.rpc("get_product_boost_stats" as any, { p_product_id: productId });
       const row = Array.isArray(adStats) ? adStats[0] : adStats;
 
