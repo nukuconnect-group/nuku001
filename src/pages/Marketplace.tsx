@@ -223,21 +223,14 @@ const Marketplace = () => {
   const { data: allDemands } = useDemands();
   const demandsCount = allDemands?.length || 0;
   
-  // Real DB products always first, boosted on top, mock products only as filler at the end
+  // Real DB products in natural recency order; sponsored visibility is injected separately
+  // so the normal marketplace flow and recent publications are preserved.
   const allProducts = useMemo(() => {
     const db = dbProducts || [];
-    const boostedIds = new Set(activeBoosts.map(b => b.product_id));
-    
-    // Sort real products: boosted first, then by creation date
-    const sortedDb = [...db].sort((a, b) => {
-      const aBoost = boostedIds.has(a.id) ? 1 : 0;
-      const bBoost = boostedIds.has(b.id) ? 1 : 0;
-      if (bBoost !== aBoost) return bBoost - aBoost;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    const sortedDb = [...db].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return sortedDb;
-  }, [dbProducts, activeBoosts]);
+  }, [dbProducts]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
@@ -401,26 +394,69 @@ const Marketplace = () => {
 
   useEffect(() => { filteredProductsCountRef.current = filteredProducts.length; }, [filteredProducts.length]);
 
-  // ID set des produits sponsorisés — pour les EXCLURE des autres sections
-  // (populaire, flash, nouveautés, par catégorie). Ils restent visibles uniquement
-  // dans la section dédiée "Produits sponsorisés".
   const sponsoredIdSet = useMemo(
     () => new Set(activeBoosts.map((b) => b.product_id)),
     [activeBoosts],
   );
-  const nonSponsoredProducts = useMemo(
-    () => allProducts.filter((p) => !sponsoredIdSet.has(p.id)),
-    [allProducts, sponsoredIdSet],
-  );
+  const sponsoredRank = useMemo(() => {
+    const rank = new Map<string, number>();
+    activeBoosts.forEach((boost, index) => rank.set(boost.product_id, index));
+    return rank;
+  }, [activeBoosts]);
+
+  const capSponsoredBySeller = (products: Product[], maxPerSeller = 3) => {
+    const counts = new Map<string, number>();
+    return products.filter((product) => {
+      const sellerKey = String(product.producer?.id || product.producer?.name || "unknown");
+      const next = (counts.get(sellerKey) || 0) + 1;
+      if (next > maxPerSeller) return false;
+      counts.set(sellerKey, next);
+      return true;
+    });
+  };
+
+  const nonSponsoredProducts = allProducts;
 
   const featuredProducts = useMemo(() => [...nonSponsoredProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 6), [nonSponsoredProducts]);
   const flashDeals = useMemo(() => nonSponsoredProducts.filter(p => p.discount && p.discount > 0).slice(0, 6), [nonSponsoredProducts]);
   const newArrivals = useMemo(() => [...nonSponsoredProducts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6), [nonSponsoredProducts]);
   const sponsoredProducts = useMemo(() => {
-    const boosted = allProducts.filter(p => sponsoredIdSet.has(p.id));
+    const boosted = capSponsoredBySeller(
+      allProducts
+        .filter(p => sponsoredIdSet.has(p.id))
+        .sort((a, b) => (sponsoredRank.get(a.id) ?? 9999) - (sponsoredRank.get(b.id) ?? 9999)),
+      3,
+    );
     // If no boosted products, show top-rated as fallback
-    return boosted.length > 0 ? boosted.slice(0, 8) : [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8);
-  }, [allProducts, sponsoredIdSet]);
+    return boosted.length > 0 ? boosted.slice(0, 30) : [...allProducts].sort((a, b) => b.producer.rating - a.producer.rating).slice(0, 8);
+  }, [allProducts, sponsoredIdSet, sponsoredRank]);
+
+  const injectSponsoredProducts = (baseProducts: Product[]) => {
+    const baseIds = new Set(baseProducts.map((product) => product.id));
+    const sponsoredPool = sponsoredProducts.filter((product) => !baseIds.has(product.id));
+    if (sponsoredPool.length === 0) return baseProducts;
+
+    const injected: Product[] = [];
+    let sponsorIndex = 0;
+    baseProducts.forEach((product, index) => {
+      injected.push(product);
+      if ((index + 1) % 3 === 0 && sponsorIndex < sponsoredPool.length) {
+        injected.push(sponsoredPool[sponsorIndex]);
+        sponsorIndex += 1;
+      }
+    });
+    return injected;
+  };
+
+  const injectedAllProducts = useMemo(
+    () => injectSponsoredProducts(allProducts.filter((product) => !sponsoredIdSet.has(product.id))),
+    [allProducts, sponsoredIdSet, sponsoredProducts],
+  );
+
+  const injectedFilteredProducts = useMemo(
+    () => injectSponsoredProducts(filteredProducts.filter((product) => !sponsoredIdSet.has(product.id))),
+    [filteredProducts, sponsoredIdSet, sponsoredProducts],
+  );
 
   const productsByCategory = useMemo(() => {
     const grouped: { [key: string]: typeof nonSponsoredProducts } = {};
@@ -938,9 +974,9 @@ const Marketplace = () => {
                   {filteredProducts.length > 0 ? (
                     <>
                       <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3" : "flex flex-col gap-3"}>
-                        {filteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                        {injectedFilteredProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode={viewMode} onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} adSource="marketplace_feed" />))}
                       </div>
-                      {visibleCount < filteredProducts.length && (
+                      {visibleCount < injectedFilteredProducts.length && (
                         <div ref={loadMoreRef} className="flex justify-center py-6">
                           <Loader2 className="w-5 h-5 animate-spin text-primary" />
                         </div>
@@ -975,9 +1011,9 @@ const Marketplace = () => {
                       <h2 className="font-heading text-sm sm:text-base lg:text-lg font-bold text-foreground">{t("mp.allProducts")}</h2>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                      {allProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} />))}
+                      {injectedAllProducts.slice(0, visibleCount).map((product) => (<ProductCard key={product.id} product={product} viewMode="grid" onCompare={handleCompare} isBoosted={isProductBoosted(activeBoosts, product.id)} adSource="marketplace_feed" />))}
                     </div>
-                    {visibleCount < allProducts.length && (
+                    {visibleCount < injectedAllProducts.length && (
                       <div ref={loadMoreRef} className="flex justify-center py-6">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
                       </div>
