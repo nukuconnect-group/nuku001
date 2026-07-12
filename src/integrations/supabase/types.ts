@@ -1728,6 +1728,57 @@ export type Database = {
         }
         Relationships: []
       }
+      product_boost_events: {
+        Row: {
+          boost_id: string
+          created_at: string
+          event_type: string
+          id: string
+          product_id: string
+          seller_id: string
+          session_key: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          boost_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          product_id: string
+          seller_id: string
+          session_key?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          boost_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          product_id?: string
+          seller_id?: string
+          session_key?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_boost_events_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "product_boosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_boost_events_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_boosts: {
         Row: {
           created_at: string
@@ -3191,6 +3242,7 @@ export type Database = {
         Args: { _note?: string; _order_id: string; _status: string }
         Returns: Json
       }
+      boost_plan_priority: { Args: { p_plan_name: string }; Returns: number }
       buyer_cancel_order: { Args: { p_order_id: string }; Returns: Json }
       buyer_delete_order: { Args: { p_order_id: string }; Returns: Json }
       can_access_formation_document: {
@@ -3231,6 +3283,14 @@ export type Database = {
         Returns: string
       }
       expire_old_tokens: { Args: never; Returns: number }
+      get_active_boosted_products: {
+        Args: { p_limit?: number }
+        Returns: {
+          plan_name: string
+          priority: number
+          product_id: string
+        }[]
+      }
       get_admin_analytics: { Args: never; Returns: Json }
       get_admin_email_confirmations: {
         Args: { p_limit?: number; p_status?: string }
@@ -3337,6 +3397,18 @@ export type Database = {
           avg_rating: number
           product_id: string
           review_count: number
+        }[]
+      }
+      get_product_boost_stats: {
+        Args: { p_product_id: string }
+        Returns: {
+          clicks: number
+          contacts: number
+          conversion_rate: number
+          favorites: number
+          impressions: number
+          orders: number
+          views: number
         }[]
       }
       get_product_reviews: {
@@ -3530,6 +3602,15 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      track_boost_event: {
+        Args: {
+          p_event_type?: string
+          p_product_id: string
+          p_session_key?: string
+          p_source?: string
+        }
+        Returns: undefined
       }
       track_order_public: {
         Args: { p_email: string; p_order_id: string }

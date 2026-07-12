@@ -22,9 +22,9 @@ interface BoostPlan {
 }
 
 const boostPlans: BoostPlan[] = [
-  { id: "basic",    name: "Boost 7 jours",  days: 7,  tokens: 1, features: ["Mise en avant 7 jours", "Badge « En vedette »", "Position prioritaire dans la catégorie", "1 crédit"] },
-  { id: "standard", name: "Boost 30 jours", days: 30, tokens: 4, features: ["Mise en avant 30 jours", "Badge « Top Produit »", "Affiché sur l'accueil", "Notification aux acheteurs", "4 crédits — économisez 25%"], popular: true },
-  { id: "premium",  name: "Boost 90 jours", days: 90, tokens: 10, features: ["Mise en avant 3 mois", "Badge « Premium » doré", "Home + catégorie + recherche", "Push notifications ciblées", "10 crédits — meilleure valeur"] },
+  { id: "standard", name: "Boost Standard", days: 7, tokens: 1, features: ["Rotation sponsorisée 7 jours", "Badge « Sponsorisé »", "Injection dans le flux marketplace", "Priorité standard"] },
+  { id: "premium", name: "Boost Premium", days: 30, tokens: 4, features: ["Rotation renforcée 30 jours", "Priorité supérieure", "Accueil + catégorie + recherche", "Statistiques publicitaires détaillées"], popular: true },
+  { id: "featured", name: "Produit Vedette", days: 90, tokens: 10, features: ["Priorité maximale 90 jours", "Diffusion premium équitable", "Visibilité longue durée", "Optimisé pour gros volumes d'annonces"] },
 ];
 
 
