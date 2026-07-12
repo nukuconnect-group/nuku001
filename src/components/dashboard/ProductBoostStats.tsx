@@ -30,12 +30,13 @@ const formatDateTime = (iso: string) =>
   });
 
 interface BoostMetrics {
-  impressions: number;     // total page views (analytics_visits)
-  uniqueVisitors: number;  // distinct sessions
-  clicks: number;          // alias of impressions for now
-  conversations: number;   // discussions ouvertes sur ce produit
-  orders: number;          // commandes générées
-  revenue: number;         // CA généré pendant le boost
+  impressions: number;
+  views: number;
+  clicks: number;
+  contacts: number;
+  favorites: number;
+  orders: number;
+  conversionRate: number;
 }
 
 const ProductBoostStats = ({ productId, productName, successMode = false }: Props) => {
@@ -104,46 +105,18 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
       const since = period.from;
       const until = period.to;
 
-      // Vues / impressions
-      const { data: visits } = await supabase
-        .from("analytics_visits")
-        .select("session_id")
-        .ilike("page_path", `%${productId}%`)
-        .gte("created_at", since)
-        .lte("created_at", until);
-      const impressions = visits?.length ?? 0;
-      const uniqueVisitors = new Set((visits || []).map((v: any) => v.session_id).filter(Boolean)).size;
-
-      // Conversations / discussions
-      const { count: convCount } = await supabase
-        .from("conversations")
-        .select("id", { count: "exact", head: true })
-        .eq("product_id", productId)
-        .gte("created_at", since)
-        .lte("created_at", until);
-
-      // Commandes & revenu
-      const { data: orderRows } = await supabase
-        .from("orders")
-        .select("id,total_price,status")
-        .eq("product_id", productId)
-        .gte("created_at", since)
-        .lte("created_at", until);
-      const orders = orderRows?.length ?? 0;
-      // Revenu réel = uniquement commandes au paiement Moneroo confirmé.
-      const PAID = new Set(["confirmed", "completed", "paid", "delivered"]);
-      const revenue = (orderRows || [])
-        .filter((o: any) => PAID.has(String(o.status || "").toLowerCase()))
-        .reduce((s: number, o: any) => s + (Number(o.total_price) || 0), 0);
+      const { data: adStats } = await supabase.rpc("get_product_boost_stats" as any, { p_product_id: productId });
+      const row = Array.isArray(adStats) ? adStats[0] : adStats;
 
       if (cancelled) return;
       setMetrics({
-        impressions,
-        uniqueVisitors,
-        clicks: impressions,
-        conversations: convCount ?? 0,
-        orders,
-        revenue,
+        impressions: Number(row?.impressions || 0),
+        views: Number(row?.views || 0),
+        clicks: Number(row?.clicks || 0),
+        contacts: Number(row?.contacts || 0),
+        favorites: Number(row?.favorites || 0),
+        orders: Number(row?.orders || 0),
+        conversionRate: Number(row?.conversion_rate || 0),
       });
     })();
     return () => { cancelled = true; };
@@ -235,7 +208,7 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
   const isFinished = !!lastFinished;
   const m = metrics;
   const success = m ? (m.impressions > 0 || m.orders > 0) : false;
-  const hasNoData = m && m.impressions === 0 && m.uniqueVisitors === 0 && m.conversations === 0 && m.orders === 0;
+  const hasNoData = m && m.impressions === 0 && m.views === 0 && m.contacts === 0 && m.orders === 0;
 
   // Couleur entête selon état
   const headerClass = isFinished
@@ -326,9 +299,9 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
               <p className="text-[9px] text-muted-foreground">Impressions</p>
             </div>
             <div className="text-center rounded-lg bg-muted/40 p-2">
-              <Users className="w-4 h-4 mx-auto text-blue-500 mb-1" />
-              <p className="text-sm font-bold text-foreground">{m?.uniqueVisitors ?? "…"}</p>
-              <p className="text-[9px] text-muted-foreground">Visiteurs uniques</p>
+              <Users className="w-4 h-4 mx-auto text-primary mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.views ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Vues</p>
             </div>
             <div className="text-center rounded-lg bg-muted/40 p-2">
               <MousePointerClick className="w-4 h-4 mx-auto text-amber-500 mb-1" />
@@ -336,9 +309,9 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
               <p className="text-[9px] text-muted-foreground">Clics fiche</p>
             </div>
             <div className="text-center rounded-lg bg-muted/40 p-2">
-              <MessageCircle className="w-4 h-4 mx-auto text-green-600 mb-1" />
-              <p className="text-sm font-bold text-foreground">{m?.conversations ?? "…"}</p>
-              <p className="text-[9px] text-muted-foreground">Discussions</p>
+              <MessageCircle className="w-4 h-4 mx-auto text-primary mb-1" />
+              <p className="text-sm font-bold text-foreground">{m?.contacts ?? "…"}</p>
+              <p className="text-[9px] text-muted-foreground">Contacts</p>
             </div>
             <div className="text-center rounded-lg bg-muted/40 p-2">
               <ShoppingCart className="w-4 h-4 mx-auto text-primary mb-1" />
@@ -346,11 +319,11 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
               <p className="text-[9px] text-muted-foreground">Commandes</p>
             </div>
             <div className="text-center rounded-lg bg-muted/40 p-2">
-              <TrendingUp className="w-4 h-4 mx-auto text-emerald-600 mb-1" />
+              <TrendingUp className="w-4 h-4 mx-auto text-primary mb-1" />
               <p className="text-sm font-bold text-foreground">
-                {m ? (m.revenue > 0 ? `${(m.revenue / 1000).toFixed(0)}K` : "0") : "…"} F
+                {m ? `${m.conversionRate}%` : "…"}
               </p>
-              <p className="text-[9px] text-muted-foreground">Revenus</p>
+              <p className="text-[9px] text-muted-foreground">Conversion</p>
             </div>
           </div>
           {hasNoData && !isFinished && (
@@ -387,26 +360,28 @@ const ProductBoostStats = ({ productId, productName, successMode = false }: Prop
                   <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.impressions ?? "…"}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Users className="w-3 h-3 text-blue-500" />Visiteurs uniques</span></TableCell>
-                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.uniqueVisitors ?? "…"}</TableCell>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Users className="w-3 h-3 text-primary" />Vues produit</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.views ?? "…"}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MousePointerClick className="w-3 h-3 text-amber-500" />Clics fiche</span></TableCell>
                   <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.clicks ?? "…"}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3 h-3 text-green-600" />Discussions</span></TableCell>
-                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.conversations ?? "…"}</TableCell>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3 h-3 text-primary" />Contacts reçus</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.contacts ?? "…"}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><ShoppingCart className="w-3 h-3 text-primary" />Commandes</span></TableCell>
                   <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.orders ?? "…"}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-emerald-600" />Revenus générés</span></TableCell>
-                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">
-                    {m ? `${(m.revenue || 0).toLocaleString("fr-FR")} F` : "…"}
-                  </TableCell>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-primary" />Taux de conversion</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m ? `${m.conversionRate}%` : "…"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-[11px] py-1.5"><span className="inline-flex items-center gap-1.5"><Sparkles className="w-3 h-3 text-primary" />Favoris</span></TableCell>
+                  <TableCell className="text-[11px] py-1.5 text-right font-semibold">{m?.favorites ?? "…"}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

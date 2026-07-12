@@ -68,8 +68,9 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
   // Realtime
   useEffect(() => {
     if (!deliveryId) return;
+    const channelName = `delivery-chat-${deliveryId}-${currentUserRole}-${crypto.randomUUID()}`;
     const channel = supabase
-      .channel(`delivery-chat-${deliveryId}`)
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
@@ -95,7 +96,7 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [deliveryId, userId]);
+  }, [deliveryId, currentUserRole, userId]);
 
   // Mark as read
   useEffect(() => {
@@ -168,7 +169,11 @@ const DeliveryChat = ({ deliveryId, currentUserRole, otherPartyName, trigger }: 
       };
 
       // Signaling channel
-      const sigChannel = supabase.channel(`call-${deliveryId}`, { config: { broadcast: { self: false } } });
+      if (callChannelRef.current) {
+        supabase.removeChannel(callChannelRef.current);
+        callChannelRef.current = null;
+      }
+      const sigChannel = supabase.channel(`call-${deliveryId}-${currentUserRole}-${crypto.randomUUID()}`, { config: { broadcast: { self: false } } });
       callChannelRef.current = sigChannel;
 
       pc.onicecandidate = (event) => {

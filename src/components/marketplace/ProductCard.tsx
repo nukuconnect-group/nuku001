@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { useProductPriceTiers } from "@/hooks/useProductPriceTiers";
 import { useAverageRating } from "@/hooks/useReviews";
 import ShippingDelayBadge from "@/components/marketplace/ShippingDelayBadge";
 import { getCategoryFallbackImage } from "@/lib/categoryFallbackImage";
+import { trackBoostEvent } from "@/hooks/useBoosts";
 
 
 interface ProductCardProps {
@@ -29,9 +30,10 @@ interface ProductCardProps {
   isBoosted?: boolean;
   /** Ultra-minimal layout for sponsored cards: only image, price (+ promo), title, location. Implies hideProducer. */
   minimal?: boolean;
+  adSource?: string;
 }
 
-const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hideProducerProp = false, isBoosted = false, minimal = false }: ProductCardProps) => {
+const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hideProducerProp = false, isBoosted = false, minimal = false, adSource = "marketplace" }: ProductCardProps) => {
   // Refactor: minimal always hides producer to avoid redundant props & accidental display
   const hideProducer = hideProducerProp || minimal;
   const navigate = useNavigate();
@@ -43,10 +45,32 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const [imgError, setImgError] = useState(false);
   const [listImgError, setListImgError] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement | null>(null);
+
+  useEffect(() => {
+    if (!isBoosted || !cardRef.current) return;
+    const node = cardRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          trackBoostEvent(product.id, "impression", adSource).catch(() => {});
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [adSource, isBoosted, product.id]);
+
+  const trackBoostClick = () => {
+    if (isBoosted) trackBoostEvent(product.id, "click", adSource).catch(() => {});
+  };
 
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    trackBoostClick();
     setQuickViewOpen(true);
   };
 
@@ -80,6 +104,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    trackBoostClick();
     addItem(product);
     toast({ title: "Ajouté au panier", description: `${product.name} a été ajouté à votre panier` });
   };
@@ -87,6 +112,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   const handleCompare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    trackBoostClick();
     onCompare?.(product);
     toast({ title: "Comparaison", description: `${product.name} ajouté à la comparaison` });
   };
@@ -168,7 +194,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
   }
 
   return (
-    <Link to={`/produit/${product.slug || product.id}`} className="block h-full">
+    <Link ref={cardRef} to={`/produit/${product.slug || product.id}`} className="block h-full" onClick={trackBoostClick}>
       <Card variant="feature" className="group overflow-hidden h-full flex flex-col w-full rounded-none shadow-none hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/20 bg-card">
         {/* Image — fallback Unsplash automatique par catégorie si l'image casse */}
         <div className="relative aspect-square overflow-hidden bg-muted">
@@ -245,6 +271,7 @@ const ProductCard = ({ product, viewMode = "grid", onCompare, hideProducer: hide
                       navigate("/auth");
                       return;
                     }
+                    if (isBoosted) trackBoostEvent(product.id, "favorite", adSource).catch(() => {});
                     toggleWishlist(product.id);
                   }}
                   className="w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 shadow-sm sm:opacity-0 sm:group-hover:opacity-100"

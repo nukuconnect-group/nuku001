@@ -35,6 +35,7 @@ import ProductDistance from "@/components/product/ProductDistance";
 import { producerShopUrl } from "@/lib/producerLinks";
 
 import { supabase } from "@/integrations/supabase/client";
+import { trackBoostEvent } from "@/hooks/useBoosts";
 import { useToast } from "@/hooks/use-toast";
 import ReviewSection from "@/components/product/ReviewSection";
 import { useAverageRating } from "@/hooks/useReviews";
@@ -183,6 +184,7 @@ const ProductDetail = () => {
     }
 
     setIsSending(true);
+    trackBoostEvent(product.id, "contact", "product_detail").catch(() => {});
     try {
       const { data: buyerProfile } = await supabase.from("profiles").select("id").eq("user_id", session.user.id).single();
       if (!buyerProfile) throw new Error("Profile not found");
