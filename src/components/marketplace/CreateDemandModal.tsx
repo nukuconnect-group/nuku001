@@ -178,12 +178,13 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
         budget: budget ? Number(budget) : undefined,
         location,
         image_url: imageUrl || undefined,
+        deadline: deadline ? new Date(deadline).toISOString() : null,
       },
       {
         onSuccess: () => {
           toast({ title: "Demande publiée !", description: "Les fournisseurs de cette catégorie seront notifiés." });
           setOpen(false);
-          setTitle(""); setDescription(""); setCategory(""); setQuantity(""); setBudget(""); setLocation("");
+          setTitle(""); setDescription(""); setCategory(""); setQuantity(""); setBudget(""); setLocation(""); setDeadline("");
           setImageFile(null); setImagePreview(null);
         },
         onError: (err: any) => {
