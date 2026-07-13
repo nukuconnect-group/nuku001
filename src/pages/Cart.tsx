@@ -205,7 +205,11 @@ const Cart = () => {
     const orderIds: string[] = [];
 
     try {
-      const buyerProfileId = profile?.id;
+      let buyerProfileId = profile?.id;
+      if (!buyerProfileId) {
+        const { data: ensuredId } = await supabase.rpc("ensure_my_profile" as any);
+        buyerProfileId = (ensuredId as string) || undefined;
+      }
       if (!buyerProfileId) throw new Error("Profil acheteur introuvable. Rechargez la page puis réessayez.");
 
       for (const item of realItems) {
