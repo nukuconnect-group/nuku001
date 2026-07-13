@@ -13,6 +13,7 @@ export interface Demand {
   budget: number | null;
   location: string | null;
   status: string;
+  deadline: string | null;
   created_at: string;
   updated_at: string;
   profile?: {
