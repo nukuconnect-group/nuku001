@@ -51,9 +51,29 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Auto-heal: create the profile row if missing (covers users whose
+      // signup trigger did not fire). Uses SECURITY DEFINER RPC.
+      try {
+        const { data: ensuredId } = await supabase.rpc("ensure_my_profile" as any);
+        if (ensuredId) {
+          const { data: created } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (requestId !== requestIdRef.current) return;
+          if (created) {
+            setProfile(created);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("ensure_my_profile failed", e);
+      }
+
       if (retries > 0) {
         await new Promise((resolve) => setTimeout(resolve, 800));
-
         if (requestId === requestIdRef.current) {
           return fetchProfile(userId, retries - 1);
         }
