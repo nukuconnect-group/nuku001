@@ -331,6 +331,19 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
               </div>
             </div>
           </div>
+          <div>
+            <Label className="text-xs">Délai souhaité (date limite)</Label>
+            <Input
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="h-9 text-xs mt-1"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Date à laquelle vous souhaitez recevoir les offres/produits.
+            </p>
+          </div>
           <Button onClick={handleSubmit} disabled={isPending || uploadingImage} className="w-full h-9 text-xs gap-1.5">
             {(isPending || uploadingImage) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <HandCoins className="w-3.5 h-3.5" />}
             Publier ma demande
