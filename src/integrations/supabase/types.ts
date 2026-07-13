@@ -679,6 +679,7 @@ export type Database = {
           budget: number | null
           category: string
           created_at: string
+          deadline: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -697,6 +698,7 @@ export type Database = {
           budget?: number | null
           category: string
           created_at?: string
+          deadline?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -715,6 +717,7 @@ export type Database = {
           budget?: number | null
           category?: string
           created_at?: string
+          deadline?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -3282,6 +3285,7 @@ export type Database = {
         Args: { p_formation_id: string; p_user_id: string }
         Returns: string
       }
+      ensure_my_profile: { Args: never; Returns: string }
       expire_old_tokens: { Args: never; Returns: number }
       get_active_boosted_products: {
         Args: { p_limit?: number }
