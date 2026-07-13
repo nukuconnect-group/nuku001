@@ -13,6 +13,7 @@ export interface Demand {
   budget: number | null;
   location: string | null;
   status: string;
+  deadline: string | null;
   created_at: string;
   updated_at: string;
   profile?: {
@@ -68,18 +69,25 @@ export const useCreateDemand = () => {
       budget?: number;
       location?: string;
       image_url?: string;
+      deadline?: string | null;
     }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Veuillez vous connecter pour publier une demande.");
 
-      const { data: profile, error: profileError } = await supabase
+      let { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
       if (profileError) throw new Error("Erreur de profil: " + profileError.message);
-      if (!profile) throw new Error("Profil non trouvé. Veuillez compléter votre profil.");
+
+      // Auto-heal: create profile on the fly if missing
+      if (!profile) {
+        const { data: ensuredId, error: ensureErr } = await supabase.rpc("ensure_my_profile" as any);
+        if (ensureErr || !ensuredId) throw new Error("Profil introuvable. Reconnectez-vous et réessayez.");
+        profile = { id: ensuredId as string };
+      }
 
       const { data, error } = await supabase
         .from("demands")
@@ -94,7 +102,8 @@ export const useCreateDemand = () => {
           budget: demand.budget || null,
           location: demand.location || null,
           image_url: demand.image_url || null,
-        })
+          deadline: demand.deadline || null,
+        } as any)
         .select()
         .single();
 
@@ -103,7 +112,6 @@ export const useCreateDemand = () => {
       if (data?.id) {
         supabase.functions.invoke("moderate-content", { body: { type: "demand", id: data.id } }).catch(err => console.warn("Demand moderation:", err));
       }
-      // Note: user will receive notifications about verification status
       return data;
     },
     onSuccess: () => {
