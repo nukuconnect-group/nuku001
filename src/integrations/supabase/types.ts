@@ -3591,6 +3591,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_module_completion: {
+        Args: { _formation_id: string; _module_id: string }
+        Returns: undefined
+      }
       renew_free_subscription: { Args: never; Returns: Json }
       resubmit_product_moderation: {
         Args: { p_product_id: string }
