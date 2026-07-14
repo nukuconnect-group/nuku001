@@ -19,9 +19,12 @@ const FeaturedProducts = () => {
 
   const featuredProducts = useMemo(() => {
     const db = dbProducts || [];
-    return [...db]
+    // Diversify: pick from the 40 most-recent then shuffle so the selection rotates
+    // at each refresh instead of always showing the same top items.
+    const recentPool = [...db]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 8);
+      .slice(0, 40);
+    return recentPool.sort(() => Math.random() - 0.5).slice(0, 8);
   }, [dbProducts]);
 
   // 1 hero + 4 secondaires (5 produits visibles)
