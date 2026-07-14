@@ -367,7 +367,14 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       }
       const imageUrls = [...existingUrls, ...uploadedUrls];
 
-      const promoActive = newProduct.promoType !== "none" && parseFloat(newProduct.originalPrice || "0") > parseFloat(newProduct.price || "0");
+      // Promo auto : dès que le prix original est supérieur au prix de vente,
+      // on active la promotion (barré + actif), même si le type n'a pas été choisi.
+      const origParsed = parseFloat(newProduct.originalPrice || "0");
+      const priceParsed = parseFloat(newProduct.price || "0");
+      const promoActive = origParsed > 0 && priceParsed > 0 && origParsed > priceParsed;
+      const autoPromoType = promoActive && (!newProduct.promoType || newProduct.promoType === "none")
+        ? "discount"
+        : newProduct.promoType;
       const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
