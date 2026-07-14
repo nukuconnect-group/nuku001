@@ -85,21 +85,21 @@ export default function PriceTiersEditor({ value, onChange, unit, basePrice, onV
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-1.5 text-sm">
           <Layers className="w-3.5 h-3.5 text-primary" />
-          Prix de gros par palier <span className="text-destructive">*</span>
+          Prix de gros par palier <span className="text-muted-foreground text-[10px] font-normal">(optionnel)</span>
         </Label>
         <Button type="button" size="sm" variant="outline" onClick={add} className="h-7 text-[10px] gap-1">
           <Plus className="w-3 h-3" />Ajouter palier
         </Button>
       </div>
       <p className="text-[10px] text-muted-foreground">
-        Obligatoire : ajoutez au moins un palier pour proposer un prix de gros (ex. ≥ 10 unités).
-        Le prix au détail saisi plus haut s'applique aux quantités hors paliers.
+        Facultatif : ajoutez des paliers si vous souhaitez proposer un prix dégressif pour les gros volumes
+        (ex. ≥ 10 unités). Sinon, le prix au détail s'applique à toutes les quantités.
       </p>
 
       {value.length === 0 ? (
-        <Card className="p-3 text-center bg-destructive/5 border-dashed border-destructive/40">
-          <p className="text-[11px] text-destructive font-medium">
-            Aucun palier — ajoutez au moins un prix de gros pour publier le produit.
+        <Card className="p-3 text-center bg-muted/30 border-dashed">
+          <p className="text-[11px] text-muted-foreground">
+            Aucun palier défini — vous pouvez publier sans prix de gros.
           </p>
         </Card>
       ) : (
