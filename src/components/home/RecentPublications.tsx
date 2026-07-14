@@ -19,19 +19,24 @@ const RecentPublications = () => {
     const boosted = all.filter((p) => boostedIds.has(p.id));
     const regular = all.filter((p) => !boostedIds.has(p.id));
 
-    // Shuffle boosted slightly so rotation is visible on refresh
-    const shuffled = [...boosted].sort(() => Math.random() - 0.5);
+    // Rotate boosted + regular so each refresh shows a different order.
+    const shuffledBoost = [...boosted].sort(() => Math.random() - 0.5);
+    const shuffledReg = [...regular].sort(() => Math.random() - 0.5);
 
-    // Insert a sponsored every 3 items
+    // Sponsored FIRST (priority), then regulars interleaved with remaining boosts every 3.
     const merged: typeof all = [];
+    // Priority slot: up to 2 sponsored at the top
+    const topBoosts = shuffledBoost.splice(0, Math.min(2, shuffledBoost.length));
+    merged.push(...topBoosts);
+
     let bi = 0;
-    for (let i = 0; i < regular.length && merged.length < 12; i++) {
-      merged.push(regular[i]);
-      if ((i + 1) % 2 === 0 && bi < shuffled.length) {
-        merged.push(shuffled[bi++]);
+    for (let i = 0; i < shuffledReg.length && merged.length < 12; i++) {
+      merged.push(shuffledReg[i]);
+      if ((i + 1) % 3 === 0 && bi < shuffledBoost.length) {
+        merged.push(shuffledBoost[bi++]);
       }
     }
-    while (bi < shuffled.length && merged.length < 12) merged.push(shuffled[bi++]);
+    while (bi < shuffledBoost.length && merged.length < 12) merged.push(shuffledBoost[bi++]);
     return merged.slice(0, 10);
   }, [products, activeBoosts]);
 
