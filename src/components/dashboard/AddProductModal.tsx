@@ -114,6 +114,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   const defaultProduct = {
     name: "",
@@ -316,6 +317,43 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       };
       reader.readAsDataURL(file);
     });
+    // reset so the same file can be re-selected
+    if (e.target) e.target.value = "";
+  };
+
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const handleGenerateImage = async () => {
+    if (!newProduct.name.trim()) {
+      toast({ title: "Nom requis", description: "Renseignez d'abord le nom du produit pour générer une image IA.", variant: "destructive" });
+      return;
+    }
+    if (imageFiles.length + imagePreviews.filter(p => /^https?:\/\//.test(p)).length >= 5) {
+      toast({ title: "Limite atteinte", description: "Maximum 5 images par produit", variant: "destructive" });
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-demand-image", {
+        body: {
+          title: newProduct.name,
+          category: newProduct.category,
+          description: newProduct.description,
+        },
+      });
+      if (error) throw error;
+      const dataUrl: string | undefined = (data as any)?.image;
+      if (!dataUrl) throw new Error("Image IA vide");
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `ai-${Date.now()}.png`, { type: blob.type || "image/png" });
+      setImageFiles((prev) => [...prev, file]);
+      setImagePreviews((prev) => [...prev, dataUrl]);
+      toast({ title: "Image générée", description: "Image IA ajoutée. Vous pouvez la remplacer à tout moment." });
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer l'image", variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -326,11 +364,11 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate price tiers — au moins un palier de gros est obligatoire
-    const tierErrors = validateTiers(priceTiers, { required: true });
+    // Validate price tiers — paliers de gros optionnels ; on vérifie seulement leur cohérence
+    const tierErrors = validateTiers(priceTiers, { required: false });
     if (tierErrors.length > 0) {
       toast({
-        title: "Prix de gros requis",
+        title: "Paliers de prix invalides",
         description: tierErrors[0],
         variant: "destructive",
       });
@@ -367,7 +405,12 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       }
       const imageUrls = [...existingUrls, ...uploadedUrls];
 
-      const promoActive = newProduct.promoType !== "none" && parseFloat(newProduct.originalPrice || "0") > parseFloat(newProduct.price || "0");
+      // Promo auto : dès que le prix original est supérieur au prix de vente,
+      // on active la promotion (prix barré + prix actif), même si aucun type
+      // n'a été explicitement choisi.
+      const origParsed = parseFloat(newProduct.originalPrice || "0");
+      const priceParsed = parseFloat(newProduct.price || "0");
+      const promoActive = origParsed > 0 && priceParsed > 0 && origParsed > priceParsed;
       const productData: any = {
         name: newProduct.name,
         description: newProduct.description,
@@ -543,6 +586,14 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
               onChange={handleImageUpload}
               className="hidden"
             />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
             
             {/* Large main preview + thumbnails */}
             {imagePreviews.length > 0 && (
@@ -580,12 +631,45 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
             )}
             
             {imagePreviews.length < 5 && (
-              <div onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Cliquez pour ajouter des images</p>
-                <p className="text-xs text-muted-foreground mt-1">PNG, JPG jusqu'à 5MB ({5 - imagePreviews.length} restantes)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                >
+                  <Upload className="w-6 h-6 mx-auto text-muted-foreground mb-1" />
+                  <p className="text-xs font-medium">Téléverser</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">PNG / JPG</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                >
+                  <Package className="w-6 h-6 mx-auto text-muted-foreground mb-1" />
+                  <p className="text-xs font-medium">Prendre photo</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Caméra</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGenerateImage}
+                  disabled={generatingImage}
+                  className="border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl p-4 text-center hover:border-primary transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  {generatingImage ? (
+                    <Loader2 className="w-6 h-6 mx-auto text-primary mb-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-6 h-6 mx-auto text-primary mb-1" />
+                  )}
+                  <p className="text-xs font-medium">Générer avec l'IA</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">À partir du nom</p>
+                </button>
               </div>
+            )}
+            {imagePreviews.length < 5 && (
+              <p className="text-[10px] text-muted-foreground text-center">
+                {5 - imagePreviews.length} image(s) restante(s) • Max 5MB par image
+              </p>
             )}
           </div>
 
