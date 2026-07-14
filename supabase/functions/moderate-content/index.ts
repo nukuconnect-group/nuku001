@@ -181,15 +181,24 @@ RÈGLE D'OR : en cas de doute sur l'appartenance au secteur agricole/aquacole, A
 Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
 {
   "approved": true/false,
-  "reason": "Raison si refusé (en français, max 200 caractères) — cite la règle ❌ violée",
+  "reason": "Raison si refusé (en français, max 200 caractères) — cite la règle ❌ violée, ou explique clairement que l'image ne correspond pas au titre (ex: 'Titre indique maïs mais l'image montre du riz — corrigez le titre ou l'image')",
   "category_check": "agricultural/non-agricultural/suspicious",
   "content_safety": "safe/unsafe",
+  "image_title_match": "match/mismatch/unknown",
   "confidence": 0.0-1.0
-}`;
+}
+
+IMPORTANT — Cohérence image/titre : si une image est fournie, VÉRIFIE qu'elle correspond bien au titre et à la catégorie. Si le titre dit « maïs » mais que l'image montre autre chose (riz, tomate, sac vide, etc.), REFUSE avec image_title_match="mismatch" et explique à l'utilisateur ce qu'il doit corriger.`;
 
     const contentDescription = type === "product"
-      ? `PRODUIT: "${content.name}" — Catégorie: ${content.category} — Prix: ${content.price} FCFA/${content.unit} — Description: ${content.description || "Aucune"} — Localisation: ${content.location || "Non spécifiée"} — Image: ${imageUrl ? "Oui" : "Aucune"}`
-      : `DEMANDE D'ACHAT: "${content.title}" — Catégorie: ${content.category} — Budget: ${content.budget || "Non spécifié"} FCFA — Quantité: ${content.quantity || "?"} ${content.unit || ""} — Description: ${content.description || "Aucune"} — Localisation: ${content.location || "Non spécifiée"} — Image: ${imageUrl ? "Oui" : "Aucune"}`;
+      ? `PRODUIT: "${content.name}" — Catégorie: ${content.category} — Prix: ${content.price} FCFA/${content.unit} — Description: ${content.description || "Aucune"} — Localisation: ${content.location || "Non spécifiée"}`
+      : `DEMANDE D'ACHAT: "${content.title}" — Catégorie: ${content.category} — Budget: ${content.budget || "Non spécifié"} FCFA — Quantité: ${content.quantity || "?"} ${content.unit || ""} — Description: ${content.description || "Aucune"} — Localisation: ${content.location || "Non spécifiée"}`;
+
+    // Build multimodal user content : texte + image (si dispo) pour la vérification visuelle
+    const userContent: any[] = [{ type: "text", text: contentDescription }];
+    if (imageUrl) {
+      userContent.push({ type: "image_url", image_url: { url: imageUrl } });
+    }
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -198,10 +207,11 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown):
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        // Vision-capable model pour analyser l'image en plus du texte
+        model: imageUrl ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: contentDescription },
+          { role: "user", content: userContent },
         ],
       }),
     });
