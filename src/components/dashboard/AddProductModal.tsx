@@ -114,6 +114,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   const defaultProduct = {
     name: "",
