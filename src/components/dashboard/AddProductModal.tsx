@@ -316,6 +316,43 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       };
       reader.readAsDataURL(file);
     });
+    // reset so the same file can be re-selected
+    if (e.target) e.target.value = "";
+  };
+
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const handleGenerateImage = async () => {
+    if (!newProduct.name.trim()) {
+      toast({ title: "Nom requis", description: "Renseignez d'abord le nom du produit pour générer une image IA.", variant: "destructive" });
+      return;
+    }
+    if (imageFiles.length + imagePreviews.filter(p => /^https?:\/\//.test(p)).length >= 5) {
+      toast({ title: "Limite atteinte", description: "Maximum 5 images par produit", variant: "destructive" });
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-demand-image", {
+        body: {
+          title: newProduct.name,
+          category: newProduct.category,
+          description: newProduct.description,
+        },
+      });
+      if (error) throw error;
+      const dataUrl: string | undefined = (data as any)?.image;
+      if (!dataUrl) throw new Error("Image IA vide");
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `ai-${Date.now()}.png`, { type: blob.type || "image/png" });
+      setImageFiles((prev) => [...prev, file]);
+      setImagePreviews((prev) => [...prev, dataUrl]);
+      toast({ title: "Image générée", description: "Image IA ajoutée. Vous pouvez la remplacer à tout moment." });
+    } catch (err: any) {
+      toast({ title: "Erreur IA", description: err?.message || "Impossible de générer l'image", variant: "destructive" });
+    } finally {
+      setGeneratingImage(false);
+    }
   };
 
   const removeImage = (index: number) => {
