@@ -33,18 +33,13 @@ const LearnerDashboard = () => {
   useEffect(() => {
     if (!isReady || profileLoading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
+    // Le tableau de bord Apprenant est désactivé pour l'instant — rediriger
+    // systématiquement vers l'espace acheteur, quelle que soit la méthode
+    // de connexion (email ou Google).
+    navigate("/buyer-dashboard", { replace: true });
+    return;
+    // eslint-disable-next-line no-unreachable
     let cancelled = false;
-    // Role guard — re-check DB directly to defeat any stale ProfileContext value
-    (async () => {
-      const { data: fresh } = await supabase.from("profiles").select("user_type").eq("user_id", user.id).maybeSingle();
-      if (cancelled) return;
-      const effectiveType = (fresh?.user_type as string | undefined) || profile?.user_type;
-      if (effectiveType && effectiveType !== "learner") {
-        if (effectiveType === "producer" || effectiveType === "trainer") { navigate("/dashboard", { replace: true }); return; }
-        if (effectiveType === "driver") { navigate("/driver-dashboard", { replace: true }); return; }
-        navigate("/buyer-dashboard", { replace: true }); return;
-      }
-    })();
 
 
     const load = async () => {
