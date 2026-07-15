@@ -501,20 +501,46 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     return productCategories.filter((c) => c.toLowerCase().includes(q));
   }, [productCategories, categorySearch]);
 
+  // Normalize for fuzzy comparison (accents, case, plural, spaces)
+  const normalizeName = (s: string) =>
+    s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/s\b/g, "")
+      .replace(/[^a-z0-9]+/g, "")
+      .trim();
+
   const handleCreateCategory = async () => {
     if (!customCategory.trim()) return;
     const name = customCategory.trim();
+    const normNew = normalizeName(name);
+    if (normNew.length < 2) {
+      toast({ title: "Nom trop court", description: "Choisissez un nom plus descriptif.", variant: "destructive" });
+      return;
+    }
+    // AI-style dedup: reject if a very similar category already exists
+    const duplicate = dbCategoriesList.find((c) => normalizeName(c.name) === normNew);
+    if (duplicate) {
+      setNewProduct({ ...newProduct, category: duplicate.name });
+      setCustomCategory("");
+      setShowNewCategory(false);
+      setCategoryOpen(false);
+      toast({ title: "Catégorie existante", description: `« ${duplicate.name} » a été sélectionnée à la place.` });
+      return;
+    }
+    const { data: authUser } = await supabase.auth.getUser();
     const { error } = await supabase.from("categories").insert({
       name,
+      emoji: "📦",
+      is_active: true,
       sort_order: dbCategoriesList.length + 1,
+      created_by: authUser.user?.id ?? null,
     } as any);
     if (!error) {
-      // Refresh the category list immediately so it shows up in this modal
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
       setNewProduct({ ...newProduct, category: name });
       setCustomCategory("");
       setShowNewCategory(false);
-      toast({ title: "Catégorie créée !", description: `« ${name} » est disponible.` });
+      toast({ title: "Catégorie créée !", description: `« ${name} » est disponible pour tous les fournisseurs.` });
     } else {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }

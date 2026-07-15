@@ -90,10 +90,10 @@ const Dashboard = () => {
       setIsLoading(false);
       return;
     }
-    // Role guard: only producers and trainers should see this dashboard
-    if (profile.user_type !== "producer" && profile.user_type !== "trainer") {
+    // Role guard: seuls les fournisseurs accèdent à ce tableau de bord.
+    // Les rôles Apprenant et Formateur sont désactivés — rediriger vers l'espace acheteur.
+    if (profile.user_type !== "producer") {
       if (profile.user_type === "driver") navigate("/driver-dashboard", { replace: true });
-      else if (profile.user_type === "learner") navigate("/learner-dashboard", { replace: true });
       else navigate("/buyer-dashboard", { replace: true });
       return;
     }
