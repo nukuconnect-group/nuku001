@@ -276,6 +276,7 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          created_by: string | null
           description: string | null
           emoji: string | null
           icon: string | null
@@ -289,6 +290,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           emoji?: string | null
           icon?: string | null
@@ -302,6 +304,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           description?: string | null
           emoji?: string | null
           icon?: string | null
