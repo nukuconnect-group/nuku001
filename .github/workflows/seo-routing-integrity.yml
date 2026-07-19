@@ -21,6 +21,7 @@ jobs:
     name: Routes, sitemap, links & share preview
     runs-on: ubuntu-latest
     timeout-minutes: 8
+
     steps:
       - uses: actions/checkout@v4
 
@@ -48,4 +49,4 @@ jobs:
         run: node scripts/check-internal-links.mjs
 
       - name: TypeScript typecheck
-        run: bunx tsgo --noEmit
+        run: bunx tsc --noEmit
