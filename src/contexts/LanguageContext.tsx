@@ -1421,8 +1421,39 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Valeur de repli : évite un écran blanc si un composant est monté hors du
+// provider (ou pendant un remplacement de module à chaud en développement).
+const fallbackLang = (): LangCode => {
+  if (typeof localStorage === "undefined") return "fr";
+  const stored = localStorage.getItem("nukuconnect-lang") as LangCode | null;
+  return stored && SUPPORTED_LANGS.includes(stored) ? stored : detectBrowserLang();
+};
+
+const fallbackContext = (): LanguageContextType => {
+  const lang = fallbackLang();
+  return {
+    lang,
+    setLang: () => {},
+    currency: "XOF",
+    setCurrency: () => {},
+    t: (key: string) =>
+      translations[lang]?.[key] ||
+      extraTranslations[lang]?.[key] ||
+      translations.fr[key] ||
+      extraTranslations.fr[key] ||
+      key,
+    formatPrice: (priceXOF: number) =>
+      `${new Intl.NumberFormat("en-US").format(Math.round(priceXOF))} ${currencySymbols.XOF}`,
+  };
+};
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (!context) throw new Error("useLanguage must be used within LanguageProvider");
+  if (!context) {
+    if (import.meta.env.DEV) {
+      console.warn("[LanguageContext] useLanguage hors LanguageProvider — repli appliqué.");
+    }
+    return fallbackContext();
+  }
   return context;
 };
