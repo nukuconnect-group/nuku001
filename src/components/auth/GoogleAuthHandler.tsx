@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * GoogleAuthHandler — gère la première connexion Google.
@@ -16,6 +17,7 @@ const PROCESSED_KEY = (uid: string) => `nuku-google-onboarded:${uid}`;
 
 const GoogleAuthHandler = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const running = useRef(false);
 
@@ -42,8 +44,8 @@ const GoogleAuthHandler = () => {
           localStorage.setItem(PROCESSED_KEY(user.id), "1");
           if (providers.length > 1) {
             toast({
-              title: "Compte existant retrouvé",
-              description: `Un compte existe déjà avec ${user.email}. Vous avez été connecté à ce compte — aucun doublon n'a été créé.`,
+              title: t("gauth.existingTitle"),
+              description: t("gauth.existingDesc").replace("{email}", user.email || ""),
             });
           }
           return;
@@ -72,9 +74,8 @@ const GoogleAuthHandler = () => {
 
         localStorage.setItem(PROCESSED_KEY(user.id), "1");
         toast({
-          title: "Bienvenue sur NukuConnect 🌱",
-          description:
-            "Votre compte a été créé. Complétez votre profil pour profiter de toutes les fonctionnalités.",
+          title: t("gauth.welcomeTitle"),
+          description: t("gauth.welcomeDesc"),
         });
         navigate("/settings");
       } catch (e) {
@@ -89,7 +90,7 @@ const GoogleAuthHandler = () => {
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION") handle(session);
     });
     return () => sub.subscription.unsubscribe();
-  }, [toast, navigate]);
+  }, [toast, navigate, t]);
 
   return null;
 };
