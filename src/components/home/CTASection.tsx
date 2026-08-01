@@ -19,68 +19,80 @@ const partners = [
 
 const CTASection = () => {
   const { t } = useLanguage();
+
   return (
-    <section className="py-6 sm:py-10 lg:py-14 relative overflow-hidden">
+    <section className="relative overflow-hidden py-10 sm:py-14 lg:py-20">
       <img
         src={heroFarmerVR}
         alt="Agriculteur africain avec casque de réalité virtuelle dans un champ high-tech"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
         width={1920}
         height={1080}
       />
-      {/* Strong dark overlay for text legibility on any background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/80 to-background/90" />
-      <div className="absolute inset-0 bg-foreground/10" />
+      {/* Legibility overlays (semantic tokens only) */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/85 to-background/95" />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-hero flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-elevated">
-            <Rocket className="w-7 h-7 sm:w-10 sm:h-10 text-primary-foreground" />
+      <div className="container relative z-10 mx-auto px-4">
+        <div className="mx-auto max-w-5xl">
+          {/* CTA card */}
+          <div className="rounded-3xl border border-border/70 bg-card/80 px-5 py-8 text-center shadow-elevated backdrop-blur-md sm:px-10 sm:py-12">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-hero shadow-elevated sm:mb-7 sm:h-16 sm:w-16">
+              <Rocket className="h-7 w-7 text-primary-foreground sm:h-8 sm:w-8" />
+            </div>
+
+            <h2 className="mx-auto max-w-3xl font-heading text-xl font-extrabold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+              {t("home.ctaTitleBefore")}{" "}
+              <span className="text-primary">{t("home.ctaTitleHighlight")}</span> ?
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
+              {t("home.ctaDesc")}
+            </p>
+
+            <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:mt-9 sm:flex-row sm:items-center">
+              <Link to="/auth" className="sm:w-auto">
+                <Button variant="hero" size="lg" className="w-full min-w-[200px] text-sm sm:w-auto sm:text-base">
+                  {t("home.ctaCreate")}
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </Link>
+              <Link to="/nuku-ai" className="sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full min-w-[200px] bg-background/70 text-sm sm:w-auto sm:text-base">
+                  {t("home.ctaContact")}
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          <h2 className="font-heading text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 px-2 drop-shadow-[0_2px_8px_hsl(var(--background)/0.8)]">
-            {t("home.ctaTitleBefore")} <span className="text-primary drop-shadow-[0_2px_8px_hsl(var(--background)/0.6)]">{t("home.ctaTitleHighlight")}</span> ?
-          </h2>
+          {/* Partners */}
+          <div className="mt-10 sm:mt-14">
+            <div className="mb-6 flex items-center gap-4">
+              <span className="h-px flex-1 bg-border" />
+              <p className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs">
+                {t("home.partnersTrust")}
+              </p>
+              <span className="h-px flex-1 bg-border" />
+            </div>
 
-          <p className="text-sm sm:text-lg text-foreground/90 font-medium mb-6 sm:mb-10 max-w-2xl mx-auto px-4 drop-shadow-[0_1px_4px_hsl(var(--background)/0.7)]">
-            {t("home.ctaDesc")}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <Link to="/auth">
-              <Button variant="hero" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
-                {t("home.ctaCreate")}
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </Link>
-            <Link to="/nuku-ai">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm sm:text-base">
-                {t("home.ctaContact")}
-              </Button>
-            </Link>
-          </div>
-
-          {/* Partners marquee */}
-          <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-border">
-            <p className="text-xs sm:text-sm text-muted-foreground mb-6">{t("home.partnersTrust")}</p>
             <div
-              className="relative overflow-hidden w-full"
+              className="relative w-full overflow-hidden"
               style={{
-                maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-                WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+                maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
               }}
             >
-              <div className="flex w-max gap-8 sm:gap-12 animate-[marquee_30s_linear_infinite] hover:[animation-play-state:paused]">
+              <div className="flex w-max animate-[marquee_32s_linear_infinite] items-stretch gap-4 sm:gap-6 hover:[animation-play-state:paused]">
                 {[...partners, ...partners, ...partners].map((partner, idx) => (
                   <div
                     key={`${partner.name}-${idx}`}
-                    className="flex-shrink-0 flex items-center justify-center bg-card/95 rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-all duration-300 min-w-[140px] sm:min-w-[180px]"
+                    className="flex h-20 w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/90 px-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-elevated sm:h-24 sm:w-[190px]"
                   >
                     <img
                       src={partner.logo}
                       alt={partner.name}
-                      className="h-10 sm:h-14 lg:h-16 w-auto object-contain"
+                      className="max-h-12 w-auto object-contain sm:max-h-14"
                       loading="lazy"
                     />
                   </div>

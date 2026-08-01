@@ -1,32 +1,18 @@
 import { Truck, Smartphone, Headphones, ShieldCheck } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const badges = [
-  {
-    icon: Truck,
-    title: "LIVRAISON INTERNE",
-    desc: "Flotte Nukuconnect dans tout le pays",
-  },
-  {
-    icon: Smartphone,
-    title: "MOBILE MONEY",
-    desc: "Moov & Mixx, simple et rapide",
-  },
-  {
-    icon: Headphones,
-    title: "SUPPORT 24/7",
-    desc: "Assistance illimitée",
-  },
-  {
-    icon: ShieldCheck,
-    title: "100% SÉCURISÉ",
-    desc: "Vos paiements et données protégés",
-  },
-];
+  { icon: Truck, key: "delivery" },
+  { icon: Smartphone, key: "momo" },
+  { icon: Headphones, key: "support" },
+  { icon: ShieldCheck, key: "secure" },
+] as const;
 
 const TrustBadges = () => {
+  const { t } = useLanguage();
   return (
     <section
-      aria-label="Nos engagements"
+      aria-label={t("trust.aria")}
       className="bg-muted/40 border-t border-border/50 py-8 sm:py-10"
     >
       <div className="container mx-auto px-4">
@@ -35,7 +21,7 @@ const TrustBadges = () => {
             const Icon = b.icon;
             return (
               <div
-                key={b.title}
+                key={b.key}
                 className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3"
               >
                 <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-background border border-primary/20 flex items-center justify-center">
@@ -46,10 +32,10 @@ const TrustBadges = () => {
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[11px] sm:text-xs font-bold tracking-wide text-foreground leading-tight">
-                    {b.title}
+                    {t(`trust.${b.key}.title`)}
                   </h3>
                   <p className="text-[10px] sm:text-xs text-muted-foreground leading-snug mt-0.5">
-                    {b.desc}
+                    {t(`trust.${b.key}.desc`)}
                   </p>
                 </div>
               </div>

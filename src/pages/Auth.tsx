@@ -51,6 +51,7 @@ const sectors = [
 ].sort((a, b) => a.localeCompare(b, "fr"));
 
 import { COUNTRIES, type Country } from "@/data/countries";
+import { useLanguage } from "@/contexts/LanguageContext";
 const countries = COUNTRIES;
 
 const profileTypes = [
@@ -66,6 +67,7 @@ const profileTypes = [
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
@@ -440,7 +442,7 @@ const Auth = () => {
         return (
           <SEO
             url="/auth"
-            title={refCode ? "Vous êtes invité sur Nukuconnect 🎁" : (authMode === "login" ? "Connexion" : "Inscription")}
+            title={refCode ? "Vous êtes invité sur Nukuconnect 🎁" : (authMode === "login" ? t("auth.login") : t("auth.signup"))}
             description={refCode
               ? "Rejoignez Nukuconnect via une invitation : marketplace agricole intelligente, livraison interne, fournisseurs vérifiés."
               : "Connectez-vous ou créez votre compte NUKUCONNECT pour acheter, vendre et livrer des produits agricoles en Afrique."}
@@ -502,7 +504,7 @@ const Auth = () => {
             <button
               onClick={() => { setAuthMode("login"); setSignupStep("select"); }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${authMode === "login" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >Connexion</button>
+            >{t("auth.login")}</button>
             <button
               onClick={() => setAuthMode("signup")}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${authMode === "signup" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
@@ -573,7 +575,7 @@ const Auth = () => {
                   <button type="button" onClick={() => { setForgotMode(true); setForgotEmail(loginEmail); }} className="text-xs text-primary hover:underline">Mot de passe oublié ?</button>
                 </div>
                 <Button type="submit" variant="hero" className="w-full h-11" disabled={isLoading}>
-                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Connexion...</> : "Se connecter"}
+                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("auth.login")}…</> : "Se connecter"}
                 </Button>
               </form>
               <div className="relative">

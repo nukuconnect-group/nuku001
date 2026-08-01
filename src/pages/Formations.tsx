@@ -16,6 +16,7 @@ import {
   Home, Library, Layers, Hammer, TrendingUp, ChevronRight, PlayCircle, CheckCircle2
 } from "lucide-react";
 import DashboardLayout, { DashboardSidebarItem } from "@/components/layout/DashboardLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const levelLabels: Record<string, string> = {
   beginner: "Débutant",
@@ -24,6 +25,7 @@ const levelLabels: Record<string, string> = {
 };
 
 const Formations = () => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const [selectedAuthor, setSelectedAuthor] = useState("Tous");
@@ -89,7 +91,7 @@ const Formations = () => {
   const learningPaths = categories.filter((cat) => cat !== "Tous").slice(0, 5);
 
   const learningSidebar: DashboardSidebarItem[] = [
-    { label: "Accueil", icon: Home, href: "/formations" },
+    { label: t("nav.home"), icon: Home, href: "/formations" },
     { label: "Ma bibliothèque", icon: Library, onClick: () => { setShowFreeOnly(false); setSelectedCategory("Tous"); window.scrollTo({ top: 600, behavior: "smooth" }); } },
     { label: "Contenus", icon: Layers, onClick: () => { setSelectedCategory("Tous"); window.scrollTo({ top: 400, behavior: "smooth" }); } },
     { label: "Pratique", icon: Hammer, onClick: () => window.scrollTo({ top: 600, behavior: "smooth" }) },

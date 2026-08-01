@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -126,6 +127,7 @@ const LocationPickerDialog = ({ open, onOpenChange, currentLocation, onSave }: P
   const [countrySearch, setCountrySearch] = useState("");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Parse current location on open
   useEffect(() => {
@@ -250,7 +252,7 @@ const LocationPickerDialog = ({ open, onOpenChange, currentLocation, onSave }: P
                       <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                       <Input
                         autoFocus
-                        placeholder="Rechercher un pays..."
+                        placeholder={t("common.search")}
                         value={countrySearch}
                         onChange={(e) => setCountrySearch(e.target.value)}
                         className="h-8 text-xs pl-7"

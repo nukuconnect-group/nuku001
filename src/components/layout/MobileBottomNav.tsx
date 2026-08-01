@@ -4,6 +4,7 @@ import { Home, Store, MessageCircle, Plus, Loader2, UserCircle } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,6 +19,7 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { user, profile: ctxProfile } = useProfile();
   const [profile, setProfile] = useState<any>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -161,7 +163,7 @@ const MobileBottomNav = () => {
               isActive("/") ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}>
             <Home className="w-[18px] h-[18px] sm:w-5 sm:h-5" />
-            <span className="text-[8px] sm:text-[9px] font-medium leading-none">Accueil</span>
+            <span className="text-[8px] sm:text-[9px] font-medium leading-none">{t("nav.home")}</span>
           </Link>
 
           <Link to="/marketplace"
