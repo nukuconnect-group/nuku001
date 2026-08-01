@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { extraTranslations } from "@/lib/i18nExtra";
+
 
 export type LangCode = "fr" | "en" | "ewe" | "kab" | "wo";
 export type CurrencyCode = "XOF" | "USD" | "EUR" | "GBP";
