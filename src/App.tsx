@@ -93,6 +93,7 @@ import PaymentTracking from "./pages/PaymentTracking";
 import ShareDiagnostic from "./pages/ShareDiagnostic";
 import UpdatePrompt from "./components/UpdatePrompt";
 import AuthCacheGuard from "./components/AuthCacheGuard";
+import GoogleAuthHandler from "./components/auth/GoogleAuthHandler";
 
 const queryClient = new QueryClient({
   defaultOptions: {
