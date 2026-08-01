@@ -68,6 +68,14 @@ serve(async (req) => {
     }
     const profile_id = profileRow.id as string;
 
+    // Préférences IA définies par l'utilisateur (personnalisation explicite)
+    const { data: prefsRow } = await supabase
+      .from("user_ai_preferences")
+      .select("*")
+      .eq("user_id", user_id)
+      .maybeSingle();
+    const prefs = prefsRow || null;
+
     let contextData: any = {};
 
     if (role === "buyer") {
@@ -85,7 +93,8 @@ serve(async (req) => {
         products: productsRes.data || [],
         formations: formationsRes.data || [],
         producers: profilesRes.data || [],
-        userLocation: location,
+        userLocation: prefs?.preferred_region || location,
+        preferences: prefs,
       };
     } else if (role === "producer") {
       const [myProductsRes, demandsRes, ordersRes, allProductsRes] = await Promise.all([
@@ -100,7 +109,8 @@ serve(async (req) => {
         demands: demandsRes.data || [],
         orders: ordersRes.data || [],
         marketProducts: allProductsRes.data || [],
-        userLocation: location,
+        userLocation: prefs?.preferred_region || location,
+        preferences: prefs,
       };
     }
 
@@ -110,7 +120,8 @@ serve(async (req) => {
 
     const userPrompt = role === "buyer"
       ? `Données utilisateur:
-- Historique commandes: ${JSON.stringify(contextData.orders?.slice(0, 10))}
+- Préférences déclarées par l'utilisateur (PRIORITAIRES): ${JSON.stringify(prefs || "aucune")}
+- Historique commandes: ${prefs && prefs.use_purchase_history === false ? "ignoré à la demande de l'utilisateur" : JSON.stringify(contextData.orders?.slice(0, 10))}
 - Favoris: ${JSON.stringify(contextData.wishlist?.slice(0, 10))}
 - Localisation: ${contextData.userLocation || "non spécifiée"}
 - Produits disponibles: ${JSON.stringify(contextData.products?.slice(0, 20))}
@@ -126,6 +137,7 @@ Retourne uniquement un JSON valide avec cette structure exacte:
 }
 Maximum 6 éléments par catégorie. Utilise UNIQUEMENT les IDs fournis dans les données.`
       : `Données fournisseur:
+- Préférences déclarées par le fournisseur (PRIORITAIRES): ${JSON.stringify(prefs || "aucune")}
 - Mes produits: ${JSON.stringify(contextData.myProducts)}
 - Demandes actives: ${JSON.stringify(contextData.demands?.slice(0, 15))}
 - Mes commandes: ${JSON.stringify(contextData.orders?.slice(0, 10))}
