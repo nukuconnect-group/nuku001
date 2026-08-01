@@ -52,7 +52,7 @@ export function useAIRecommendations(role: "buyer" | "producer", userId?: string
     queryFn: async () => {
       const emptyBuyer: BuyerRecommendations = { recommended_products: [], similar_products: [], nearby_suppliers: [], recommended_formations: [] };
       const emptySupplier: SupplierRecommendations = { potential_clients: [], trending_products: [], ai_suggestions: [] };
-      const fallback = { recommendations: role === "buyer" ? emptyBuyer : emptySupplier, context: {} };
+      const fallback = readCache(role, userId) ?? { recommendations: role === "buyer" ? emptyBuyer : emptySupplier, context: {} };
       try {
         const { data, error } = await supabase.functions.invoke("ai-recommendations", {
           body: { user_id: userId, role, profile_id: profileId, location },
@@ -65,7 +65,11 @@ export function useAIRecommendations(role: "buyer" | "producer", userId?: string
           console.warn("[ai-recommendations] returned error:", data.error);
           return fallback;
         }
-        return data as { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
+        const payload = data as RecoPayload;
+        // On ne persiste que des recommandations réellement exploitables.
+        const hasContent = Object.values(payload?.recommendations || {}).some((v: any) => Array.isArray(v) && v.length > 0);
+        if (hasContent) writeCache(role, userId, { recommendations: payload.recommendations, context: {} });
+        return payload;
       } catch (e) {
         console.warn("[ai-recommendations] exception, using fallback:", e);
         return fallback;
