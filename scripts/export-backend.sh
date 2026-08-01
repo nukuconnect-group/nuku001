@@ -65,20 +65,39 @@ done
 
 # ---------------------------------------------------------------- 3. Auth
 echo "→ Auth (utilisateurs + identités)"
+AUTH_OK=1
 psql -c "\copy (
   select id, email, phone, encrypted_password, email_confirmed_at, phone_confirmed_at,
          raw_user_meta_data, raw_app_meta_data, created_at, updated_at, last_sign_in_at,
          is_sso_user, is_anonymous, banned_until, deleted_at
   from auth.users order by created_at
-) to stdout with csv header" > "$AUTH_DIR/users.csv"
+) to stdout with csv header" > "$AUTH_DIR/users.csv" 2>/dev/null || AUTH_OK=0
 
 psql -c "\copy (
   select id, user_id, provider, provider_id, identity_data, created_at, updated_at, last_sign_in_at
   from auth.identities order by created_at
-) to stdout with csv header" > "$AUTH_DIR/identities.csv"
+) to stdout with csv header" > "$AUTH_DIR/identities.csv" 2>/dev/null || AUTH_OK=0
 
-echo "  users      : $(($(wc -l < "$AUTH_DIR/users.csv") - 1))"
-echo "  identities : $(($(wc -l < "$AUTH_DIR/identities.csv") - 1))"
+if [ "$AUTH_OK" = "1" ] && [ -s "$AUTH_DIR/users.csv" ]; then
+  echo "  users      : $(($(wc -l < "$AUTH_DIR/users.csv") - 1))"
+  echo "  identities : $(($(wc -l < "$AUTH_DIR/identities.csv") - 1))"
+else
+  rm -f "$AUTH_DIR/users.csv" "$AUTH_DIR/identities.csv"
+  cat > "$AUTH_DIR/README.txt" <<'EOF'
+Le schéma `auth` n'est pas lisible via cette connexion (permission refusée) :
+les comptes ne peuvent pas être exportés par ce script.
+
+➜ Utilisez l'export natif de la plateforme, qui inclut le schéma auth complet
+  (utilisateurs, identités OAuth, hash de mots de passe) :
+
+     Cloud → Advanced settings → Export data
+
+  Placez ensuite le dump obtenu à côté de ce dossier, puis suivez
+  docs/MIGRATION-SUPABASE.md § 5.
+EOF
+  echo "  ⚠️  schéma auth non lisible ici — voir auth/README.txt (export via Cloud → Advanced settings)"
+fi
+
 
 # ---------------------------------------------------------------- 4. Storage
 echo "→ Storage (inventaire)"
