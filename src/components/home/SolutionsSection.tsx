@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Truck, Globe, Handshake, GraduationCap, ArrowRight, Bot, BarChart3, ShieldCheck, Leaf } from "lucide-react";
+import { Truck, Globe, Handshake, GraduationCap, ArrowRight, ArrowUpRight, Bot, BarChart3, ShieldCheck, Leaf, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const SolutionsSection = () => {
@@ -13,10 +12,7 @@ const SolutionsSection = () => {
       description: t("sol.deliveryDesc"),
       cta: t("sol.deliveryCta"),
       link: "/marketplace",
-      gradient: "from-primary/10 to-primary/5",
-      iconBg: "bg-primary/15",
-      iconColor: "text-primary",
-      borderColor: "border-primary/20 hover:border-primary/40",
+      tone: "primary" as const,
     },
     {
       icon: Globe,
@@ -24,10 +20,7 @@ const SolutionsSection = () => {
       description: t("sol.marketsDesc"),
       cta: t("sol.marketsCta"),
       link: "/marketplace",
-      gradient: "from-accent/10 to-accent/5",
-      iconBg: "bg-accent/15",
-      iconColor: "text-accent",
-      borderColor: "border-accent/20 hover:border-accent/40",
+      tone: "accent" as const,
     },
     {
       icon: Handshake,
@@ -35,10 +28,7 @@ const SolutionsSection = () => {
       description: t("sol.connectDesc"),
       cta: t("sol.connectCta"),
       link: "/devenir-fournisseur",
-      gradient: "from-primary/10 to-primary/5",
-      iconBg: "bg-primary/15",
-      iconColor: "text-primary",
-      borderColor: "border-primary/20 hover:border-primary/40",
+      tone: "primary" as const,
     },
     {
       icon: GraduationCap,
@@ -46,12 +36,24 @@ const SolutionsSection = () => {
       description: t("sol.trainingDesc"),
       cta: t("sol.trainingCta"),
       link: "/formations",
-      gradient: "from-accent/10 to-accent/5",
-      iconBg: "bg-accent/15",
-      iconColor: "text-accent",
-      borderColor: "border-accent/20 hover:border-accent/40",
+      tone: "accent" as const,
     },
   ];
+
+  const tones = {
+    primary: {
+      ring: "hover:border-primary/50",
+      glow: "from-primary/12 via-primary/5 to-transparent",
+      iconBg: "bg-primary/12 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
+      bar: "bg-primary",
+    },
+    accent: {
+      ring: "hover:border-accent/50",
+      glow: "from-accent/12 via-accent/5 to-transparent",
+      iconBg: "bg-accent/12 text-accent group-hover:bg-accent group-hover:text-accent-foreground",
+      bar: "bg-accent",
+    },
+  };
 
   const highlights = [
     { icon: Bot, label: t("sol.nukuAI"), link: "/nuku-ai" },
@@ -61,69 +63,84 @@ const SolutionsSection = () => {
   ];
 
   return (
-    <section className="hidden md:block py-10 lg:py-16 bg-gradient-to-b from-muted/30 to-background">
-      <div className="container mx-auto px-4">
+    <section className="hidden md:block relative overflow-hidden py-12 lg:py-20 bg-gradient-to-b from-muted/40 via-background to-background">
+      {/* Ambient decoration */}
+      <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
+
+      <div className="container mx-auto px-4 relative">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8 lg:mb-12">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide uppercase mb-4">
-            <ShieldCheck className="w-3.5 h-3.5" />
+        <div className="text-center max-w-3xl mx-auto mb-10 lg:mb-14">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-[11px] font-semibold tracking-[0.14em] uppercase mb-5">
+            <Sparkles className="w-3.5 h-3.5" />
             {t("home.solutionsBadge")}
           </span>
-          <h2 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-3">
-            {t("home.solutionsTitleBefore")} <span className="text-primary">{t("home.solutionsTitleHighlight")}</span>
+          <h2 className="font-heading text-2xl lg:text-4xl font-extrabold text-foreground tracking-tight mb-4">
+            {t("home.solutionsTitleBefore")}{" "}
+            <span className="relative inline-block text-primary">
+              {t("home.solutionsTitleHighlight")}
+              <span className="absolute left-0 -bottom-1 h-[3px] w-full rounded-full bg-gradient-hero opacity-70" />
+            </span>
           </h2>
-          <p className="text-sm lg:text-base text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm lg:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             {t("home.solutionsDesc")}
           </p>
         </div>
 
         {/* Solutions Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8 lg:mb-12">
-          {solutions.map((sol, idx) => (
-            <Link
-              key={idx}
-              to={sol.link}
-              className={`group relative bg-card border ${sol.borderColor} rounded-2xl p-5 lg:p-6 flex flex-col transition-all duration-300 hover:shadow-elevated hover:-translate-y-1`}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${sol.gradient} rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10 lg:mb-14 items-stretch">
+          {solutions.map((sol, idx) => {
+            const tone = tones[sol.tone];
+            return (
+              <Link
+                key={sol.title}
+                to={sol.link}
+                className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elevated ${tone.ring}`}
+              >
+                <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tone.glow} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
+                <span className={`absolute top-0 left-0 h-1 w-0 ${tone.bar} transition-all duration-500 group-hover:w-full`} />
 
-              <div className="relative z-10 flex flex-col flex-1">
-                <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl ${sol.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <sol.icon className={`w-6 h-6 lg:w-7 lg:h-7 ${sol.iconColor}`} />
+                <div className="relative z-10 flex h-full flex-col">
+                  <div className="flex items-start justify-between mb-5">
+                    <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${tone.iconBg}`}>
+                      <sol.icon className="w-6 h-6 lg:w-7 lg:h-7" strokeWidth={1.8} />
+                    </div>
+                    <span className="font-heading text-2xl font-black leading-none text-muted-foreground/20 transition-colors group-hover:text-primary/25">
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  <h3 className="font-heading text-[15px] lg:text-base font-bold text-foreground leading-snug mb-2">
+                    {sol.title}
+                  </h3>
+                  <p className="text-xs lg:text-[13px] text-muted-foreground leading-relaxed mb-6 flex-1">
+                    {sol.description}
+                  </p>
+
+                  <span className="mt-auto inline-flex items-center justify-between border-t border-border/70 pt-4 text-xs font-semibold text-primary">
+                    {sol.cta}
+                    <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
                 </div>
-
-                <span className="absolute top-0 right-0 text-[10px] font-bold text-muted-foreground/30 group-hover:text-primary/20 transition-colors">
-                  0{idx + 1}
-                </span>
-
-                <h3 className="font-heading text-sm lg:text-base font-bold text-foreground mb-2 leading-tight">
-                  {sol.title}
-                </h3>
-                <p className="text-[11px] lg:text-xs text-muted-foreground leading-relaxed mb-4 flex-1">
-                  {sol.description}
-                </p>
-
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:gap-2.5 transition-all">
-                  {sol.cta}
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </span>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Quick access highlights */}
-        <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-4">
-          <span className="text-xs text-muted-foreground font-medium mr-2">{t("sol.quickAccess")} :</span>
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2.5 rounded-2xl border border-border/70 bg-card/60 px-5 py-4 backdrop-blur-sm lg:gap-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("sol.quickAccess")}
+          </span>
           {highlights.map((h) => (
             <Link
               key={h.label}
               to={h.link}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-all text-xs font-medium text-foreground group"
+              className="group inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-primary/5"
             >
               <h.icon className="w-3.5 h-3.5 text-primary" />
               {h.label}
-              <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ArrowRight className="w-3 h-3 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
             </Link>
           ))}
         </div>

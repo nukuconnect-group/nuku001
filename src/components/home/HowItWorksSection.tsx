@@ -38,18 +38,18 @@ const HowItWorksSection = () => {
           {steps.map((step, index) => (
             <div 
               key={step.title} 
-              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border"
+              className="group bg-card rounded-none overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 border border-border"
             >
               {/* Image */}
-              <div className="relative w-full aspect-[16/9] sm:aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
+              <div className="relative w-full aspect-[16/9] sm:aspect-[4/3] overflow-hidden rounded-none bg-gradient-to-br from-primary/5 to-accent/5">
                 <img 
                   src={step.image} 
                   alt={step.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full rounded-none object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
                 <div className="absolute top-3 left-3">
-                  <span className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground shadow-md">
+                  <span className="w-7 h-7 rounded-none bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground shadow-md">
                     {index + 1}
                   </span>
                 </div>

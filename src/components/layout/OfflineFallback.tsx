@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface OfflineFallbackProps {
   /** Titre adapté au contexte ex: "Produits indisponibles" */
@@ -27,6 +28,7 @@ export const OfflineFallback = ({
   onRetry,
   queryKeys,
 }: OfflineFallbackProps) => {
+  const { t } = useLanguage();
   const isOnline = useOnlineStatus();
   const queryClient = useQueryClient();
   const [retrying, setRetrying] = useState(false);
@@ -101,7 +103,7 @@ export const OfflineFallback = ({
           <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link to="/">
               <Home className="mr-2 h-4 w-4" />
-              Accueil
+              {t("nav.home")}
             </Link>
           </Button>
         </div>

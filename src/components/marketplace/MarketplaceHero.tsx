@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCategories } from "@/hooks/useCategories";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MarketplaceHeroProps {
   searchQuery: string;
@@ -23,6 +24,7 @@ const stats = [
 ];
 
 const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) => {
+  const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -61,12 +63,12 @@ const MarketplaceHero = ({ searchQuery, onSearchChange }: MarketplaceHeroProps) 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl mx-auto mb-5 sm:mb-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-              <Input type="text" placeholder="Rechercher un produit, producteur..."
+              <Input type="text" placeholder={t("mp.searchProduct")}
                 value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
                 className="pl-9 sm:pl-12 h-10 sm:h-12 lg:h-14 text-xs sm:text-base bg-card/80 backdrop-blur-sm border-border/50" />
             </div>
             <Button variant="hero" size="lg" className="h-10 sm:h-12 lg:h-14 px-6 sm:px-8 text-xs sm:text-sm">
-              Rechercher <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
+              {t("common.search")} <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5" />
             </Button>
           </div>
 
