@@ -287,15 +287,12 @@ const Dashboard = () => {
                   </Badge>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Ventes réelles</p>
                   <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString("en-US")} F</p>
                 </div>
-                <div>
-                  <p className="text-[10px] text-primary-foreground/70">Commission ({commissionRate}%)</p>
-                  <p className="text-base sm:text-2xl font-bold">-{commissionAmount.toLocaleString("en-US")} F</p>
-                </div>
+
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Solde net</p>
                   <p className="text-base sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString("en-US")} F</p>
