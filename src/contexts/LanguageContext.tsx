@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { extraTranslations } from "@/lib/i18nExtra";
+
 
 export type LangCode = "fr" | "en" | "ewe" | "kab" | "wo";
 export type CurrencyCode = "XOF" | "USD" | "EUR" | "GBP";
@@ -1380,15 +1382,27 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem("nukuconnect-lang", lang);
+    // Applique la langue à tout le document (toutes les pages, SEO, lecteurs d'écran)
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang === "ewe" ? "ee" : lang;
+    }
   }, [lang]);
+
 
   useEffect(() => {
     localStorage.setItem("nukuconnect-currency", currency);
   }, [currency]);
 
   const t = (key: string): string => {
-    return translations[lang]?.[key] || translations.fr[key] || key;
+    return (
+      translations[lang]?.[key] ||
+      extraTranslations[lang]?.[key] ||
+      translations.fr[key] ||
+      extraTranslations.fr[key] ||
+      key
+    );
   };
+
 
   const formatPrice = (priceXOF: number): string => {
     const converted = priceXOF * exchangeRates[currency];

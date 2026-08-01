@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ShoppingBag, Heart, MessageCircle, Package, TrendingUp, Store,
   Star, MapPin, Clock, ChevronRight, Loader2, User, Bell, HandCoins,
-  Eye, Truck, Settings, LogOut, Crown, FileDown, Receipt, Camera, Save, LayoutGrid, Coins, Plus, Rocket
+  Eye, Truck, Settings, LogOut, Crown, Sparkles, FileDown, Receipt, Camera, Save, LayoutGrid, Coins, Plus, Rocket
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import CreateDemandModal from "@/components/marketplace/CreateDemandModal";
@@ -38,6 +38,7 @@ import ProfileSettingsPanel from "@/components/dashboard/ProfileSettingsPanel";
 import FormationsSection from "@/components/dashboard/FormationsSection";
 import DeliveryTrackingWidget from "@/components/dashboard/DeliveryTrackingWidget";
 import BuyerAIRecommendations from "@/components/dashboard/BuyerAIRecommendations";
+import AIPreferencesPanel from "@/components/dashboard/AIPreferencesPanel";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -212,6 +213,8 @@ const BuyerDashboard = () => {
     { label: "Messages", icon: MessageCircle, tabValue: "messages" },
     { label: "Alertes", icon: Bell, tabValue: "alerts", badge: unreadNotifs > 0 ? unreadNotifs : undefined },
     { label: "Paiements", icon: Receipt, tabValue: "payments" },
+    { label: t("aiPrefs.tab"), icon: Sparkles, tabValue: "ai-preferences" },
+    { label: t("loc.sidebar"), icon: MapPin, href: "/localiser" },
     { label: "Paramètres", icon: Settings, tabValue: "settings" },
     { label: "Marketplace", icon: ShoppingBag, href: "/marketplace" },
     { label: "Suivi livraison", icon: Truck, href: "/suivi-livraison" },
@@ -492,6 +495,11 @@ const BuyerDashboard = () => {
                 <AffiliationCard userId={user.id} />
               </div>
             )}
+
+            {/* Préférences IA */}
+            <TabsContent value="ai-preferences">
+              <AIPreferencesPanel userId={user?.id} role="buyer" />
+            </TabsContent>
 
             {/* Orders Tab */}
             <TabsContent value="orders">

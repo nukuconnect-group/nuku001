@@ -100,7 +100,7 @@ const SupplierVerificationPopup = ({ userId, plan, isVerified }: Props) => {
                   <span className="text-xs font-semibold">Devenez Premium pour vendre plus</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Débloquez la traçabilité, NukuAI, boosts et commission réduite à partir de 2 500 FCFA.
+                  Débloquez la traçabilité, NukuAI, boosts et bien plus à partir de 2 500 FCFA.
                 </p>
                 <Link to="/plans">
                   <Button variant="outline" size="sm" className="w-full text-xs gap-1">

@@ -50,6 +50,7 @@ import DriverDashboard from "./pages/DriverDashboard";
 import LearnerDashboard from "./pages/LearnerDashboard";
 import Plans from "./pages/Plans";
 import Tokens from "./pages/Tokens";
+import Locator from "./pages/Locator";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import PublicDeliveryTracking from "./pages/PublicDeliveryTracking";
 import About from "./pages/About";
@@ -226,6 +227,8 @@ const App = () => {
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/jetons" element={<Tokens />} />
                   <Route path="/tokens" element={<Tokens />} />
+                  <Route path="/localiser" element={<Locator />} />
+                  <Route path="/locator" element={<Locator />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
                   <Route path="/tracking/:token" element={<PublicDeliveryTracking />} />
                   <Route path="/a-propos" element={<About />} />

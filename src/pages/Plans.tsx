@@ -20,7 +20,7 @@ const PENDING_PLAN_KEY = "nuku:pendingPlan";
 // Plans alignés sur la nouvelle politique tarifaire NukuConnect
 const plans = [
   {
-    id: "free", name: "Gratuit", price: 0, maxProducts: 5, commission: 8, credits: 0,
+    id: "free", name: "Gratuit", price: 0, maxProducts: 5, credits: 0,
     description: "1 mois offert + 2 renouvellements possibles", icon: Zap, color: "bg-muted", popular: false,
     features: [
       "Maximum 5 produits publiés",
@@ -33,7 +33,7 @@ const plans = [
     limitations: ["Pas de mise en avant produits", "Pas de traçabilité QR", "Pas de crédits boost"],
   },
   {
-    id: "starter", name: "Starter", price: 2500, maxProducts: 15, commission: 8, credits: 4,
+    id: "starter", name: "Starter", price: 2500, maxProducts: 15, credits: 4,
     description: "Pour démarrer activement", icon: Sparkles, color: "bg-secondary", popular: false,
     features: [
       "Jusqu'à 15 produits publiés",
@@ -47,7 +47,7 @@ const plans = [
     limitations: [],
   },
   {
-    id: "standard", name: "Standard", price: 5000, maxProducts: 30, commission: 8, credits: 8,
+    id: "standard", name: "Standard", price: 5000, maxProducts: 30, credits: 8,
     description: "Le choix populaire", icon: Star, color: "bg-primary", popular: true,
     features: [
       "Jusqu'à 30 produits publiés",
@@ -61,7 +61,7 @@ const plans = [
     limitations: [],
   },
   {
-    id: "premium", name: "Premium", price: 10000, maxProducts: 9999, commission: 5, credits: 20,
+    id: "premium", name: "Premium", price: 10000, maxProducts: 9999, credits: 20,
     description: "Pour les professionnels", icon: Rocket, color: "bg-primary", popular: false,
     features: [
       "Annonces illimitées",
@@ -72,12 +72,11 @@ const plans = [
       "Mises en avant homepage prioritaires",
       "Account Manager dédié",
       "Support 24/7",
-      "Commission réduite à 5%",
-    ],
+          ],
     limitations: [],
   },
   {
-    id: "enterprise", name: "Entreprise", price: -1, maxProducts: 9999, commission: 2,
+    id: "enterprise", name: "Entreprise", price: -1, maxProducts: 9999,
     description: "Solutions sur mesure", icon: Crown, color: "bg-accent", popular: false,
     features: [
       "Tout le plan Premium",
@@ -87,7 +86,6 @@ const plans = [
       "White-label possible",
       "Formation équipe complète",
       "Audit sécurité",
-      "Commission négociable (à partir de 2%)",
     ],
     limitations: [],
   },
@@ -145,7 +143,7 @@ const Plans = () => {
       user_id: session.user.id,
       type: "subscription",
       title: `🎉 Plan ${plan.name} activé !`,
-      description: `Bienvenue sur le plan ${plan.name}. Commission ${plan.commission}%, ${plan.maxProducts >= 9999 ? "annonces illimitées" : plan.maxProducts + " annonces"}.`,
+      description: `Bienvenue sur le plan ${plan.name}. ${plan.maxProducts >= 9999 ? "annonces illimitées" : plan.maxProducts + " annonces"}.`,
     });
 
     await refreshSubscription();
@@ -355,7 +353,7 @@ const Plans = () => {
                     </div>
 
                     <Badge variant="outline" className="text-[9px] sm:text-[10px] border-primary/30 text-primary w-fit">
-                      Commission ventes : {plan.commission}%
+                      0% de commission sur les ventes
                     </Badge>
 
                     <ul className="space-y-1.5 flex-1">
@@ -410,7 +408,7 @@ const Plans = () => {
               { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader à tout moment. Les nouveaux avantages s'appliquent immédiatement." },
               { q: "Combien de temps les avantages durent-ils ?", a: "Tous les packs payants (Starter, Standard, Premium) sont valables 12 mois à compter de l'activation." },
               { q: "Comment fonctionne le badge vérifié ?", a: "Tous les fournisseurs (gratuit ou payant) peuvent passer le KYC. Le badge vérifié apparaît dès validation par notre équipe." },
-              { q: "Quelle est la commission sur les ventes ?", a: "8% pour les plans Gratuit, Starter et Standard. 5% pour Premium. Négociable pour Entreprise." },
+              { q: "Y a-t-il une commission sur les ventes ?", a: "Non. NukuConnect ne prélève aucune commission sur vos ventes, quel que soit votre plan. Vous ne payez que votre abonnement et vos crédits." },
               { q: "Que se passe-t-il à la fin des 12 mois ?", a: "Vos boosts inutilisés expirent. Vous repassez automatiquement au plan Gratuit sauf renouvellement." },
             ].map((f, i) => (
               <Card key={i}><CardContent className="p-3 sm:p-4">

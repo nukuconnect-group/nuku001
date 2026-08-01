@@ -1263,6 +1263,45 @@ export type Database = {
         }
         Relationships: []
       }
+      locator_searches: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          product_query: string | null
+          radius_km: number | null
+          region: string | null
+          results_count: number
+          search_type: string
+          tokens_spent: number
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          product_query?: string | null
+          radius_km?: number | null
+          region?: string | null
+          results_count?: number
+          search_type: string
+          tokens_spent?: number
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          product_query?: string | null
+          radius_km?: number | null
+          region?: string | null
+          results_count?: number
+          search_type?: string
+          tokens_spent?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketing_campaigns: {
         Row: {
           clicks_count: number | null
@@ -2996,6 +3035,54 @@ export type Database = {
           pixel_id?: string
           provider?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_ai_preferences: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          id: string
+          interests: string[]
+          notes: string | null
+          preferred_categories: string[]
+          preferred_region: string | null
+          radius_km: number
+          updated_at: string
+          use_purchase_history: boolean
+          use_search_history: boolean
+          user_id: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          id?: string
+          interests?: string[]
+          notes?: string | null
+          preferred_categories?: string[]
+          preferred_region?: string | null
+          radius_km?: number
+          updated_at?: string
+          use_purchase_history?: boolean
+          use_search_history?: boolean
+          user_id: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          id?: string
+          interests?: string[]
+          notes?: string | null
+          preferred_categories?: string[]
+          preferred_region?: string | null
+          radius_km?: number
+          updated_at?: string
+          use_purchase_history?: boolean
+          use_search_history?: boolean
           user_id?: string
         }
         Relationships: []

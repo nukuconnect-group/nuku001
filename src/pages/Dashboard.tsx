@@ -142,17 +142,16 @@ const Dashboard = () => {
   const completedOrders = orders.filter(o => ["completed", "delivered"].includes(String(o.status || "").toLowerCase())).length;
   const pendingOrders = orders.filter(o => o.status === "pending").length;
   
-  // Commission based on plan
-  const commissionRate = subscription?.plan === "business" ? 3 : subscription?.plan === "pro" ? 5 : 8;
-  const commissionAmount = Math.round(totalSales * commissionRate / 100);
-  const netRevenue = totalSales - commissionAmount;
-  
+  // Aucune commission : les revenus des vendeurs sont intégralement conservés
+  const netRevenue = totalSales;
+
   const stats = [
     { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
     { label: "Commandes payées", value: paidOrders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
     { label: "Ventes réelles", value: totalSales.toLocaleString("en-US") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
-    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
+    { label: "Revenu net (0% commission)", value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
+
 
   const confirmDeleteProduct = async () => {
     if (!productToDelete) return;
@@ -213,6 +212,7 @@ const Dashboard = () => {
     { label: "Formations", icon: Calendar, href: "/formations" },
     { label: "Mon abonnement", icon: Sparkles, href: "/plans" },
     { label: "Jetons", icon: Coins, href: "/jetons" },
+    { label: "Localiser des acheteurs", icon: MapPin, href: "/localiser" },
     { label: "Retraits", icon: Wallet, onClick: () => {
       document.getElementById("withdrawals-section")?.setAttribute("open", "true");
       document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
@@ -288,15 +288,12 @@ const Dashboard = () => {
                   </Badge>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Ventes réelles</p>
                   <p className="text-base sm:text-2xl font-bold">{totalSales.toLocaleString("en-US")} F</p>
                 </div>
-                <div>
-                  <p className="text-[10px] text-primary-foreground/70">Commission ({commissionRate}%)</p>
-                  <p className="text-base sm:text-2xl font-bold">-{commissionAmount.toLocaleString("en-US")} F</p>
-                </div>
+
                 <div>
                   <p className="text-[10px] text-primary-foreground/70">Solde net</p>
                   <p className="text-base sm:text-2xl font-bold text-accent">{netRevenue.toLocaleString("en-US")} F</p>
