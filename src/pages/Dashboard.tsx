@@ -142,17 +142,16 @@ const Dashboard = () => {
   const completedOrders = orders.filter(o => ["completed", "delivered"].includes(String(o.status || "").toLowerCase())).length;
   const pendingOrders = orders.filter(o => o.status === "pending").length;
   
-  // Commission based on plan
-  const commissionRate = subscription?.plan === "business" ? 3 : subscription?.plan === "pro" ? 5 : 8;
-  const commissionAmount = Math.round(totalSales * commissionRate / 100);
-  const netRevenue = totalSales - commissionAmount;
-  
+  // Aucune commission : les revenus des vendeurs sont intégralement conservés
+  const netRevenue = totalSales;
+
   const stats = [
     { label: "Produits", value: products.length, icon: Package, color: "bg-primary/20 text-primary" },
     { label: "Commandes payées", value: paidOrders.length, icon: ShoppingCart, color: "bg-accent/20 text-accent-foreground" },
     { label: "Ventes réelles", value: totalSales.toLocaleString("en-US") + " F", icon: DollarSign, color: "bg-green-500/20 text-green-600" },
-    { label: `Revenu net (-${commissionRate}%)`, value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
+    { label: "Revenu net (0% commission)", value: netRevenue.toLocaleString("en-US") + " F", icon: TrendingUp, color: "bg-blue-500/20 text-blue-600" },
   ];
+
 
   const confirmDeleteProduct = async () => {
     if (!productToDelete) return;
