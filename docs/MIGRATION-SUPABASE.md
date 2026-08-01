@@ -76,6 +76,20 @@ where schemaname = 'public' and rowsecurity = false;
 Les comptes doivent exister **avant** les données, car quasiment toutes les tables
 référencent `auth.users(id)`.
 
+Le schéma `auth` n'est pas lisible par le script d'export (permission refusée côté
+plateforme). Récupérez-le via l'**export natif** : `Cloud → Advanced settings →
+Export data`. Le dump obtenu contient `auth.users` et `auth.identities`.
+
+Deux options pour la restauration :
+
+**a) Depuis le dump natif** — restaurez directement les tables `auth.users` et
+`auth.identities` du dump dans le projet cible (`psql "$DEST_PG_URL" -f dump.sql`,
+en filtrant le schéma `auth`).
+
+**b) Depuis des CSV** — si vous extrayez `users.csv` / `identities.csv` du dump vers
+`supabase-export/auth/`, le script d'import les rejoue en conservant les UUID et les
+hash :
+
 ```bash
 npm i pg csv-parse
 DEST_PG_URL="postgresql://postgres:MDP@db.<ref>.supabase.co:5432/postgres" \
@@ -83,9 +97,9 @@ EXPORT_DIR=./supabase-export \
 node scripts/import-auth.mjs
 ```
 
-Le script conserve les **UUID d'origine** et les **hash de mots de passe** : les
-utilisateurs se reconnectent avec leurs identifiants existants, et toutes les clés
-étrangères restent valides.
+Dans les deux cas, les **UUID d'origine** et les **hash de mots de passe** sont
+conservés : les utilisateurs se reconnectent avec leurs identifiants existants et
+toutes les clés étrangères restent valides.
 
 ⚠️ Désactivez temporairement les triggers applicatifs sur `auth.users`
 (`handle_new_user`) pendant l'import pour éviter la création de profils en double :
