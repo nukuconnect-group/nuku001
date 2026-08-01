@@ -190,6 +190,7 @@ const App = () => {
             )}
             <BrowserRouter>
               <RouteProgress />
+              <GoogleAuthHandler />
               <OfflineBanner />
               <PerformanceTracker />
               <LinkPrefetcher />
