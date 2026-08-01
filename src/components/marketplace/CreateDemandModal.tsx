@@ -205,7 +205,13 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-md max-h-[90vh] overflow-y-auto"
+        /* Mobile : empêche Radix de voler le focus à l'ouverture — sans cela,
+           le focus-trap referme le clavier virtuel dès la première frappe. */
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
             <HandCoins className="w-4 h-4 text-primary" />
@@ -215,7 +221,15 @@ const CreateDemandModal = ({ trigger, open: openProp, onOpenChange }: CreateDema
         <div className="space-y-3 mt-2">
           <div>
             <Label className="text-xs">Titre *</Label>
-            <Input placeholder="Ex: Recherche maïs jaune en gros" value={title} onChange={(e) => setTitle(e.target.value)} className="h-9 text-xs mt-1" />
+            <Input
+              placeholder="Ex: Recherche maïs jaune en gros"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onTouchStart={(e) => (e.currentTarget as HTMLInputElement).focus()}
+              autoComplete="off"
+              enterKeyHint="next"
+              className="h-9 text-xs mt-1"
+            />
           </div>
 
           {/* Image upload */}

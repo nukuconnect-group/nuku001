@@ -14,13 +14,45 @@ interface SupplierRecommendations {
   ai_suggestions: { type: string; title: string; description: string }[];
 }
 
+type RecoPayload = { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
+
+const cacheKey = (role: string, userId?: string) => `nuku-ai-reco:${role}:${userId || "anon"}`;
+
+/** Lecture instantanée du dernier résultat connu (affichage immédiat, sans attendre l'IA). */
+function readCache(role: string, userId?: string): RecoPayload | undefined {
+  try {
+    const raw = localStorage.getItem(cacheKey(role, userId));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    // Expiration douce : 24h
+    if (!parsed?.at || Date.now() - parsed.at > 24 * 60 * 60 * 1000) return undefined;
+    return parsed.data as RecoPayload;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeCache(role: string, userId: string | undefined, data: RecoPayload) {
+  try {
+    localStorage.setItem(cacheKey(role, userId), JSON.stringify({ at: Date.now(), data }));
+  } catch {
+    /* quota — ignore */
+  }
+}
+
 export function useAIRecommendations(role: "buyer" | "producer", userId?: string, profileId?: string, location?: string) {
+  const cached = readCache(role, userId);
+
   return useQuery({
     queryKey: ["ai-recommendations", role, userId],
+    initialData: cached,
+    // Le cache local sert d'affichage instantané, mais on rafraîchit en arrière-plan.
+    initialDataUpdatedAt: cached ? 0 : undefined,
+    refetchOnMount: "always",
     queryFn: async () => {
       const emptyBuyer: BuyerRecommendations = { recommended_products: [], similar_products: [], nearby_suppliers: [], recommended_formations: [] };
       const emptySupplier: SupplierRecommendations = { potential_clients: [], trending_products: [], ai_suggestions: [] };
-      const fallback = { recommendations: role === "buyer" ? emptyBuyer : emptySupplier, context: {} };
+      const fallback = readCache(role, userId) ?? { recommendations: role === "buyer" ? emptyBuyer : emptySupplier, context: {} };
       try {
         const { data, error } = await supabase.functions.invoke("ai-recommendations", {
           body: { user_id: userId, role, profile_id: profileId, location },
@@ -33,7 +65,11 @@ export function useAIRecommendations(role: "buyer" | "producer", userId?: string
           console.warn("[ai-recommendations] returned error:", data.error);
           return fallback;
         }
-        return data as { recommendations: BuyerRecommendations | SupplierRecommendations; context: any };
+        const payload = data as RecoPayload;
+        // On ne persiste que des recommandations réellement exploitables.
+        const hasContent = Object.values(payload?.recommendations || {}).some((v: any) => Array.isArray(v) && v.length > 0);
+        if (hasContent) writeCache(role, userId, { recommendations: payload.recommendations, context: {} });
+        return payload;
       } catch (e) {
         console.warn("[ai-recommendations] exception, using fallback:", e);
         return fallback;
