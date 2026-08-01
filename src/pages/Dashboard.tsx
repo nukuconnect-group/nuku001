@@ -212,6 +212,7 @@ const Dashboard = () => {
     { label: "Formations", icon: Calendar, href: "/formations" },
     { label: "Mon abonnement", icon: Sparkles, href: "/plans" },
     { label: "Jetons", icon: Coins, href: "/jetons" },
+    { label: "Localiser des acheteurs", icon: MapPin, href: "/localiser" },
     { label: "Retraits", icon: Wallet, onClick: () => {
       document.getElementById("withdrawals-section")?.setAttribute("open", "true");
       document.getElementById("withdrawals-section")?.scrollIntoView({ behavior: "smooth" });
