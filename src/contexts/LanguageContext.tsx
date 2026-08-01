@@ -1382,7 +1382,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem("nukuconnect-lang", lang);
+    // Applique la langue à tout le document (toutes les pages, SEO, lecteurs d'écran)
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang === "ewe" ? "ee" : lang;
+    }
   }, [lang]);
+
 
   useEffect(() => {
     localStorage.setItem("nukuconnect-currency", currency);
