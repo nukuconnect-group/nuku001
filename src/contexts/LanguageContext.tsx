@@ -1387,8 +1387,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   }, [currency]);
 
   const t = (key: string): string => {
-    return translations[lang]?.[key] || translations.fr[key] || key;
+    return (
+      translations[lang]?.[key] ||
+      extraTranslations[lang]?.[key] ||
+      translations.fr[key] ||
+      extraTranslations.fr[key] ||
+      key
+    );
   };
+
 
   const formatPrice = (priceXOF: number): string => {
     const converted = priceXOF * exchangeRates[currency];
