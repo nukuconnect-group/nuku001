@@ -18,8 +18,8 @@ vous possédez.
 | Policies RLS | `pg_policies` | `schema/_rls_policies.txt` |
 | Fonctions & triggers SQL | `pg_proc` | `schema/_functions.sql` |
 | Données applicatives (74 tables) | schéma `public` | `data/<table>.csv` |
-| Comptes utilisateurs + mots de passe | `auth.users` | `auth/users.csv` |
-| Connexions Google / OAuth | `auth.identities` | `auth/identities.csv` |
+| Comptes utilisateurs + mots de passe | schéma `auth` | export natif (Cloud → Advanced settings) |
+| Connexions Google / OAuth | schéma `auth` | export natif (Cloud → Advanced settings) |
 | Buckets & inventaire fichiers | `storage.*` | `storage/buckets.csv`, `storage/objects.csv` |
 | Fichiers binaires Storage | API Storage | via `scripts/export-storage.mjs` |
 | Fonctions serveur (46) | `supabase/functions/` (versionné) | déjà dans le repo |
