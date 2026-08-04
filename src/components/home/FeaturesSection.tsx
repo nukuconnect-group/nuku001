@@ -1,3 +1,4 @@
+import {
   ShoppingCart, MessageSquare, Brain, GraduationCap, QrCode, Users, TrendingUp, Shield
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
