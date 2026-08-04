@@ -353,7 +353,7 @@ const Plans = () => {
                     </div>
 
                     <Badge variant="outline" className="text-[9px] sm:text-[10px] border-primary/30 text-primary w-fit">
-                      0% de commission sur les ventes
+                      {plan.id === "free" ? "8% de commission sur les ventes" : "0% de commission sur les ventes"}
                     </Badge>
 
                     <ul className="space-y-1.5 flex-1">
