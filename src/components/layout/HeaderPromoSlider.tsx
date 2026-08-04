@@ -250,14 +250,16 @@ const HeaderPromoSlider = () => {
                       : "pointer-events-none absolute inset-0 opacity-0 translate-y-6"
                   }`}
                 >
-                  <p className="inline-flex items-center gap-2 text-accent text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-[0.22em] leading-none mb-3">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {slide.eyebrow}
-                  </p>
-                  <span className="inline-flex items-center bg-accent text-accent-foreground px-2.5 py-1 rounded-sm text-[11px] sm:text-xs font-extrabold uppercase mb-4 shadow-md">
-                    {slide.pill}
-                  </span>
-                  <h3 className="font-heading text-white font-black leading-[1.02] tracking-tight text-[28px] sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] drop-shadow-2xl">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3 md:mb-4">
+                    <p className="inline-flex items-center gap-2 text-accent text-[11px] sm:text-xs md:text-sm font-extrabold uppercase tracking-[0.18em] leading-none">
+                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+                      {slide.eyebrow}
+                    </p>
+                    <span className="inline-flex items-center bg-accent text-accent-foreground px-2.5 py-1 rounded-sm text-[10px] sm:text-[11px] font-extrabold uppercase leading-none shadow-md">
+                      {slide.pill}
+                    </span>
+                  </div>
+                  <h3 className="font-heading text-white font-black leading-[1.08] tracking-tight text-[26px] sm:text-[32px] md:text-[40px] lg:text-[48px] xl:text-[54px] drop-shadow-2xl max-w-[16ch] text-balance">
                     {slide.title}
                   </h3>
                   <p className="text-white/95 text-sm sm:text-base md:text-lg mt-4 md:mt-5 max-w-[44ch] leading-relaxed drop-shadow-md font-medium">
