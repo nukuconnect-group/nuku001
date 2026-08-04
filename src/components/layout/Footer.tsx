@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Smartphone, ArrowRight } from "lucide-react";
+import { articles } from "@/data/articles";
 import { useLanguage } from "@/contexts/LanguageContext";
 import nukuLogoWhite from "@/assets/nukuconnect-logo-white.png";
 import footerBg from "@/assets/footer-bg.webp";
@@ -168,12 +169,51 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Derniers articles — miniatures imbriquées */}
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15">
+          <div className="flex items-center justify-between gap-3 mb-4 sm:mb-5">
+            <h4 className="font-heading font-semibold text-sm sm:text-base text-white">
+              Derniers articles
+            </h4>
+            <Link to="/blog" className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-medium text-white/80 hover:text-white transition-colors">
+              Voir le blog
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            {articles.slice(0, 4).map((article) => (
+              <Link
+                key={article.slug}
+                to={`/blog/${article.slug}`}
+                className="group flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-2 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/20"
+              >
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  loading="lazy"
+                  className="h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 rounded-lg object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="text-[11px] sm:text-xs font-semibold text-white leading-snug line-clamp-2 group-hover:underline">
+                    {article.title}
+                  </p>
+                  <p className="mt-1 text-[10px] text-white/60">
+                    {article.date} · {article.readTime}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/15 flex justify-center items-center">
           <p className="text-xs sm:text-sm text-white/50 text-center">
             © 2025 NUKUCONNECT. {t("footer.rights")}
           </p>
         </div>
+
       </div>
       </footer>
     </>

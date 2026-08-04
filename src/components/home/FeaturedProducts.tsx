@@ -110,7 +110,7 @@ const FeaturedHeroCard = ({ product, formatPrice, newLabel = "NEW" }: CardProps)
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[260px] sm:min-h-[380px] lg:min-h-[480px]"
+      className="group relative block overflow-hidden rounded-none bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[260px] sm:min-h-[380px] lg:min-h-[480px]"
     >
       <img
         src={src}
@@ -165,7 +165,7 @@ const FeaturedSecondaryCard = ({ product, formatPrice }: CardProps) => {
   return (
     <Link
       to={`/produit/${product.slug || product.id}`}
-      className="group relative block overflow-hidden rounded-lg sm:rounded-xl bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[125px] sm:min-h-[185px] lg:min-h-[230px]"
+      className="group relative block overflow-hidden rounded-none bg-card shadow-soft hover:shadow-elevated transition-all duration-300 min-h-[125px] sm:min-h-[185px] lg:min-h-[230px]"
     >
       <img
         src={src}

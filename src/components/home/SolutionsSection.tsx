@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Truck, Globe, Handshake, GraduationCap, ArrowRight, ArrowUpRight, Bot, BarChart3, ShieldCheck, Leaf, Sparkles } from "lucide-react";
+import { Truck, Globe, Handshake, GraduationCap, ArrowUpRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const SolutionsSection = () => {
@@ -55,13 +55,6 @@ const SolutionsSection = () => {
     },
   };
 
-  const highlights = [
-    { icon: Bot, label: t("sol.nukuAI"), link: "/nuku-ai" },
-    { icon: BarChart3, label: t("sol.dashboard"), link: "/dashboard" },
-    { icon: ShieldCheck, label: t("sol.verifiedProducts"), link: "/tracabilite" },
-    { icon: Leaf, label: t("mp.bio"), link: "/marketplace?category=bio" },
-  ];
-
   return (
     <section className="hidden md:block relative overflow-hidden py-12 lg:py-20 bg-gradient-to-b from-muted/40 via-background to-background">
       {/* Ambient decoration */}
@@ -88,7 +81,7 @@ const SolutionsSection = () => {
         </div>
 
         {/* Solutions Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10 lg:mb-14 items-stretch">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 items-stretch">
           {solutions.map((sol, idx) => {
             const tone = tones[sol.tone];
             return (
@@ -125,24 +118,6 @@ const SolutionsSection = () => {
               </Link>
             );
           })}
-        </div>
-
-        {/* Quick access highlights */}
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2.5 rounded-2xl border border-border/70 bg-card/60 px-5 py-4 backdrop-blur-sm lg:gap-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("sol.quickAccess")}
-          </span>
-          {highlights.map((h) => (
-            <Link
-              key={h.label}
-              to={h.link}
-              className="group inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-primary/5"
-            >
-              <h.icon className="w-3.5 h-3.5 text-primary" />
-              {h.label}
-              <ArrowRight className="w-3 h-3 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
-            </Link>
-          ))}
         </div>
       </div>
     </section>

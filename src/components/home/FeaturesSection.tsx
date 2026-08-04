@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { 
+import {
   ShoppingCart, MessageSquare, Brain, GraduationCap, QrCode, Users, TrendingUp, Shield
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -30,23 +29,35 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
           {features.map((feature, index) => (
-            <Card key={feature.title} variant="feature" className="group cursor-pointer">
-              <CardContent className="p-4 sm:p-6 lg:p-8">
-                <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${feature.bgColor} flex items-center justify-center mb-3 sm:mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className={`w-5 h-5 sm:w-7 sm:h-7 ${feature.color}`} />
+            <article
+              key={feature.title}
+              className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card/90 p-4 shadow-soft backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-elevated sm:p-6 lg:p-7"
+            >
+              {/* accent glow */}
+              <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/10 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+              <span className="absolute left-0 top-0 h-1 w-0 bg-gradient-hero transition-all duration-500 group-hover:w-full" />
+
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl sm:h-14 sm:w-14 sm:rounded-2xl ${feature.bgColor} transition-transform duration-300 group-hover:scale-110`}>
+                  <feature.icon className={`h-5 w-5 sm:h-7 sm:w-7 ${feature.color}`} strokeWidth={1.8} />
                 </div>
-                <h3 className="font-heading text-sm sm:text-lg lg:text-xl font-semibold text-foreground mb-1 sm:mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-[11px] sm:text-sm text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+                <span className="font-heading text-xl font-black leading-none text-muted-foreground/20 transition-colors group-hover:text-primary/25 sm:text-2xl">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </div>
+
+              <h3 className="relative z-10 mt-3 font-heading text-sm font-bold leading-snug text-foreground sm:mt-5 sm:text-lg lg:text-xl">
+                {feature.title}
+              </h3>
+              <p className="relative z-10 mt-1.5 flex-1 text-[11px] leading-relaxed text-muted-foreground sm:mt-2.5 sm:text-sm">
+                {feature.description}
+              </p>
+            </article>
           ))}
         </div>
+
 
         <div className="mt-10 sm:mt-20 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           {[

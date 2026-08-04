@@ -7,6 +7,7 @@ import partnerRT from "@/assets/partner-republique-togolaise.png";
 import partnerTTI from "@/assets/partner-togo-top-impact.png";
 import partnerKoko from "@/assets/partner-koko-international.png";
 import partnerAHA from "@/assets/partner-africa-horizon.jpg";
+import partnerEuroEnzym from "@/assets/partner-euro-enzym.png";
 import heroFarmerVR from "@/assets/hero-african-farmer-vr.jpg";
 
 const partners = [
@@ -15,6 +16,7 @@ const partners = [
   { name: "Togo Top Impact", logo: partnerTTI },
   { name: "Koko International", logo: partnerKoko },
   { name: "Africa Horizon Aquatic", logo: partnerAHA },
+  { name: "Euro Enzym", logo: partnerEuroEnzym },
 ];
 
 const CTASection = () => {
@@ -68,38 +70,33 @@ const CTASection = () => {
 
           {/* Partners */}
           <div className="mt-10 sm:mt-14">
-            <div className="mb-6 flex items-center gap-4">
+            <div className="mb-6 flex items-center gap-3 sm:gap-4">
               <span className="h-px flex-1 bg-border" />
-              <p className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs">
+              <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:text-xs">
                 {t("home.partnersTrust")}
               </p>
               <span className="h-px flex-1 bg-border" />
             </div>
 
-            <div
-              className="relative w-full overflow-hidden"
-              style={{
-                maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-                WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-              }}
-            >
-              <div className="flex w-max animate-[marquee_32s_linear_infinite] items-stretch gap-4 sm:gap-6 hover:[animation-play-state:paused]">
-                {[...partners, ...partners, ...partners].map((partner, idx) => (
-                  <div
-                    key={`${partner.name}-${idx}`}
-                    className="flex h-20 w-[150px] flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card/90 px-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-elevated sm:h-24 sm:w-[190px]"
-                  >
-                    <img
-                      src={partner.logo}
-                      alt={partner.name}
-                      className="max-h-12 w-auto object-contain sm:max-h-14"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
+            {/* Grid — aligné et responsive (mobile → desktop) */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-5">
+              {partners.map((partner) => (
+                <div
+                  key={partner.name}
+                  title={partner.name}
+                  className="flex h-20 items-center justify-center rounded-xl border border-border/60 bg-card/90 px-4 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-elevated sm:h-24"
+                >
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-h-10 w-auto max-w-full object-contain sm:max-h-14"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
             </div>
           </div>
+
         </div>
       </div>
     </section>
