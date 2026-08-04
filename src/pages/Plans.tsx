@@ -29,6 +29,7 @@ const plans = [
       "Statistiques de base",
       "Vérification KYC (badge vérifié)",
       "Durée : 1 mois (2 renouvellements gratuits possibles)",
+      "Commission de 8% sur les ventes",
     ],
     limitations: ["Pas de mise en avant produits", "Pas de traçabilité QR", "Pas de crédits boost"],
   },
