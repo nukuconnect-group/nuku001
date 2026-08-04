@@ -408,7 +408,7 @@ const Plans = () => {
               { q: "Puis-je changer de plan à tout moment ?", a: "Oui, vous pouvez upgrader à tout moment. Les nouveaux avantages s'appliquent immédiatement." },
               { q: "Combien de temps les avantages durent-ils ?", a: "Tous les packs payants (Starter, Standard, Premium) sont valables 12 mois à compter de l'activation." },
               { q: "Comment fonctionne le badge vérifié ?", a: "Tous les fournisseurs (gratuit ou payant) peuvent passer le KYC. Le badge vérifié apparaît dès validation par notre équipe." },
-              { q: "Y a-t-il une commission sur les ventes ?", a: "Non. NukuConnect ne prélève aucune commission sur vos ventes, quel que soit votre plan. Vous ne payez que votre abonnement et vos crédits." },
+              { q: "Y a-t-il une commission sur les ventes ?", a: "Le plan Gratuit inclut une commission de 8% sur les ventes réalisées. Tous les plans payants sont sans commission : vous ne payez que votre abonnement et vos crédits." },
               { q: "Que se passe-t-il à la fin des 12 mois ?", a: "Vos boosts inutilisés expirent. Vous repassez automatiquement au plan Gratuit sauf renouvellement." },
             ].map((f, i) => (
               <Card key={i}><CardContent className="p-3 sm:p-4">
