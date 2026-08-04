@@ -38,7 +38,7 @@ export const articles = [
     slug: "marketplace-agricole-connecter-producteurs-acheteurs",
     title: "Marketplace agricole : pourquoi connecter directement producteurs et acheteurs change la donne",
     excerpt: "En supprimant les intermédiaires, les marketplaces agricoles permettent aux producteurs d'augmenter leurs marges et aux acheteurs de bénéficier de prix plus justes.",
-    image: "https://images.unsplash.com/photo-1595508064774-5ff825a60bba?w=800&h=400&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=400&fit=crop&q=80",
     date: "8 janvier 2026",
     readTime: "4 min",
     category: "Marché",
