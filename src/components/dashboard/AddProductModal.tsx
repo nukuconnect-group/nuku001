@@ -531,7 +531,9 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
     const { error } = await supabase.from("categories").insert({
       name,
       emoji: "📦",
-      is_active: true,
+      // Les catégories proposées par les utilisateurs restent inactives
+      // jusqu'à validation par un administrateur (anti-spam de la taxonomie).
+      is_active: false,
       sort_order: dbCategoriesList.length + 1,
       created_by: authUser.user?.id ?? null,
     } as any);
@@ -540,7 +542,7 @@ const AddProductModal = ({ open, onOpenChange, profileId, onProductAdded, editPr
       setNewProduct({ ...newProduct, category: name });
       setCustomCategory("");
       setShowNewCategory(false);
-      toast({ title: "Catégorie créée !", description: `« ${name} » est disponible pour tous les fournisseurs.` });
+      toast({ title: "Catégorie proposée", description: `« ${name} » est utilisable pour votre produit et sera visible publiquement après validation.` });
     } else {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     }
