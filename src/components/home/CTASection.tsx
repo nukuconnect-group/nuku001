@@ -7,6 +7,7 @@ import partnerRT from "@/assets/partner-republique-togolaise.png";
 import partnerTTI from "@/assets/partner-togo-top-impact.png";
 import partnerKoko from "@/assets/partner-koko-international.png";
 import partnerAHA from "@/assets/partner-africa-horizon.jpg";
+import partnerEuroEnzym from "@/assets/partner-euro-enzym.png";
 import heroFarmerVR from "@/assets/hero-african-farmer-vr.jpg";
 
 const partners = [
@@ -15,6 +16,7 @@ const partners = [
   { name: "Togo Top Impact", logo: partnerTTI },
   { name: "Koko International", logo: partnerKoko },
   { name: "Africa Horizon Aquatic", logo: partnerAHA },
+  { name: "Euro Enzym", logo: partnerEuroEnzym },
 ];
 
 const CTASection = () => {
