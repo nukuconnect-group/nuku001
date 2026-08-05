@@ -60,6 +60,7 @@ jobs:
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
+            echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
             echo "signed=true" >> "$GITHUB_OUTPUT"
             echo "✅ Keystore décodé"
           else
@@ -73,18 +74,12 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
         run: |
           chmod +x ./gradlew
           ./gradlew clean
-          if [ "${{ steps.keystore.outputs.signed }}" = "true" ]; then
-            ./gradlew bundleRelease assembleRelease \
-              -Pandroid.injected.signing.store.file="$HOME/release.jks" \
-              -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
-              -Pandroid.injected.signing.key.alias="$ANDROID_KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
-          else
-            ./gradlew bundleRelease assembleRelease
-          fi
+          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace
+
 
       - name: Verify AAB signature
         if: steps.keystore.outputs.signed == 'true'

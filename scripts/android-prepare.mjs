@@ -89,7 +89,40 @@ let appGradle = fs.readFileSync(appGradlePath, 'utf8');
 appGradle = appGradle
   .replace(/versionCode\s+\d+/, `versionCode ${versionCode}`)
   .replace(/versionName\s+"[^"]*"/, `versionName "${versionName}"`);
+
+/* ------------------------------------------------------------------ */
+/* 4. build.gradle : signingConfigs release (env-driven)               */
+/* ------------------------------------------------------------------ */
+/* Compatible GitHub Actions (ANDROID_*) et Codemagic (CM_*).           */
+if (!appGradle.includes('signingConfigs')) {
+  const signingBlock = `
+    signingConfigs {
+        release {
+            def ksPath = System.getenv("ANDROID_KEYSTORE_PATH") ?: System.getenv("CM_KEYSTORE_PATH")
+            if (ksPath && file(ksPath).exists()) {
+                storeFile file(ksPath)
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: System.getenv("CM_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: System.getenv("CM_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("CM_KEY_PASSWORD")
+            }
+        }
+    }
+`;
+  appGradle = appGradle.replace(/\n(\s*)buildTypes\s*{/, `\n${signingBlock}\n$1buildTypes {`);
+
+  appGradle = appGradle.replace(
+    /(release\s*{\s*\n)(\s*)minifyEnabled/,
+    `$1$2if (signingConfigs.release.storeFile != null) {\n$2    signingConfig signingConfigs.release\n$2}\n$2minifyEnabled`,
+  );
+
+  if (!appGradle.includes('signingConfigs')) fail("Impossible d'injecter signingConfigs dans app/build.gradle.");
+  console.log('✅ signingConfigs.release injecté (variables d\'environnement)');
+} else {
+  console.log('✅ signingConfigs déjà présent');
+}
+
 fs.writeFileSync(appGradlePath, appGradle);
 console.log(`✅ versionCode = ${versionCode}, versionName = ${versionName}`);
 
 console.log('🎉 Projet Android prêt pour le build release.');
+
