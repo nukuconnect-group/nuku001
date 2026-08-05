@@ -9,7 +9,7 @@ workflows:
       groups:
         - google_play   # (optionnel) pour publication automatique sur Play Store
       vars:
-        PACKAGE_NAME: "app.lovable.7cbf6140856746c7888328d929a2bdd4"
+        PACKAGE_NAME: "com.nukuconnect.app"
       node: 20
       java: 17
     triggering:

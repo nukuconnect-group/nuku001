@@ -5,7 +5,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const liveReload = process.env.CAP_LIVE_RELOAD === '1';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.7cbf6140856746c7888328d929a2bdd4',
+  appId: 'com.nukuconnect.app',
   appName: 'nukuconnect',
   webDir: 'dist',
   ...(liveReload
