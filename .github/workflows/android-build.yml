@@ -70,21 +70,15 @@ jobs:
       - name: Build release AAB & APK
         working-directory: android
         env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.keystore.outputs.signed == 'true' && format('{0}/release.jks', env.HOME) || '' }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
           ./gradlew clean
-          if [ "${{ steps.keystore.outputs.signed }}" = "true" ]; then
-            ./gradlew bundleRelease assembleRelease \
-              -Pandroid.injected.signing.store.file="$HOME/release.jks" \
-              -Pandroid.injected.signing.store.password="$ANDROID_KEYSTORE_PASSWORD" \
-              -Pandroid.injected.signing.key.alias="$ANDROID_KEY_ALIAS" \
-              -Pandroid.injected.signing.key.password="$ANDROID_KEY_PASSWORD"
-          else
-            ./gradlew bundleRelease assembleRelease
-          fi
+          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace
+
 
       - name: Verify AAB signature
         if: steps.keystore.outputs.signed == 'true'
