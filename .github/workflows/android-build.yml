@@ -1,10 +1,5 @@
 name: Android signed build
-
 on:
- name: Android signed build
-
-on:
-  on:
   push:
     branches:
       - main
