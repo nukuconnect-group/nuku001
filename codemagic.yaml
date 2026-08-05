@@ -104,79 +104,15 @@ workflows:
 
       - name: Préparer la plateforme Android (Capacitor)
         script: |
-          # Retire le serveur de dev pour la prod (build offline embarqué)
-          node -e "
-            const fs = require('fs');
-            const f = 'capacitor.config.ts';
-            let c = fs.readFileSync(f, 'utf8');
-            c = c.replace(/server:\s*{[^}]*},?/s, '');
-            fs.writeFileSync(f, c);
-          "
+          # Pas de CAP_LIVE_RELOAD => build offline embarqué (prod)
           npx cap add android || true
           npx cap sync android
 
-      - name: Activer les App Links (autoVerify) pour nukuconnect.com
+      - name: Configuration Android (SDK 36, App Links, versionCode)
         script: |
-          set -e
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if [ ! -f "$MANIFEST" ]; then
-            echo "❌ AndroidManifest.xml introuvable à $MANIFEST"
-            exit 1
-          fi
+          export ANDROID_VERSION_CODE=$(($(date +%s) / 60))
+          node scripts/android-prepare.mjs
 
-          echo "🔧 Injection de l'intent-filter App Links (autoVerify=true) pour https://nukuconnect.com"
-
-          if grep -q 'android:host="nukuconnect.com"' "$MANIFEST"; then
-            echo "✅ Intent-filter App Links déjà présent — aucun changement."
-          else
-            # Insère le bloc AVANT la fermeture </activity> de MainActivity
-            python3 - "$MANIFEST" <<'PY'
-          import re, sys
-          path = sys.argv[1]
-          with open(path, 'r', encoding='utf-8') as f:
-              xml = f.read()
-
-          block = '''
-                  <intent-filter android:autoVerify="true">
-                      <action android:name="android.intent.action.VIEW" />
-                      <category android:name="android.intent.category.DEFAULT" />
-                      <category android:name="android.intent.category.BROWSABLE" />
-                      <data android:scheme="https" android:host="nukuconnect.com" />
-                  </intent-filter>
-                  <intent-filter android:autoVerify="true">
-                      <action android:name="android.intent.action.VIEW" />
-                      <category android:name="android.intent.category.DEFAULT" />
-                      <category android:name="android.intent.category.BROWSABLE" />
-                      <data android:scheme="https" android:host="www.nukuconnect.com" />
-                  </intent-filter>
-          '''
-
-          # Injecte juste avant le </activity> qui contient MainActivity
-          pattern = re.compile(r'(<activity\b[^>]*MainActivity[\s\S]*?)(\s*</activity>)')
-          new_xml, n = pattern.subn(r'\1' + block + r'\2', xml, count=1)
-          if n == 0:
-              print("❌ Impossible de trouver la balise <activity ... MainActivity> dans AndroidManifest.xml")
-              sys.exit(1)
-
-          with open(path, 'w', encoding='utf-8') as f:
-              f.write(new_xml)
-          print("✅ Intent-filter App Links injecté avec succès.")
-          PY
-          fi
-
-          echo "----- Extrait AndroidManifest.xml -----"
-          grep -A 6 'nukuconnect.com' "$MANIFEST" || true
-          echo "---------------------------------------"
-
-
-
-      - name: Configurer le numéro de version Android
-        script: |
-          cd android/app
-          # Incrémente automatiquement le versionCode à chaque build
-          BUILD_NUMBER=$(($(date +%s) / 60))
-          sed -i.bak "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" build.gradle
-          sed -i.bak "s/versionName \"[^\"]*\"/versionName \"1.0.$BUILD_NUMBER\"/" build.gradle
 
       - name: Compiler l'AAB signé
         script: |
