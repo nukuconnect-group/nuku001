@@ -46,11 +46,15 @@ jobs:
           unzip -q /tmp/cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
           yes | $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Decode Android keystore (from secret ANDROID_KEYSTORE_BASE64)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      - name: Decode Android keystore (if provided)
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > $HOME/android-keystore.jks
-          ls -l $HOME/android-keystore.jks
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Decoding keystore"
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > $HOME/android-keystore.jks
+            ls -l $HOME/android-keystore.jks
+          else
+            echo "No keystore provided; will build unsigned"
+          fi
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
