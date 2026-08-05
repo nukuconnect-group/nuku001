@@ -1,22 +1,14 @@
-name: Android release (AAB + APK)
+name: Android signed build
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      version_name:
-        description: 'versionName (ex: 1.2.0). Vide = auto'
-        required: false
-        default: ''
-  push:
-    tags:
-      - 'android-v*'
 
 jobs:
   build:
-    name: Build signed AAB & APK (SDK 36)
+    name: Build Android AAB & APK (signed)
     runs-on: ubuntu-latest
 
     steps:
