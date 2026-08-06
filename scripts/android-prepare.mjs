@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prépare le projet Android natif pour un build de production (AAB / APK).
+ * Prépare le projet Android natif pour un build de production unsigned.
  *
  * - Force compileSdk / targetSdk 36 (Android 16) + minSdk 23
  * - Injecte les intent-filters App Links (autoVerify) pour nukuconnect.com
@@ -91,37 +91,25 @@ appGradle = appGradle
   .replace(/versionName\s+"[^"]*"/, `versionName "${versionName}"`);
 
 /* ------------------------------------------------------------------ */
-/* 4. build.gradle : signingConfigs release (env-driven)               */
+/* 4. build.gradle : suppression de toute signature release             */
 /* ------------------------------------------------------------------ */
-/* Compatible GitHub Actions (ANDROID_*) et Codemagic (CM_*).           */
-if (!appGradle.includes('signingConfigs')) {
-  const signingBlock = `
-    signingConfigs {
-        release {
-            def ksPath = System.getenv("ANDROID_KEYSTORE_PATH") ?: System.getenv("CM_KEYSTORE_PATH")
-            if (ksPath && file(ksPath).exists()) {
-                storeFile file(ksPath)
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: System.getenv("CM_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: System.getenv("CM_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("CM_KEY_PASSWORD")
-            }
-        }
-    }
-`;
-  appGradle = appGradle.replace(/\n(\s*)buildTypes\s*{/, `\n${signingBlock}\n$1buildTypes {`);
-
-  appGradle = appGradle.replace(
-    /(release\s*{\s*\n)(\s*)minifyEnabled/,
-    `$1$2if (signingConfigs.release.storeFile != null) {\n$2    signingConfig signingConfigs.release\n$2}\n$2minifyEnabled`,
-  );
-
-  if (!appGradle.includes('signingConfigs')) fail("Impossible d'injecter signingConfigs dans app/build.gradle.");
-  console.log('✅ signingConfigs.release injecté (variables d\'environnement)');
+const signingConfigsBlock = /\n\s*signingConfigs\s*{[\s\S]*?\n\s*}\n(?=\s*buildTypes\s*{)/m;
+if (signingConfigsBlock.test(appGradle)) {
+  appGradle = appGradle.replace(signingConfigsBlock, '\n');
+  console.log('✅ signingConfigs release supprimé');
 } else {
-  console.log('✅ signingConfigs déjà présent');
+  console.log('✅ Aucun signingConfigs release à supprimer');
+}
+
+const conditionalSigningBlock = /\n\s*if\s*\(\s*signingConfigs\.release\.storeFile\s*!=\s*null\s*\)\s*{\n\s*signingConfig signingConfigs\.release\n\s*}\n/m;
+if (conditionalSigningBlock.test(appGradle)) {
+  appGradle = appGradle.replace(conditionalSigningBlock, '\n');
+  console.log('✅ signingConfig release supprimé');
+} else {
+  console.log('✅ Aucun signingConfig release à supprimer');
 }
 
 fs.writeFileSync(appGradlePath, appGradle);
 console.log(`✅ versionCode = ${versionCode}, versionName = ${versionName}`);
 
-console.log('🎉 Projet Android prêt pour le build release.');
+console.log('🎉 Projet Android prêt pour le build release unsigned.');

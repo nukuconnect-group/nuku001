@@ -17,23 +17,8 @@ android {
         }
     }
 
-    signingConfigs {
-        release {
-            def ksPath = System.getenv("ANDROID_KEYSTORE_PATH") ?: System.getenv("CM_KEYSTORE_PATH")
-            if (ksPath && file(ksPath).exists()) {
-                storeFile file(ksPath)
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: System.getenv("CM_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: System.getenv("CM_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: System.getenv("CM_KEY_PASSWORD")
-            }
-        }
-    }
-
     buildTypes {
         release {
-            if (signingConfigs.release.storeFile != null) {
-                signingConfig signingConfigs.release
-            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

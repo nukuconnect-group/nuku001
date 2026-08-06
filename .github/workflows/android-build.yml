@@ -1,4 +1,4 @@
-name: Android signed build + Verify API 36
+name: Android unsigned AAB build + Verify API 36
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Build Android AAB & APK (signed) + Verify API 36
+    name: Build Android AAB unsigned + Verify API 36
     runs-on: ubuntu-latest
 
     steps:
@@ -70,108 +70,39 @@ jobs:
           echo "📄 app/build.gradle :"
           grep -E "(targetSdkVersion|compileSdk)" android/app/build.gradle | head -5 || true
 
-      - name: Decode keystore
-        id: keystore
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
-            echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Keystore décodé et prêt"
-          else
-            echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️ Aucun keystore : build non signé"
-          fi
-
-      - name: Build release AAB & APK
+      - name: Build release AAB (unsigned)
         working-directory: android
-        env:
-          ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
           ./gradlew clean
-          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | tee build.log
 
-      - name: Verify outputs (app-release.aab / app-release.apk)
-        continue-on-error: true
+      - name: Verify and rename unsigned AAB
         run: |
           AAB=android/app/build/outputs/bundle/release/app-release.aab
-          APK=android/app/build/outputs/apk/release/app-release.apk
-          
-          echo "🔍 Recherche des fichiers générés..."
-          echo ""
+          UNSIGNED_AAB=android/app/build/outputs/bundle/release/app-release-unsigned.aab
           
           if [ -f "$AAB" ]; then
-            AAB_SIZE=$(du -h "$AAB" | cut -f1)
-            echo "✅ AAB généré : $AAB_SIZE"
+            mv "$AAB" "$UNSIGNED_AAB"
+            AAB_SIZE=$(du -h "$UNSIGNED_AAB" | cut -f1)
+            echo "✅ AAB unsigned généré : $AAB_SIZE"
           else
             echo "❌ AAB manquant à $AAB"
             echo "📂 Contenu android/app/build/outputs/ :"
             ls -la android/app/build/outputs/ 2>/dev/null || echo "Répertoire introuvable"
-          fi
-          
-          echo ""
-          
-          if [ -f "$APK" ]; then
-            APK_SIZE=$(du -h "$APK" | cut -f1)
-            echo "✅ APK généré : $APK_SIZE"
-          else
-            echo "❌ APK manquant à $APK"
-            echo "📂 Contenu android/app/build/outputs/ :"
-            ls -la android/app/build/outputs/ 2>/dev/null || echo "Répertoire introuvable"
-          fi
-
-      - name: Verify targetSdk = 36 with aapt2
-        continue-on-error: true
-        run: |
-          APK=android/app/build/outputs/apk/release/app-release.apk
-          AAPT=$(find "$ANDROID_HOME/build-tools/36.0.0" -name aapt2 | head -1)
-          
-          echo "=== VÉRIFICATION DE L'API CIBLE ==="
-          echo ""
-          
-          if [ ! -f "$APK" ]; then
-            echo "⚠️ APK non trouvé, vérification sautée"
-            exit 0
-          fi
-          
-          if [ -z "$AAPT" ]; then
-            echo "⚠️ aapt2 non trouvé"
-          else
-            echo "Exécution de aapt2 dump badging..."
-            "$AAPT" dump badging "$APK" > /tmp/badging.txt 2>&1
-            
-            echo "Résultat du badging :"
-            cat /tmp/badging.txt | grep -i "sdkversion\|targetSdkVersion" || echo "Pas de sdkVersion trouvé"
-            
-            if grep -q "targetSdkVersion:'36'" /tmp/badging.txt; then
-              echo ""
-              echo "✅✅✅ CONFORME GOOGLE PLAY ✅✅✅"
-              echo "✅ targetSdk = 36 (Android 16)"
-              echo "✅ Votre app peut être publiée sur Google Play Store"
-            else
-              echo ""
-              echo "⚠️ Avertissement : targetSdk n'est pas 36"
-              cat /tmp/badging.txt | head -20
-            fi
+            exit 1
           fi
 
       - name: Extract and verify AAB manifest
-        continue-on-error: true
         run: |
           echo "=== VÉRIFICATION DU MANIFEST DE L'AAB ==="
           echo ""
           
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          AAB=android/app/build/outputs/bundle/release/app-release-unsigned.aab
           
           if [ ! -f "$AAB" ]; then
-            echo "⚠️ AAB non trouvé, vérification du manifest sautée"
-            exit 0
+            echo "❌ AAB non trouvé, vérification du manifest impossible"
+            exit 1
           fi
           
           mkdir -p /tmp/aab_check
@@ -186,53 +117,39 @@ jobs:
           fi
           
           echo ""
-          echo "📦 AAB est prêt pour Google Play Store"
+          echo "📦 AAB unsigned prêt pour signature manuelle"
 
-      - name: Verify AAB signature
-        if: steps.keystore.outputs.signed == 'true'
-        continue-on-error: true
+      - name: Verify AAB is unsigned
         run: |
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          AAB=android/app/build/outputs/bundle/release/app-release-unsigned.aab
           
           if [ ! -f "$AAB" ]; then
-            echo "⚠️ AAB non trouvé, vérification de signature sautée"
-            exit 0
+            echo "❌ AAB non trouvé, vérification impossible"
+            exit 1
           fi
           
-          echo "=== VÉRIFICATION DE LA SIGNATURE ==="
-          
-          EXPECTED=$(keytool -list -v -keystore "$HOME/release.jks" \
-            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            -alias "${{ secrets.ANDROID_KEY_ALIAS }}" 2>/dev/null \
-            | grep "SHA256:" | head -1 | awk '{print $2}')
-          
+          echo "=== VÉRIFICATION ABSENCE DE SIGNATURE ==="
           mkdir -p /tmp/aab
           unzip -o -q "$AAB" "META-INF/*" -d /tmp/aab 2>/dev/null || true
           
           CERT=$(find /tmp/aab/META-INF -type f \( -name "*.RSA" -o -name "*.EC" -o -name "*.DSA" \) | head -1)
           
           if [ -z "$CERT" ]; then
-            echo "✅ AAB généré (signature présente)"
+            echo "✅ AAB non signé confirmé"
           else
-            ACTUAL=$(keytool -printcert -file "$CERT" 2>/dev/null | grep "SHA256:" | head -1 | awk '{print $2}')
-            if [ "$EXPECTED" = "$ACTUAL" ]; then
-              echo "✅ AAB signé correctement"
-              echo "✅ Prêt pour Google Play Store"
-            else
-              echo "⚠️ Signature trouvée mais ne correspond pas au keystore"
-            fi
+            echo "❌ Signature trouvée dans l'AAB"
+            find /tmp/aab/META-INF -type f
+            exit 1
           fi
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-release
+          name: android-release-unsigned-aab
           path: |
-            android/app/build/outputs/bundle/release/*.aab
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/mapping/release/mapping.txt
-          if-no-files-found: warn
+            android/app/build/outputs/bundle/release/app-release-unsigned.aab
+          if-no-files-found: error
           retention-days: 30
 
       - name: Display build summary
@@ -240,26 +157,20 @@ jobs:
         run: |
           echo ""
           echo "========================================="
-          echo "📦 BUILD ANDROID AAB + APK TERMINÉ"
+          echo "📦 BUILD ANDROID AAB UNSIGNED TERMINÉ"
           echo "========================================="
           echo ""
-          if [ -f "android/app/build/outputs/bundle/release/app-release.aab" ]; then
-            AAB_SIZE=$(du -h "android/app/build/outputs/bundle/release/app-release.aab" | cut -f1)
-            echo "✅ AAB : $AAB_SIZE"
-            echo "   Chemin : android/app/build/outputs/bundle/release/app-release.aab"
-            echo ""
-          fi
-          if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
-            APK_SIZE=$(du -h "android/app/build/outputs/apk/release/app-release.apk" | cut -f1)
-            echo "✅ APK : $APK_SIZE"
-            echo "   Chemin : android/app/build/outputs/apk/release/app-release.apk"
+          if [ -f "android/app/build/outputs/bundle/release/app-release-unsigned.aab" ]; then
+            AAB_SIZE=$(du -h "android/app/build/outputs/bundle/release/app-release-unsigned.aab" | cut -f1)
+            echo "✅ AAB unsigned : $AAB_SIZE"
+            echo "   Chemin : android/app/build/outputs/bundle/release/app-release-unsigned.aab"
             echo ""
           fi
           echo "========================================="
           echo "🎯 CIBLAGE API : Android 16 (API 36)"
-          echo "✅ CONFORME GOOGLE PLAY STORE"
+          echo "✅ AAB NON SIGNÉ, SIGNATURE MANUELLE POSSIBLE"
           echo "========================================="
           echo ""
           echo "📍 Récupérez vos artifacts ici :"
-          echo "   Actions → Latest Run → Artifacts → android-release"
+          echo "   Actions → Latest Run → Artifacts → android-release-unsigned-aab"
           echo ""
