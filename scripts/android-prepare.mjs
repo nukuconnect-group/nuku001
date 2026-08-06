@@ -125,4 +125,3 @@ fs.writeFileSync(appGradlePath, appGradle);
 console.log(`✅ versionCode = ${versionCode}, versionName = ${versionName}`);
 
 console.log('🎉 Projet Android prêt pour le build release.');
-
