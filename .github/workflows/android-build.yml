@@ -4,7 +4,14 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'android-v*'
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'versionName (ex: 1.0.3). Laisser vide pour auto.'
+        required: false
+        type: string
 
 jobs:
   build:
@@ -37,7 +44,7 @@ jobs:
       - name: Build web application
         run: npm run build
 
-      - name: Add & sync Android platform (production, sans live-reload)
+      - name: Sync Android platform (production, sans live-reload)
         run: |
           npx cap add android || true
           npx cap sync android
@@ -45,8 +52,8 @@ jobs:
       - name: Prepare Android config (SDK 36, App Links, version)
         run: node scripts/android-prepare.mjs
         env:
-          ANDROID_VERSION_CODE: ${{ github.run_number }}  
-          ANDROID_VERSION_NAME: ${{ github.event.inputs.version_name }}
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_NAME: ${{ inputs.version_name }}
 
       - name: Decode keystore
         id: keystore
@@ -54,7 +61,7 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
+            echo "$ANDROID_KEYSTORE_BASE64" | tr -d '\n' | base64 --decode > "$HOME/release.jks"
             echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
             echo "signed=true" >> "$GITHUB_OUTPUT"
             echo "✅ Keystore décodé"
@@ -69,20 +76,33 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
         run: |
           chmod +x ./gradlew
           ./gradlew clean
           ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace
 
+      - name: Verify outputs (app-release.aab / app-release.apk)
+        run: |
+          set -e
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          [ -f "$AAB" ] || { echo "❌ $AAB manquant"; exit 1; }
+          [ -f "$APK" ] || { echo "❌ $APK manquant"; exit 1; }
+          echo "📦 AAB : $(du -h "$AAB" | cut -f1) — APK : $(du -h "$APK" | cut -f1)"
+
+      - name: Verify targetSdk = 36
+        run: |
+          set -e
+          AAPT=$(find "$ANDROID_HOME/build-tools/36.0.0" -name aapt2 | head -1)
+          "$AAPT" dump badging android/app/build/outputs/apk/release/app-release.apk > /tmp/badging.txt
+          grep -E "targetSdkVersion:'36'" /tmp/badging.txt || { echo "❌ targetSdk != 36"; cat /tmp/badging.txt | head -20; exit 1; }
+          echo "✅ targetSdk 36 (Android 16) conforme Google Play"
 
       - name: Verify AAB signature
         if: steps.keystore.outputs.signed == 'true'
         run: |
           set -e
-          AAB=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -1)
-          [ -n "$AAB" ] || { echo "❌ Aucun AAB généré"; exit 1; }
-          echo "📦 AAB : $AAB ($(du -h "$AAB" | cut -f1))"
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
           EXPECTED=$(keytool -list -v -keystore "$HOME/release.jks" \
             -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             -alias "${{ secrets.ANDROID_KEY_ALIAS }}" 2>/dev/null \
