@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "android:prepare": "node scripts/android-prepare.mjs",
-    "android:build": "npm run build && npx cap sync android && node scripts/android-prepare.mjs",
+    "android:build": "npm run build && npx cap add android || true && npx cap sync android && node scripts/android-prepare.mjs && cd android && ./gradlew clean bundleRelease assembleRelease",
     "android:dev": "CAP_LIVE_RELOAD=1 npx cap sync android"
   },
   "dependencies": {
