@@ -13,6 +13,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build Android AAB unsigned + Verify API 36
