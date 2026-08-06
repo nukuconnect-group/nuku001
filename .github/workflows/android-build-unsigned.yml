@@ -1,0 +1,100 @@
+name: Android AAB non signé (test/dev)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'versionName (ex: 1.0.3). Laisser vide pour auto.'
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build Android AAB non signé (SDK 36)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies with Bun
+        run: bun install --frozen-lockfile
+
+      - name: Build web application
+        run: npm run build
+
+      - name: Sync Android platform
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Prepare Android config (SDK 36, version)
+        run: node scripts/android-prepare.mjs
+        env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_VERSION_NAME: ${{ inputs.version_name }}
+
+      - name: Build release AAB (non signé)
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean bundleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Rename AAB en unsigned
+        run: |
+          AAB_SRC=android/app/build/outputs/bundle/release/app-release.aab
+          AAB_DST=android/app/build/outputs/bundle/release/app-release-unsigned.aab
+          if [ -f "$AAB_SRC" ]; then
+            cp "$AAB_SRC" "$AAB_DST"
+            echo "✅ AAB copié : $(du -h "$AAB_DST" | cut -f1)"
+          else
+            echo "❌ AAB non trouvé"
+            find android/app/build/outputs -name "*.aab" 2>/dev/null || true
+            exit 1
+          fi
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-unsigned
+          path: android/app/build/outputs/bundle/release/app-release-unsigned.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Résumé du build
+        if: always()
+        run: |
+          echo "========================================="
+          echo "📦 BUILD AAB NON SIGNÉ TERMINÉ"
+          echo "========================================="
+          AAB=android/app/build/outputs/bundle/release/app-release-unsigned.aab
+          if [ -f "$AAB" ]; then
+            echo "✅ app-release-unsigned.aab : $(du -h "$AAB" | cut -f1)"
+            echo "   Prêt pour tests ou signature manuelle"
+          else
+            echo "❌ AAB non généré"
+          fi
+          echo "========================================="
+          echo "🎯 SDK : Android 16 (API 36)"
+          echo "========================================="
