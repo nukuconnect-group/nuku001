@@ -51,6 +51,7 @@ import LearnerDashboard from "./pages/LearnerDashboard";
 import Plans from "./pages/Plans";
 import Tokens from "./pages/Tokens";
 import Locator from "./pages/Locator";
+import Sourcing from "./pages/Sourcing";
 import DeliveryTracking from "./pages/DeliveryTracking";
 import PublicDeliveryTracking from "./pages/PublicDeliveryTracking";
 import About from "./pages/About";
@@ -227,6 +228,7 @@ const App = () => {
                   <Route path="/plans" element={<Plans />} />
                   <Route path="/jetons" element={<Tokens />} />
                   <Route path="/tokens" element={<Tokens />} />
+                  <Route path="/sourcing" element={<Sourcing />} />
                   <Route path="/localiser" element={<Locator />} />
                   <Route path="/locator" element={<Locator />} />
                   <Route path="/suivi-livraison" element={<DeliveryTracking />} />
