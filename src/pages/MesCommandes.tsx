@@ -206,8 +206,8 @@ const MesCommandes = () => {
 
   const handleRetryPayment = async (order: any) => {
     try {
-      const { openMonerooPay } = await import("@/lib/moneroo");
-      await openMonerooPay({
+      const { openSolimiPay } = await import("@/lib/solimi");
+      await openSolimiPay({
         amount: Number(order.total_price || 0),
         description: `Relance commande #${String(order.id).slice(0, 8)}`,
         context: "order_retry",

@@ -126,7 +126,7 @@ const BuyerDashboard = () => {
     return result;
   })();
 
-  // Dépenses comptabilisées uniquement quand le paiement Moneroo est confirmé/encaissé.
+  // Dépenses comptabilisées uniquement quand le paiement SOLIMI est confirmé/encaissé.
   const PAID_STATUSES = new Set(["confirmed", "completed", "paid", "delivered"]);
   const totalSpent = orders
     .filter((o: any) => PAID_STATUSES.has(String(o.status || "").toLowerCase()))

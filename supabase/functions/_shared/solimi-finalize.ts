@@ -1,20 +1,8 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const json = (body: Record<string, unknown>, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-const normalizeStatus = (value: unknown) => {
-  const s = String(value || "").toLowerCase();
-  if (["success", "completed", "paid", "successful", "succeeded"].includes(s)) return "success";
-  if (["failed", "cancelled", "expired", "pending", "initiated"].includes(s)) return s;
-  return "pending";
-};
+/**
+ * Post-payment business logic shared by solimi-verify (polling) and
+ * solimi-webhook (push). Safe to run more than once: every write is guarded
+ * so a webhook + a manual verification never double-credit anything.
+ */
 
 const getOrderIds = (data: Record<string, unknown>): string[] => {
   if (Array.isArray(data.orderIds)) return data.orderIds.map(String).filter(Boolean);
@@ -27,7 +15,7 @@ async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: 
     const { data: buyerAuth } = await admin.auth.admin.getUserById(tx.user_id);
     const buyerEmail = buyerAuth?.user?.email || tx.customer_email;
     if (!buyerEmail) {
-      console.warn("[email] no buyer email for verified tx", paymentId);
+      console.warn("[email] no buyer email for tx", paymentId);
       return;
     }
 
@@ -42,7 +30,9 @@ async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: 
 
     const { data: items } = await admin
       .from("orders")
-      .select("id, seller_id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(id, full_name, business_name, user_id)")
+      .select(
+        "id, seller_id, quantity, unit_price, total_price, products(name, unit), profiles!orders_seller_id_fkey(id, full_name, business_name, user_id)",
+      )
       .in("id", orderIds);
 
     const allItems = (items || []).map((o: any) => ({
@@ -82,7 +72,7 @@ async function sendCartPurchaseEmails(admin: any, tx: any, orders: any[], data: 
           deliveryPrice,
           total,
           deliveryMethod,
-          paymentMethod: "Moneroo",
+          paymentMethod: "SOLIMI",
           deliveryCity: data.deliveryCity || "",
           invoiceUrl,
         },
@@ -162,47 +152,62 @@ async function finalizeCartPayment(admin: any, tx: any, paymentId: string) {
 
   for (const order of orders || []) {
     const previousNotes = order.notes || "";
-    await admin
-      .from("orders")
-      .update({
-        status: "confirmed",
-        notes: `${previousNotes} | Paiement Moneroo confirmé: ${paymentId}`,
-      })
-      .eq("id", order.id)
-      .in("status", ["pending", "confirmed"]);
+    if (!previousNotes.includes(paymentId)) {
+      await admin
+        .from("orders")
+        .update({ status: "confirmed", notes: `${previousNotes} | Paiement SOLIMI confirmé: ${paymentId}` })
+        .eq("id", order.id)
+        .in("status", ["pending", "confirmed"]);
+    }
 
     const seller = sellerMap.get(order.seller_id);
     if (seller?.user_id) {
-      const { error: walletErr } = await admin.from("wallet_movements").insert({
-        user_id: seller.user_id,
-        order_id: order.id,
-        type: "credit",
-        amount: Number(order.total_price || 0),
-        description: `Vente confirmée Moneroo — commande ${order.id}`,
-      });
-      if (walletErr && walletErr.code !== "23505") throw walletErr;
+      const { data: existingMovement } = await admin
+        .from("wallet_movements")
+        .select("id")
+        .eq("order_id", order.id)
+        .eq("type", "credit")
+        .maybeSingle();
 
-      await admin.from("notifications").insert({
-        user_id: seller.user_id,
-        type: "order",
-        title: "💰 Vente créditée",
-        description: `Votre vente de ${Number(order.total_price || 0).toLocaleString("fr-FR")} FCFA est créditée sur votre compte vendeur.`,
-      });
+      if (!existingMovement) {
+        const { error: walletErr } = await admin.from("wallet_movements").insert({
+          user_id: seller.user_id,
+          order_id: order.id,
+          type: "credit",
+          amount: Number(order.total_price || 0),
+          description: `Vente confirmée SOLIMI — commande ${order.id}`,
+        });
+        if (walletErr && walletErr.code !== "23505") throw walletErr;
+
+        await admin.from("notifications").insert({
+          user_id: seller.user_id,
+          type: "order",
+          title: "💰 Vente créditée",
+          description: `Votre vente de ${Number(order.total_price || 0).toLocaleString("fr-FR")} FCFA est créditée sur votre compte vendeur.`,
+        });
+      }
     }
 
     if (deliveryMethod === "livreur") {
-      const { data: delivery } = await admin.from("deliveries").upsert({
-        order_id: order.id,
-        driver_id: selectedDriverId,
-        dropoff_address: deliveryAddress,
-        delivery_fee: perOrderDelivery,
-        driver_fee: driverFee,
-        platform_fee: platformFee,
-        distance_km: data.distanceKm == null ? null : Number(data.distanceKm),
-        estimated_minutes: data.distanceKm == null ? null : Math.round(Number(data.distanceKm) * 3),
-        status: selectedDriverId ? "accepted" : "pending",
-        accepted_at: selectedDriverId ? new Date().toISOString() : null,
-      }, { onConflict: "order_id" }).select("id").single();
+      const { data: delivery } = await admin
+        .from("deliveries")
+        .upsert(
+          {
+            order_id: order.id,
+            driver_id: selectedDriverId,
+            dropoff_address: deliveryAddress,
+            delivery_fee: perOrderDelivery,
+            driver_fee: driverFee,
+            platform_fee: platformFee,
+            distance_km: data.distanceKm == null ? null : Number(data.distanceKm),
+            estimated_minutes: data.distanceKm == null ? null : Math.round(Number(data.distanceKm) * 3),
+            status: selectedDriverId ? "accepted" : "pending",
+            accepted_at: selectedDriverId ? new Date().toISOString() : null,
+          },
+          { onConflict: "order_id" },
+        )
+        .select("id")
+        .single();
 
       if (delivery?.id) {
         const { data: existingMessage } = await admin
@@ -233,7 +238,8 @@ async function finalizeCartPayment(admin: any, tx: any, paymentId: string) {
   await sendCartPurchaseEmails(admin, tx, orders || [], data, paymentId);
 }
 
-async function finalizePayment(admin: any, tx: any, paymentId: string) {
+/** Apply the business effect of a successful payment for every payment context. */
+export async function finalizePayment(admin: any, tx: any, paymentId: string) {
   const context = tx.context;
   const data = tx.context_data || {};
   const userId = tx.user_id;
@@ -244,86 +250,157 @@ async function finalizePayment(admin: any, tx: any, paymentId: string) {
 
   if (context === "plan") {
     const plan = String(data.planId || "standard");
+    const billingPeriod = String(data.billingPeriod || "annual");
+    const months = billingPeriod === "monthly" ? 1 : 12;
     const maxProducts: Record<string, number> = { free: 5, starter: 15, standard: 30, premium: 9999, enterprise: 9999 };
-    await admin.from("subscriptions").upsert({ user_id: userId, plan, billing_period: "annual", max_products: maxProducts[plan] || 30, status: "active", started_at: new Date().toISOString(), expires_at: new Date(Date.now() + 365 * 86400000).toISOString() }, { onConflict: "user_id" });
-    await admin.from("notifications").insert({ user_id: userId, type: "subscription", title: `🎉 Plan ${data.planName || plan} activé !`, description: "Votre abonnement Moneroo est confirmé." });
+    await admin.from("subscriptions").upsert(
+      {
+        user_id: userId,
+        plan,
+        billing_period: billingPeriod,
+        max_products: maxProducts[plan] || 30,
+        status: "active",
+        started_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + months * 30 * 86400000).toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+    await admin.from("notifications").insert({
+      user_id: userId,
+      type: "subscription",
+      title: `🎉 Plan ${data.planName || plan} activé !`,
+      description: "Votre abonnement est confirmé.",
+    });
   }
 
   if (context === "tokens") {
     const packCode = String(data.packCode || "");
-    const { data: pack } = await admin.from("token_packs").select("id, code, tokens, bonus_tokens, price_fcfa").eq("code", packCode).eq("is_active", true).maybeSingle();
+    const { data: pack } = await admin
+      .from("token_packs")
+      .select("id, code, tokens, bonus_tokens, price_fcfa")
+      .eq("code", packCode)
+      .eq("is_active", true)
+      .maybeSingle();
     if (pack) {
       const amount = Number(pack.tokens || 0) + Number(pack.bonus_tokens || 0);
-      const { data: existing } = await admin.from("token_purchases").select("id").eq("payment_identifier", paymentId).maybeSingle();
+      const { data: existing } = await admin
+        .from("token_purchases")
+        .select("id")
+        .eq("payment_identifier", paymentId)
+        .maybeSingle();
       if (!existing) {
-        const { data: purchase } = await admin.from("token_purchases").insert({ user_id: userId, pack_id: pack.id, pack_code: pack.code, tokens_purchased: amount, tokens_remaining: amount, price_fcfa: pack.price_fcfa, payment_status: "completed", payment_reference: paymentId, payment_identifier: paymentId, completed_at: new Date().toISOString() }).select("id").single();
+        const { data: purchase } = await admin
+          .from("token_purchases")
+          .insert({
+            user_id: userId,
+            pack_id: pack.id,
+            pack_code: pack.code,
+            tokens_purchased: amount,
+            tokens_remaining: amount,
+            price_fcfa: pack.price_fcfa,
+            payment_status: "completed",
+            payment_reference: paymentId,
+            payment_identifier: paymentId,
+            completed_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
         const { data: bal } = await admin.rpc("get_user_token_balance", { p_user_id: userId });
-        await admin.from("token_transactions").insert({ user_id: userId, purchase_id: purchase?.id, type: "purchase", amount, balance_after: bal || amount, reason: `Achat ${pack.code}`, reference_type: "token_pack" });
+        await admin.from("token_transactions").insert({
+          user_id: userId,
+          purchase_id: purchase?.id,
+          type: "purchase",
+          amount,
+          balance_after: bal || amount,
+          reason: `Achat ${pack.code}`,
+          reference_type: "token_pack",
+        });
+        await admin.from("notifications").insert({
+          user_id: userId,
+          type: "tokens",
+          title: `🎁 ${amount} jetons crédités`,
+          description: "Votre recharge est confirmée.",
+        });
       }
-      await admin.from("notifications").insert({ user_id: userId, type: "tokens", title: `🎁 ${amount} jetons crédités`, description: "Votre recharge Moneroo est confirmée." });
     }
   }
 
   if (context === "formation" && data.formationId) {
-    await admin.from("formation_progress").upsert({ user_id: userId, formation_id: data.formationId, progress_percent: 0, completed: false }, { onConflict: "user_id,formation_id,module_id" });
-    await admin.from("formation_payments").upsert({ user_id: userId, formation_id: data.formationId, identifier: paymentId, tx_reference: paymentId, status: "success", paygate_status: "moneroo_success", amount: tx.amount, raw_response: tx.provider_response }, { onConflict: "identifier" });
-    await admin.from("notifications").insert({ user_id: userId, type: "formation", title: "✅ Formation débloquée", description: "Votre paiement Moneroo est confirmé." });
+    await admin.from("formation_payments").upsert(
+      {
+        user_id: userId,
+        formation_id: data.formationId,
+        identifier: paymentId,
+        tx_reference: paymentId,
+        status: "success",
+        paygate_status: "solimi_success",
+        amount: tx.amount,
+        raw_response: tx.provider_response,
+      },
+      { onConflict: "identifier" },
+    );
+    await admin.from("notifications").insert({
+      user_id: userId,
+      type: "formation",
+      title: "✅ Formation débloquée",
+      description: "Votre paiement est confirmé.",
+    });
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Non authentifié" }, 401);
+/**
+ * Persist a provider status change on the transaction and run the business
+ * finalization exactly once (guarded by `completed_at`).
+ */
+export async function applyPaymentStatus(
+  admin: any,
+  existing: any,
+  merchantReference: string,
+  status: string,
+  provider: Record<string, any>,
+  extra: Record<string, unknown> = {},
+) {
+  const alreadyCompleted = !!existing?.completed_at;
+  const failureReason = ["failed", "cancelled", "expired"].includes(status)
+    ? String(provider?.failure_reason || provider?.message || status)
+    : null;
 
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const secret = Deno.env.get("MONEROO_SECRET_KEY")!;
-    const userClient = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return json({ error: "Session invalide" }, 401);
-
-    const { payment_id, context, context_data } = await req.json();
-    if (!payment_id) return json({ error: "Identifiant Moneroo manquant" }, 400);
-
-    const admin = createClient(url, service);
-    const { data: existing } = await admin.from("moneroo_transactions").select("*").eq("payment_id", payment_id).maybeSingle();
-    if (existing && existing.user_id !== user.id) return json({ error: "Paiement non autorisé" }, 403);
-
-    const res = await fetch(`https://api.moneroo.io/v1/payments/${encodeURIComponent(payment_id)}/verify`, { headers: { Accept: "application/json", Authorization: `Bearer ${secret}` } });
-    const raw = await res.json().catch(() => ({}));
-    if (!res.ok) return json({ error: raw?.message || "Vérification Moneroo impossible", raw }, 502);
-
-    const provider = raw?.data || raw;
-    const status = normalizeStatus(provider?.status);
-    const mergedContext = existing?.context || context || provider?.metadata?.context || "direct";
-    const mergedData = existing?.context_data || context_data || provider?.metadata || {};
-    const amount = Number(provider?.amount ?? existing?.amount ?? 0);
-
-    const { data: tx, error } = await admin.from("moneroo_transactions").upsert({
-      user_id: user.id,
-      payment_id,
-      status,
-      amount,
-      currency: provider?.currency || existing?.currency || "XOF",
-      context: mergedContext,
-      context_data: mergedData,
-      checkout_url: provider?.checkout_url || existing?.checkout_url,
-      description: provider?.description || existing?.description,
-      customer_email: provider?.customer?.email || existing?.customer_email || user.email,
+  const { data: tx, error } = await admin
+    .from("solimi_transactions")
+    .update({
+      status: alreadyCompleted && status !== "refunded" ? existing.status : status,
+      checkout_reference: provider?.checkout_reference || existing?.checkout_reference || null,
+      payment_reference: provider?.payment_reference || existing?.payment_reference || null,
       provider_response: provider,
       verified_at: new Date().toISOString(),
-      completed_at: status === "success" ? new Date().toISOString() : existing?.completed_at,
-      failure_reason: ["failed", "cancelled", "expired"].includes(status) ? (provider?.capture?.failure_message || status) : null,
-    }, { onConflict: "payment_id" }).select("*").single();
-    if (error) return json({ error: error.message }, 500);
+      completed_at: status === "success" ? existing?.completed_at || new Date().toISOString() : existing?.completed_at,
+      refunded_at: status === "refunded" ? new Date().toISOString() : existing?.refunded_at,
+      failure_reason: failureReason,
+      updated_at: new Date().toISOString(),
+      ...extra,
+    })
+    .eq("merchant_reference", merchantReference)
+    .select("*")
+    .single();
+  if (error) throw error;
 
-    if (status === "success" && !existing?.completed_at) await finalizePayment(admin, tx, payment_id);
-    return json({ success: status === "success", status, transaction: tx });
-  } catch (e) {
-    console.error("moneroo-verify", e);
-    return json({ error: (e as Error).message || "Erreur serveur" }, 500);
+  if (status === "success" && !alreadyCompleted) {
+    try {
+      await finalizePayment(admin, tx, merchantReference);
+    } catch (e) {
+      console.error("[solimi] finalizePayment error", e);
+      await admin
+        .from("solimi_transactions")
+        .update({
+          error_log: [
+            ...(Array.isArray(tx.error_log) ? tx.error_log : []),
+            { at: new Date().toISOString(), stage: "finalize", message: (e as Error).message },
+          ],
+        })
+        .eq("merchant_reference", merchantReference);
+      throw e;
+    }
   }
-});
+
+  return tx;
+}

@@ -57,7 +57,7 @@ const WithdrawalPanel = () => {
       .select("total_price, status")
       .eq("seller_id", profile.id);
 
-    // Gains comptabilisés uniquement quand le paiement Moneroo est confirmé/encaissé.
+    // Gains comptabilisés uniquement quand le paiement SOLIMI est confirmé/encaissé.
     // Les commandes "pending" / "failed" / "cancelled" ne génèrent AUCUN gain.
     const PAID = new Set(["confirmed", "completed", "paid", "delivered"]);
     const earnings = (orderData || [])

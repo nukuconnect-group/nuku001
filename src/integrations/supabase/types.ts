@@ -676,8 +676,69 @@ export type Database = {
           },
         ]
       }
+      demand_offers: {
+        Row: {
+          created_at: string
+          currency: string
+          delivery_days: number | null
+          demand_id: string
+          id: string
+          message: string | null
+          product_id: string | null
+          status: string
+          supplier_user_id: string
+          total_price: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          delivery_days?: number | null
+          demand_id: string
+          id?: string
+          message?: string | null
+          product_id?: string | null
+          status?: string
+          supplier_user_id: string
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          delivery_days?: number | null
+          demand_id?: string
+          id?: string
+          message?: string | null
+          product_id?: string | null
+          status?: string
+          supplier_user_id?: string
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_offers_demand_id_fkey"
+            columns: ["demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demands: {
         Row: {
+          auto_sourcing: boolean
           boosted_until: string | null
           budget: number | null
           category: string
@@ -697,6 +758,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_sourcing?: boolean
           boosted_until?: string | null
           budget?: number | null
           category: string
@@ -716,6 +778,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_sourcing?: boolean
           boosted_until?: string | null
           budget?: number | null
           category?: string
@@ -1520,66 +1583,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      moneroo_transactions: {
-        Row: {
-          amount: number
-          checkout_url: string | null
-          completed_at: string | null
-          context: string
-          context_data: Json
-          created_at: string
-          currency: string
-          customer_email: string | null
-          description: string | null
-          failure_reason: string | null
-          id: string
-          payment_id: string
-          provider_response: Json
-          status: string
-          updated_at: string
-          user_id: string
-          verified_at: string | null
-        }
-        Insert: {
-          amount?: number
-          checkout_url?: string | null
-          completed_at?: string | null
-          context?: string
-          context_data?: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          description?: string | null
-          failure_reason?: string | null
-          id?: string
-          payment_id: string
-          provider_response?: Json
-          status?: string
-          updated_at?: string
-          user_id: string
-          verified_at?: string | null
-        }
-        Update: {
-          amount?: number
-          checkout_url?: string | null
-          completed_at?: string | null
-          context?: string
-          context_data?: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          description?: string | null
-          failure_reason?: string | null
-          id?: string
-          payment_id?: string
-          provider_response?: Json
-          status?: string
-          updated_at?: string
-          user_id?: string
-          verified_at?: string | null
-        }
-        Relationships: []
       }
       notifications: {
         Row: {
@@ -2646,6 +2649,84 @@ export type Database = {
           status_code?: number
           title?: string | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      solimi_transactions: {
+        Row: {
+          amount: number
+          checkout_reference: string | null
+          checkout_url: string | null
+          completed_at: string | null
+          context: string
+          context_data: Json
+          created_at: string
+          currency: string
+          customer_email: string | null
+          description: string | null
+          error_log: Json
+          failure_reason: string | null
+          id: string
+          last_event: string | null
+          merchant_reference: string | null
+          payment_id: string
+          payment_reference: string | null
+          provider_response: Json
+          refunded_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount?: number
+          checkout_reference?: string | null
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          error_log?: Json
+          failure_reason?: string | null
+          id?: string
+          last_event?: string | null
+          merchant_reference?: string | null
+          payment_id: string
+          payment_reference?: string | null
+          provider_response?: Json
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          checkout_reference?: string | null
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          error_log?: Json
+          failure_reason?: string | null
+          id?: string
+          last_event?: string | null
+          merchant_reference?: string | null
+          payment_id?: string
+          payment_reference?: string | null
+          provider_response?: Json
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }

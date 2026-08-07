@@ -328,7 +328,7 @@ const OrderSummary = ({ deliveryPrice, isCheckingOut, canCheckout, onCheckout, o
           disabled={isCheckingOut || !canCheckout || !acceptedTerms || isPolling}
         >
           {isCheckingOut || isPolling ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag className="w-4 h-4" />}
-          {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Ouverture de Moneroo..." : `Commander et payer ${formatPrice(finalTotal)}`}
+          {isPolling ? "Vérification du paiement..." : isCheckingOut ? "Ouverture de SOLIMI..." : `Commander et payer ${formatPrice(finalTotal)}`}
         </Button>
 
         <div className="flex items-center gap-2 justify-center">

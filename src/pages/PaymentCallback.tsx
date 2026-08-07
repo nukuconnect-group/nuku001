@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getPendingPayment, clearPendingPayment } from "@/lib/moneroo";
+import { getPendingPayment, clearPendingPayment } from "@/lib/solimi";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,24 +30,24 @@ const PaymentCallback = () => {
     const payment_id = paymentId || pending?.paymentId;
     if (!payment_id) {
       setStatus("expired");
-      setMessage("Aucun paiement Moneroo en attente trouvé. Retournez à la page précédente.");
+      setMessage("Aucun paiement SOLIMI en attente trouvé. Retournez à la page précédente.");
       return;
     }
 
     setProcessing(true);
     try {
-      const result = await invokeAuthenticatedFunction<any>("moneroo-verify", {
+      const result = await invokeAuthenticatedFunction<any>("solimi-verify", {
         payment_id,
         context: pending?.context,
         context_data: pending?.contextData || {},
       });
-      if (result.error) throw new Error(result.error || "Vérification Moneroo impossible");
+      if (result.error) throw new Error(result.error || "Vérification SOLIMI impossible");
 
       if (result.status === "success") {
         clearPendingPayment();
         setStatus("success");
         setMessage("Paiement confirmé et opération finalisée automatiquement.");
-        toast({ title: "✅ Paiement confirmé", description: "Moneroo a confirmé le paiement." });
+        toast({ title: "✅ Paiement confirmé", description: "SOLIMI a confirmé le paiement." });
         const ctx = result.transaction?.context || pending?.context;
         const ctxData = result.transaction?.context_data || pending?.contextData || {};
         setTimeout(() => {
@@ -63,12 +63,12 @@ const PaymentCallback = () => {
       if (result.status === "failed" || result.status === "cancelled") {
         clearPendingPayment();
         setStatus("failed");
-        setMessage("Le paiement Moneroo a échoué ou a été annulé. Aucun montant confirmé n’a été finalisé.");
+        setMessage("Le paiement SOLIMI a échoué ou a été annulé. Aucun montant confirmé n’a été finalisé.");
         return;
       }
 
       setStatus("loading");
-      setMessage("Paiement encore en attente chez Moneroo. Vous pouvez suivre ou vérifier manuellement.");
+      setMessage("Paiement encore en attente chez SOLIMI. Vous pouvez suivre ou vérifier manuellement.");
       setTimeout(() => navigate("/suivi-paiement"), 1500);
     } catch (err: any) {
       console.error("Payment callback error:", err);

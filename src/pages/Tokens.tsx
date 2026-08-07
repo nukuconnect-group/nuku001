@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import AskAdvisorButton from "@/components/premium/AskAdvisorButton";
 import { usePremiumAlerts } from "@/hooks/usePremiumAlerts";
-import { openMonerooPay } from "@/lib/moneroo";
+import { openSolimiPay } from "@/lib/solimi";
 
 const subscriptionPlans = [
   { id: "free", name: "Gratuit", price: 0, credits: 0, icon: Zap, popular: false, perks: ["5 produits", "Messagerie", "KYC vérifié"] },
@@ -41,7 +41,7 @@ const Tokens = () => {
 
     setSubmitting(pack.code);
 
-    openMonerooPay({
+    openSolimiPay({
       amount: pack.price_fcfa,
       description: `${pack.name} - ${pack.tokens + pack.bonus_tokens} jetons NukuConnect`,
       context: "tokens",
@@ -182,7 +182,7 @@ const Tokens = () => {
           <div className="text-center mb-6">
             <Badge variant="secondary" className="mb-2 text-[11px]"><Coins className="w-3 h-3 mr-1" /> Recharger des jetons</Badge>
             <h2 className="font-heading text-lg sm:text-2xl font-bold">Packs de jetons</h2>
-            <p className="text-[10px] text-muted-foreground mt-1">🔒 Paiement sécurisé via Moneroo — Mobile Money, Visa, Mastercard</p>
+            <p className="text-[10px] text-muted-foreground mt-1">🔒 Paiement sécurisé via SOLIMI — Mobile Money, Visa, Mastercard</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {packs.map((pack) => {

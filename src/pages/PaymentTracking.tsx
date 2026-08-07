@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, ShieldCheck, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPendingPayment, clearPendingPayment } from "@/lib/moneroo";
+import { getPendingPayment, clearPendingPayment } from "@/lib/solimi";
 import { useToast } from "@/hooks/use-toast";
 
 const PaymentTracking = () => {
@@ -22,7 +22,7 @@ const PaymentTracking = () => {
   const verify = useCallback(async () => {
     if (!pending?.paymentId) return;
     setChecking(true);
-    const { data, error } = await supabase.functions.invoke("moneroo-verify", {
+    const { data, error } = await supabase.functions.invoke("solimi-verify", {
       body: { payment_id: pending.paymentId, context: pending.context, context_data: pending.contextData },
     });
     setChecking(false);
@@ -43,11 +43,11 @@ const PaymentTracking = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      <SEO url="/suivi-paiement" title="Suivi paiement" description="Suivez et vérifiez votre paiement Moneroo." noIndex />
+      <SEO url="/suivi-paiement" title="Suivi paiement" description="Suivez et vérifiez votre paiement SOLIMI." noIndex />
       <Header />
       <main className="container mx-auto px-4 py-10 max-w-xl">
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck className="w-5 h-5 text-primary" />Suivi paiement Moneroo</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ShieldCheck className="w-5 h-5 text-primary" />Suivi paiement SOLIMI</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {pending ? (
               <>

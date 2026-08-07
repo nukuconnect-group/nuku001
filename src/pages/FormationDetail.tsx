@@ -16,7 +16,7 @@ import {
   GraduationCap, CalendarClock, Download, CreditCard, ShieldCheck,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { openMonerooPay } from "@/lib/moneroo";
+import { openSolimiPay } from "@/lib/solimi";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus, PAYMENT_STATUS_DEFAULT_MESSAGES, mapBackendStateToKind } from "@/lib/paymentStatus";
 
@@ -144,7 +144,7 @@ const FormationDetail = () => {
     setPayInitiating(true);
     setPayState({ kind: "initiating" });
 
-    openMonerooPay({
+    openSolimiPay({
       amount: Number(formation.price) || 0,
       description: `Formation : ${formation.title}`.slice(0, 200),
       context: "formation",
@@ -370,7 +370,7 @@ const FormationDetail = () => {
                     </Button>
                   </div>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via Moneroo — Mobile Money, Visa, Mastercard
+                    <ShieldCheck className="w-3 h-3 text-primary" /> Paiement sécurisé via SOLIMI — Mobile Money, Visa, Mastercard
                   </p>
                 </div>
               )}

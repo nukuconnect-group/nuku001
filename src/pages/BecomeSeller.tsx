@@ -146,7 +146,7 @@ const BecomeSeller = () => {
             <div className="flex flex-wrap items-center gap-3 mt-4 text-xs sm:text-sm">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Inscription gratuite</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Badge vérifié (Pro/Business)</span>
-              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Paiements Moneroo</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Paiements SOLIMI</span>
             </div>
           </div>
         </div>

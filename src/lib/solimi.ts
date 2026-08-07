@@ -1,14 +1,14 @@
 /**
- * Moneroo integration helper.
- * Calls the moneroo-init Edge Function, then redirects to Moneroo checkout.
- * On payment completion, user is redirected back to /payment-callback.
+ * SOLIMI integration helper.
+ * Calls the solimi-init Edge Function, then redirects to the SOLIMI hosted
+ * checkout. On completion the user is sent back to /payment-callback.
  */
 
 import { invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
 
 const PENDING_PAYMENT_KEY = "nuku:pendingPayment";
 
-export interface MonerooPaymentConfig {
+export interface SolimiPaymentConfig {
   amount: number;
   description?: string;
   currency?: string;
@@ -26,10 +26,10 @@ export interface MonerooPaymentConfig {
 }
 
 /**
- * Save payment context in sessionStorage, call edge function,
- * and redirect user to Moneroo checkout page.
+ * Save payment context, create the SOLIMI checkout session,
+ * and redirect the user to the SOLIMI payment page.
  */
-export async function openMonerooPay(config: MonerooPaymentConfig) {
+export async function openSolimiPay(config: SolimiPaymentConfig) {
   const {
     amount,
     description = "Paiement NUKUCONNECT",
@@ -40,10 +40,9 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
     onError,
   } = config;
 
-  // Build return URL pointing to our callback page.
-  // Use the CURRENT origin whenever it is a real http(s) host (preview, lovable.app,
-  // custom domain). Only fall back to the published production URL for native shells
-  // (Capacitor: "capacitor://localhost", "file://...") which Moneroo cannot redirect to.
+  // Build return URL pointing to our callback page. Use the CURRENT origin
+  // whenever it is a real http(s) host; fall back to production for native
+  // shells (capacitor://, file://) which SOLIMI cannot redirect to.
   const PROD_URL = "https://nukuconnect.com/payment-callback";
   let returnUrl = PROD_URL;
   try {
@@ -65,7 +64,11 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
   }
 
   try {
-    const data = await invokeAuthenticatedFunction<{ checkout_url?: string; payment_id?: string; error?: string }>("moneroo-init", {
+    const data = await invokeAuthenticatedFunction<{
+      checkout_url?: string;
+      payment_id?: string;
+      error?: string;
+    }>("solimi-init", {
       amount,
       currency,
       description,
@@ -92,7 +95,6 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
     try { sessionStorage.setItem(PENDING_PAYMENT_KEY, pendingPayload); } catch {}
     try { localStorage.setItem(PENDING_PAYMENT_KEY, pendingPayload); } catch {}
 
-    // Redirect to Moneroo checkout
     window.location.href = data.checkout_url;
     return true;
   } catch (err: any) {
@@ -101,9 +103,7 @@ export async function openMonerooPay(config: MonerooPaymentConfig) {
   }
 }
 
-/**
- * Read the pending payment context from sessionStorage.
- */
+/** Read the pending payment context. */
 export function getPendingPayment(): {
   context: string;
   contextData: Record<string, any>;
@@ -128,9 +128,7 @@ export function getPendingPayment(): {
   }
 }
 
-/**
- * Clear the pending payment context.
- */
+/** Clear the pending payment context. */
 export function clearPendingPayment() {
   try {
     sessionStorage.removeItem(PENDING_PAYMENT_KEY);

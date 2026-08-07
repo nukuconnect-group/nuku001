@@ -36,6 +36,7 @@ export const APP_ROUTES: string[] = [
   "/nuku-ai/faq",
   "/panier",
   "/plans",
+  "/sourcing",
   "/politique-achat",
   "/politique-remboursement",
   "/premium",
