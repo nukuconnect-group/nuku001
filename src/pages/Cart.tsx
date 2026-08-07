@@ -13,7 +13,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, CheckCircle2, Loader2, LogIn, MapPin, ShoppingCart } from "lucide-react";
 import { deliveryOptions, type DeliveryDistanceInfo } from "@/components/cart/DeliveryZoneMap";
-import { openMonerooPay } from "@/lib/moneroo";
+import { openSolimiPay } from "@/lib/solimi";
 import { PaymentStatusPanel } from "@/components/payments/PaymentStatusPanel";
 import { PaymentStatus } from "@/lib/paymentStatus";
 import { generateOrderInvoice } from "@/utils/generateInvoicePDF";
@@ -147,7 +147,7 @@ const Cart = () => {
         deliveryPrice,
         finalTotal,
         selectedDelivery?.name || "",
-        "Moneroo",
+        "SOLIMI",
         buyerFullName,
         billing.phone,
         deliveryCity,
@@ -161,7 +161,7 @@ const Cart = () => {
     setPayStatus({
       kind: "success",
       message: "Paiement confirmé. La commande, le crédit vendeur et le suivi de livraison ont été finalisés.",
-      details: { invoiceNumber: paymentId, amount: finalTotal, method: "Moneroo", orderIds },
+      details: { invoiceNumber: paymentId, amount: finalTotal, method: "SOLIMI", orderIds },
     });
     toast({ title: "✅ Paiement confirmé", description: "Commande finalisée et traçabilité créée." });
     // Règle panier: on ne vide le panier qu'après confirmation explicite du paiement.
@@ -226,7 +226,7 @@ const Cart = () => {
             notes: [
               `Client: ${buyerFullName} | ${billing.phone}`,
               deliveryMethod !== "pickup" ? `Livraison: ${selectedDelivery?.name || "Livreur NukuConnect"} - ${deliveryCity}, ${fullAddress}` : "Retrait sur place",
-              `Paiement: Moneroo`,
+              `Paiement: SOLIMI`,
               `tx_ref: ${identifier}`,
             ].join(" | "),
           } as any)
@@ -239,7 +239,7 @@ const Cart = () => {
       pendingCheckoutRef.current = { orderIds, identifier };
       setPaymentIdentifier(identifier);
 
-      const opened = await openMonerooPay({
+      const opened = await openSolimiPay({
         amount: finalTotal,
         description: `Commande NUKUCONNECT - ${identifier}`,
         customer: {
@@ -282,12 +282,12 @@ const Cart = () => {
       }
 
       if (!opened) {
-        await markOrdersFailed(orderIds, `Initialisation Moneroo échouée | tx_ref: ${identifier}`);
+        await markOrdersFailed(orderIds, `Initialisation SOLIMI échouée | tx_ref: ${identifier}`);
         setIsCheckingOut(false);
         return;
       }
 
-      setPayStatus({ kind: "pending", message: "Redirection vers Moneroo. Validez le paiement puis revenez automatiquement sur NukuConnect." });
+      setPayStatus({ kind: "pending", message: "Redirection vers SOLIMI. Validez le paiement puis revenez automatiquement sur NukuConnect." });
     } catch (error: any) {
       console.error("Checkout error:", error);
       if (orderIds.length) await markOrdersFailed(orderIds, `Erreur checkout: ${error?.message || "inconnue"} | tx_ref: ${identifier}`);
@@ -302,7 +302,7 @@ const Cart = () => {
     if (!paymentId) return;
     setVerifyingPay(true);
     try {
-      const { data, error } = await supabase.functions.invoke("moneroo-verify", { body: { payment_id: paymentId } });
+      const { data, error } = await supabase.functions.invoke("solimi-verify", { body: { payment_id: paymentId } });
       if (error) throw error;
       const result = data as any;
       if (result?.status === "success") finalizeLocalSuccess(result?.transaction?.context_data?.orderIds || pendingCheckoutRef.current?.orderIds || [], paymentId);

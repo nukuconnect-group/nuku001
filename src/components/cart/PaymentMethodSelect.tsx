@@ -4,10 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet, ShieldCheck, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { openMonerooPay } from "@/lib/moneroo";
+import { openSolimiPay } from "@/lib/solimi";
 
 const paymentMethods = [
-  { id: "moneroo", name: "Moneroo", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
+  { id: "solimi", name: "SOLIMI", description: "Mobile Money, Visa, Mastercard", icon: Wallet, tag: "Recommandé" },
 ];
 export { paymentMethods };
 
@@ -40,7 +40,7 @@ const PaymentMethodSelect = ({
     if (!amount || amount <= 0) return;
     setIsProcessing(true);
 
-    openMonerooPay({
+    openSolimiPay({
       amount,
       description: `Commande NUKUCONNECT - ${amount} FCFA`,
       context: "direct",
@@ -70,7 +70,7 @@ const PaymentMethodSelect = ({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm text-foreground">Moneroo</p>
+                <p className="font-semibold text-sm text-foreground">SOLIMI</p>
                 <Badge className="text-[9px] bg-primary/20 text-primary border-0">Sécurisé</Badge>
               </div>
               <p className="text-[11px] text-muted-foreground">Mobile Money • Visa • Mastercard</p>
@@ -85,7 +85,7 @@ const PaymentMethodSelect = ({
           )}
 
           <p className="text-[10px] text-muted-foreground text-center">
-            🔒 Transaction chiffrée et sécurisée via Moneroo
+            🔒 Transaction chiffrée et sécurisée via SOLIMI
           </p>
         </div>
 

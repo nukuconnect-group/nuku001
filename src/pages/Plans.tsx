@@ -13,7 +13,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getFreshAuthSession, invokeAuthenticatedFunction } from "@/lib/edgeFunctions";
-import { openMonerooPay } from "@/lib/moneroo";
+import { openSolimiPay } from "@/lib/solimi";
 
 const PENDING_PLAN_KEY = "nuku:pendingPlan";
 
@@ -215,7 +215,7 @@ const Plans = () => {
 
     setSubscribing(planId);
 
-    openMonerooPay({
+    openSolimiPay({
       amount,
       description: `Plan ${plan.name} - NUKUCONNECT (${periodLabel})`,
       customer: { email: session.user.email || "" },
@@ -395,7 +395,7 @@ const Plans = () => {
               💡 Tous les packs payants sont valables <strong>12 mois</strong>. Annonces, badge vérifié, traçabilité, NukuAI et boosts inclus selon le plan choisi.
             </p>
             <p className="text-[10px] text-muted-foreground mt-2">
-              🔒 Paiement sécurisé via Moneroo — Mobile Money, Visa, Mastercard
+              🔒 Paiement sécurisé via SOLIMI — Mobile Money, Visa, Mastercard
             </p>
           </div>
         </div>

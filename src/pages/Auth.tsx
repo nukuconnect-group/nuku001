@@ -975,7 +975,7 @@ const Auth = () => {
                 <h3 className="text-foreground font-semibold">3. Services</h3>
                 <p>NUKUCONNECT facilite la mise en relation, la vente, la communication et le suivi des commandes.</p>
                 <h3 className="text-foreground font-semibold">4. Paiements</h3>
-                <p>Les transactions sont effectuées via Moneroo. NUKUCONNECT peut prélever une commission.</p>
+                <p>Les transactions sont effectuées via SOLIMI. NUKUCONNECT peut prélever une commission.</p>
                 <div className="pt-4"><Button variant="outline" size="sm" className="w-full" onClick={() => setLegalSheet(null)}>Fermer</Button></div>
               </div>
             ) : (
