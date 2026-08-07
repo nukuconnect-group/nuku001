@@ -1521,66 +1521,6 @@ export type Database = {
           },
         ]
       }
-      moneroo_transactions: {
-        Row: {
-          amount: number
-          checkout_url: string | null
-          completed_at: string | null
-          context: string
-          context_data: Json
-          created_at: string
-          currency: string
-          customer_email: string | null
-          description: string | null
-          failure_reason: string | null
-          id: string
-          payment_id: string
-          provider_response: Json
-          status: string
-          updated_at: string
-          user_id: string
-          verified_at: string | null
-        }
-        Insert: {
-          amount?: number
-          checkout_url?: string | null
-          completed_at?: string | null
-          context?: string
-          context_data?: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          description?: string | null
-          failure_reason?: string | null
-          id?: string
-          payment_id: string
-          provider_response?: Json
-          status?: string
-          updated_at?: string
-          user_id: string
-          verified_at?: string | null
-        }
-        Update: {
-          amount?: number
-          checkout_url?: string | null
-          completed_at?: string | null
-          context?: string
-          context_data?: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          description?: string | null
-          failure_reason?: string | null
-          id?: string
-          payment_id?: string
-          provider_response?: Json
-          status?: string
-          updated_at?: string
-          user_id?: string
-          verified_at?: string | null
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string
@@ -2646,6 +2586,84 @@ export type Database = {
           status_code?: number
           title?: string | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      solimi_transactions: {
+        Row: {
+          amount: number
+          checkout_reference: string | null
+          checkout_url: string | null
+          completed_at: string | null
+          context: string
+          context_data: Json
+          created_at: string
+          currency: string
+          customer_email: string | null
+          description: string | null
+          error_log: Json
+          failure_reason: string | null
+          id: string
+          last_event: string | null
+          merchant_reference: string | null
+          payment_id: string
+          payment_reference: string | null
+          provider_response: Json
+          refunded_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount?: number
+          checkout_reference?: string | null
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          error_log?: Json
+          failure_reason?: string | null
+          id?: string
+          last_event?: string | null
+          merchant_reference?: string | null
+          payment_id: string
+          payment_reference?: string | null
+          provider_response?: Json
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          checkout_reference?: string | null
+          checkout_url?: string | null
+          completed_at?: string | null
+          context?: string
+          context_data?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          error_log?: Json
+          failure_reason?: string | null
+          id?: string
+          last_event?: string | null
+          merchant_reference?: string | null
+          payment_id?: string
+          payment_reference?: string | null
+          provider_response?: Json
+          refunded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
