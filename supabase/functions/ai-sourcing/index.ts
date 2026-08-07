@@ -191,7 +191,6 @@ ${JSON.stringify(candidates)}`;
               type: "demand",
               title: "🎯 Nouvelle demande ciblée",
               description: `Un acheteur recherche : ${input.need.slice(0, 120)}. Proposez votre offre.`,
-              link: `/besoins?demande=${demandId}`,
             })),
           );
         }
