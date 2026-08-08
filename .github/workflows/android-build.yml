@@ -100,39 +100,45 @@ jobs:
           ./gradlew clean
           ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
 
-      - name: Verify outputs (app-release.aab / app-release.apk)
-        continue-on-error: true
+      - name: Locate generated Android packages
+        id: locate_outputs
         run: |
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
-          APK=android/app/build/outputs/apk/release/app-release.apk
-          
-          echo "🔍 Recherche des fichiers générés..."
-          echo ""
-          
-          if [ -f "$AAB" ]; then
-            AAB_SIZE=$(du -h "$AAB" | cut -f1)
-            echo "✅ AAB généré : $AAB_SIZE"
-          else
-            echo "❌ AAB manquant à $AAB"
-            echo "📂 Contenu android/app/build/outputs/ :"
-            ls -la android/app/build/outputs/ 2>/dev/null || echo "Répertoire introuvable"
+          set -e
+          echo "=== Recherche automatique des .aab/.apk ==="
+          AAB_FILE=$(find android -type f -name "*.aab" | head -1 || true)
+          APK_FILE=$(find android -type f -name "*.apk" | head -1 || true)
+
+          echo "AAB trouvé: ${AAB_FILE:-aucun}"
+          echo "APK trouvé: ${APK_FILE:-aucun}"
+
+          echo "aab=$AAB_FILE" >> "$GITHUB_OUTPUT"
+          echo "apk=$APK_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Verify outputs are present (fail if missing)
+        run: |
+          set -e
+          AAB="${{ steps.locate_outputs.outputs.aab }}"
+          APK="${{ steps.locate_outputs.outputs.apk }}"
+
+          if [ -z "$AAB" ] || [ ! -f "$AAB" ]; then
+            echo "❌ Aucun fichier AAB trouvé"
+            find android -type f | grep -E "(outputs|bundle|apk)" || true
+            exit 1
           fi
-          
-          echo ""
-          
-          if [ -f "$APK" ]; then
-            APK_SIZE=$(du -h "$APK" | cut -f1)
-            echo "✅ APK généré : $APK_SIZE"
-          else
-            echo "❌ APK manquant à $APK"
-            echo "📂 Contenu android/app/build/outputs/ :"
-            ls -la android/app/build/outputs/ 2>/dev/null || echo "Répertoire introuvable"
+
+          if [ -z "$APK" ] || [ ! -f "$APK" ]; then
+            echo "❌ Aucun fichier APK trouvé"
+            find android -type f | grep -E "(outputs|bundle|apk)" || true
+            exit 1
           fi
+
+          echo "✅ AAB OK: $AAB"
+          echo "✅ APK OK: $APK"
 
       - name: Verify targetSdk = 36 with aapt2
         continue-on-error: true
         run: |
-          APK=android/app/build/outputs/apk/release/app-release.apk
+          APK="${{ steps.locate_outputs.outputs.apk }}"
           AAPT=$(find "$ANDROID_HOME/build-tools/36.0.0" -name aapt2 | head -1)
           
           echo "=== VÉRIFICATION DE L'API CIBLE ==="
@@ -170,7 +176,7 @@ jobs:
           echo "=== VÉRIFICATION DU MANIFEST DE L'AAB ==="
           echo ""
           
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          AAB="${{ steps.locate_outputs.outputs.aab }}"
           
           if [ ! -f "$AAB" ]; then
             echo "⚠️ AAB non trouvé, vérification du manifest sautée"
@@ -180,29 +186,23 @@ jobs:
           mkdir -p /tmp/aab_check
           unzip -q -o "$AAB" "BundleConfig.pb" -d /tmp/aab_check 2>/dev/null || true
           
-          # Extraction du manifest dans l'AAB
           unzip -q -o "$AAB" "base/manifest/AndroidManifest.xml" -d /tmp/aab_check 2>/dev/null || true
           
           if [ -f "/tmp/aab_check/base/manifest/AndroidManifest.xml" ]; then
             echo "✅ AndroidManifest.xml trouvé dans l'AAB"
             grep -o 'android:targetSdkVersion="[0-9]*"' /tmp/aab_check/base/manifest/AndroidManifest.xml || echo "Pas de targetSdkVersion lisible"
           fi
-          
-          echo ""
-          echo "📦 AAB est prêt pour Google Play Store"
 
       - name: Verify AAB signature
         if: steps.keystore.outputs.signed == 'true'
         continue-on-error: true
         run: |
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          AAB="${{ steps.locate_outputs.outputs.aab }}"
           
           if [ ! -f "$AAB" ]; then
             echo "⚠️ AAB non trouvé, vérification de signature sautée"
             exit 0
           fi
-          
-          echo "=== VÉRIFICATION DE LA SIGNATURE ==="
           
           EXPECTED=$(keytool -list -v -keystore "$HOME/release.jks" \
             -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
@@ -211,7 +211,6 @@ jobs:
           
           mkdir -p /tmp/aab
           unzip -o -q "$AAB" "META-INF/*" -d /tmp/aab 2>/dev/null || true
-          
           CERT=$(find /tmp/aab/META-INF -type f \( -name "*.RSA" -o -name "*.EC" -o -name "*.DSA" \) | head -1)
           
           if [ -z "$CERT" ]; then
@@ -220,7 +219,6 @@ jobs:
             ACTUAL=$(keytool -printcert -file "$CERT" 2>/dev/null | grep "SHA256:" | head -1 | awk '{print $2}')
             if [ "$EXPECTED" = "$ACTUAL" ]; then
               echo "✅ AAB signé correctement"
-              echo "✅ Prêt pour Google Play Store"
             else
               echo "⚠️ Signature trouvée mais ne correspond pas au keystore"
             fi
@@ -228,10 +226,11 @@ jobs:
 
       - name: Rename outputs with version for clarity
         id: rename
-        continue-on-error: true
         run: |
-          AAB=android/app/build/outputs/bundle/release/app-release.aab
-          APK=android/app/build/outputs/apk/release/app-release.apk
+          set -e
+          AAB="${{ steps.locate_outputs.outputs.aab }}"
+          APK="${{ steps.locate_outputs.outputs.apk }}"
+
           VERSION="${{ inputs.version_name }}"
           if [ -z "$VERSION" ]; then
             VERSION="run${{ github.run_number }}"
@@ -239,32 +238,29 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           mkdir -p release-assets
-          if [ -f "$AAB" ]; then
-            cp "$AAB" "release-assets/nuku-${VERSION}.aab"
-          fi
-          if [ -f "$APK" ]; then
-            cp "$APK" "release-assets/nuku-${VERSION}.apk"
-          fi
-          ls -la release-assets || true
+          cp "$AAB" "release-assets/nuku-${VERSION}.aab"
+          cp "$APK" "release-assets/nuku-${VERSION}.apk"
+          ls -la release-assets
 
-      - name: Upload artifacts (Actions tab)
+      - name: Upload artifacts (packages + logs)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: android-release
           path: |
-            android/app/build/outputs/bundle/release/*.aab
-            android/app/build/outputs/apk/release/*.apk
+            release-assets/*.aab
+            release-assets/*.apk
+            android/build.log
             android/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: warn
           retention-days: 30
 
       - name: Publish GitHub Release with downloadable AAB & APK
-        if: always()
+        if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-build-${{ steps.rename.outputs.version || github.run_number }}
-          name: "Android build ${{ steps.rename.outputs.version || github.run_number }}"
+          tag_name: android-build-${{ steps.rename.outputs.version }}
+          name: "Android build ${{ steps.rename.outputs.version }}"
           body: |
             Build automatique Android (AAB + APK) déclenché par ${{ github.event_name }}.
             - Commit : ${{ github.sha }}
@@ -275,7 +271,6 @@ jobs:
           files: |
             release-assets/*.aab
             release-assets/*.apk
-        continue-on-error: true
 
       - name: Display build summary
         if: always()
@@ -285,24 +280,10 @@ jobs:
           echo "📦 BUILD ANDROID AAB + APK TERMINÉ"
           echo "========================================="
           echo ""
-          if [ -f "android/app/build/outputs/bundle/release/app-release.aab" ]; then
-            AAB_SIZE=$(du -h "android/app/build/outputs/bundle/release/app-release.aab" | cut -f1)
-            echo "✅ AAB : $AAB_SIZE"
-            echo "   Chemin : android/app/build/outputs/bundle/release/app-release.aab"
-            echo ""
+          if [ -d "release-assets" ]; then
+            ls -lah release-assets || true
           fi
-          if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
-            APK_SIZE=$(du -h "android/app/build/outputs/apk/release/app-release.apk" | cut -f1)
-            echo "✅ APK : $APK_SIZE"
-            echo "   Chemin : android/app/build/outputs/apk/release/app-release.apk"
-            echo ""
-          fi
-          echo "========================================="
-          echo "🎯 CIBLAGE API : Android 16 (API 36)"
-          echo "✅ CONFORME GOOGLE PLAY STORE"
-          echo "========================================="
           echo ""
-          echo "📍 Récupérez vos artifacts :"
-          echo "   1) Actions → Latest Run → Artifacts → android-release (nécessite d'être connecté à GitHub)"
-          echo "   2) Onglet 'Releases' du repo → dernière release → fichiers .aab/.apk téléchargeables publiquement, sans connexion"
-          echo ""
+          echo "📍 Récupération :"
+          echo "   1) Actions > Run > Artifacts > android-release"
+          echo "   2) Releases > dernière release (si job réussi)"
