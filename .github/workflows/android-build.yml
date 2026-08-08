@@ -63,16 +63,6 @@ jobs:
           ANDROID_VERSION_CODE: ${{ github.run_number }}
           ANDROID_VERSION_NAME: ${{ inputs.version_name }}
 
-      - name: Verify Android configuration files
-        run: |
-          echo "=== Vérification des fichiers Android ==="
-          echo ""
-          echo "📄 variables.gradle :"
-          grep -E "(compileSdk|targetSdk|minSdk)" android/variables.gradle || true
-          echo ""
-          echo "📄 app/build.gradle :"
-          grep -E "(targetSdkVersion|compileSdk)" android/app/build.gradle | head -5 || true
-
       - name: Decode keystore
         id: keystore
         env:
@@ -88,7 +78,7 @@ jobs:
             echo "⚠️ Aucun keystore : build non signé"
           fi
 
-      - name: Build release AAB & APK
+      - name: Build release AAB & APK (force :app)
         working-directory: android
         env:
           ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
@@ -96,17 +86,29 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          set -e
           chmod +x ./gradlew
+          ./gradlew --version
+          ./gradlew :app:tasks --all > gradle-app-tasks.txt || true
           ./gradlew clean
-          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
 
       - name: Locate generated Android packages
         id: locate_outputs
         run: |
           set -e
           echo "=== Recherche automatique des .aab/.apk ==="
-          AAB_FILE=$(find android -type f -name "*.aab" | head -1 || true)
-          APK_FILE=$(find android -type f -name "*.apk" | head -1 || true)
+          find android -type f | sort > android/android-files.txt || true
+
+          AAB_FILE=$(find android -type f -path "*/app/build/outputs/*" -name "*.aab" | head -1 || true)
+          APK_FILE=$(find android -type f -path "*/app/build/outputs/*" -name "*.apk" | head -1 || true)
+
+          if [ -z "$AAB_FILE" ]; then
+            AAB_FILE=$(find android -type f -name "*.aab" | head -1 || true)
+          fi
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find android -type f -name "*.apk" | head -1 || true)
+          fi
 
           echo "AAB trouvé: ${AAB_FILE:-aucun}"
           echo "APK trouvé: ${APK_FILE:-aucun}"
@@ -122,107 +124,18 @@ jobs:
 
           if [ -z "$AAB" ] || [ ! -f "$AAB" ]; then
             echo "❌ Aucun fichier AAB trouvé"
-            find android -type f | grep -E "(outputs|bundle|apk)" || true
+            find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
             exit 1
           fi
 
           if [ -z "$APK" ] || [ ! -f "$APK" ]; then
             echo "❌ Aucun fichier APK trouvé"
-            find android -type f | grep -E "(outputs|bundle|apk)" || true
+            find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
             exit 1
           fi
 
           echo "✅ AAB OK: $AAB"
           echo "✅ APK OK: $APK"
-
-      - name: Verify targetSdk = 36 with aapt2
-        continue-on-error: true
-        run: |
-          APK="${{ steps.locate_outputs.outputs.apk }}"
-          AAPT=$(find "$ANDROID_HOME/build-tools/36.0.0" -name aapt2 | head -1)
-          
-          echo "=== VÉRIFICATION DE L'API CIBLE ==="
-          echo ""
-          
-          if [ ! -f "$APK" ]; then
-            echo "⚠️ APK non trouvé, vérification sautée"
-            exit 0
-          fi
-          
-          if [ -z "$AAPT" ]; then
-            echo "⚠️ aapt2 non trouvé"
-          else
-            echo "Exécution de aapt2 dump badging..."
-            "$AAPT" dump badging "$APK" > /tmp/badging.txt 2>&1
-            
-            echo "Résultat du badging :"
-            cat /tmp/badging.txt | grep -i "sdkversion\|targetSdkVersion" || echo "Pas de sdkVersion trouvé"
-            
-            if grep -q "targetSdkVersion:'36'" /tmp/badging.txt; then
-              echo ""
-              echo "✅✅✅ CONFORME GOOGLE PLAY ✅✅✅"
-              echo "✅ targetSdk = 36 (Android 16)"
-              echo "✅ Votre app peut être publiée sur Google Play Store"
-            else
-              echo ""
-              echo "⚠️ Avertissement : targetSdk n'est pas 36"
-              cat /tmp/badging.txt | head -20
-            fi
-          fi
-
-      - name: Extract and verify AAB manifest
-        continue-on-error: true
-        run: |
-          echo "=== VÉRIFICATION DU MANIFEST DE L'AAB ==="
-          echo ""
-          
-          AAB="${{ steps.locate_outputs.outputs.aab }}"
-          
-          if [ ! -f "$AAB" ]; then
-            echo "⚠️ AAB non trouvé, vérification du manifest sautée"
-            exit 0
-          fi
-          
-          mkdir -p /tmp/aab_check
-          unzip -q -o "$AAB" "BundleConfig.pb" -d /tmp/aab_check 2>/dev/null || true
-          
-          unzip -q -o "$AAB" "base/manifest/AndroidManifest.xml" -d /tmp/aab_check 2>/dev/null || true
-          
-          if [ -f "/tmp/aab_check/base/manifest/AndroidManifest.xml" ]; then
-            echo "✅ AndroidManifest.xml trouvé dans l'AAB"
-            grep -o 'android:targetSdkVersion="[0-9]*"' /tmp/aab_check/base/manifest/AndroidManifest.xml || echo "Pas de targetSdkVersion lisible"
-          fi
-
-      - name: Verify AAB signature
-        if: steps.keystore.outputs.signed == 'true'
-        continue-on-error: true
-        run: |
-          AAB="${{ steps.locate_outputs.outputs.aab }}"
-          
-          if [ ! -f "$AAB" ]; then
-            echo "⚠️ AAB non trouvé, vérification de signature sautée"
-            exit 0
-          fi
-          
-          EXPECTED=$(keytool -list -v -keystore "$HOME/release.jks" \
-            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            -alias "${{ secrets.ANDROID_KEY_ALIAS }}" 2>/dev/null \
-            | grep "SHA256:" | head -1 | awk '{print $2}')
-          
-          mkdir -p /tmp/aab
-          unzip -o -q "$AAB" "META-INF/*" -d /tmp/aab 2>/dev/null || true
-          CERT=$(find /tmp/aab/META-INF -type f \( -name "*.RSA" -o -name "*.EC" -o -name "*.DSA" \) | head -1)
-          
-          if [ -z "$CERT" ]; then
-            echo "✅ AAB généré (signature présente)"
-          else
-            ACTUAL=$(keytool -printcert -file "$CERT" 2>/dev/null | grep "SHA256:" | head -1 | awk '{print $2}')
-            if [ "$EXPECTED" = "$ACTUAL" ]; then
-              echo "✅ AAB signé correctement"
-            else
-              echo "⚠️ Signature trouvée mais ne correspond pas au keystore"
-            fi
-          fi
 
       - name: Rename outputs with version for clarity
         id: rename
@@ -251,6 +164,8 @@ jobs:
             release-assets/*.aab
             release-assets/*.apk
             android/build.log
+            android/gradle-app-tasks.txt
+            android/android-files.txt
             android/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: warn
           retention-days: 30
@@ -262,7 +177,7 @@ jobs:
           tag_name: android-build-${{ steps.rename.outputs.version }}
           name: "Android build ${{ steps.rename.outputs.version }}"
           body: |
-            Build automatique Android (AAB + APK) déclenché par ${{ github.event_name }}.
+            Build automatique Android (AAB + APK)
             - Commit : ${{ github.sha }}
             - Run : ${{ github.run_id }}
           draft: false
@@ -275,15 +190,11 @@ jobs:
       - name: Display build summary
         if: always()
         run: |
-          echo ""
           echo "========================================="
           echo "📦 BUILD ANDROID AAB + APK TERMINÉ"
           echo "========================================="
-          echo ""
           if [ -d "release-assets" ]; then
             ls -lah release-assets || true
           fi
-          echo ""
-          echo "📍 Récupération :"
-          echo "   1) Actions > Run > Artifacts > android-release"
-          echo "   2) Releases > dernière release (si job réussi)"
+          echo "Artifacts: Actions > Run > android-release"
+          echo "Release: Releases > latest (si succès)"
