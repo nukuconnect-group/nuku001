@@ -13,6 +13,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Android AAB & APK (signed) + Verify API 36
@@ -223,7 +226,28 @@ jobs:
             fi
           fi
 
-      - name: Upload artifacts
+      - name: Rename outputs with version for clarity
+        id: rename
+        continue-on-error: true
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          VERSION="${{ inputs.version_name }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="run${{ github.run_number }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          mkdir -p release-assets
+          if [ -f "$AAB" ]; then
+            cp "$AAB" "release-assets/nuku-${VERSION}.aab"
+          fi
+          if [ -f "$APK" ]; then
+            cp "$APK" "release-assets/nuku-${VERSION}.apk"
+          fi
+          ls -la release-assets || true
+
+      - name: Upload artifacts (Actions tab)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -234,6 +258,24 @@ jobs:
             android/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Publish GitHub Release with downloadable AAB & APK
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-build-${{ steps.rename.outputs.version || github.run_number }}
+          name: "Android build ${{ steps.rename.outputs.version || github.run_number }}"
+          body: |
+            Build automatique Android (AAB + APK) déclenché par ${{ github.event_name }}.
+            - Commit : ${{ github.sha }}
+            - Run : ${{ github.run_id }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: |
+            release-assets/*.aab
+            release-assets/*.apk
+        continue-on-error: true
 
       - name: Display build summary
         if: always()
@@ -260,6 +302,7 @@ jobs:
           echo "✅ CONFORME GOOGLE PLAY STORE"
           echo "========================================="
           echo ""
-          echo "📍 Récupérez vos artifacts ici :"
-          echo "   Actions → Latest Run → Artifacts → android-release"
+          echo "📍 Récupérez vos artifacts :"
+          echo "   1) Actions → Latest Run → Artifacts → android-release (nécessite d'être connecté à GitHub)"
+          echo "   2) Onglet 'Releases' du repo → dernière release → fichiers .aab/.apk téléchargeables publiquement, sans connexion"
           echo ""
