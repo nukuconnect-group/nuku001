@@ -91,7 +91,9 @@ jobs:
         run: |
           set -e
           ./gradlew clean --no-daemon
-          ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon --stacktrace --info 2>&1 | tee build.log
+          ./gradlew :app:bundleRelease --no-daemon --stacktrace --info 2>&1 | tee build.log
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --info 2>&1 | tee -a build.log
+          ls -R app/build/outputs || true
 
       - name: Locate generated Android packages
         id: locate_outputs
