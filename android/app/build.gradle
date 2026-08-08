@@ -2,29 +2,24 @@ apply plugin: 'com.android.application'
 
 android {
     namespace "com.nuku.app"
-    compileSdk 36
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "com.nuku.app"
-        minSdk 24
-        targetSdk 36
+        minSdkVersion 24
+        targetSdkVersion 36
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         release {
             def ksPath = System.getenv("ANDROID_KEYSTORE_PATH")
-            def ksPass = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            def keyAliasEnv = System.getenv("ANDROID_KEY_ALIAS")
-            def keyPass = System.getenv("ANDROID_KEY_PASSWORD")
-
             if (ksPath != null && ksPath.trim()) {
                 storeFile file(ksPath)
-                storePassword ksPass
-                keyAlias keyAliasEnv
-                keyPassword keyPass
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
             }
         }
     }
@@ -39,6 +34,18 @@ android {
         }
         debug {
             minifyEnabled false
+        }
+    }
+
+    bundle {
+        language {
+            enableSplit = false
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
         }
     }
 
