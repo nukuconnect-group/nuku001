@@ -2,14 +2,12 @@ name: Android signed build + Verify API 36
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - 'android-v*'
+    branches: [main]
+    tags: ['android-v*']
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'versionName (ex: 1.0.3). Laisser vide pour auto.'
+        description: "versionName (ex: 1.0.3). Leave empty for auto."
         required: false
         type: string
 
@@ -29,12 +27,12 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -52,12 +50,10 @@ jobs:
       - name: Build web application
         run: npm run build
 
-      - name: Sync Android platform (production, sans live-reload)
-        run: |
-          npx cap add android || true
-          npx cap sync android
+      - name: Sync Android platform
+        run: npx cap sync android
 
-      - name: Prepare Android config (SDK 36, App Links, version)
+      - name: Prepare Android config
         run: node scripts/android-prepare.mjs
         env:
           ANDROID_VERSION_CODE: ${{ github.run_number }}
@@ -72,11 +68,15 @@ jobs:
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
             echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
             echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Keystore décodé et prêt"
           else
             echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️ Aucun keystore : build non signé"
           fi
+
+      - name: Verify Gradle modules
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew projects
 
       - name: Build release AAB & APK (force :app)
         working-directory: android
@@ -97,7 +97,6 @@ jobs:
         id: locate_outputs
         run: |
           set -e
-          echo "=== Recherche automatique des .aab/.apk ==="
           find android -type f | sort > android/android-files.txt || true
 
           AAB_FILE=$(find android -type f -path "*/app/build/outputs/*" -name "*.aab" | head -1 || true)
@@ -110,34 +109,28 @@ jobs:
             APK_FILE=$(find android -type f -name "*.apk" | head -1 || true)
           fi
 
-          echo "AAB trouvé: ${AAB_FILE:-aucun}"
-          echo "APK trouvé: ${APK_FILE:-aucun}"
-
           echo "aab=$AAB_FILE" >> "$GITHUB_OUTPUT"
           echo "apk=$APK_FILE" >> "$GITHUB_OUTPUT"
 
-      - name: Verify outputs are present (fail if missing)
+      - name: Verify outputs are present
         run: |
           set -e
           AAB="${{ steps.locate_outputs.outputs.aab }}"
           APK="${{ steps.locate_outputs.outputs.apk }}"
 
           if [ -z "$AAB" ] || [ ! -f "$AAB" ]; then
-            echo "❌ Aucun fichier AAB trouvé"
+            echo "No AAB file found"
             find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
             exit 1
           fi
 
           if [ -z "$APK" ] || [ ! -f "$APK" ]; then
-            echo "❌ Aucun fichier APK trouvé"
+            echo "No APK file found"
             find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
             exit 1
           fi
 
-          echo "✅ AAB OK: $AAB"
-          echo "✅ APK OK: $APK"
-
-      - name: Rename outputs with version for clarity
+      - name: Rename outputs
         id: rename
         run: |
           set -e
@@ -153,9 +146,8 @@ jobs:
           mkdir -p release-assets
           cp "$AAB" "release-assets/nuku-${VERSION}.aab"
           cp "$APK" "release-assets/nuku-${VERSION}.apk"
-          ls -la release-assets
 
-      - name: Upload artifacts (packages + logs)
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -170,31 +162,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Publish GitHub Release with downloadable AAB & APK
+      - name: Publish GitHub Release
         if: success()
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-build-${{ steps.rename.outputs.version }}
-          name: "Android build ${{ steps.rename.outputs.version }}"
+          name: Android build ${{ steps.rename.outputs.version }}
           body: |
-            Build automatique Android (AAB + APK)
-            - Commit : ${{ github.sha }}
-            - Run : ${{ github.run_id }}
+            Automatic Android build (AAB + APK)
+            - Commit: ${{ github.sha }}
+            - Run: ${{ github.run_id }}
           draft: false
           prerelease: false
           make_latest: true
           files: |
             release-assets/*.aab
             release-assets/*.apk
-
-      - name: Display build summary
-        if: always()
-        run: |
-          echo "========================================="
-          echo "📦 BUILD ANDROID AAB + APK TERMINÉ"
-          echo "========================================="
-          if [ -d "release-assets" ]; then
-            ls -lah release-assets || true
-          fi
-          echo "Artifacts: Actions > Run > android-release"
-          echo "Release: Releases > latest (si succès)"
