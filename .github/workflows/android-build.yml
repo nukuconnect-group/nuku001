@@ -76,10 +76,16 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
-            echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Keystore décodé et prêt"
+            CLEAN_KEYSTORE_BASE64=$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\r\n\t ')
+            if printf '%s' "$CLEAN_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks" 2>/dev/null; then
+              echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
+              echo "signed=true" >> "$GITHUB_OUTPUT"
+              echo "✅ Keystore décodé et prêt"
+            else
+              rm -f "$HOME/release.jks"
+              echo "signed=false" >> "$GITHUB_OUTPUT"
+              echo "⚠️ Keystore invalide : build non signé"
+            fi
           else
             echo "signed=false" >> "$GITHUB_OUTPUT"
             echo "⚠️ Aucun keystore : build non signé"
