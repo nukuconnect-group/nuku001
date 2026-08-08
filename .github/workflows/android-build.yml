@@ -60,25 +60,28 @@ jobs:
           ANDROID_VERSION_NAME: ${{ inputs.version_name }}
 
       - name: Decode keystore
-        id: keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.jks"
             echo "ANDROID_KEYSTORE_PATH=$HOME/release.jks" >> "$GITHUB_ENV"
-            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "SIGNED_BUILD=true" >> "$GITHUB_ENV"
           else
-            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "SIGNED_BUILD=false" >> "$GITHUB_ENV"
           fi
 
-      - name: Verify Gradle modules
+      - name: Force Gradle wrapper executable
+        working-directory: android
+        run: chmod +x ./gradlew
+
+      - name: Show Gradle modules/tasks
         working-directory: android
         run: |
-          chmod +x ./gradlew
-          ./gradlew projects
+          ./gradlew projects --no-daemon > gradle-projects.txt 2>&1 || true
+          ./gradlew :app:tasks --all --no-daemon > gradle-app-tasks.txt 2>&1 || true
 
-      - name: Build release AAB & APK (force :app)
+      - name: Build Release AAB + APK (signed if keystore exists)
         working-directory: android
         env:
           ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
@@ -87,27 +90,28 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -e
-          chmod +x ./gradlew
-          ./gradlew --version
-          ./gradlew :app:tasks --all > gradle-app-tasks.txt || true
-          ./gradlew clean
-          ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew clean --no-daemon
+          ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon --stacktrace --info 2>&1 | tee build.log
 
       - name: Locate generated Android packages
         id: locate_outputs
         run: |
           set -e
-          find android -type f | sort > android/android-files.txt || true
+          mkdir -p android-debug
+          find android -type f | sort > android-debug/android-files.txt || true
 
-          AAB_FILE=$(find android -type f -path "*/app/build/outputs/*" -name "*.aab" | head -1 || true)
-          APK_FILE=$(find android -type f -path "*/app/build/outputs/*" -name "*.apk" | head -1 || true)
+          AAB_FILE="$(find android -type f -path '*/app/build/outputs/*' -name '*.aab' | head -1 || true)"
+          APK_FILE="$(find android -type f -path '*/app/build/outputs/*' -name '*.apk' | head -1 || true)"
 
           if [ -z "$AAB_FILE" ]; then
-            AAB_FILE=$(find android -type f -name "*.aab" | head -1 || true)
+            AAB_FILE="$(find android -type f -name '*.aab' | head -1 || true)"
           fi
           if [ -z "$APK_FILE" ]; then
-            APK_FILE=$(find android -type f -name "*.apk" | head -1 || true)
+            APK_FILE="$(find android -type f -name '*.apk' | head -1 || true)"
           fi
+
+          echo "AAB_FILE=$AAB_FILE"
+          echo "APK_FILE=$APK_FILE"
 
           echo "aab=$AAB_FILE" >> "$GITHUB_OUTPUT"
           echo "apk=$APK_FILE" >> "$GITHUB_OUTPUT"
@@ -120,15 +124,18 @@ jobs:
 
           if [ -z "$AAB" ] || [ ! -f "$AAB" ]; then
             echo "No AAB file found"
-            find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
+            find android -type f | grep -E "(app/build/outputs|bundle|apk|aab|manifest-merger)" || true
             exit 1
           fi
 
           if [ -z "$APK" ] || [ ! -f "$APK" ]; then
             echo "No APK file found"
-            find android -type f | grep -E "(outputs|bundle|apk|aab)" || true
+            find android -type f | grep -E "(app/build/outputs|bundle|apk|aab|manifest-merger)" || true
             exit 1
           fi
+
+          echo "AAB OK: $AAB"
+          echo "APK OK: $APK"
 
       - name: Rename outputs
         id: rename
@@ -136,7 +143,6 @@ jobs:
           set -e
           AAB="${{ steps.locate_outputs.outputs.aab }}"
           APK="${{ steps.locate_outputs.outputs.apk }}"
-
           VERSION="${{ inputs.version_name }}"
           if [ -z "$VERSION" ]; then
             VERSION="run${{ github.run_number }}"
@@ -146,8 +152,9 @@ jobs:
           mkdir -p release-assets
           cp "$AAB" "release-assets/nuku-${VERSION}.aab"
           cp "$APK" "release-assets/nuku-${VERSION}.apk"
+          ls -la release-assets
 
-      - name: Upload artifacts
+      - name: Upload artifacts (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -156,8 +163,9 @@ jobs:
             release-assets/*.aab
             release-assets/*.apk
             android/build.log
+            android/gradle-projects.txt
             android/gradle-app-tasks.txt
-            android/android-files.txt
+            android-debug/android-files.txt
             android/app/build/outputs/mapping/release/mapping.txt
           if-no-files-found: warn
           retention-days: 30
